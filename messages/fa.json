@@ -379,7 +379,7 @@
       },
       "ready": {
         "title": "سفارش آماده است",
-        "body": "سفارش {reference} آماده است. {handover}"
+        "body": "سفارش {reference} آماده است. {fulfillment, select, pickup {می‌توانید آن را از دکان {shopName} در مرکز گلبهار بگیرید.} other {پیک به زودی آن را می‌رساند.}}"
       },
       "fulfilled": {
         "title": "سفارش تحویل شد",
@@ -756,6 +756,77 @@
     "yourShop": "دکان شما",
     "viewStorefront": "دیدن در فروشگاه"
   },
+  "shopOrders": {
+    "title": "سفارش‌ها",
+    "needsAction": "{count} سفارش در انتظار تایید",
+    "itemCount": "{count} قلم",
+    "shopSubtotal": "مجموع سهم دکان شما",
+    "sharedOrder": "مشترک",
+    "sharedOrderNote": "این سفارش قلم‌هایی از دکان‌های دیگر هم دارد. تغییر وضعیت روی تمام سفارش اثر می‌کند و در تاریخچه به نام شما ثبت می‌شود.",
+    "itemsHeading": "قلم‌های شما",
+    "customerHeading": "مشتری",
+    "fulfillmentHeading": "روش تحویل",
+    "historyHeading": "تاریخچه",
+    "emptyFilteredBody": "با این صافی سفارشی نیست. صافی دیگری را بیازمایید.",
+    "emptyActionableBody": "هر سفارش تازه همین‌جا و بی‌نیاز به نوسازی صفحه پیدا می‌شود.",
+    "filters": {
+      "actionable": "در جریان",
+      "placed": "در انتظار تایید",
+      "accepted": "تاییدشده",
+      "ready": "آماده",
+      "fulfilled": "تحویل‌شده",
+      "rejected": "ردشده"
+    },
+    "status": {
+      "placed": "در انتظار تایید",
+      "accepted": "تاییدشده",
+      "ready": "آماده",
+      "fulfilled": "تحویل‌شده",
+      "rejected": "ردشده"
+    },
+    "empty": {
+      "actionable": "کار باقی‌مانده‌ای نیست",
+      "placed": "سفارشی در انتظار تایید نیست",
+      "accepted": "سفارش تاییدشده‌ای نیست",
+      "ready": "سفارش آماده‌ای نیست",
+      "fulfilled": "هنوز سفارش تحویل‌شده‌ای نیست",
+      "rejected": "سفارش ردشده‌ای نیست"
+    },
+    "fulfillment": {
+      "delivery": "رسانیدن به آدرس",
+      "pickup": "گرفتن از دکان"
+    },
+    "payment": {
+      "cod": "پرداخت هنگام تحویل",
+      "hesabpay": "حساب‌پی"
+    },
+    "actions": {
+      "accept": "تایید سفارش",
+      "reject": "رد",
+      "markReady": "آماده شد",
+      "markFulfilled": "تحویل شد",
+      "rejectTitle": "رد این سفارش",
+      "rejectBody": "سفارش ردشده برگشت‌پذیر نیست. مشتری بی‌درنگ خبر می‌شود.",
+      "reasonLabel": "دلیل رد",
+      "reasonPlaceholder": "مثلاً: این کالا فعلاً موجود نیست.",
+      "reasonNote": "این متن همان‌گونه که می‌نویسید برای مشتری فرستاده می‌شود.",
+      "cancel": "لغو",
+      "confirmReject": "رد سفارش",
+      "rejecting": "در حال رد…",
+      "done": {
+        "accepted": "سفارش تایید شد و به مشتری خبر رفت",
+        "ready": "سفارش آماده علامت زده شد",
+        "fulfilled": "سفارش تحویل‌شده ثبت شد",
+        "rejected": "سفارش رد شد و دلیل برای مشتری فرستاده شد"
+      },
+      "errors": {
+        "forbidden": "شما اجازه‌ی این کار را ندارید",
+        "invalid_input": "ورودی نادرست است",
+        "reason_required": "برای رد سفارش نوشتن دلیل الزامی است",
+        "transition_not_allowed": "وضعیت این سفارش در این میان تغییر کرده است. صفحه را نو کنید."
+      }
+    }
+  },
   "shopProducts": {
     "title": "محصولات",
     "addProduct": "افزودن محصول",
@@ -915,6 +986,308 @@
         "missing_columns": "ستون‌های title_fa و price باید در پرونده باشند",
         "too_many_rows": "در هر بار بیشتر از ۲۰۰ سطر نمی‌شود",
         "nothing_to_import": "سطر درستی برای ورود نمانده است"
+      }
+    }
+  },
+  "shopPromotions": {
+    "title": "تبلیغات و تخفیف‌ها",
+    "awaitingApproval": "{count} درخواست در انتظار بررسی",
+    "tabs": {
+      "offers": "تخفیف‌ها",
+      "featured": "جایگاه‌های ویژه"
+    },
+    "offers": {
+      "intro": "تخفیف را خود دکان می‌پردازد، پس بی‌درنگ و بدون بررسی مدیریت فعال می‌شود.",
+      "emptyTitle": "هنوز تخفیفی ندارید",
+      "emptyBody": "یک تخفیف فیصدی یا مبلغی بسازید تا در فروشگاه دیده شود.",
+      "sections": {
+        "active": "در جریان",
+        "scheduled": "برنامه‌ریزی‌شده",
+        "expired": "پایان‌یافته"
+      },
+      "percentOff": "{value}٪ تخفیف",
+      "fixedOff": "{value} تخفیف",
+      "wholeShop": "تمام دکان",
+      "productScope": "{count} محصول",
+      "notStarted": "هنوز آغاز نشده",
+      "edit": "ویرایش تخفیف",
+      "end": "پایان دادن",
+      "ended": "تخفیف پایان یافت",
+      "errors": {
+        "forbidden": "شما اجازه‌ی این کار را ندارید",
+        "invalid_input": "ورودی نادرست است",
+        "not_found": "این تخفیف یافت نشد",
+        "fa_required": "نام دری الزامی است",
+        "value_positive": "اندازه‌ی تخفیف باید بیشتر از صفر باشد",
+        "percent_too_high": "تخفیف بیشتر از ۹۰ فیصد پذیرفته نمی‌شود",
+        "products_required": "کم‌ازکم یک محصول را بگزینید",
+        "products_not_yours": "یکی از محصولات گزیده‌شده از دکان شما نیست",
+        "end_after_start": "تاریخ پایان باید پس از تاریخ آغاز باشد"
+      }
+    },
+    "offerForm": {
+      "newOffer": "تخفیف تازه",
+      "newTitle": "تخفیف تازه",
+      "editTitle": "ویرایش تخفیف",
+      "description": "اندازه، دامنه و بازه‌ی زمانی تخفیف را تعیین کنید.",
+      "nameFa": "نام تخفیف (دری)",
+      "nameEn": "نام تخفیف (انگلیسی)",
+      "type": "گونه‌ی تخفیف",
+      "typePercent": "فیصدی",
+      "typeFixed": "مبلغ ثابت",
+      "valuePercent": "فیصد تخفیف",
+      "valueFixed": "مبلغ تخفیف (افغانی)",
+      "scope": "دامنه",
+      "scopeProducts": "محصولات گزیده‌شده",
+      "scopeShop": "تمام دکان",
+      "pickProducts": "گزینش محصولات",
+      "selectedCount": "{count} گزیده شد",
+      "startsAt": "آغاز",
+      "endsAt": "پایان",
+      "preview": "بها پس از تخفیف",
+      "zeroWarning": "بها به صفر می‌رسد — اندازه‌ی تخفیف را بازبینی کنید",
+      "cancel": "لغو",
+      "save": "ثبت تخفیف",
+      "saving": "در حال ثبت…",
+      "saved": "تخفیف ثبت شد",
+      "created": "تخفیف ساخته شد",
+      "errors": {
+        "forbidden": "شما اجازه‌ی این کار را ندارید",
+        "invalid_input": "ورودی نادرست است",
+        "not_found": "این تخفیف یافت نشد",
+        "fa_required": "نام دری الزامی است",
+        "value_positive": "اندازه‌ی تخفیف باید بیشتر از صفر باشد",
+        "percent_too_high": "تخفیف بیشتر از ۹۰ فیصد پذیرفته نمی‌شود",
+        "products_required": "کم‌ازکم یک محصول را بگزینید",
+        "products_not_yours": "یکی از محصولات گزیده‌شده از دکان شما نیست",
+        "end_after_start": "تاریخ پایان باید پس از تاریخ آغاز باشد"
+      }
+    },
+    "featured": {
+      "intro": "جایگاه ویژه را از مرکز گلبهار می‌خرید. هر درخواست پس از تایید مدیریت فعال می‌شود.",
+      "spend": "مجموع پرداخت",
+      "impressions": "نمایش",
+      "clicks": "کلیک",
+      "slotsHeading": "جایگاه‌های موجود",
+      "campaignsHeading": "کمپاین‌های شما",
+      "perWeek": "{price} در هفته",
+      "availability": "{available} از {capacity} جای خالی",
+      "soldOut": "این جایگاه فعلاً پر است",
+      "yours": "شما دارید",
+      "book": "گرفتن جایگاه",
+      "bookingIntro": "محصول و مدت را بگزینید؛ مجموع پیش از ارسال نشان داده می‌شود.",
+      "pickProduct": "محصول برای این جایگاه",
+      "noPublishedProducts": "برای گرفتن این جایگاه نخست یک محصول را نشر کنید.",
+      "duration": "مدت",
+      "weeks": "{count} هفته",
+      "summaryWeeks": "مدت",
+      "summaryUntil": "تا تاریخ",
+      "summaryTotal": "مجموع",
+      "needsApproval": "این درخواست به مدیریت مرکز می‌رود و پس از تایید فعال می‌شود.",
+      "cancel": "لغو",
+      "submit": "ارسال درخواست",
+      "submitting": "در حال ارسال…",
+      "requested": "درخواست شما فرستاده شد و در انتظار تایید است",
+      "errors": {
+        "forbidden": "شما اجازه‌ی این کار را ندارید",
+        "invalid_input": "ورودی نادرست است",
+        "not_found": "این کمپاین یافت نشد",
+        "slot_not_found": "این جایگاه یافت نشد",
+        "slot_full": "این جایگاه در این بازه پر است",
+        "product_required": "برای این جایگاه گزینش یک محصول الزامی است",
+        "product_not_publishable": "محصول گزیده‌شده نشرشده و از دکان شما نیست",
+        "not_withdrawable": "تنها درخواست بررسی‌نشده را می‌شود پس گرفت"
+      }
+    },
+    "campaigns": {
+      "none": "هنوز کمپاینی ندارید.",
+      "status": {
+        "requested": "در انتظار تایید",
+        "approved": "تاییدشده",
+        "active": "در جریان",
+        "rejected": "ردشده",
+        "ended": "پایان‌یافته"
+      },
+      "daysLeft": "{count} روز مانده",
+      "rejectedBecause": "دلیل رد: {reason}",
+      "impressions": "{count} نمایش",
+      "clicks": "{count} کلیک",
+      "ctr": "نرخ کلیک {value}",
+      "renew": "تمدید ۲ هفته",
+      "renewed": "درخواست تمدید فرستاده شد",
+      "withdraw": "پس‌گرفتن",
+      "withdrawn": "درخواست پس گرفته شد",
+      "errors": {
+        "forbidden": "شما اجازه‌ی این کار را ندارید",
+        "invalid_input": "ورودی نادرست است",
+        "not_found": "این کمپاین یافت نشد",
+        "slot_not_found": "این جایگاه یافت نشد",
+        "slot_full": "این جایگاه در این بازه پر است",
+        "product_required": "برای این جایگاه گزینش یک محصول الزامی است",
+        "product_not_publishable": "محصول گزیده‌شده نشرشده و از دکان شما نیست",
+        "not_withdrawable": "تنها درخواست بررسی‌نشده را می‌شود پس گرفت"
+      }
+    }
+  },
+  "shopReviews": {
+    "title": "نظرها",
+    "averageOf": "میانگین از {count} نظر",
+    "filters": {
+      "all": "همه",
+      "unanswered": "بی‌پاسخ",
+      "star5": "۵ ستاره",
+      "star4": "۴ ستاره",
+      "star3": "۳ ستاره",
+      "star2": "۲ ستاره",
+      "star1": "۱ ستاره"
+    },
+    "emptyTitle": "هنوز نظری ثبت نشده",
+    "emptyBody": "پس از نخستین خریدها، نظر مشتریان همین‌جا پیدا می‌شود.",
+    "emptyAnsweredTitle": "به همه پاسخ داده‌اید",
+    "emptyAnsweredBody": "نظر بی‌پاسخی نمانده است.",
+    "flagged": "گزارش‌شده",
+    "yourReply": "پاسخ شما",
+    "respond": "پاسخ",
+    "responded": "پاسخ شما ثبت شد و به مشتری خبر رفت",
+    "flag": "گزارش به مدیریت",
+    "flaggedDone": "این نظر برای بررسی به مدیریت رفت",
+    "replyTitle": "پاسخ به این نظر",
+    "replyBody": "پاسخ شما در صفحه‌ی محصول برای همه دیده می‌شود و یک‌بار بیشتر نمی‌شود نوشت.",
+    "replyPlaceholder": "مثلاً: از بازخورد شما سپاسگزاریم؛ موضوع را بررسی می‌کنیم.",
+    "cancel": "لغو",
+    "sendReply": "ثبت پاسخ",
+    "sending": "در حال ثبت…",
+    "errors": {
+      "forbidden": "شما اجازه‌ی این کار را ندارید",
+      "invalid_input": "ورودی نادرست است",
+      "not_found": "این نظر یافت نشد",
+      "too_short": "پاسخ باید کم‌ازکم سه حرف باشد",
+      "already_answered": "به این نظر پیش‌تر پاسخ داده شده است",
+      "already_flagged": "این نظر پیش‌تر گزارش شده است"
+    }
+  },
+  "shopProfile": {
+    "title": "نمای دکان",
+    "viewPublicPage": "دیدن صفحه‌ی عمومی",
+    "imagesHeading": "نشان و بنر",
+    "logo": "نشان دکان",
+    "logoHint": "مربع، کم‌ازکم ۴۰۰×۴۰۰",
+    "banner": "بنر",
+    "bannerHint": "پهن، نسبت نزدیک به ۳:۱",
+    "uploading": "در حال بارگذاری…",
+    "imageUpdated": "تصویر نو شد",
+    "contentHeading": "نام و معرفی",
+    "langFa": "دری",
+    "langEn": "انگلیسی",
+    "langPs": "پشتو",
+    "required": "الزامی",
+    "missing": "خالی",
+    "name": "نام دکان",
+    "description": "معرفی",
+    "locationHeading": "جای دکان و تماس",
+    "category": "دسته‌ی دکان",
+    "categoryHint": "یک دسته را بگزینید",
+    "floor": "طبقه",
+    "unit": "شماره‌ی واحد",
+    "phone": "شماره‌ی تماس",
+    "hours": "ساعت کار",
+    "opensAt": "ساعت آغاز",
+    "closesAt": "ساعت پایان",
+    "hoursPreview": "مشتری می‌بیند: {value}",
+    "save": "ثبت تغییرات",
+    "saving": "در حال ثبت…",
+    "saved": "نمای دکان ثبت شد",
+    "status": {
+      "pending": "در انتظار تایید مدیریت",
+      "approved": "تاییدشده",
+      "suspended": "معطل‌شده",
+      "closed": "بسته‌شده"
+    },
+    "errors": {
+      "forbidden": "شما اجازه‌ی این کار را ندارید",
+      "invalid_input": "ورودی نادرست است",
+      "not_found": "دکان یافت نشد",
+      "fa_required": "نام دری الزامی است",
+      "bad_phone": "شماره باید با ۰۷ آغاز شود و ده رقم باشد",
+      "bad_hours": "ساعت آغاز و پایان را کامل بگزینید",
+      "no_file": "تصویری گزیده نشد",
+      "too_large": "اندازه‌ی تصویر بیشتر از ۸ مگابایت است",
+      "unsupported_format": "این گونه‌ی تصویر پشتیبانی نمی‌شود"
+    }
+  },
+  "shopReports": {
+    "title": "گزارش‌ها",
+    "days": "{count} روز",
+    "revenue": "فروش",
+    "orders": "سفارش‌ها",
+    "aov": "میانگین هر سفارش",
+    "units": "قلم فروخته‌شده",
+    "salesHeading": "روند فروش",
+    "statusHeading": "وضعیت سفارش‌ها",
+    "ratingHeading": "روند امتیاز",
+    "productsHeading": "پرفروش‌ترین محصولات",
+    "promotionsHeading": "کارکرد تبلیغات",
+    "wishlistHeading": "بیشترین ذخیره‌شده‌ها",
+    "ordersLabel": "سفارش",
+    "averageRating": "میانگین امتیاز",
+    "unitsSold": "{count} قلم فروخته شد",
+    "impressionsClicks": "{impressions} نمایش · {clicks} کلیک · نرخ کلیک {ctr}",
+    "noOrders": "در این بازه سفارشی نبوده است.",
+    "noReviews": "در این بازه نظری ثبت نشده است.",
+    "noPromotions": "در این بازه کمپاینی نداشته‌اید.",
+    "noWishlist": "هنوز کسی محصولی را ذخیره نکرده است."
+  },
+  "shopSettings": {
+    "title": "تنظیمات",
+    "notifications": {
+      "heading": "آگاهی‌نامه‌ها",
+      "demoNote": "در این نسخه‌ی نمایشی این گزینه‌ها ذخیره نمی‌شوند؛ با پیوستن دروازه‌ی واقعی پیامک فعال می‌شوند.",
+      "items": {
+        "newOrder": "سفارش تازه",
+        "orderCancelled": "لغو سفارش از سوی مشتری",
+        "lowStock": "کم‌شدن موجودی",
+        "newReview": "نظر تازه",
+        "campaignDecisions": "نتیجه‌ی درخواست جایگاه"
+      }
+    },
+    "staff": {
+      "heading": "کارکنان دکان",
+      "hint": "هر کارمند با شماره‌ی خود و کد پیامکی وارد می‌شود.",
+      "roles": {
+        "owner": "مالک",
+        "staff": "کارمند"
+      },
+      "nameLabel": "نام",
+      "phoneLabel": "شماره‌ی تماس",
+      "add": "افزودن کارمند",
+      "adding": "در حال افزودن…",
+      "addedNew": "کارمند تازه افزوده شد",
+      "addedExisting": "این شماره به کارکنان دکان افزوده شد",
+      "remove": "برداشتن",
+      "removed": "کارمند برداشته شد",
+      "signInNote": "برای ورود، همان شماره و کد پیامکی کافی است؛ رمز جداگانه‌ای نیست.",
+      "ownerOnly": "تنها مالک دکان می‌تواند کارکنان را تغییر دهد.",
+      "errors": {
+        "owner_only": "تنها مالک دکان می‌تواند این کار را بکند",
+        "invalid_input": "ورودی نادرست است",
+        "name_required": "نام باید کم‌ازکم دو حرف باشد",
+        "bad_phone": "شماره باید با ۰۷ آغاز شود و ده رقم باشد",
+        "is_admin": "این شماره از مدیریت مرکز است و کارمند دکان نمی‌شود",
+        "already_member": "این شخص از پیش کارمند دکان شماست",
+        "already_in_shop": "این شماره در دکان دیگری کار می‌کند",
+        "not_found": "این کارمند یافت نشد",
+        "cannot_remove_self": "خود را نمی‌توانید بردارید"
+      }
+    },
+    "language": {
+      "heading": "زبان",
+      "hint": "زبان پنل و زبان پیامک‌هایی که می‌گیرید.",
+      "fa": "دری",
+      "en": "English",
+      "pashtoDeferred": "پشتو در مرحله‌ی بعدی افزوده می‌شود.",
+      "errors": {
+        "requires_auth": "نخست وارد شوید",
+        "invalid_input": "ورودی نادرست است"
       }
     }
   }

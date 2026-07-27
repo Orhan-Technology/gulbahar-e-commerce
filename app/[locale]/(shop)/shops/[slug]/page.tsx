@@ -13,7 +13,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { publicShopProducts, shopCategories } from '@/lib/db/queries/listing';
 import { shopDetail } from '@/lib/db/queries/shops';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatOpeningHours } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
@@ -110,7 +110,7 @@ export default async function ShopPage({
             {shop.hours && (
               <div className="flex items-center gap-1.5">
                 <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <dd>{shop.hours}</dd>
+                <dd>{formatOpeningHours(shop.hours, locale)}</dd>
               </div>
             )}
             {shop.phone && (

@@ -49,6 +49,33 @@ export function formatPercent(fraction: number, locale: string): string {
   }).format(fraction);
 }
 
+/**
+ * Opening hours, e.g. "۸:۰۰ – ۱۹:۰۰" / "8:00 – 19:00".
+ *
+ * `shops.hours` is free text, so it is stored CANONICALLY as ASCII "HH:MM-HH:MM"
+ * and localised here. Storing the display string instead would freeze one
+ * language's digits into the column — which is exactly what the first seed did,
+ * leaving English visitors reading Persian numerals.
+ *
+ * Anything that does not parse is passed through unchanged, so a hand-entered
+ * "Fridays only" survives rather than vanishing.
+ */
+export function formatOpeningHours(value: string | null | undefined, locale: string): string {
+  if (!value) return '';
+  const match = /^(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return value;
+
+  const [, openHour, openMinute, closeHour, closeMinute] = match;
+  const digits = (input: string) => formatNumber(Number(input), locale);
+  const pad = (input: string) =>
+    new Intl.NumberFormat(intlLocale(locale), {
+      minimumIntegerDigits: 2,
+      useGrouping: false,
+    }).format(Number(input));
+
+  return `${digits(openHour)}:${pad(openMinute)} – ${digits(closeHour)}:${pad(closeMinute)}`;
+}
+
 export function formatDate(
   date: Date | string | number,
   locale: string,

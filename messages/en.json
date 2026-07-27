@@ -379,7 +379,7 @@
       },
       "ready": {
         "title": "Order ready",
-        "body": "Order {reference} is ready. {handover}"
+        "body": "Order {reference} is ready. {fulfillment, select, pickup {You can collect it from {shopName}.} other {A courier will deliver it shortly.}}"
       },
       "fulfilled": {
         "title": "Order delivered",
@@ -756,6 +756,77 @@
     "yourShop": "Your shop",
     "viewStorefront": "View storefront"
   },
+  "shopOrders": {
+    "title": "Orders",
+    "needsAction": "{count} awaiting acceptance",
+    "itemCount": "{count} items",
+    "shopSubtotal": "Your shop's subtotal",
+    "sharedOrder": "Shared",
+    "sharedOrderNote": "This order also contains items from other shops. A status change applies to the whole order and is recorded in the history under your name.",
+    "itemsHeading": "Your items",
+    "customerHeading": "Customer",
+    "fulfillmentHeading": "Fulfilment",
+    "historyHeading": "History",
+    "emptyFilteredBody": "No orders match this filter. Try another one.",
+    "emptyActionableBody": "New orders appear here without reloading the page.",
+    "filters": {
+      "actionable": "In progress",
+      "placed": "Awaiting acceptance",
+      "accepted": "Accepted",
+      "ready": "Ready",
+      "fulfilled": "Fulfilled",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "placed": "Awaiting acceptance",
+      "accepted": "Accepted",
+      "ready": "Ready",
+      "fulfilled": "Fulfilled",
+      "rejected": "Rejected"
+    },
+    "empty": {
+      "actionable": "Nothing left to do",
+      "placed": "No orders awaiting acceptance",
+      "accepted": "No accepted orders",
+      "ready": "No orders ready",
+      "fulfilled": "No fulfilled orders yet",
+      "rejected": "No rejected orders"
+    },
+    "fulfillment": {
+      "delivery": "Delivery",
+      "pickup": "Collect from shop"
+    },
+    "payment": {
+      "cod": "Pay on delivery",
+      "hesabpay": "HesabPay"
+    },
+    "actions": {
+      "accept": "Accept order",
+      "reject": "Reject",
+      "markReady": "Mark ready",
+      "markFulfilled": "Mark fulfilled",
+      "rejectTitle": "Reject this order",
+      "rejectBody": "A rejection cannot be undone. The customer is notified immediately.",
+      "reasonLabel": "Reason for rejection",
+      "reasonPlaceholder": "For example: this item is out of stock right now.",
+      "reasonNote": "This text is sent to the customer exactly as you write it.",
+      "cancel": "Cancel",
+      "confirmReject": "Reject order",
+      "rejecting": "Rejecting…",
+      "done": {
+        "accepted": "Order accepted and the customer notified",
+        "ready": "Order marked ready",
+        "fulfilled": "Order marked fulfilled",
+        "rejected": "Order rejected and the reason sent to the customer"
+      },
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That input is not valid",
+        "reason_required": "A reason is required to reject an order",
+        "transition_not_allowed": "This order's status changed in the meantime. Reload the page."
+      }
+    }
+  },
   "shopProducts": {
     "title": "Products",
     "addProduct": "Add product",
@@ -915,6 +986,308 @@
         "missing_columns": "The file must have title_fa and price columns",
         "too_many_rows": "Up to 200 rows at a time",
         "nothing_to_import": "No valid rows left to import"
+      }
+    }
+  },
+  "shopPromotions": {
+    "title": "Promotions",
+    "awaitingApproval": "{count} awaiting approval",
+    "tabs": {
+      "offers": "Offers",
+      "featured": "Featured slots"
+    },
+    "offers": {
+      "intro": "An offer is funded by your shop, so it goes live immediately with no approval.",
+      "emptyTitle": "No offers yet",
+      "emptyBody": "Create a percentage or fixed discount to show it on the storefront.",
+      "sections": {
+        "active": "Running",
+        "scheduled": "Scheduled",
+        "expired": "Finished"
+      },
+      "percentOff": "{value}% off",
+      "fixedOff": "{value} off",
+      "wholeShop": "Whole shop",
+      "productScope": "{count} products",
+      "notStarted": "Not started yet",
+      "edit": "Edit offer",
+      "end": "End now",
+      "ended": "Offer ended",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That input is not valid",
+        "not_found": "That offer was not found",
+        "fa_required": "The Dari name is required",
+        "value_positive": "The discount must be greater than zero",
+        "percent_too_high": "A discount above 90% is not accepted",
+        "products_required": "Choose at least one product",
+        "products_not_yours": "One of the chosen products is not from your shop",
+        "end_after_start": "The end date must come after the start date"
+      }
+    },
+    "offerForm": {
+      "newOffer": "New offer",
+      "newTitle": "New offer",
+      "editTitle": "Edit offer",
+      "description": "Set the size, scope and dates of the discount.",
+      "nameFa": "Offer name (Dari)",
+      "nameEn": "Offer name (English)",
+      "type": "Discount type",
+      "typePercent": "Percentage",
+      "typeFixed": "Fixed amount",
+      "valuePercent": "Percent off",
+      "valueFixed": "Amount off (AFN)",
+      "scope": "Scope",
+      "scopeProducts": "Selected products",
+      "scopeShop": "Whole shop",
+      "pickProducts": "Choose products",
+      "selectedCount": "{count} selected",
+      "startsAt": "Starts",
+      "endsAt": "Ends",
+      "preview": "Price after discount",
+      "zeroWarning": "The price reaches zero — check the discount",
+      "cancel": "Cancel",
+      "save": "Save offer",
+      "saving": "Saving…",
+      "saved": "Offer saved",
+      "created": "Offer created",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That input is not valid",
+        "not_found": "That offer was not found",
+        "fa_required": "The Dari name is required",
+        "value_positive": "The discount must be greater than zero",
+        "percent_too_high": "A discount above 90% is not accepted",
+        "products_required": "Choose at least one product",
+        "products_not_yours": "One of the chosen products is not from your shop",
+        "end_after_start": "The end date must come after the start date"
+      }
+    },
+    "featured": {
+      "intro": "A featured slot is bought from Gulbahar Center. Each request goes live once management approves it.",
+      "spend": "Total spend",
+      "impressions": "Impressions",
+      "clicks": "Clicks",
+      "slotsHeading": "Available slots",
+      "campaignsHeading": "Your campaigns",
+      "perWeek": "{price} per week",
+      "availability": "{available} of {capacity} places free",
+      "soldOut": "This slot is currently full",
+      "yours": "Yours",
+      "book": "Book slot",
+      "bookingIntro": "Choose a product and a duration; the total is shown before you submit.",
+      "pickProduct": "Product for this slot",
+      "noPublishedProducts": "Publish a product before booking this slot.",
+      "duration": "Duration",
+      "weeks": "{count} weeks",
+      "summaryWeeks": "Duration",
+      "summaryUntil": "Runs until",
+      "summaryTotal": "Total",
+      "needsApproval": "This request goes to mall management and starts once approved.",
+      "cancel": "Cancel",
+      "submit": "Submit request",
+      "submitting": "Submitting…",
+      "requested": "Request sent and awaiting approval",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That input is not valid",
+        "not_found": "That campaign was not found",
+        "slot_not_found": "That slot was not found",
+        "slot_full": "That slot is full for this window",
+        "product_required": "This slot needs a product",
+        "product_not_publishable": "The chosen product is not published, or not yours",
+        "not_withdrawable": "Only an undecided request can be withdrawn"
+      }
+    },
+    "campaigns": {
+      "none": "No campaigns yet.",
+      "status": {
+        "requested": "Awaiting approval",
+        "approved": "Approved",
+        "active": "Running",
+        "rejected": "Rejected",
+        "ended": "Finished"
+      },
+      "daysLeft": "{count} days left",
+      "rejectedBecause": "Rejected: {reason}",
+      "impressions": "{count} impressions",
+      "clicks": "{count} clicks",
+      "ctr": "CTR {value}",
+      "renew": "Renew 2 weeks",
+      "renewed": "Renewal request sent",
+      "withdraw": "Withdraw",
+      "withdrawn": "Request withdrawn",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That input is not valid",
+        "not_found": "That campaign was not found",
+        "slot_not_found": "That slot was not found",
+        "slot_full": "That slot is full for this window",
+        "product_required": "This slot needs a product",
+        "product_not_publishable": "The chosen product is not published, or not yours",
+        "not_withdrawable": "Only an undecided request can be withdrawn"
+      }
+    }
+  },
+  "shopReviews": {
+    "title": "Reviews",
+    "averageOf": "average of {count} reviews",
+    "filters": {
+      "all": "All",
+      "unanswered": "Unanswered",
+      "star5": "5 stars",
+      "star4": "4 stars",
+      "star3": "3 stars",
+      "star2": "2 stars",
+      "star1": "1 star"
+    },
+    "emptyTitle": "No reviews yet",
+    "emptyBody": "Customer reviews will appear here after the first purchases.",
+    "emptyAnsweredTitle": "You have answered everything",
+    "emptyAnsweredBody": "No unanswered reviews left.",
+    "flagged": "Reported",
+    "yourReply": "Your reply",
+    "respond": "Reply",
+    "responded": "Your reply was posted and the customer notified",
+    "flag": "Report to management",
+    "flaggedDone": "This review was sent to management for review",
+    "replyTitle": "Reply to this review",
+    "replyBody": "Your reply is public on the product page and can only be written once.",
+    "replyPlaceholder": "For example: thank you for the feedback, we are looking into it.",
+    "cancel": "Cancel",
+    "sendReply": "Post reply",
+    "sending": "Posting…",
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "invalid_input": "That input is not valid",
+      "not_found": "That review was not found",
+      "too_short": "The reply must be at least three characters",
+      "already_answered": "This review has already been answered",
+      "already_flagged": "This review has already been reported"
+    }
+  },
+  "shopProfile": {
+    "title": "Shop profile",
+    "viewPublicPage": "View public page",
+    "imagesHeading": "Logo and banner",
+    "logo": "Shop logo",
+    "logoHint": "Square, at least 400×400",
+    "banner": "Banner",
+    "bannerHint": "Wide, around 3:1",
+    "uploading": "Uploading…",
+    "imageUpdated": "Image updated",
+    "contentHeading": "Name and description",
+    "langFa": "Dari",
+    "langEn": "English",
+    "langPs": "Pashto",
+    "required": "Required",
+    "missing": "Empty",
+    "name": "Shop name",
+    "description": "About",
+    "locationHeading": "Location and contact",
+    "category": "Shop category",
+    "categoryHint": "Choose a category",
+    "floor": "Floor",
+    "unit": "Unit number",
+    "phone": "Contact number",
+    "hours": "Opening hours",
+    "opensAt": "Opens at",
+    "closesAt": "Closes at",
+    "hoursPreview": "Customers see: {value}",
+    "save": "Save changes",
+    "saving": "Saving…",
+    "saved": "Shop profile saved",
+    "status": {
+      "pending": "Awaiting approval",
+      "approved": "Approved",
+      "suspended": "Suspended",
+      "closed": "Closed"
+    },
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "invalid_input": "That input is not valid",
+      "not_found": "Shop not found",
+      "fa_required": "The Dari name is required",
+      "bad_phone": "The number must start with 07 and be ten digits",
+      "bad_hours": "Set both the opening and closing time",
+      "no_file": "No image selected",
+      "too_large": "That image is over 8MB",
+      "unsupported_format": "That image format is not supported"
+    }
+  },
+  "shopReports": {
+    "title": "Reports",
+    "days": "{count} days",
+    "revenue": "Sales",
+    "orders": "Orders",
+    "aov": "Average order",
+    "units": "Units sold",
+    "salesHeading": "Sales trend",
+    "statusHeading": "Order status",
+    "ratingHeading": "Rating trend",
+    "productsHeading": "Best sellers",
+    "promotionsHeading": "Promotion performance",
+    "wishlistHeading": "Most saved",
+    "ordersLabel": "orders",
+    "averageRating": "Average rating",
+    "unitsSold": "{count} units sold",
+    "impressionsClicks": "{impressions} impressions · {clicks} clicks · CTR {ctr}",
+    "noOrders": "No orders in this period.",
+    "noReviews": "No reviews in this period.",
+    "noPromotions": "No campaigns in this period.",
+    "noWishlist": "Nobody has saved a product yet."
+  },
+  "shopSettings": {
+    "title": "Settings",
+    "notifications": {
+      "heading": "Notifications",
+      "demoNote": "In this demo these choices are not saved; they activate with the real SMS gateway.",
+      "items": {
+        "newOrder": "New order",
+        "orderCancelled": "Order cancelled by the customer",
+        "lowStock": "Low stock",
+        "newReview": "New review",
+        "campaignDecisions": "Slot request decisions"
+      }
+    },
+    "staff": {
+      "heading": "Shop staff",
+      "hint": "Each member signs in with their own number and an SMS code.",
+      "roles": {
+        "owner": "Owner",
+        "staff": "Staff"
+      },
+      "nameLabel": "Name",
+      "phoneLabel": "Contact number",
+      "add": "Add staff",
+      "adding": "Adding…",
+      "addedNew": "New staff member added",
+      "addedExisting": "That number was added to your shop's staff",
+      "remove": "Remove",
+      "removed": "Staff member removed",
+      "signInNote": "They sign in with that number and an SMS code — there is no separate password.",
+      "ownerOnly": "Only the shop owner can change staff.",
+      "errors": {
+        "owner_only": "Only the shop owner can do that",
+        "invalid_input": "That input is not valid",
+        "name_required": "The name must be at least two characters",
+        "bad_phone": "The number must start with 07 and be ten digits",
+        "is_admin": "That number belongs to mall management and cannot be shop staff",
+        "already_member": "That person is already on your staff",
+        "already_in_shop": "That number works at another shop",
+        "not_found": "That staff member was not found",
+        "cannot_remove_self": "You cannot remove yourself"
+      }
+    },
+    "language": {
+      "heading": "Language",
+      "hint": "The language of this panel and of the messages you receive.",
+      "fa": "دری",
+      "en": "English",
+      "pashtoDeferred": "Pashto arrives in the next phase.",
+      "errors": {
+        "requires_auth": "Sign in first",
+        "invalid_input": "That input is not valid"
       }
     }
   }

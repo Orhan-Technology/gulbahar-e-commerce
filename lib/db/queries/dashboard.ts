@@ -200,8 +200,16 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   };
 }
 
-/** Rating trend for the shopkeeper's reports (PRD §6.7). */
-export async function shopRatingTrend(shopId: string, since: Date) {
+/**
+ * Rating trend for the shopkeeper's reports (PRD §6.7) — weekly average over the
+ * last `days`.
+ *
+ * Takes a day count rather than a Date so the clock is read HERE and not in a
+ * component: React 19's purity rule forbids Date.now() during render, and the
+ * window a report covers is a property of the query anyway.
+ */
+export async function shopRatingTrend(shopId: string, days: number) {
+  const since = new Date(Date.now() - days * 86_400_000);
   const rows = await db.execute(sql`
     select
       date_trunc('week', r.created_at)::date as week,

@@ -69,7 +69,7 @@ SHOPS = [
             "fa": "فروش لوازم برقی و الکترونیکی اصل با گرانتی. بیش از ۱۵ سال در مرکز گلبهار.",
             "en": "Genuine electronics and appliances with warranty. Over 15 years in Gulbahar Center.",
         },
-        "hours": "۸:۰۰ – ۱۹:۰۰", "phone": "0700100201",
+        "hours": "8:00-19:00", "phone": "0700100201",
     },
     {
         "slug": "markaz-mobile", "category": "mobiles-tablets", "floor": 1, "unit": "۱۰۵",
@@ -78,7 +78,7 @@ SHOPS = [
             "fa": "نمایندگی رسمی موبایل و تابلت. تبدیل، خرید و فروش با قیمت مناسب.",
             "en": "Official mobile and tablet dealer. Trade-in, buy and sell at fair prices.",
         },
-        "hours": "۸:۳۰ – ۲۰:۰۰", "phone": "0700100202",
+        "hours": "8:30-20:00", "phone": "0700100202",
     },
     {
         "slug": "bahar-cosmetics", "category": "cosmetics", "floor": 1, "unit": "۱۲۸",
@@ -87,7 +87,7 @@ SHOPS = [
             "fa": "لوازم آرایشی اصل از برندهای معروف جهان. مشوره رایگان از طرف کارمندان ما.",
             "en": "Authentic cosmetics from well-known international brands. Free advice from our staff.",
         },
-        "hours": "۹:۰۰ – ۱۹:۳۰", "phone": "0700100203",
+        "hours": "9:00-19:30", "phone": "0700100203",
     },
     {
         "slug": "golden-perfumes", "category": "perfume", "floor": 1, "unit": "۱۳۲",
@@ -96,7 +96,7 @@ SHOPS = [
             "fa": "عطر و ادکلن اصل شرقی و فرانسوی. امکان تست همه عطرها در دکان.",
             "en": "Authentic oriental and French fragrances. Try any scent in store.",
         },
-        "hours": "۹:۰۰ – ۲۰:۰۰", "phone": "0700100204",
+        "hours": "9:00-20:00", "phone": "0700100204",
     },
     {
         "slug": "noor-watches", "category": "watches", "floor": 2, "unit": "۲۰۷",
@@ -105,7 +105,7 @@ SHOPS = [
             "fa": "ساعت مردانه و زنانه از برندهای معتبر. ترمیم و تبدیل باتری در جای.",
             "en": "Men's and women's watches from trusted brands. On-site repair and battery change.",
         },
-        "hours": "۸:۳۰ – ۱۹:۰۰", "phone": "0700100205",
+        "hours": "8:30-19:00", "phone": "0700100205",
     },
     {
         "slug": "ariana-clothing", "category": "menswear", "floor": 3, "unit": "۳۱۱",
@@ -114,7 +114,7 @@ SHOPS = [
             "fa": "پوشاک مردانه و زنانه، دوخت ترکی و وطنی. سایزهای مختلف موجود است.",
             "en": "Men's and women's clothing, Turkish and locally tailored. All sizes available.",
         },
-        "hours": "۹:۰۰ – ۱۹:۳۰", "phone": "0700100206",
+        "hours": "9:00-19:30", "phone": "0700100206",
     },
     {
         "slug": "pamir-shoes", "category": "shoes", "floor": 3, "unit": "۳۰۴",
@@ -123,7 +123,7 @@ SHOPS = [
             "fa": "کفش چرمی اصل، مردانه و زنانه. کفش مکتب و کفش ورزشی هم موجود است.",
             "en": "Genuine leather shoes for men and women. School and sports shoes also available.",
         },
-        "hours": "۸:۰۰ – ۱۹:۰۰", "phone": "0700100207",
+        "hours": "8:00-19:00", "phone": "0700100207",
     },
     {
         "slug": "salam-home", "category": "kitchen-appliances", "floor": 2, "unit": "۲۲۶",
@@ -132,7 +132,7 @@ SHOPS = [
             "fa": "همه لوازم آشپزخانه و خانه در یک جای. تحویل رایگان در شهر کابل.",
             "en": "Every kitchen and household item in one place. Free delivery within Kabul.",
         },
-        "hours": "۸:۰۰ – ۱۹:۰۰", "phone": "0700100208",
+        "hours": "8:00-19:00", "phone": "0700100208",
     },
     {
         "slug": "kudak-toys", "category": "toys", "floor": 3, "unit": "۳۲۲",
@@ -141,7 +141,7 @@ SHOPS = [
             "fa": "اسباب‌بازی سالم و بی‌خطر برای هر سن. تحفه‌های تولد و عیدی.",
             "en": "Safe, well-made toys for every age. Birthday and Eid gifts.",
         },
-        "hours": "۹:۰۰ – ۱۹:۰۰", "phone": "0700100209",
+        "hours": "9:00-19:00", "phone": "0700100209",
     },
     {
         "slug": "danesh-stationery", "category": "stationery", "floor": 1, "unit": "۱۱۹",
@@ -150,7 +150,7 @@ SHOPS = [
             "fa": "قرطاسیه مکتب و دفتر، کتاب و لوازم رسامی. تخفیف برای مکاتب.",
             "en": "School and office stationery, books and art supplies. Discounts for schools.",
         },
-        "hours": "۷:۳۰ – ۱۸:۳۰", "phone": "0700100210",
+        "hours": "7:30-18:30", "phone": "0700100210",
     },
     {
         "slug": "herat-jewellery", "category": "jewellery", "floor": 2, "unit": "۲۰۱",
@@ -159,7 +159,7 @@ SHOPS = [
             "fa": "طلا و نقره با عیار تضمینی. ساخت سفارشی زیورات به سلیقه شما.",
             "en": "Gold and silver with guaranteed purity. Custom jewellery made to order.",
         },
-        "hours": "۹:۰۰ – ۱۸:۳۰", "phone": "0700100211",
+        "hours": "9:00-18:30", "phone": "0700100211",
     },
     {
         "slug": "zarin-bags", "category": "bags", "floor": 3, "unit": "۳۱۸",
@@ -168,7 +168,7 @@ SHOPS = [
             "fa": "کیف دستی، بکس مکتب و چمدان سفر. جنس مقاوم با قیمت مناسب.",
             "en": "Handbags, school backpacks and travel luggage. Durable goods at fair prices.",
         },
-        "hours": "۸:۳۰ – ۱۹:۰۰", "phone": "0700100212",
+        "hours": "8:30-19:00", "phone": "0700100212",
     },
     {
         "slug": "alborz-sports", "category": "sportswear", "floor": 3, "unit": "۳۲۷",
@@ -177,7 +177,7 @@ SHOPS = [
             "fa": "لباس و لوازم ورزشی برای فوتبال، کرکت و جمنازیم.",
             "en": "Sportswear and equipment for football, cricket and the gym.",
         },
-        "hours": "۹:۰۰ – ۱۹:۳۰", "phone": "0700100213",
+        "hours": "9:00-19:30", "phone": "0700100213",
     },
     # The 14th shop stays PENDING for the live approval moment (PRD §9.4).
     {
@@ -187,7 +187,7 @@ SHOPS = [
             "fa": "خشکبار تازه افغانی: پسته، بادام، کشمش و شیرینی خانگی. بسته‌بندی تحفه‌ای.",
             "en": "Fresh Afghan dried fruit: pistachios, almonds, raisins and homemade sweets. Gift packaging.",
         },
-        "hours": "۸:۰۰ – ۱۹:۰۰", "phone": "0700100214",
+        "hours": "8:00-19:00", "phone": "0700100214",
         "status": "pending",
     },
 ]

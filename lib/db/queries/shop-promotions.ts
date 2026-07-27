@@ -1,0 +1,242 @@
+import { and, asc, desc, eq, gt, gte, lte, sql } from 'drizzle-orm';
+
+import { db } from '..';
+import { campaigns, offers, products, promotionSlots } from '../schema';
+import { slotNeedsProduct } from '../../promotions';
+
+/**
+ * The shopkeeper's promotions view (PRD §6.4).
+ *
+ * Two mechanisms, deliberately kept apart all the way down to the query layer:
+ * Offers are discounts the shop funds itself and need no approval (PRD §8.1),
+ * Campaigns are visibility bought from Gulbahar and do (PRD §8.2). Merging them
+ * into one "promotions" table would have made the approval rule a per-row
+ * condition instead of a property of the type.
+ */
+
+export type OfferPhase = 'active' | 'scheduled' | 'expired';
+
+/** Which of the three sections an offer belongs in, derived rather than stored. */
+export function offerPhase(
+  offer: { startsAt: Date; endsAt: Date; active: boolean },
+  now: Date = new Date(),
+): OfferPhase {
+  if (!offer.active || offer.endsAt < now) return 'expired';
+  if (offer.startsAt > now) return 'scheduled';
+  return 'active';
+}
+
+export async function shopOffers(shopId: string) {
+  const rows = await db
+    .select({
+      id: offers.id,
+      name: offers.name,
+      type: offers.type,
+      value: offers.value,
+      scope: offers.scope,
+      productIds: offers.productIds,
+      startsAt: offers.startsAt,
+      endsAt: offers.endsAt,
+      active: offers.active,
+      createdAt: offers.createdAt,
+    })
+    .from(offers)
+    .where(eq(offers.shopId, shopId))
+    .orderBy(desc(offers.startsAt));
+
+  return rows.map((row) => ({
+    ...row,
+    phase: offerPhase(row),
+    productCount: row.scope === 'products' ? (row.productIds?.length ?? 0) : null,
+  }));
+}
+
+export async function shopOfferById(shopId: string, offerId: string) {
+  const [row] = await db
+    .select()
+    .from(offers)
+    // shopId in the predicate is the ownership check.
+    .where(and(eq(offers.id, offerId), eq(offers.shopId, shopId)))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Published products, for the offer scope picker and the campaign booking step. */
+export async function shopPublishedProducts(shopId: string) {
+  return db
+    .select({
+      id: products.id,
+      title: products.title,
+      price: products.price,
+      discountPrice: products.discountPrice,
+    })
+    .from(products)
+    .where(and(eq(products.shopId, shopId), eq(products.status, 'published')))
+    .orderBy(asc(products.createdAt));
+}
+
+/* -------------------------------------------------------------------------- */
+/* Featured slots                                                             */
+
+/**
+ * Slot inventory with live availability (PRD §6.4).
+ *
+ * `taken` counts campaigns that occupy the slot RIGHT NOW — approved and active
+ * both hold a place, because an approved booking that has not started yet is still
+ * sold. Counting only 'active' would oversell the slot.
+ */
+export async function slotInventory(shopId: string, now: Date = new Date()) {
+  /*
+   * ISO string + explicit ::timestamptz, not the Date itself. Inside a raw `sql`
+   * fragment drizzle has no column to infer a type from, so the Date reaches
+   * postgres.js untyped and it throws 'The "string" argument must be of type
+   * string or an instance of Buffer' — nowhere near the actual cause.
+   */
+  const at = now.toISOString();
+
+  const rows = await db
+    .select({
+      id: promotionSlots.id,
+      key: promotionSlots.key,
+      name: promotionSlots.name,
+      capacity: promotionSlots.capacity,
+      pricePerWeek: promotionSlots.pricePerWeek,
+      taken: sql<number>`(
+        select count(*)::int from campaigns c
+        where c.slot_id = promotion_slots.id
+          and c.status in ('approved', 'active')
+          and c.ends_at >= ${at}::timestamptz
+      )`,
+      /** Does this shop already hold or await a place in the slot? */
+      mine: sql<number>`(
+        select count(*)::int from campaigns c
+        where c.slot_id = promotion_slots.id
+          and c.shop_id = ${shopId}
+          and c.status in ('requested', 'approved', 'active')
+          and c.ends_at >= ${at}::timestamptz
+      )`,
+    })
+    .from(promotionSlots)
+    .orderBy(desc(promotionSlots.pricePerWeek));
+
+  return rows.map((row) => ({
+    ...row,
+    available: Math.max(row.capacity - row.taken, 0),
+    // Product-level slots need a product chosen at booking time; shop-level ones
+    // promote the shop itself (see lib/promotions.ts).
+    needsProduct: slotNeedsProduct(row.key),
+  }));
+}
+
+export async function shopCampaigns(shopId: string) {
+  return db
+    .select({
+      id: campaigns.id,
+      status: campaigns.status,
+      startsAt: campaigns.startsAt,
+      endsAt: campaigns.endsAt,
+      pricePaid: campaigns.pricePaid,
+      impressions: campaigns.impressions,
+      clicks: campaigns.clicks,
+      rejectionReason: campaigns.rejectionReason,
+      slotKey: promotionSlots.key,
+      slotName: promotionSlots.name,
+      slotPricePerWeek: promotionSlots.pricePerWeek,
+      productId: campaigns.productId,
+      productTitle: products.title,
+      // Whole days left, floored at zero — "0 days" reads better than "-3".
+      daysLeft: sql<number>`greatest(0, ceil(extract(epoch from (${campaigns.endsAt} - now())) / 86400))::int`,
+    })
+    .from(campaigns)
+    .innerJoin(promotionSlots, eq(campaigns.slotId, promotionSlots.id))
+    .leftJoin(products, eq(campaigns.productId, products.id))
+    .where(eq(campaigns.shopId, shopId))
+    .orderBy(desc(campaigns.startsAt));
+}
+
+/** Spend and reach this shop has bought, for the promotions header. */
+export async function shopCampaignTotals(shopId: string) {
+  const [row] = await db
+    .select({
+      activeCount: sql<number>`count(*) filter (where ${campaigns.status} = 'active')::int`,
+      requestedCount: sql<number>`count(*) filter (where ${campaigns.status} = 'requested')::int`,
+      totalSpend: sql<number>`coalesce(sum(${campaigns.pricePaid}) filter (where ${campaigns.status} in ('active','ended')), 0)::int`,
+      impressions: sql<number>`coalesce(sum(${campaigns.impressions}), 0)::int`,
+      clicks: sql<number>`coalesce(sum(${campaigns.clicks}), 0)::int`,
+    })
+    .from(campaigns)
+    .where(eq(campaigns.shopId, shopId));
+
+  return row ?? { activeCount: 0, requestedCount: 0, totalSpend: 0, impressions: 0, clicks: 0 };
+}
+
+/**
+ * Is a slot still bookable for a window? Counts only bookings whose window
+ * OVERLAPS the requested one, so a slot that is full this week is still sellable
+ * for next month.
+ *
+ * Advisory, not a lock: two shops booking the last place in the same instant could
+ * both pass. That is acceptable here because a booking lands as `requested` and an
+ * admin decides — the oversell would be caught by a human before anything runs. A
+ * real capacity constraint belongs with real billing, in phase 2.
+ */
+export async function slotAvailability(slotId: string, from: Date, to: Date) {
+  // See slotInventory: raw fragments need ISO strings with an explicit cast.
+  const [fromIso, toIso] = [from.toISOString(), to.toISOString()];
+
+  const [row] = await db
+    .select({
+      capacity: promotionSlots.capacity,
+      pricePerWeek: promotionSlots.pricePerWeek,
+      key: promotionSlots.key,
+      overlapping: sql<number>`(
+        select count(*)::int from campaigns c
+        where c.slot_id = promotion_slots.id
+          and c.status in ('approved', 'active')
+          and c.starts_at <= ${toIso}::timestamptz and c.ends_at >= ${fromIso}::timestamptz
+      )`,
+    })
+    .from(promotionSlots)
+    .where(eq(promotionSlots.id, slotId))
+    .limit(1);
+
+  if (!row) return null;
+  return { ...row, available: Math.max(row.capacity - row.overlapping, 0) };
+}
+
+/**
+ * Offers whose window covers now, for the countdown preview. Kept separate from
+ * shopOffers so the preview cannot accidentally show an expired offer counting
+ * down to a date in the past.
+ */
+export async function shopActiveOfferCount(shopId: string, now: Date = new Date()) {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(offers)
+    .where(
+      and(
+        eq(offers.shopId, shopId),
+        eq(offers.active, true),
+        lte(offers.startsAt, now),
+        gte(offers.endsAt, now),
+      ),
+    );
+  return row?.n ?? 0;
+}
+
+/** Campaigns ending within a week, so the renew shortcut can be surfaced. */
+export async function expiringCampaigns(shopId: string, now: Date = new Date()) {
+  const weekOut = new Date(now.getTime() + 7 * 86_400_000);
+  return db
+    .select({ id: campaigns.id, endsAt: campaigns.endsAt, slotName: promotionSlots.name })
+    .from(campaigns)
+    .innerJoin(promotionSlots, eq(campaigns.slotId, promotionSlots.id))
+    .where(
+      and(
+        eq(campaigns.shopId, shopId),
+        eq(campaigns.status, 'active'),
+        gt(campaigns.endsAt, now),
+        lte(campaigns.endsAt, weekOut),
+      ),
+    );
+}
