@@ -1,0 +1,107 @@
+import { sql, type SQL } from 'drizzle-orm';
+
+/**
+ * Correlated subquery fragments, written as fully-qualified raw SQL.
+ *
+ * WHY RAW: drizzle renders an interpolated `${table.column}` UNQUALIFIED when it
+ * appears inside a `sql` template in a select list. So this —
+ *
+ *   sql`(select path from ${productImages}
+ *        where ${productImages.productId} = ${products.id} ...)`
+ *
+ * emits `where "product_id" = "id"`, and inside a subquery scoped to
+ * product_images BOTH sides resolve to product_images. The condition is then
+ * never true and the column silently returns NULL — no error, just missing
+ * images everywhere. Where another joined table also has an `id`, the same bug
+ * surfaces as "column reference is ambiguous" instead.
+ *
+ * Writing the inner query as literal SQL with explicit aliases (`pi`, `r`, `oi`)
+ * and an explicit outer qualification (`products.id`) removes both failure modes.
+ *
+ * Each fragment documents which table must be in the OUTER query's FROM clause,
+ * because that is what the outer qualification binds to.
+ */
+
+/** Outer query must select FROM products. */
+export const firstProductImagePath: SQL<string | null> = sql<string | null>`(
+  select pi.path from product_images pi
+  where pi.product_id = products.id
+  order by pi.sort asc
+  limit 1
+)`;
+
+/** Outer query must select FROM products. Visible reviews only. */
+export const productRatingAvg: SQL<number> = sql<number>`coalesce((
+  select avg(r.rating) from reviews r
+  where r.product_id = products.id and r.status = 'visible'
+), 0)`;
+
+/** Outer query must select FROM products. */
+export const productReviewCount: SQL<number> = sql<number>`(
+  select count(*) from reviews r
+  where r.product_id = products.id and r.status = 'visible'
+)`;
+
+/** Outer query must select FROM products. */
+export const productWishlistCount: SQL<number> = sql<number>`(
+  select count(*) from wishlist_items wi
+  where wi.product_id = products.id
+)`;
+
+/**
+ * Shop rating derived from that shop's product reviews (PRD §5.5) rather than
+ * stored, so it can never drift from the reviews it summarises.
+ * Outer query must select FROM shops.
+ */
+export const shopRatingAvg: SQL<number> = sql<number>`coalesce((
+  select avg(r.rating) from reviews r
+  join products p on p.id = r.product_id
+  where p.shop_id = shops.id and r.status = 'visible'
+), 0)`;
+
+/** Outer query must select FROM shops. */
+export const shopReviewCount: SQL<number> = sql<number>`(
+  select count(*) from reviews r
+  join products p on p.id = r.product_id
+  where p.shop_id = shops.id and r.status = 'visible'
+)`;
+
+/** Outer query must select FROM shops. Published products only. */
+export const shopPublishedProductCount: SQL<number> = sql<number>`(
+  select count(*) from products p
+  where p.shop_id = shops.id and p.status = 'published'
+)`;
+
+/** Outer query must select FROM shops. Counts drafts too, for the admin queue. */
+export const shopTotalProductCount: SQL<number> = sql<number>`(
+  select count(*) from products p
+  where p.shop_id = shops.id
+)`;
+
+/** Outer query must select FROM categories. Publicly visible products only. */
+export const categoryProductCount: SQL<number> = sql<number>`(
+  select count(*) from products p
+  join shops s on s.id = p.shop_id
+  where p.category_id = categories.id
+    and p.status = 'published' and s.status = 'approved'
+)`;
+
+/** Outer query must select FROM orders. */
+export const orderItemQuantity: SQL<number> = sql<number>`(
+  select coalesce(sum(oi.quantity), 0) from order_items oi
+  where oi.order_id = orders.id
+)`;
+
+/** Outer query must select FROM orders. */
+export const orderShopCount: SQL<number> = sql<number>`(
+  select count(distinct oi.shop_id) from order_items oi
+  where oi.order_id = orders.id
+)`;
+
+/** Outer query must select FROM order_items. */
+export const orderItemImagePath: SQL<string | null> = sql<string | null>`(
+  select pi.path from product_images pi
+  where pi.product_id = order_items.product_id
+  order by pi.sort asc
+  limit 1
+)`;

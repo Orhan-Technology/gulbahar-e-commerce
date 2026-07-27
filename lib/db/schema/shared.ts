@@ -78,3 +78,23 @@ export const campaignStatusEnum = pgEnum('campaign_status', [
 export const notificationChannelEnum = pgEnum('notification_channel', ['sms', 'inapp']);
 
 export const localeEnum = pgEnum('locale', ['fa', 'en', 'ps']);
+
+/* ---------------------------------------------------------------------------
+ * Union types derived from the enums, so application code and Zod schemas stay
+ * in lockstep with the database rather than re-declaring the same string lists.
+ * ------------------------------------------------------------------------- */
+
+export type UserRole = (typeof userRoleEnum.enumValues)[number];
+export type ShopStatus = (typeof shopStatusEnum.enumValues)[number];
+export type ShopMemberRole = (typeof shopMemberRoleEnum.enumValues)[number];
+export type ProductStatus = (typeof productStatusEnum.enumValues)[number];
+export type OrderStatus = (typeof orderStatusEnum.enumValues)[number];
+export type FulfillmentMethod = (typeof fulfillmentEnum.enumValues)[number];
+export type PaymentMethod = (typeof paymentMethodEnum.enumValues)[number];
+export type ReviewStatus = (typeof reviewStatusEnum.enumValues)[number];
+export type OfferType = (typeof offerTypeEnum.enumValues)[number];
+export type OfferScope = (typeof offerScopeEnum.enumValues)[number];
+export type PromotionSlotKey = (typeof promotionSlotKeyEnum.enumValues)[number];
+export type CampaignStatus = (typeof campaignStatusEnum.enumValues)[number];
+export type NotificationChannel = (typeof notificationChannelEnum.enumValues)[number];
+export type DbLocale = (typeof localeEnum.enumValues)[number];

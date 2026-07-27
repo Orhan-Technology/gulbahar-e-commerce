@@ -262,5 +262,103 @@
       "rejected": "Rejected",
       "rejectedHint": "The shop rejected this order and it was cancelled."
     }
+  },
+  "notifications": {
+    "otp": {
+      "title": "Gulbahar sign-in code",
+      "body": "Your sign-in code is {code} — valid for 5 minutes. Do not share it with anyone."
+    },
+    "order.placed": {
+      "title": "Order placed",
+      "body": "Order {reference} has been placed. Total: {total} AFN. The shop will confirm shortly."
+    },
+    "order.newForShop": {
+      "title": "New order",
+      "body": "Order {reference} with {itemCount} items worth {total} AFN has arrived. Please accept or reject it."
+    },
+    "order.accepted": {
+      "title": "Order accepted",
+      "body": "{shopName} accepted order {reference} and is preparing it."
+    },
+    "order.rejected": {
+      "title": "Order rejected",
+      "body": "Unfortunately {shopName} rejected order {reference}. Reason: {reason}"
+    },
+    "order.ready": {
+      "title": "Order ready",
+      "body": "Order {reference} is ready. {handover}"
+    },
+    "order.fulfilled": {
+      "title": "Order delivered",
+      "body": "Order {reference} has been delivered. Thank you — please leave a review."
+    },
+    "shop.submitted": {
+      "title": "New shop application",
+      "body": "\"{shopName}\" has applied to join and is awaiting review."
+    },
+    "shop.approved": {
+      "title": "Your shop is approved",
+      "body": "Congratulations! \"{shopName}\" is approved and your products are now visible in the Gulbahar storefront."
+    },
+    "shop.rejected": {
+      "title": "Shop application rejected",
+      "body": "The application for \"{shopName}\" was rejected. Reason: {reason} — you can amend and resubmit."
+    },
+    "shop.invited": {
+      "title": "Your shop is ready",
+      "body": "Gulbahar management created \"{shopName}\" for you. Sign in with {phone}."
+    },
+    "campaign.requested": {
+      "title": "New promotion request",
+      "body": "\"{shopName}\" requested the \"{slotName}\" slot for {weeks} weeks."
+    },
+    "campaign.approved": {
+      "title": "Your promotion is approved",
+      "body": "The \"{slotName}\" slot is now active for your shop and runs until {endsAt}."
+    },
+    "campaign.rejected": {
+      "title": "Promotion request rejected",
+      "body": "The request for \"{slotName}\" was rejected. Reason: {reason}"
+    },
+    "campaign.expiring": {
+      "title": "Promotion ending soon",
+      "body": "The \"{slotName}\" slot ends in {days} days. Renew to keep the placement."
+    },
+    "review.received": {
+      "title": "New review",
+      "body": "\"{productTitle}\" received a {rating} star review."
+    },
+    "review.responded": {
+      "title": "Shop replied",
+      "body": "{shopName} replied to your review of \"{productTitle}\"."
+    }
+  },
+  "auth": {
+    "title": "Sign in to Gulbahar",
+    "subtitle": "Enter your phone number and we'll send you a sign-in code.",
+    "phoneLabel": "Phone number",
+    "phoneHint": "e.g. 0700000003 — Afghan numbers start with 07.",
+    "sendCode": "Send code",
+    "sending": "Sending…",
+    "codeSent": "Code sent — find it in the notification panel.",
+    "codeLabel": "Six-digit code",
+    "codeHint": "In the demo build the code appears in the notification panel.",
+    "nameLabel": "Name (optional)",
+    "namePlaceholder": "Your name",
+    "nameHint": "Only used on first sign-in.",
+    "verify": "Verify and sign in",
+    "verifying": "Verifying…",
+    "changeNumber": "Change number",
+    "signedIn": "Welcome!",
+    "signOut": "Sign out",
+    "errors": {
+      "invalid_phone": "That phone number is not valid",
+      "invalid_code": "The code must be six digits",
+      "code_rejected": "That code is wrong or has expired",
+      "no_code": "No code was sent — please try again",
+      "expired": "That code has expired",
+      "too_many_attempts": "Too many attempts — request a new code",
+      "mismatch": "That code is incorrect"
+    }
   }
 }

@@ -1,8 +1,14 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { requireShopkeeper } from '@/lib/auth/guards';
+
 /**
  * Shopkeeper panel shell. Phase 6.1 replaces this with the mobile-first
  * bottom tab bar, desktop sidebar, and notification bell (PRD §6).
+ *
+ * Access control lives here rather than in proxy.ts: the auth config imports the
+ * database, and proxy.ts runs on the edge runtime. Guarding in the layout also
+ * covers every nested route without each page repeating the check.
  */
 export default async function DashboardLayout({
   children,
@@ -11,12 +17,14 @@ export default async function DashboardLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  // Without this, getTranslations() below reads headers and opts the whole
-  // route group out of static rendering (Next 16 is stricter than 14 here).
   const { locale } = await params;
   setRequestLocale(locale);
 
+  // Requires a shopkeeper (or admin) WITH a shop; redirects preserve the locale.
+  const user = await requireShopkeeper(locale);
+
   const t = await getTranslations('dashboard');
+  void user;
 
   return (
     <div className="min-h-screen">

@@ -1,8 +1,12 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { requireAdmin } from '@/lib/auth/guards';
+
 /**
  * Mall management shell. Phase 7.1 replaces this with the admin sidebar and
  * pending-count badges (PRD §7).
+ *
+ * Guarded here for the same reason as the dashboard — see that layout.
  */
 export default async function AdminLayout({
   children,
@@ -11,10 +15,11 @@ export default async function AdminLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
-  // Without this, getTranslations() below reads headers and opts the whole
-  // route group out of static rendering (Next 16 is stricter than 14 here).
   const { locale } = await params;
   setRequestLocale(locale);
+
+  // Admin role required; a signed-in non-admin is sent to the storefront.
+  await requireAdmin(locale);
 
   const t = await getTranslations('admin');
 

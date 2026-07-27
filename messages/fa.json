@@ -262,5 +262,103 @@
       "rejected": "رد شد",
       "rejectedHint": "دکان این سفارش را رد کرد و سفارش لغو شد."
     }
+  },
+  "notifications": {
+    "otp": {
+      "title": "کد ورود گلبهار",
+      "body": "کد ورود شما: {code} — تا ۵ دقیقه اعتبار دارد. این کد را با کسی شریک نسازید."
+    },
+    "order.placed": {
+      "title": "سفارش شما ثبت شد",
+      "body": "سفارش {reference} ثبت شد. مجموع: {total} افغانی. به زودی از طرف دکان تایید می‌شود."
+    },
+    "order.newForShop": {
+      "title": "سفارش جدید",
+      "body": "سفارش {reference} با {itemCount} قلم به ارزش {total} افغانی رسید. لطفاً تایید یا رد کنید."
+    },
+    "order.accepted": {
+      "title": "سفارش تایید شد",
+      "body": "دکان {shopName} سفارش {reference} را تایید کرد و در حال آماده‌سازی است."
+    },
+    "order.rejected": {
+      "title": "سفارش رد شد",
+      "body": "متأسفانه دکان {shopName} سفارش {reference} را رد کرد. دلیل: {reason}"
+    },
+    "order.ready": {
+      "title": "سفارش آماده است",
+      "body": "سفارش {reference} آماده است. {handover}"
+    },
+    "order.fulfilled": {
+      "title": "سفارش تحویل شد",
+      "body": "سفارش {reference} تحویل داده شد. از خرید شما سپاسگزاریم — نظر خود را ثبت کنید."
+    },
+    "shop.submitted": {
+      "title": "درخواست دکان جدید",
+      "body": "دکان «{shopName}» درخواست ثبت داده است و در انتظار بررسی است."
+    },
+    "shop.approved": {
+      "title": "دکان شما تایید شد",
+      "body": "تبریک! دکان «{shopName}» تایید شد و محصولات شما در فروشگاه گلبهار قابل دیدن است."
+    },
+    "shop.rejected": {
+      "title": "درخواست دکان رد شد",
+      "body": "درخواست «{shopName}» رد شد. دلیل: {reason} — می‌توانید اصلاح و دوباره ارسال کنید."
+    },
+    "shop.invited": {
+      "title": "دکان شما آماده است",
+      "body": "مدیریت گلبهار دکان «{shopName}» را برای شما ایجاد کرد. با شماره {phone} وارد شوید."
+    },
+    "campaign.requested": {
+      "title": "درخواست تبلیغ جدید",
+      "body": "دکان «{shopName}» جایگاه «{slotName}» را برای {weeks} هفته درخواست کرد."
+    },
+    "campaign.approved": {
+      "title": "تبلیغ شما تایید شد",
+      "body": "جایگاه «{slotName}» برای دکان شما فعال شد و تا {endsAt} ادامه دارد."
+    },
+    "campaign.rejected": {
+      "title": "درخواست تبلیغ رد شد",
+      "body": "درخواست جایگاه «{slotName}» رد شد. دلیل: {reason}"
+    },
+    "campaign.expiring": {
+      "title": "تبلیغ در حال ختم",
+      "body": "جایگاه «{slotName}» در {days} روز ختم می‌شود. برای تمدید اقدام کنید."
+    },
+    "review.received": {
+      "title": "نظر جدید",
+      "body": "برای «{productTitle}» یک نظر {rating} ستاره ثبت شد."
+    },
+    "review.responded": {
+      "title": "پاسخ دکان",
+      "body": "دکان {shopName} به نظر شما در مورد «{productTitle}» پاسخ داد."
+    }
+  },
+  "auth": {
+    "title": "ورود به گلبهار",
+    "subtitle": "شماره تلفن خود را وارد کنید. کد ورود برای شما فرستاده می‌شود.",
+    "phoneLabel": "شماره تلفن",
+    "phoneHint": "مثلاً ۰۷۰۰۰۰۰۰۰۳ — شماره‌های افغانستان با ۰۷ شروع می‌شوند.",
+    "sendCode": "ارسال کد",
+    "sending": "در حال ارسال…",
+    "codeSent": "کد ورود فرستاده شد — آن را در پنل پیام‌ها ببینید.",
+    "codeLabel": "کد شش رقمی",
+    "codeHint": "در نسخه نمایشی، کد در پنل پیام‌ها نمایش داده می‌شود.",
+    "nameLabel": "نام (اختیاری)",
+    "namePlaceholder": "نام شما",
+    "nameHint": "تنها در اولین ورود استفاده می‌شود.",
+    "verify": "تایید و ورود",
+    "verifying": "در حال تایید…",
+    "changeNumber": "تغییر شماره",
+    "signedIn": "خوش آمدید!",
+    "signOut": "خارج شدن",
+    "errors": {
+      "invalid_phone": "شماره تلفن معتبر نیست",
+      "invalid_code": "کد باید شش رقم باشد",
+      "code_rejected": "کد نادرست یا منقضی شده است",
+      "no_code": "کدی فرستاده نشده — دوباره تلاش کنید",
+      "expired": "کد منقضی شده است",
+      "too_many_attempts": "تلاش‌های زیاد — کد جدید بگیرید",
+      "mismatch": "کد نادرست است"
+    }
   }
 }

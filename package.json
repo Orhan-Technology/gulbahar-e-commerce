@@ -10,12 +10,14 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "db:push": "drizzle-kit push",
+    "db:push": "drizzle-kit push && npm run db:extensions",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed:images": "tsx scripts/seed-images.ts",
     "db:reset": "tsx scripts/db-reset.ts && npm run db:push && npm run db:seed",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "db:extensions": "tsx scripts/db-extensions.ts",
+    "check:phase3": "tsx scripts/check-phase3.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",
