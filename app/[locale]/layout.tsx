@@ -3,6 +3,7 @@ import { Inter, Vazirmatn } from 'next/font/google';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
+import { Toaster } from '@/components/ui/sonner';
 import { localeDirection, routing } from '@/lib/i18n/routing';
 import '../globals.css';
 
@@ -57,7 +58,11 @@ export default async function LocaleLayout({
       className={`${vazirmatn.variable} ${inter.variable}`}
     >
       <body>
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider messages={messages}>
+          {children}
+          {/* Toast position follows document direction — see components/ui/sonner.tsx */}
+          <Toaster />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
