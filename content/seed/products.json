@@ -1,0 +1,1659 @@
+[
+  {
+    "slug": "lg-tv-43-smart",
+    "shopSlug": "kabul-electronics",
+    "categorySlug": "home-electronics",
+    "title": {
+      "fa": "تلویزیون ال‌جی ۴۳ اینچ اسمارت",
+      "en": "LG 43-inch Smart TV"
+    },
+    "description": {
+      "fa": "تلویزیون اسمارت ال‌جی با کیفیت فول اچ‌دی، دو سال گرانتی رسمی.",
+      "en": "LG smart TV in full HD with a two-year official warranty."
+    },
+    "price": 38500,
+    "discountPrice": 34900,
+    "stock": 6,
+    "variants": [],
+    "viewCount": 940
+  },
+  {
+    "slug": "midea-fridge-260l",
+    "shopSlug": "kabul-electronics",
+    "categorySlug": "home-electronics",
+    "title": {
+      "fa": "یخچال مدیا ۲۶۰ لیتر",
+      "en": "Midea 260L Refrigerator"
+    },
+    "description": {
+      "fa": "یخچال دو دروازه با مصرف کم برق، مناسب فامیل چهار نفری.",
+      "en": "Two-door, low-consumption fridge suited to a family of four."
+    },
+    "price": 46000,
+    "discountPrice": null,
+    "stock": 4,
+    "variants": [],
+    "viewCount": 610
+  },
+  {
+    "slug": "jbl-flip-speaker",
+    "shopSlug": "kabul-electronics",
+    "categorySlug": "audio-video",
+    "title": {
+      "fa": "سپیکر بلوتوث جی‌بی‌ال فلیپ",
+      "en": "JBL Flip Bluetooth Speaker"
+    },
+    "description": {
+      "fa": "سپیکر قابل حمل ضد آب با ۱۰ ساعت بطری.",
+      "en": "Portable waterproof speaker with 10-hour battery."
+    },
+    "price": 4200,
+    "discountPrice": null,
+    "stock": 18,
+    "variants": [],
+    "viewCount": 1320
+  },
+  {
+    "slug": "anker-powerbank-20000",
+    "shopSlug": "kabul-electronics",
+    "categorySlug": "audio-video",
+    "title": {
+      "fa": "پاور بانک انکر ۲۰۰۰۰",
+      "en": "Anker 20000mAh Power Bank"
+    },
+    "description": {
+      "fa": "پاور بانک با شارژ سریع، دو پورت یو‌اس‌بی.",
+      "en": "Fast-charge power bank with two USB ports."
+    },
+    "price": 2400,
+    "discountPrice": null,
+    "stock": 35,
+    "variants": [],
+    "viewCount": 1580
+  },
+  {
+    "slug": "solar-panel-150w",
+    "shopSlug": "kabul-electronics",
+    "categorySlug": "home-electronics",
+    "title": {
+      "fa": "پنل آفتابی ۱۵۰ وات",
+      "en": "150W Solar Panel"
+    },
+    "description": {
+      "fa": "پنل آفتابی مناسب خانه، همراه با کیبل و ستند.",
+      "en": "Household solar panel supplied with cable and stand."
+    },
+    "price": 8900,
+    "discountPrice": null,
+    "stock": 9,
+    "variants": [],
+    "viewCount": 770
+  },
+  {
+    "slug": "samsung-galaxy-a54-128",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "سامسونگ گلکسی A54 ۱۲۸ گیگابایت",
+      "en": "Samsung Galaxy A54 128GB"
+    },
+    "description": {
+      "fa": "گوشی سامسونگ گلکسی A54 با حافظه ۱۲۸ گیگابایت و کمره ۵۰ میگاپیکسل.",
+      "en": "Samsung Galaxy A54 with 128GB storage and a 50MP camera."
+    },
+    "price": 24500,
+    "discountPrice": 22900,
+    "stock": 12,
+    "variants": [
+      {
+        "name": {
+          "fa": "رنگ",
+          "en": "Colour"
+        },
+        "options": [
+          {
+            "fa": "سیاه",
+            "en": "Black"
+          },
+          {
+            "fa": "سفید",
+            "en": "White"
+          },
+          {
+            "fa": "سبز",
+            "en": "Green"
+          }
+        ]
+      }
+    ],
+    "viewCount": 2450
+  },
+  {
+    "slug": "iphone-13-128",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "آیفون ۱۳ ۱۲۸ گیگابایت",
+      "en": "iPhone 13 128GB"
+    },
+    "description": {
+      "fa": "آیفون ۱۳ کارکرده در حالت بسیار خوب، بطری ۹۰ فیصد.",
+      "en": "iPhone 13 in very good condition, battery health 90%."
+    },
+    "price": 58000,
+    "discountPrice": null,
+    "stock": 3,
+    "variants": [],
+    "viewCount": 3100
+  },
+  {
+    "slug": "xiaomi-redmi-note-13",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "شیائومی ردمی نوت ۱۳",
+      "en": "Xiaomi Redmi Note 13"
+    },
+    "description": {
+      "fa": "گوشی ردمی نوت ۱۳ با بطری ۵۰۰۰ میلی‌امپر و شارژ سریع.",
+      "en": "Redmi Note 13 with a 5000mAh battery and fast charging."
+    },
+    "price": 16800,
+    "discountPrice": null,
+    "stock": 20,
+    "variants": [],
+    "viewCount": 1890
+  },
+  {
+    "slug": "samsung-tab-a9",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "تابلت سامسونگ Tab A9",
+      "en": "Samsung Tab A9 Tablet"
+    },
+    "description": {
+      "fa": "تابلت ۸.۷ اینچ مناسب درس و سرگرمی اطفال.",
+      "en": "8.7-inch tablet, good for study and children's entertainment."
+    },
+    "price": 13500,
+    "discountPrice": null,
+    "stock": 8,
+    "variants": [],
+    "viewCount": 620
+  },
+  {
+    "slug": "airpods-pro-2",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "ایرپاد پرو ۲",
+      "en": "AirPods Pro 2"
+    },
+    "description": {
+      "fa": "ایرفون بی‌سیم با قطع صدای محیط.",
+      "en": "Wireless earbuds with active noise cancellation."
+    },
+    "price": 9800,
+    "discountPrice": null,
+    "stock": 14,
+    "variants": [],
+    "viewCount": 1450
+  },
+  {
+    "slug": "nokia-105-classic",
+    "shopSlug": "markaz-mobile",
+    "categorySlug": "mobiles-tablets",
+    "title": {
+      "fa": "نوکیا ۱۰۵ ساده",
+      "en": "Nokia 105 Classic"
+    },
+    "description": {
+      "fa": "موبایل ساده با بطری قوی، مناسب استعمال روزمره.",
+      "en": "Simple handset with long battery life for everyday use."
+    },
+    "price": 1200,
+    "discountPrice": null,
+    "stock": 40,
+    "variants": [],
+    "viewCount": 980
+  },
+  {
+    "slug": "maybelline-fit-me-foundation",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "کریم پودر میبلین فیت می",
+      "en": "Maybelline Fit Me Foundation"
+    },
+    "description": {
+      "fa": "کریم پودر با پوشش طبیعی، مناسب پوست معمولی و چرب.",
+      "en": "Natural-coverage foundation for normal to oily skin."
+    },
+    "price": 1450,
+    "discountPrice": null,
+    "stock": 26,
+    "variants": [
+      {
+        "name": {
+          "fa": "شماره رنگ",
+          "en": "Shade"
+        },
+        "options": [
+          {
+            "fa": "۱۱۰",
+            "en": "110"
+          },
+          {
+            "fa": "۱۲۰",
+            "en": "120"
+          },
+          {
+            "fa": "۲۲۰",
+            "en": "220"
+          },
+          {
+            "fa": "۳۳۰",
+            "en": "330"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1120
+  },
+  {
+    "slug": "loreal-mascara-volume",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "مسکارا لورآل ولیوم",
+      "en": "L'Oréal Volume Mascara"
+    },
+    "description": {
+      "fa": "مسکارا برای حجم دادن به مژه‌ها، ضد آب.",
+      "en": "Volumising, water-resistant mascara."
+    },
+    "price": 980,
+    "discountPrice": null,
+    "stock": 34,
+    "variants": [],
+    "viewCount": 890
+  },
+  {
+    "slug": "nivea-cream-blue-tin",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "کریم نیویا قوطی آبی",
+      "en": "Nivea Creme Blue Tin"
+    },
+    "description": {
+      "fa": "کریم مرطوب‌کننده برای دست و روی، مناسب هوای خشک کابل.",
+      "en": "Moisturising cream for hands and face, made for Kabul's dry air."
+    },
+    "price": 380,
+    "discountPrice": null,
+    "stock": 60,
+    "variants": [],
+    "viewCount": 1340
+  },
+  {
+    "slug": "essence-lipstick-matte",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "لپ‌ستیک مات اسنس",
+      "en": "Essence Matte Lipstick"
+    },
+    "description": {
+      "fa": "لپ‌ستیک مات با دوام طولانی در هشت رنگ.",
+      "en": "Long-wear matte lipstick in eight shades."
+    },
+    "price": 420,
+    "discountPrice": null,
+    "stock": 48,
+    "variants": [
+      {
+        "name": {
+          "fa": "رنگ",
+          "en": "Shade"
+        },
+        "options": [
+          {
+            "fa": "سرخ کلاسیک",
+            "en": "Classic red"
+          },
+          {
+            "fa": "صورتی",
+            "en": "Pink"
+          },
+          {
+            "fa": "قهوه‌ای",
+            "en": "Nude brown"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1520
+  },
+  {
+    "slug": "garnier-micellar-water",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "آب پاک‌کننده گارنیر",
+      "en": "Garnier Micellar Water"
+    },
+    "description": {
+      "fa": "پاک‌کننده آرایش بدون الکول، ۴۰۰ میلی‌لیتر.",
+      "en": "Alcohol-free micellar makeup remover, 400ml."
+    },
+    "price": 650,
+    "discountPrice": null,
+    "stock": 30,
+    "variants": [],
+    "viewCount": 760
+  },
+  {
+    "slug": "hair-oil-argan-100",
+    "shopSlug": "bahar-cosmetics",
+    "categorySlug": "cosmetics",
+    "title": {
+      "fa": "روغن آرگان مو ۱۰۰ میلی",
+      "en": "Argan Hair Oil 100ml"
+    },
+    "description": {
+      "fa": "روغن آرگان خالص برای تقویت و درخشش مو.",
+      "en": "Pure argan oil to strengthen and add shine to hair."
+    },
+    "price": 720,
+    "discountPrice": null,
+    "stock": 25,
+    "variants": [],
+    "viewCount": 540
+  },
+  {
+    "slug": "oud-royal-100ml",
+    "shopSlug": "golden-perfumes",
+    "categorySlug": "perfume",
+    "title": {
+      "fa": "عطر عود رویال ۱۰۰ میلی",
+      "en": "Oud Royal 100ml"
+    },
+    "description": {
+      "fa": "عطر شرقی با رایحه عود و عنبر، دوام بالا برای محفل شام.",
+      "en": "Oriental fragrance with oud and amber; long-lasting for evening wear."
+    },
+    "price": 3200,
+    "discountPrice": 2400,
+    "stock": 15,
+    "variants": [],
+    "viewCount": 1680
+  },
+  {
+    "slug": "amber-musk-50ml",
+    "shopSlug": "golden-perfumes",
+    "categorySlug": "perfume",
+    "title": {
+      "fa": "عطر عنبر و مشک ۵۰ میلی",
+      "en": "Amber & Musk 50ml"
+    },
+    "description": {
+      "fa": "ترکیب گرم عنبر و مشک سفید، مناسب هر فصل.",
+      "en": "A warm blend of amber and white musk, suitable year round."
+    },
+    "price": 1850,
+    "discountPrice": null,
+    "stock": 22,
+    "variants": [],
+    "viewCount": 720
+  },
+  {
+    "slug": "rose-taif-attar-12ml",
+    "shopSlug": "golden-perfumes",
+    "categorySlug": "perfume",
+    "title": {
+      "fa": "عطر گل سرخ طائف ۱۲ میلی",
+      "en": "Taif Rose Attar 12ml"
+    },
+    "description": {
+      "fa": "عطر روغنی گل سرخ طائف بدون الکول، در شیشه دستی.",
+      "en": "Alcohol-free Taif rose oil attar in a hand-blown bottle."
+    },
+    "price": 2600,
+    "discountPrice": null,
+    "stock": 10,
+    "variants": [],
+    "viewCount": 910
+  },
+  {
+    "slug": "bakhoor-incense-set",
+    "shopSlug": "golden-perfumes",
+    "categorySlug": "perfume",
+    "title": {
+      "fa": "ست بخور و عودسوز",
+      "en": "Bakhoor & Incense Burner Set"
+    },
+    "description": {
+      "fa": "ست بخور با عودسوز سرامیکی، مناسب تحفه.",
+      "en": "Bakhoor set with a ceramic burner — makes a good gift."
+    },
+    "price": 1400,
+    "discountPrice": null,
+    "stock": 18,
+    "variants": [],
+    "viewCount": 640
+  },
+  {
+    "slug": "citrus-fresh-men-100",
+    "shopSlug": "golden-perfumes",
+    "categorySlug": "perfume",
+    "title": {
+      "fa": "عطر مردانه سیتروس ۱۰۰ میلی",
+      "en": "Citrus Fresh for Men 100ml"
+    },
+    "description": {
+      "fa": "رایحه تازه مرکبات، مناسب استعمال روزانه و دفتر.",
+      "en": "Fresh citrus scent for daily and office wear."
+    },
+    "price": 1650,
+    "discountPrice": null,
+    "stock": 28,
+    "variants": [],
+    "viewCount": 1050
+  },
+  {
+    "slug": "casio-edifice-steel",
+    "shopSlug": "noor-watches",
+    "categorySlug": "watches",
+    "title": {
+      "fa": "ساعت کاسیو ادیفایس استیل",
+      "en": "Casio Edifice Steel Watch"
+    },
+    "description": {
+      "fa": "ساعت مردانه کاسیو با بند استیل و کرونوگراف.",
+      "en": "Men's Casio watch with a steel bracelet and chronograph."
+    },
+    "price": 7800,
+    "discountPrice": null,
+    "stock": 9,
+    "variants": [],
+    "viewCount": 1240
+  },
+  {
+    "slug": "casio-classic-leather",
+    "shopSlug": "noor-watches",
+    "categorySlug": "watches",
+    "title": {
+      "fa": "ساعت کاسیو کلاسیک چرمی",
+      "en": "Casio Classic Leather Watch"
+    },
+    "description": {
+      "fa": "ساعت کلاسیک با بند چرم طبیعی، مناسب دفتر.",
+      "en": "Classic watch with a genuine leather strap for office wear."
+    },
+    "price": 3400,
+    "discountPrice": null,
+    "stock": 16,
+    "variants": [],
+    "viewCount": 880
+  },
+  {
+    "slug": "seiko-automatic-5",
+    "shopSlug": "noor-watches",
+    "categorySlug": "watches",
+    "title": {
+      "fa": "ساعت سیکو اتوماتیک ۵",
+      "en": "Seiko 5 Automatic Watch"
+    },
+    "description": {
+      "fa": "ساعت اتوماتیک سیکو بدون بطری، شیشه معدنی.",
+      "en": "Seiko automatic watch — no battery, mineral glass."
+    },
+    "price": 18500,
+    "discountPrice": null,
+    "stock": 4,
+    "variants": [],
+    "viewCount": 1490
+  },
+  {
+    "slug": "womens-gold-tone-watch",
+    "shopSlug": "noor-watches",
+    "categorySlug": "watches",
+    "title": {
+      "fa": "ساعت زنانه طلایی",
+      "en": "Women's Gold-Tone Watch"
+    },
+    "description": {
+      "fa": "ساعت زنانه با بند باریک و صفحه مینیاتوری.",
+      "en": "Women's watch with a slim bracelet and small dial."
+    },
+    "price": 2900,
+    "discountPrice": null,
+    "stock": 20,
+    "variants": [],
+    "viewCount": 1130
+  },
+  {
+    "slug": "digital-sport-watch",
+    "shopSlug": "noor-watches",
+    "categorySlug": "watches",
+    "title": {
+      "fa": "ساعت دیجیتال ورزشی",
+      "en": "Digital Sport Watch"
+    },
+    "description": {
+      "fa": "ساعت دیجیتال ضد آب با کرونومتر و الارم.",
+      "en": "Waterproof digital watch with stopwatch and alarm."
+    },
+    "price": 1250,
+    "discountPrice": null,
+    "stock": 30,
+    "variants": [],
+    "viewCount": 690
+  },
+  {
+    "slug": "mens-perahan-tunban-cotton",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "menswear",
+    "title": {
+      "fa": "پیراهن و تنبان نخی مردانه",
+      "en": "Men's Cotton Perahan Tunban"
+    },
+    "description": {
+      "fa": "پیراهن و تنبان نخی دوخت وطنی، مناسب هر فصل.",
+      "en": "Locally tailored cotton perahan tunban, suitable year round."
+    },
+    "price": 1850,
+    "discountPrice": null,
+    "stock": 24,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      },
+      {
+        "name": {
+          "fa": "رنگ",
+          "en": "Colour"
+        },
+        "options": [
+          {
+            "fa": "کریمی",
+            "en": "Cream"
+          },
+          {
+            "fa": "خاکی",
+            "en": "Khaki"
+          },
+          {
+            "fa": "سفید",
+            "en": "White"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1320
+  },
+  {
+    "slug": "mens-wool-blazer",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "menswear",
+    "title": {
+      "fa": "کوت پشمی مردانه",
+      "en": "Men's Wool Blazer"
+    },
+    "description": {
+      "fa": "کوت پشمی دوخت ترکی، مناسب زمستان کابل.",
+      "en": "Turkish-tailored wool blazer for Kabul winters."
+    },
+    "price": 4600,
+    "discountPrice": null,
+    "stock": 11,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      }
+    ],
+    "viewCount": 840
+  },
+  {
+    "slug": "womens-embroidered-dress",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "womenswear",
+    "title": {
+      "fa": "پیراهن گلدوزی زنانه",
+      "en": "Women's Embroidered Dress"
+    },
+    "description": {
+      "fa": "پیراهن با گلدوزی دستی، مناسب محفل و عروسی.",
+      "en": "Dress with hand embroidery for celebrations and weddings."
+    },
+    "price": 5400,
+    "discountPrice": null,
+    "stock": 8,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1570
+  },
+  {
+    "slug": "womens-wool-shawl",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "womenswear",
+    "title": {
+      "fa": "شال پشمی زنانه",
+      "en": "Women's Wool Shawl"
+    },
+    "description": {
+      "fa": "شال پشمی گرم با نقش سنتی، بافت هرات.",
+      "en": "Warm wool shawl with a traditional Herat pattern."
+    },
+    "price": 1650,
+    "discountPrice": null,
+    "stock": 32,
+    "variants": [],
+    "viewCount": 1080
+  },
+  {
+    "slug": "mens-cotton-shirt-formal",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "menswear",
+    "title": {
+      "fa": "پیراهن رسمی نخی مردانه",
+      "en": "Men's Formal Cotton Shirt"
+    },
+    "description": {
+      "fa": "پیراهن رسمی نخی، آستین دراز، مناسب دفتر.",
+      "en": "Long-sleeve formal cotton shirt for the office."
+    },
+    "price": 1250,
+    "discountPrice": null,
+    "stock": 40,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      },
+      {
+        "name": {
+          "fa": "رنگ",
+          "en": "Colour"
+        },
+        "options": [
+          {
+            "fa": "سیاه",
+            "en": "Black"
+          },
+          {
+            "fa": "سفید",
+            "en": "White"
+          },
+          {
+            "fa": "سرمه‌ای",
+            "en": "Navy"
+          }
+        ]
+      }
+    ],
+    "viewCount": 930
+  },
+  {
+    "slug": "womens-winter-coat",
+    "shopSlug": "ariana-clothing",
+    "categorySlug": "womenswear",
+    "title": {
+      "fa": "پالتوی زمستانی زنانه",
+      "en": "Women's Winter Coat"
+    },
+    "description": {
+      "fa": "پالتوی گرم با آستر پشمی و جیب‌های عمیق.",
+      "en": "Warm coat with wool lining and deep pockets."
+    },
+    "price": 6200,
+    "discountPrice": null,
+    "stock": 7,
+    "variants": [],
+    "viewCount": 760
+  },
+  {
+    "slug": "mens-leather-oxford",
+    "shopSlug": "pamir-shoes",
+    "categorySlug": "shoes",
+    "title": {
+      "fa": "بوت چرمی رسمی مردانه",
+      "en": "Men's Leather Oxford Shoes"
+    },
+    "description": {
+      "fa": "بوت چرم طبیعی با تلی چسپی، دوخت دستی.",
+      "en": "Genuine leather Oxfords with a glued sole, hand-stitched."
+    },
+    "price": 3800,
+    "discountPrice": null,
+    "stock": 14,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "۴۰",
+            "en": "40"
+          },
+          {
+            "fa": "۴۱",
+            "en": "41"
+          },
+          {
+            "fa": "۴۲",
+            "en": "42"
+          },
+          {
+            "fa": "۴۳",
+            "en": "43"
+          },
+          {
+            "fa": "۴۴",
+            "en": "44"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1210
+  },
+  {
+    "slug": "nike-air-running",
+    "shopSlug": "pamir-shoes",
+    "categorySlug": "shoes",
+    "title": {
+      "fa": "کتان دویدن نایک ایر",
+      "en": "Nike Air Running Shoes"
+    },
+    "description": {
+      "fa": "کتان سبک برای دویدن و جمنازیم.",
+      "en": "Lightweight trainers for running and the gym."
+    },
+    "price": 5200,
+    "discountPrice": 4400,
+    "stock": 10,
+    "variants": [],
+    "viewCount": 1980
+  },
+  {
+    "slug": "school-shoes-black",
+    "shopSlug": "pamir-shoes",
+    "categorySlug": "shoes",
+    "title": {
+      "fa": "بوت مکتب سیاه",
+      "en": "Black School Shoes"
+    },
+    "description": {
+      "fa": "بوت مکتب مقاوم برای اطفال، سایز ۳۰ تا ۳۸.",
+      "en": "Durable school shoes for children, sizes 30–38."
+    },
+    "price": 980,
+    "discountPrice": null,
+    "stock": 55,
+    "variants": [],
+    "viewCount": 1650
+  },
+  {
+    "slug": "womens-flat-sandals",
+    "shopSlug": "pamir-shoes",
+    "categorySlug": "shoes",
+    "title": {
+      "fa": "صندل تخت زنانه",
+      "en": "Women's Flat Sandals"
+    },
+    "description": {
+      "fa": "صندل راحت برای تابستان، تلی نرم.",
+      "en": "Comfortable summer sandals with a soft sole."
+    },
+    "price": 850,
+    "discountPrice": null,
+    "stock": 38,
+    "variants": [],
+    "viewCount": 740
+  },
+  {
+    "slug": "winter-boots-lined",
+    "shopSlug": "pamir-shoes",
+    "categorySlug": "shoes",
+    "title": {
+      "fa": "بوت زمستانی آستردار",
+      "en": "Lined Winter Boots"
+    },
+    "description": {
+      "fa": "بوت زمستانی با آستر خزدار و تلی ضد لغزش.",
+      "en": "Winter boots with fleece lining and a non-slip sole."
+    },
+    "price": 2900,
+    "discountPrice": null,
+    "stock": 20,
+    "variants": [],
+    "viewCount": 1090
+  },
+  {
+    "slug": "moulinex-blender",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "بلندر مولینکس",
+      "en": "Moulinex Blender"
+    },
+    "description": {
+      "fa": "بلندر ۶۰۰ وات با جار شیشه‌ای، مناسب آشپزخانه فامیلی.",
+      "en": "600W blender with a glass jar for family kitchens."
+    },
+    "price": 3400,
+    "discountPrice": null,
+    "stock": 16,
+    "variants": [],
+    "viewCount": 920
+  },
+  {
+    "slug": "pressure-cooker-7l",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "دیگ بخار ۷ لیتر",
+      "en": "7L Pressure Cooker"
+    },
+    "description": {
+      "fa": "دیگ بخار المونیمی با والف امنیتی، مناسب قابلی و شوربا.",
+      "en": "Aluminium pressure cooker with a safety valve — for qabuli and shorwa."
+    },
+    "price": 2200,
+    "discountPrice": 1850,
+    "stock": 24,
+    "variants": [],
+    "viewCount": 1380
+  },
+  {
+    "slug": "electric-kettle-1-7",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "کتری برقی ۱.۷ لیتر",
+      "en": "1.7L Electric Kettle"
+    },
+    "description": {
+      "fa": "کتری برقی با خاموشی خودکار.",
+      "en": "Electric kettle with automatic shut-off."
+    },
+    "price": 1100,
+    "discountPrice": null,
+    "stock": 42,
+    "variants": [],
+    "viewCount": 860
+  },
+  {
+    "slug": "tea-set-porcelain-12",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "ست چای‌خوری چینی ۱۲ پارچه",
+      "en": "12-Piece Porcelain Tea Set"
+    },
+    "description": {
+      "fa": "ست چای‌خوری چینی با نقش گل، مناسب مهمانی.",
+      "en": "Floral porcelain tea set for guests."
+    },
+    "price": 1650,
+    "discountPrice": null,
+    "stock": 28,
+    "variants": [],
+    "viewCount": 1240
+  },
+  {
+    "slug": "non-stick-pan-28",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "تاوه نچسپ ۲۸ سانتی",
+      "en": "28cm Non-Stick Pan"
+    },
+    "description": {
+      "fa": "تاوه نچسپ با دسته حرارت‌بند.",
+      "en": "Non-stick pan with a heat-resistant handle."
+    },
+    "price": 890,
+    "discountPrice": null,
+    "stock": 45,
+    "variants": [],
+    "viewCount": 680
+  },
+  {
+    "slug": "thermos-flask-2l",
+    "shopSlug": "salam-home",
+    "categorySlug": "kitchen-appliances",
+    "title": {
+      "fa": "فلاسک چای ۲ لیتر",
+      "en": "2L Tea Thermos"
+    },
+    "description": {
+      "fa": "فلاسک استیل که چای را ۱۲ ساعت گرم نگه می‌دارد.",
+      "en": "Steel thermos that keeps tea hot for 12 hours."
+    },
+    "price": 1300,
+    "discountPrice": null,
+    "stock": 33,
+    "variants": [],
+    "viewCount": 1010
+  },
+  {
+    "slug": "lego-classic-bricks",
+    "shopSlug": "kudak-toys",
+    "categorySlug": "toys",
+    "title": {
+      "fa": "بلاک‌های ساختمانی کلاسیک",
+      "en": "Classic Building Bricks"
+    },
+    "description": {
+      "fa": "بلاک‌های رنگی ۲۰۰ پارچه برای سن ۴ سال بالا.",
+      "en": "200 colourful bricks for ages 4 and up."
+    },
+    "price": 1450,
+    "discountPrice": null,
+    "stock": 26,
+    "variants": [],
+    "viewCount": 1120
+  },
+  {
+    "slug": "remote-control-car",
+    "shopSlug": "kudak-toys",
+    "categorySlug": "toys",
+    "title": {
+      "fa": "موتر ریموت‌دار",
+      "en": "Remote Control Car"
+    },
+    "description": {
+      "fa": "موتر ریموت‌دار شارژی با بطری قابل تبدیل.",
+      "en": "Rechargeable remote-control car with a replaceable battery."
+    },
+    "price": 1850,
+    "discountPrice": 1490,
+    "stock": 18,
+    "variants": [],
+    "viewCount": 1740
+  },
+  {
+    "slug": "wooden-puzzle-alphabet",
+    "shopSlug": "kudak-toys",
+    "categorySlug": "toys",
+    "title": {
+      "fa": "پازل چوبی الفبا",
+      "en": "Wooden Alphabet Puzzle"
+    },
+    "description": {
+      "fa": "پازل چوبی الفبای دری برای آموزش اطفال.",
+      "en": "Wooden Dari alphabet puzzle for early learning."
+    },
+    "price": 620,
+    "discountPrice": null,
+    "stock": 34,
+    "variants": [],
+    "viewCount": 890
+  },
+  {
+    "slug": "doll-with-clothes",
+    "shopSlug": "kudak-toys",
+    "categorySlug": "toys",
+    "title": {
+      "fa": "گدی با لباس‌های تبدیلی",
+      "en": "Doll with Changeable Clothes"
+    },
+    "description": {
+      "fa": "گدی با سه دست لباس و لوازم.",
+      "en": "Doll with three outfits and accessories."
+    },
+    "price": 980,
+    "discountPrice": null,
+    "stock": 22,
+    "variants": [],
+    "viewCount": 1050
+  },
+  {
+    "slug": "football-size-5",
+    "shopSlug": "kudak-toys",
+    "categorySlug": "toys",
+    "title": {
+      "fa": "توپ فوتبال سایز ۵",
+      "en": "Size 5 Football"
+    },
+    "description": {
+      "fa": "توپ فوتبال دوخت ماشینی، مناسب میدان خاکی و سمنتی.",
+      "en": "Machine-stitched football for dirt and concrete pitches."
+    },
+    "price": 750,
+    "discountPrice": null,
+    "stock": 48,
+    "variants": [],
+    "viewCount": 1320
+  },
+  {
+    "slug": "notebook-a4-200",
+    "shopSlug": "danesh-stationery",
+    "categorySlug": "stationery",
+    "title": {
+      "fa": "کتابچه A4 دو صد برگ",
+      "en": "A4 Notebook 200 Pages"
+    },
+    "description": {
+      "fa": "کتابچه خط‌دار با جلد سخت، مناسب مکتب و پوهنتون.",
+      "en": "Hardcover ruled notebook for school and university."
+    },
+    "price": 180,
+    "discountPrice": null,
+    "stock": 120,
+    "variants": [],
+    "viewCount": 1450
+  },
+  {
+    "slug": "pen-set-blue-10",
+    "shopSlug": "danesh-stationery",
+    "categorySlug": "stationery",
+    "title": {
+      "fa": "ست قلم آبی ۱۰ عدد",
+      "en": "Blue Pen Set of 10"
+    },
+    "description": {
+      "fa": "قلم خودکار آبی با نوشتار روان.",
+      "en": "Smooth-writing blue ballpoint pens."
+    },
+    "price": 150,
+    "discountPrice": null,
+    "stock": 200,
+    "variants": [],
+    "viewCount": 980
+  },
+  {
+    "slug": "backpack-school-navy",
+    "shopSlug": "danesh-stationery",
+    "categorySlug": "stationery",
+    "title": {
+      "fa": "بکس مکتب سرمه‌ای",
+      "en": "Navy School Backpack"
+    },
+    "description": {
+      "fa": "بکس مکتب با سه جیب و بند شانه پدینگ‌دار.",
+      "en": "School backpack with three pockets and padded straps."
+    },
+    "price": 1250,
+    "discountPrice": 990,
+    "stock": 30,
+    "variants": [],
+    "viewCount": 1680
+  },
+  {
+    "slug": "colour-pencils-24",
+    "shopSlug": "danesh-stationery",
+    "categorySlug": "stationery",
+    "title": {
+      "fa": "رنگ پنسل ۲۴ رنگ",
+      "en": "24 Colour Pencils"
+    },
+    "description": {
+      "fa": "رنگ پنسل چوبی با رنگ‌های روشن، برای رسامی.",
+      "en": "Wooden colour pencils in bright shades for drawing."
+    },
+    "price": 320,
+    "discountPrice": null,
+    "stock": 70,
+    "variants": [],
+    "viewCount": 760
+  },
+  {
+    "slug": "calculator-scientific",
+    "shopSlug": "danesh-stationery",
+    "categorySlug": "stationery",
+    "title": {
+      "fa": "ماشین حساب ساینتفیک",
+      "en": "Scientific Calculator"
+    },
+    "description": {
+      "fa": "ماشین حساب ساینتفیک ۲۴۰ فنکشن، مناسب صنف ۱۰ تا ۱۲.",
+      "en": "240-function scientific calculator for grades 10–12."
+    },
+    "price": 680,
+    "discountPrice": null,
+    "stock": 40,
+    "variants": [],
+    "viewCount": 1190
+  },
+  {
+    "slug": "gold-ring-21k-simple",
+    "shopSlug": "herat-jewellery",
+    "categorySlug": "jewellery",
+    "title": {
+      "fa": "انگشتر طلای ۲۱ عیار ساده",
+      "en": "21K Gold Ring, Plain"
+    },
+    "description": {
+      "fa": "انگشتر طلای ۲۱ عیار با وزن ۳ گرام، عیار تضمینی.",
+      "en": "21K gold ring weighing 3g with guaranteed purity."
+    },
+    "price": 28000,
+    "discountPrice": null,
+    "stock": 5,
+    "variants": [],
+    "viewCount": 1560
+  },
+  {
+    "slug": "silver-necklace-lapis",
+    "shopSlug": "herat-jewellery",
+    "categorySlug": "jewellery",
+    "title": {
+      "fa": "گردن‌بند نقره با لاجورد",
+      "en": "Silver Necklace with Lapis"
+    },
+    "description": {
+      "fa": "گردن‌بند نقره با سنگ لاجورد بدخشان.",
+      "en": "Silver necklace set with Badakhshan lapis lazuli."
+    },
+    "price": 4200,
+    "discountPrice": 3600,
+    "stock": 12,
+    "variants": [],
+    "viewCount": 1980
+  },
+  {
+    "slug": "gold-earrings-pair",
+    "shopSlug": "herat-jewellery",
+    "categorySlug": "jewellery",
+    "title": {
+      "fa": "گوشواره طلایی جوره",
+      "en": "Gold Earrings, Pair"
+    },
+    "description": {
+      "fa": "گوشواره طلای ۲۱ عیار با نقش سنتی هراتی.",
+      "en": "21K gold earrings with a traditional Herat pattern."
+    },
+    "price": 19500,
+    "discountPrice": null,
+    "stock": 6,
+    "variants": [],
+    "viewCount": 1240
+  },
+  {
+    "slug": "silver-bracelet-engraved",
+    "shopSlug": "herat-jewellery",
+    "categorySlug": "jewellery",
+    "title": {
+      "fa": "دست‌بند نقره حکاکی‌شده",
+      "en": "Engraved Silver Bracelet"
+    },
+    "description": {
+      "fa": "دست‌بند نقره با حکاکی دستی.",
+      "en": "Silver bracelet with hand engraving."
+    },
+    "price": 2800,
+    "discountPrice": null,
+    "stock": 15,
+    "variants": [],
+    "viewCount": 890
+  },
+  {
+    "slug": "emerald-ring-silver",
+    "shopSlug": "herat-jewellery",
+    "categorySlug": "jewellery",
+    "title": {
+      "fa": "انگشتر زمرد با نقره",
+      "en": "Emerald Ring in Silver"
+    },
+    "description": {
+      "fa": "انگشتر با سنگ زمرد پنجشیر در قالب نقره.",
+      "en": "Ring with a Panjshir emerald in a silver setting."
+    },
+    "price": 8600,
+    "discountPrice": null,
+    "stock": 4,
+    "variants": [],
+    "viewCount": 1420
+  },
+  {
+    "slug": "womens-handbag-leather",
+    "shopSlug": "zarin-bags",
+    "categorySlug": "bags",
+    "title": {
+      "fa": "کیف دستی چرمی زنانه",
+      "en": "Women's Leather Handbag"
+    },
+    "description": {
+      "fa": "کیف دستی چرم مصنوعی با بند شانه قابل تبدیل.",
+      "en": "Faux-leather handbag with a detachable shoulder strap."
+    },
+    "price": 1850,
+    "discountPrice": null,
+    "stock": 22,
+    "variants": [
+      {
+        "name": {
+          "fa": "رنگ",
+          "en": "Colour"
+        },
+        "options": [
+          {
+            "fa": "سیاه",
+            "en": "Black"
+          },
+          {
+            "fa": "قهوه‌ای",
+            "en": "Brown"
+          },
+          {
+            "fa": "شرابی",
+            "en": "Burgundy"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1340
+  },
+  {
+    "slug": "travel-suitcase-24",
+    "shopSlug": "zarin-bags",
+    "categorySlug": "bags",
+    "title": {
+      "fa": "چمدان سفری ۲۴ اینچ",
+      "en": "24-inch Travel Suitcase"
+    },
+    "description": {
+      "fa": "چمدان چرخ‌دار با قفل رمزی و بدنه مقاوم.",
+      "en": "Wheeled suitcase with a combination lock and hard shell."
+    },
+    "price": 3900,
+    "discountPrice": null,
+    "stock": 14,
+    "variants": [],
+    "viewCount": 1120
+  },
+  {
+    "slug": "laptop-bag-15",
+    "shopSlug": "zarin-bags",
+    "categorySlug": "bags",
+    "title": {
+      "fa": "بکس لپ‌تاپ ۱۵ اینچ",
+      "en": "15-inch Laptop Bag"
+    },
+    "description": {
+      "fa": "بکس لپ‌تاپ با جیب پدینگ‌دار و جای شارژر.",
+      "en": "Laptop bag with a padded compartment and charger pocket."
+    },
+    "price": 1450,
+    "discountPrice": null,
+    "stock": 26,
+    "variants": [],
+    "viewCount": 980
+  },
+  {
+    "slug": "crossbody-small-bag",
+    "shopSlug": "zarin-bags",
+    "categorySlug": "bags",
+    "title": {
+      "fa": "کیف کوچک دوشی",
+      "en": "Small Crossbody Bag"
+    },
+    "description": {
+      "fa": "کیف کوچک برای موبایل و پول، مناسب بازار.",
+      "en": "Small bag for phone and cash — handy for the bazaar."
+    },
+    "price": 650,
+    "discountPrice": null,
+    "stock": 40,
+    "variants": [],
+    "viewCount": 760
+  },
+  {
+    "slug": "duffel-gym-bag",
+    "shopSlug": "zarin-bags",
+    "categorySlug": "bags",
+    "title": {
+      "fa": "بکس ورزشی داف‌بگ",
+      "en": "Gym Duffel Bag"
+    },
+    "description": {
+      "fa": "بکس ورزشی با جیب جداگانه برای بوت.",
+      "en": "Gym bag with a separate shoe compartment."
+    },
+    "price": 1250,
+    "discountPrice": null,
+    "stock": 30,
+    "variants": [],
+    "viewCount": 640
+  },
+  {
+    "slug": "tracksuit-mens-navy",
+    "shopSlug": "alborz-sports",
+    "categorySlug": "sportswear",
+    "title": {
+      "fa": "ترنگ ورزشی مردانه",
+      "en": "Men's Tracksuit"
+    },
+    "description": {
+      "fa": "ترنگ ورزشی دو پارچه، جنس نرم و گرم.",
+      "en": "Two-piece tracksuit in a soft, warm fabric."
+    },
+    "price": 2400,
+    "discountPrice": null,
+    "stock": 20,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1180
+  },
+  {
+    "slug": "cricket-bat-kashmir",
+    "shopSlug": "alborz-sports",
+    "categorySlug": "sportswear",
+    "title": {
+      "fa": "بت کرکت کشمیری",
+      "en": "Kashmir Willow Cricket Bat"
+    },
+    "description": {
+      "fa": "بت کرکت از چوب کشمیری با گریپ اضافی.",
+      "en": "Kashmir willow cricket bat supplied with a spare grip."
+    },
+    "price": 3200,
+    "discountPrice": 2750,
+    "stock": 12,
+    "variants": [],
+    "viewCount": 2140
+  },
+  {
+    "slug": "football-jersey-team",
+    "shopSlug": "alborz-sports",
+    "categorySlug": "sportswear",
+    "title": {
+      "fa": "جرسی فوتبال تیمی",
+      "en": "Team Football Jersey"
+    },
+    "description": {
+      "fa": "جرسی فوتبال با جنس خنک، مناسب تمرین و مسابقه.",
+      "en": "Breathable football jersey for training and matches."
+    },
+    "price": 950,
+    "discountPrice": null,
+    "stock": 45,
+    "variants": [
+      {
+        "name": {
+          "fa": "سایز",
+          "en": "Size"
+        },
+        "options": [
+          {
+            "fa": "سمال",
+            "en": "S"
+          },
+          {
+            "fa": "میدیم",
+            "en": "M"
+          },
+          {
+            "fa": "لارج",
+            "en": "L"
+          },
+          {
+            "fa": "ایکس‌لارج",
+            "en": "XL"
+          }
+        ]
+      }
+    ],
+    "viewCount": 1620
+  },
+  {
+    "slug": "dumbbell-set-10kg",
+    "shopSlug": "alborz-sports",
+    "categorySlug": "sportswear",
+    "title": {
+      "fa": "ست دمبل ۱۰ کیلو",
+      "en": "10kg Dumbbell Set"
+    },
+    "description": {
+      "fa": "ست دمبل با وزنه‌های قابل تبدیل.",
+      "en": "Dumbbell set with adjustable plates."
+    },
+    "price": 2800,
+    "discountPrice": null,
+    "stock": 10,
+    "variants": [],
+    "viewCount": 890
+  },
+  {
+    "slug": "yoga-mat-6mm",
+    "shopSlug": "alborz-sports",
+    "categorySlug": "sportswear",
+    "title": {
+      "fa": "متریس یوگا ۶ ملی‌متر",
+      "en": "6mm Yoga Mat"
+    },
+    "description": {
+      "fa": "متریس یوگا ضد لغزش با بند حمل.",
+      "en": "Non-slip yoga mat with a carry strap."
+    },
+    "price": 780,
+    "discountPrice": null,
+    "stock": 26,
+    "variants": [],
+    "viewCount": 540
+  },
+  {
+    "slug": "pistachio-roasted-1kg",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "پسته بریان یک کیلو",
+      "en": "Roasted Pistachios 1kg"
+    },
+    "description": {
+      "fa": "پسته بریان و نمکی از هرات، تازه بریان‌شده.",
+      "en": "Salted roasted pistachios from Herat, freshly roasted."
+    },
+    "price": 1450,
+    "discountPrice": null,
+    "stock": 30,
+    "variants": [],
+    "viewCount": 0
+  },
+  {
+    "slug": "almond-qahqaha-1kg",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "بادام قهقهه یک کیلو",
+      "en": "Qahqaha Almonds 1kg"
+    },
+    "description": {
+      "fa": "بادام قهقهه کندهاری با مغز پر و شیرین.",
+      "en": "Kandahar Qahqaha almonds — full, sweet kernels."
+    },
+    "price": 1200,
+    "discountPrice": null,
+    "stock": 25,
+    "variants": [],
+    "viewCount": 0
+  },
+  {
+    "slug": "raisin-green-1kg",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "کشمش سبز یک کیلو",
+      "en": "Green Raisins 1kg"
+    },
+    "description": {
+      "fa": "کشمش سبز شمالی، خشک‌شده در سایه.",
+      "en": "Northern green raisins, shade-dried."
+    },
+    "price": 650,
+    "discountPrice": null,
+    "stock": 40,
+    "variants": [],
+    "viewCount": 0
+  },
+  {
+    "slug": "walnut-shelled-1kg",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "مغز چارمغز یک کیلو",
+      "en": "Shelled Walnuts 1kg"
+    },
+    "description": {
+      "fa": "مغز چارمغز تازه از پروان.",
+      "en": "Fresh shelled walnuts from Parwan."
+    },
+    "price": 980,
+    "discountPrice": null,
+    "stock": 22,
+    "variants": [],
+    "viewCount": 0
+  },
+  {
+    "slug": "sweets-gift-box",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "بکس تحفه‌ای شیرینی",
+      "en": "Sweets Gift Box"
+    },
+    "description": {
+      "fa": "بکس تحفه‌ای با شیرینی خانگی و نقل، مناسب عید.",
+      "en": "Gift box of homemade sweets and noql, right for Eid."
+    },
+    "price": 1350,
+    "discountPrice": null,
+    "stock": 18,
+    "variants": [],
+    "viewCount": 0
+  },
+  {
+    "slug": "dried-apricot-1kg",
+    "shopSlug": "kabul-dried-fruit",
+    "categorySlug": "dried-fruit-sweets",
+    "title": {
+      "fa": "زردالو خشک یک کیلو",
+      "en": "Dried Apricots 1kg"
+    },
+    "description": {
+      "fa": "زردالوی خشک بی‌دانه از بامیان.",
+      "en": "Pitted dried apricots from Bamyan."
+    },
+    "price": 850,
+    "discountPrice": null,
+    "stock": 28,
+    "variants": [],
+    "viewCount": 0
+  }
+]

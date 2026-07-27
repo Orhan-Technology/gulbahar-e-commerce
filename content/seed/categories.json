@@ -1,0 +1,210 @@
+[
+  {
+    "slug": "electronics",
+    "name": {
+      "fa": "الکترونیک",
+      "en": "Electronics",
+      "ps": "بریښنایي وسایل"
+    },
+    "children": [
+      {
+        "slug": "mobiles-tablets",
+        "name": {
+          "fa": "موبایل و تابلت",
+          "en": "Mobiles & Tablets",
+          "ps": "موبایل او ټابلیټ"
+        }
+      },
+      {
+        "slug": "home-electronics",
+        "name": {
+          "fa": "لوازم برقی خانه",
+          "en": "Home Electronics",
+          "ps": "کورني بریښنايي توکي"
+        }
+      },
+      {
+        "slug": "audio-video",
+        "name": {
+          "fa": "صدا و تصویر",
+          "en": "Audio & Video",
+          "ps": "غږ او تصویر"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "beauty",
+    "name": {
+      "fa": "زیبایی و آرایش",
+      "en": "Beauty",
+      "ps": "ښکلا او سينګار"
+    },
+    "children": [
+      {
+        "slug": "cosmetics",
+        "name": {
+          "fa": "لوازم آرایشی",
+          "en": "Cosmetics",
+          "ps": "سينګار توکي"
+        }
+      },
+      {
+        "slug": "perfume",
+        "name": {
+          "fa": "عطر و ادکلن",
+          "en": "Perfume",
+          "ps": "عطر"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "clothing",
+    "name": {
+      "fa": "پوشاک",
+      "en": "Clothing",
+      "ps": "جامې"
+    },
+    "children": [
+      {
+        "slug": "menswear",
+        "name": {
+          "fa": "پوشاک مردانه",
+          "en": "Menswear",
+          "ps": "نارینه جامې"
+        }
+      },
+      {
+        "slug": "womenswear",
+        "name": {
+          "fa": "پوشاک زنانه",
+          "en": "Womenswear",
+          "ps": "ښځینه جامې"
+        }
+      },
+      {
+        "slug": "shoes",
+        "name": {
+          "fa": "کفش",
+          "en": "Shoes",
+          "ps": "بوټان"
+        }
+      },
+      {
+        "slug": "bags",
+        "name": {
+          "fa": "کیف و چمدان",
+          "en": "Bags & Luggage",
+          "ps": "بکسې"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "home-kitchen",
+    "name": {
+      "fa": "خانه و آشپزخانه",
+      "en": "Home & Kitchen",
+      "ps": "کور او پخلنځی"
+    },
+    "children": [
+      {
+        "slug": "kitchen-appliances",
+        "name": {
+          "fa": "لوازم آشپزخانه",
+          "en": "Kitchen Appliances",
+          "ps": "پخلنځي وسایل"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "watches-jewellery",
+    "name": {
+      "fa": "ساعت و جواهرات",
+      "en": "Watches & Jewellery",
+      "ps": "ساعتونه او ګاڼې"
+    },
+    "children": [
+      {
+        "slug": "watches",
+        "name": {
+          "fa": "ساعت",
+          "en": "Watches",
+          "ps": "ساعتونه"
+        }
+      },
+      {
+        "slug": "jewellery",
+        "name": {
+          "fa": "جواهرات",
+          "en": "Jewellery",
+          "ps": "ګاڼې"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "kids-hobby",
+    "name": {
+      "fa": "کودک و سرگرمی",
+      "en": "Kids & Hobby",
+      "ps": "ماشومان او ساتیري"
+    },
+    "children": [
+      {
+        "slug": "toys",
+        "name": {
+          "fa": "اسباب‌بازی",
+          "en": "Toys",
+          "ps": "لوبتکې"
+        }
+      },
+      {
+        "slug": "stationery",
+        "name": {
+          "fa": "قرطاسیه",
+          "en": "Stationery",
+          "ps": "قرطاسیه"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "sports",
+    "name": {
+      "fa": "ورزش",
+      "en": "Sports",
+      "ps": "لوبې"
+    },
+    "children": [
+      {
+        "slug": "sportswear",
+        "name": {
+          "fa": "لباس ورزشی",
+          "en": "Sportswear",
+          "ps": "سپورتي جامې"
+        }
+      }
+    ]
+  },
+  {
+    "slug": "food",
+    "name": {
+      "fa": "خوراکه",
+      "en": "Food",
+      "ps": "خوراکي توکي"
+    },
+    "children": [
+      {
+        "slug": "dried-fruit-sweets",
+        "name": {
+          "fa": "خشکبار و شیرینی",
+          "en": "Dried Fruit & Sweets",
+          "ps": "وچه میوه او خواږه"
+        }
+      }
+    ]
+  }
+]
