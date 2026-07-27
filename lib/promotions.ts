@@ -1,21 +1,36 @@
 import type { PromotionSlotKey } from './db/schema';
 
 /**
- * Which slots promote a PRODUCT rather than the shop itself (PRD §8.2).
+ * What each placement slot promotes (PRD §8.2).
  *
- * Shared by the booking action and the slot inventory query: if the two disagreed,
- * the UI would either ask for a product the server ignores or skip the picker for a
- * slot the server then rejects.
+ * Three categories, not two, because the home hero is genuinely different: its
+ * renderer (homeHeroCampaign in lib/db/queries/home.ts) draws either a product or the
+ * shop's own banner, whichever the campaign points at. Treating it as
+ * product-required refused a shop that wanted to buy the hero for its brand — a
+ * booking the storefront was already built to display.
+ *
+ * Shared by the booking actions and the slot inventory query, so the picker and the
+ * server can never disagree about whether a product is wanted.
  */
-const PRODUCT_LEVEL_SLOTS = new Set<PromotionSlotKey>([
-  'home_hero',
+
+/** A product is mandatory: the slot has nowhere to put a shop. */
+const PRODUCT_REQUIRED: Set<PromotionSlotKey> = new Set([
   'search_top',
   'category_top',
   'product_related',
 ]);
 
-export function slotNeedsProduct(key: PromotionSlotKey): boolean {
-  return PRODUCT_LEVEL_SLOTS.has(key);
+/** A product is optional: given one it promotes that, otherwise the shop. */
+const PRODUCT_OPTIONAL: Set<PromotionSlotKey> = new Set(['home_hero']);
+
+/** True when the booking cannot proceed without a product. */
+export function slotRequiresProduct(key: PromotionSlotKey): boolean {
+  return PRODUCT_REQUIRED.has(key);
+}
+
+/** True when the picker should be offered at all — required or optional. */
+export function slotAcceptsProduct(key: PromotionSlotKey): boolean {
+  return PRODUCT_REQUIRED.has(key) || PRODUCT_OPTIONAL.has(key);
 }
 
 /** Campaign duration choices offered in the booking sheet (PRD §8.3: flat weekly fee). */

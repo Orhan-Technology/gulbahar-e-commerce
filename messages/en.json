@@ -1099,7 +1099,8 @@
         "product_required": "This slot needs a product",
         "product_not_publishable": "The chosen product is not published, or not yours",
         "not_withdrawable": "Only an undecided request can be withdrawn"
-      }
+      },
+      "pickProductOptional": "Product for this slot (optional — leave empty to promote your shop)"
     },
     "campaigns": {
       "none": "No campaigns yet.",
@@ -1685,7 +1686,8 @@
         "shop_not_approved": "An unapproved shop cannot be promoted",
         "product_required": "This slot needs a product",
         "product_not_publishable": "The chosen product is not published, or not from this shop"
-      }
+      },
+      "productOptional": "Product (optional — leave empty to promote the shop itself)"
     }
   },
   "adminRevenue": {

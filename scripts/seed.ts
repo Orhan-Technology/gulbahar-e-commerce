@@ -246,8 +246,14 @@ async function main() {
         phone: index === 0 ? '0700000003' : `07002003${String(index + 1).padStart(2, '0')}`,
         name: `${chance(0.45) ? pick(FEMALE_FIRST) : pick(MALE_FIRST)} ${pick(SURNAMES)}`,
         role: 'customer' as const,
-        // A few English-preferring customers, so the notification log shows both.
-        locale: index % 8 === 0 ? ('en' as const) : ('fa' as const),
+        /*
+         * The PRIMARY demo customer (index 0, 0700000003) is Dari, because the
+         * walkthrough is in Dari and their OTP and order messages are read aloud from
+         * the notification log — an English SMS there reads as a bug to a Dari
+         * audience. A few later customers prefer English so the log still shows both
+         * templates side by side (PRD §9.2).
+         */
+        locale: index > 0 && index % 8 === 0 ? ('en' as const) : ('fa' as const),
       })),
     )
     .returning();

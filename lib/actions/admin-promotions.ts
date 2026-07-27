@@ -11,7 +11,7 @@ import { campaigns, products, promotionSlots, shopMembers, shops, users } from '
 import { slotAvailability } from '../db/queries/shop-promotions';
 import { formatDate } from '../format';
 import { notifyMany } from '../notify';
-import { slotNeedsProduct } from '../promotions';
+import { slotAcceptsProduct, slotRequiresProduct } from '../promotions';
 
 /**
  * Promotion inventory and campaign decisions (PRD §7.3).
@@ -285,8 +285,9 @@ export async function createCampaignForShop(
   // Promoting a shop that is not public would show a placement leading nowhere.
   if (shop.status !== 'approved') return { ok: false, error: 'shop_not_approved' };
 
+  // Same rule as the shop-side booking: mandatory on most slots, optional on the hero.
   let productId: string | null = null;
-  if (slotNeedsProduct(slot.key)) {
+  if (slotAcceptsProduct(slot.key) && (slotRequiresProduct(slot.key) || parsed.data.productId)) {
     if (!parsed.data.productId) return { ok: false, error: 'product_required' };
     const [owned] = await db
       .select({ id: products.id })

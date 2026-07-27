@@ -106,6 +106,9 @@ the log and the customer's timeline never contradict each other.
 
 ## The 15-minute walkthrough
 
+Full presenter cue card, pre-demo checklist and the five hardest client questions:
+[`docs/DEMO-RUNBOOK.md`](docs/DEMO-RUNBOOK.md). Summary:
+
 Driven entirely from the control panel — no login form, no terminal (PRD §9.5).
 
 **1 · Storefront (4 min)** — `/fa`. Home, search a Dari term, open a product, add to

@@ -11,7 +11,7 @@ import { campaigns, offers, products, promotionSlots } from '../db/schema';
 import { slotAvailability } from '../db/queries/shop-promotions';
 import { shopNameFor } from '../db/queries/shop-orders';
 import { notify } from '../notify';
-import { slotNeedsProduct } from '../promotions';
+import { slotAcceptsProduct, slotRequiresProduct } from '../promotions';
 
 /**
  * Offers and campaign bookings (PRD §6.4, §8).
@@ -193,9 +193,13 @@ export async function requestCampaign(
   if (!slot) return { ok: false, error: 'slot_not_found' };
   if (slot.available <= 0) return { ok: false, error: 'slot_full' };
 
-  // Product-level slots must name a product, and it must be this shop's.
+  /*
+   * A product is mandatory on some slots and optional on the hero, which renders the
+   * shop's banner when none is given. Either way, a product that IS supplied must
+   * belong to this shop and be published.
+   */
   let productId: string | null = null;
-  if (slotNeedsProduct(slot.key)) {
+  if (slotAcceptsProduct(slot.key) && (slotRequiresProduct(slot.key) || parsed.data.productId)) {
     if (!parsed.data.productId) return { ok: false, error: 'product_required' };
     const [owned] = await db
       .select({ id: products.id })

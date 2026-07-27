@@ -34,6 +34,9 @@ export type ManualSlot = {
   id: string;
   name: string;
   pricePerWeek: number;
+  /** Show the product picker at all. */
+  acceptsProduct: boolean;
+  /** Block submission without one. The hero accepts but does not require. */
   needsProduct: boolean;
   available: number;
 };
@@ -76,7 +79,9 @@ export function ManualCampaignDialog({
   const listPrice = slot ? slot.pricePerWeek * weeks : 0;
   const finalPrice = priceOverride === '' ? listPrice : Number(priceOverride) || 0;
 
-  // A product-level slot needs one, and it has to belong to the chosen shop.
+  // The picker appears whenever the slot can use a product; only a required slot
+  // blocks submission without one.
+  const acceptsProduct = slot?.acceptsProduct ?? false;
   const needsProduct = slot?.needsProduct ?? false;
   const ready =
     Boolean(slot) && Boolean(shopId) && (!needsProduct || Boolean(productId)) && weeks > 0;
@@ -94,7 +99,9 @@ export function ManualCampaignDialog({
       const result = await createCampaignForShop({
         slotId,
         shopId,
-        productId: needsProduct ? productId : null,
+        // acceptsProduct, not needsProduct: an optional product chosen for the hero
+        // must still be sent, or the picker silently does nothing.
+        productId: acceptsProduct ? productId || null : null,
         weeks,
         pricePaid: priceOverride === '' ? undefined : finalPrice,
       });
@@ -182,9 +189,11 @@ export function ManualCampaignDialog({
             <p className="text-muted-foreground text-xs">{t('shopNote')}</p>
           </div>
 
-          {needsProduct && (
+          {acceptsProduct && (
             <div className="space-y-1.5">
-              <Label htmlFor="manual-product">{t('product')}</Label>
+              <Label htmlFor="manual-product">
+                {needsProduct ? t('product') : t('productOptional')}
+              </Label>
               <Select
                 value={productId || undefined}
                 onValueChange={setProductId}

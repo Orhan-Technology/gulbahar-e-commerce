@@ -29,6 +29,9 @@ export type SlotCard = {
   capacity: number;
   available: number;
   pricePerWeek: number;
+  /** Show the product picker at all. */
+  acceptsProduct: boolean;
+  /** Block submission without one — the hero accepts a product but does not need it. */
   needsProduct: boolean;
   mine: number;
 };
@@ -147,10 +150,16 @@ function BookingSheet({
   const total = slot.pricePerWeek * weeks;
   const endsAt = new Date(new Date(now).getTime() + weeks * 7 * 86_400_000);
   const ready = !slot.needsProduct || productId !== null;
+  const acceptsProduct = slot.acceptsProduct;
 
   function submit() {
     startTransition(async () => {
-      const result = await requestCampaign({ slotId: booked.id, productId, weeks });
+      const result = await requestCampaign({
+        slotId: booked.id,
+        // Sent whenever the slot accepts one, so an optional hero product is kept.
+        productId: acceptsProduct ? productId : null,
+        weeks,
+      });
       if (!result.ok) {
         toast.error(t(`errors.${result.error}` as never));
         return;
@@ -170,9 +179,9 @@ function BookingSheet({
         </SheetHeader>
 
         <div className="space-y-5 p-4">
-          {slot.needsProduct && (
+          {acceptsProduct && (
             <div className="space-y-1.5">
-              <Label>{t('pickProduct')}</Label>
+              <Label>{slot.needsProduct ? t('pickProduct') : t('pickProductOptional')}</Label>
               {products.length === 0 ? (
                 <p className="text-muted-foreground text-sm">{t('noPublishedProducts')}</p>
               ) : (

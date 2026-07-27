@@ -2,7 +2,7 @@ import { and, asc, desc, eq, gt, gte, lte, sql } from 'drizzle-orm';
 
 import { db } from '..';
 import { campaigns, offers, products, promotionSlots } from '../schema';
-import { slotNeedsProduct } from '../../promotions';
+import { slotAcceptsProduct, slotRequiresProduct } from '../../promotions';
 
 /**
  * The shopkeeper's promotions view (PRD §6.4).
@@ -122,9 +122,10 @@ export async function slotInventory(shopId: string, now: Date = new Date()) {
   return rows.map((row) => ({
     ...row,
     available: Math.max(row.capacity - row.taken, 0),
-    // Product-level slots need a product chosen at booking time; shop-level ones
-    // promote the shop itself (see lib/promotions.ts).
-    needsProduct: slotNeedsProduct(row.key),
+    // Offer the picker whenever the slot can use a product; only block submission
+    // when it must have one (see lib/promotions.ts).
+    acceptsProduct: slotAcceptsProduct(row.key),
+    needsProduct: slotRequiresProduct(row.key),
   }));
 }
 

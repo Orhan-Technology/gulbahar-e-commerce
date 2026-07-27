@@ -10,7 +10,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { bookingCalendar, campaignLedger, revenueBySlot } from '@/lib/db/queries/admin-revenue';
 import { adminProducts, adminShopDirectory } from '@/lib/db/queries/admin';
 import { formatNumber } from '@/lib/format';
-import { slotNeedsProduct } from '@/lib/promotions';
+import { slotAcceptsProduct, slotRequiresProduct } from '@/lib/promotions';
 import type { PromotionSlotKey } from '@/lib/db/schema';
 
 /**
@@ -52,7 +52,8 @@ export default async function AdminPromotionsPage({
             id: slot.id,
             name: pickLocale(slot.name, locale),
             pricePerWeek: slot.pricePerWeek,
-            needsProduct: slotNeedsProduct(slot.key as PromotionSlotKey),
+            acceptsProduct: slotAcceptsProduct(slot.key as PromotionSlotKey),
+            needsProduct: slotRequiresProduct(slot.key as PromotionSlotKey),
             available: Math.max(slot.capacity - slot.occupied, 0),
           }))}
           shops={shops.map((shop) => ({ id: shop.id, name: pickLocale(shop.name, locale) }))}
