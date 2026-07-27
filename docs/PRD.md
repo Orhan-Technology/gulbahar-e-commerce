@@ -425,9 +425,9 @@ Afghani currency formatting and Persian numeral display follow locale throughout
 
 | Layer      | Choice                        | Notes                                                                                 |
 | ---------- | ----------------------------- | ------------------------------------------------------------------------------------- |
-| Framework  | Next.js 14 (App Router)       | One app; route groups `(shop)`, `(dashboard)`, `(admin)` sharing types and components |
-| Language   | TypeScript, strict            |                                                                                       |
-| Styling    | Tailwind CSS                  | Logical properties for RTL; design tokens as CSS variables                            |
+| Framework  | Next.js 16 (App Router)       | One app; route groups `(shop)`, `(dashboard)`, `(admin)` sharing types and components |
+| Language   | TypeScript, strict            | TS 6 — see the build note below                                                       |
+| Styling    | Tailwind CSS v4               | CSS-first `@theme`; logical properties for RTL; design tokens as CSS variables        |
 | Components | shadcn/ui, restyled           | §10.4                                                                                 |
 | Database   | PostgreSQL via Docker Compose | Single container, volume-persisted                                                    |
 | ORM        | Drizzle                       | Fast migrations, transparent SQL                                                      |
@@ -435,6 +435,16 @@ Afghani currency formatting and Persian numeral display follow locale throughout
 | Auth       | Auth.js, credentials provider | Phone + OTP; OTP surfaces in the notification log                                     |
 | Charts     | Recharts                      | RTL-verified                                                                          |
 | i18n       | next-intl                     | §11                                                                                   |
+
+**Version note (deviation from PRD v0.2, decided July 2026).** The original draft
+specified Next.js 14. The build runs on the current releases instead: Next 16.2,
+React 19.2, Tailwind v4.3, ESLint 10, TypeScript 6.0.
+
+TypeScript is the one place where "latest" is not achievable: TS 7.0 is published
+as `latest` on npm, but both Next 16 and `typescript-eslint` refuse it outright —
+TS 7 is the native compiler rewrite and does not expose the compiler API they
+depend on. Both tools' error messages direct you to TypeScript 6. Revisit once
+`typescript-eslint` ships TS 7 support (their issue #10940).
 
 ### 12.3 Deliberately local
 

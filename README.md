@@ -1,7 +1,7 @@
 # Gulbahar Online Shopping — Demo MVP
 
 Multi-vendor marketplace digitizing Gulbahar Center (Malik Azghar Square, Kabul). Three surfaces
-in one Next.js 14 app: customer storefront, shopkeeper dashboard, mall admin.
+in one Next.js 16 app: customer storefront, shopkeeper dashboard, mall admin.
 
 Full specification: [`docs/PRD.md`](docs/PRD.md) · build plan: [`docs/BUILD-PROMPTS.md`](docs/BUILD-PROMPTS.md)
 
