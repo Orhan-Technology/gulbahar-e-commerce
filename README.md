@@ -24,6 +24,14 @@ npm run dev               # http://localhost:3005
 `npm run db:reset` on its own — it rebuilds the data in about 3 seconds and leaves
 the generated imagery alone, which is what the demo control panel's reset needs.
 
+Catalogue imagery is real photography: every product and shop banner is mapped to a
+hand-picked Unsplash photo in `content/seed/photos.json`, fetched into the committed
+`content/seed/photo-cache/` and cropped locally by `npm run db:seed:images` (two
+gallery angles per product, wide banner crop). Because the cache is in the repo, the
+generator never needs the network; if a cache file is missing and the machine is
+offline, that one item falls back to the old SVG placeholder and the run continues.
+Shop logos stay as generated monograms deliberately — a photo makes a poor 40px mark.
+
 The seed is **deterministic**: every reset produces byte-identical data, so a
 rehearsed walkthrough still matches after resetting mid-demo.
 
@@ -210,3 +218,12 @@ genuine mismatches in our own markup, and is not worth trading away.
 | 8     | Demo apparatus                           | ✅ done |
 | 9     | Polish + audits                          | ✅ done |
 | 10    | Rehearsal (no code)                      | —       |
+
+### Deliberate omissions
+
+**Payouts.** PRD §9.1 lists "Payouts: read-only seeded table", but §2 names
+"commission accounting, payouts, or reconciliation" a non-goal and open question
+§17.2 leaves the revenue model — the thing a payout ledger would settle — explicitly
+undecided. The build follows the non-goal: the revenue screen reports promotion
+income (the one revenue stream the PRD does commit to) and no payout table is
+seeded, rather than inventing per-shop payout figures the model doesn't support.

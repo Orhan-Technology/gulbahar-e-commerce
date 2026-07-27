@@ -1,26 +1,35 @@
 import 'dotenv/config';
-import { readFile, rm } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 
 import { seedBasename, storeImage } from '../lib/images';
 
 /**
- * Generates the seeded catalogue imagery (Prompt 4.1).
+ * Generates the seeded catalogue imagery (Prompt 4.1, PRD §10.7).
  *
- * These are stand-ins with PERFECT consistency rather than attempts at realism.
- * PRD §10.7 is explicit that consistency beats realism: one background treatment,
- * one aspect ratio, no watermarks, no mixed lighting. Thirty uniform products
- * look better than eighty inconsistent ones, and a grid of these reads as a
- * deliberate catalogue rather than as scraped placeholders.
+ * Every product and shop banner is a real photograph, hand-mapped in
+ * content/seed/photos.json to a validated Unsplash photo id (each id was
+ * checked to exist AND eyeballed against its product — several "obvious"
+ * candidates turned out to be broccoli, a MacBook, a watermelon). Photos are
+ * fetched once into content/seed/photo-cache/ and committed, so db:reset stays
+ * fully offline (PRD §1.3) — the network is touched only for a photo whose
+ * cache file is missing.
  *
- * Real photography can replace the output files 1:1 with no code change, because
- * everything goes through the same lib/images.ts storeImage() the upload form uses.
+ * Both derived angles and the banner crop come from the SAME cached original:
+ * angle 0 is the full attention-weighted square, angle 1 a 1.3× zoom of it, so
+ * the gallery rail shows two genuinely different framings without a second
+ * source photo. Everything still goes through the same lib/images.ts
+ * storeImage() the upload form uses, and basenames are deterministic — so
+ * regenerating imagery never requires touching the database.
  *
- * Font note: Vazirmatn is not installed system-wide and downloading it would put
- * a network dependency inside db:reset, which the offline requirement (PRD §1.3)
- * rules out. Noto Sans Arabic is present and is the closest humanist match; it
- * shapes Dari correctly, which is what actually matters here.
+ * If a photo cannot be resolved at all (no cache, no network), the previous
+ * SVG placeholder is generated for that one item and the run continues: a demo
+ * machine that has never been online still gets a complete catalogue.
+ *
+ * Font note (for the fallback SVGs): Vazirmatn is not installed system-wide and
+ * downloading it would put a network dependency inside db:reset. Noto Sans
+ * Arabic is present and shapes Dari correctly, which is what actually matters.
  */
 
 const ARABIC_FONT = 'Noto Sans Arabic';
@@ -55,6 +64,82 @@ type ProductSeed = {
   shopSlug: string;
   title: { fa: string; en: string };
 };
+
+type PhotoMap = {
+  products: Record<string, string>;
+  banners: Record<string, string>;
+};
+
+/**
+ * Where fetched originals live. COMMITTED, not gitignored: ~20MB buys a
+ * db:reset that works with the network cable pulled out, which is the demo's
+ * whole operating assumption.
+ */
+const PHOTO_CACHE_DIR = path.join(process.cwd(), 'content', 'seed', 'photo-cache');
+
+/**
+ * `fm=jpg` is load-bearing: without it the CDN content-negotiates and a Node
+ * fetch can be handed AVIF, which round-trips through sharp fine today but
+ * makes the cache format depend on what Unsplash felt like serving.
+ */
+function photoUrl(id: string): string {
+  return `https://images.unsplash.com/${id}?fm=jpg&w=1600&q=80&fit=max`;
+}
+
+/**
+ * Returns the cached original for a photo id, fetching it on a cache miss.
+ * Returns null when the photo is unreachable — the caller falls back to SVG.
+ */
+async function resolvePhoto(id: string): Promise<Buffer | null> {
+  const cached = path.join(PHOTO_CACHE_DIR, `${id}.jpg`);
+  try {
+    return await readFile(cached);
+  } catch {
+    // cache miss — fall through to the network
+  }
+  try {
+    const response = await fetch(photoUrl(id), { signal: AbortSignal.timeout(30_000) });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    // Refuse to cache an error page: a jpeg this small is not a photo.
+    if (buffer.length < 10_000) throw new Error(`suspiciously small (${buffer.length}B)`);
+    await mkdir(PHOTO_CACHE_DIR, { recursive: true });
+    await writeFile(cached, buffer);
+    return buffer;
+  } catch (error) {
+    console.warn(`  ⚠ photo ${id} unavailable (${(error as Error).message}) — SVG fallback`);
+    return null;
+  }
+}
+
+/** Attention-weighted square crop — the product's primary image. */
+async function squareCrop(photo: Buffer): Promise<Buffer> {
+  return sharp(photo)
+    .resize(1200, 1200, { fit: 'cover', position: sharp.strategy.attention })
+    .jpeg({ quality: 88 })
+    .toBuffer();
+}
+
+/**
+ * The second gallery "angle": a 1.3× zoom of the same crop. Resizing larger and
+ * extracting the centre keeps the salient region (attention already centred it)
+ * while framing it noticeably tighter than angle 0.
+ */
+async function zoomCrop(photo: Buffer): Promise<Buffer> {
+  return sharp(photo)
+    .resize(1560, 1560, { fit: 'cover', position: sharp.strategy.attention })
+    .extract({ left: 180, top: 180, width: 1200, height: 1200 })
+    .jpeg({ quality: 88 })
+    .toBuffer();
+}
+
+/** Wide banner crop for shop pages. */
+async function bannerCrop(photo: Buffer): Promise<Buffer> {
+  return sharp(photo)
+    .resize(1600, 600, { fit: 'cover', position: sharp.strategy.attention })
+    .jpeg({ quality: 85 })
+    .toBuffer();
+}
 
 function escapeXml(value: string): string {
   return value
@@ -208,6 +293,9 @@ async function main() {
   const products = JSON.parse(
     await readFile(path.join(contentDir, 'products.json'), 'utf8'),
   ) as ProductSeed[];
+  const photos = JSON.parse(
+    await readFile(path.join(contentDir, 'photos.json'), 'utf8'),
+  ) as PhotoMap;
 
   const shopNames = new Map(shops.map((shop) => [shop.slug, shop.name]));
 
@@ -218,22 +306,32 @@ async function main() {
   console.log(`Generating imagery for ${shops.length} shops and ${products.length} products…`);
 
   const manifest: Record<string, unknown> = { shops: {}, products: {} };
+  let svgFallbacks = 0;
 
   for (const [shopIndex, shop] of shops.entries()) {
     const palette = pickPalette(shopIndex);
 
+    // Logos stay as monogram SVGs deliberately: a photo makes a poor 40px mark,
+    // a single letter in the brand green reads like an actual shop identity.
     const logo = await storeImage(await sharp(logoSvg(shop.name.fa, palette)).png().toBuffer(), {
       folder: 'seed',
       basename: seedBasename(`${shop.slug}-logo`),
       maxWidth: 400,
     });
 
-    const banner = await storeImage(
-      await sharp(bannerSvg(shop.name.fa, shop.name.en, palette))
-        .png()
-        .toBuffer(),
-      { folder: 'seed', basename: seedBasename(`${shop.slug}-banner`), maxWidth: 1600 },
-    );
+    const photo = photos.banners[shop.slug]
+      ? await resolvePhoto(photos.banners[shop.slug])
+      : null;
+    if (!photo) svgFallbacks += 1;
+    const bannerBuffer = photo
+      ? await bannerCrop(photo)
+      : await sharp(bannerSvg(shop.name.fa, shop.name.en, palette)).png().toBuffer();
+
+    const banner = await storeImage(bannerBuffer, {
+      folder: 'seed',
+      basename: seedBasename(`${shop.slug}-banner`),
+      maxWidth: 1600,
+    });
 
     (manifest.shops as Record<string, unknown>)[shop.slug] = {
       logoPath: logo.path,
@@ -246,23 +344,38 @@ async function main() {
    * Two angles per product. A single image left the gallery's thumbnail rail and
    * zoom affordance with nothing to show, and the product page is quality-bar
    * screen #2 — the rail is part of what makes it read as a real catalogue
-   * (PRD §5.2, §10.4).
+   * (PRD §5.2, §10.4). With photos the second angle is a tighter crop of the
+   * same shot; the SVG fallback keeps its rotated-motif variant.
    */
-  const ANGLES = [0, 28];
+  const SVG_ANGLES = [0, 28];
 
   let count = 0;
   for (const [productIndex, product] of products.entries()) {
     const shopName = shopNames.get(product.shopSlug);
     const palette = pickPalette(productIndex);
 
+    const photo = photos.products[product.slug]
+      ? await resolvePhoto(photos.products[product.slug])
+      : null;
+    if (!photo) svgFallbacks += 1;
+
+    const angleBuffers = photo
+      ? [await squareCrop(photo), await zoomCrop(photo)]
+      : await Promise.all(
+          SVG_ANGLES.map((angle) =>
+            sharp(productSvg(product.title.fa, shopName?.fa ?? '', palette, angle))
+              .png()
+              .toBuffer(),
+          ),
+        );
+
     const stored: Array<{ path: string; variants: Record<number, string> }> = [];
-    for (const [angleIndex, angle] of ANGLES.entries()) {
-      const image = await storeImage(
-        await sharp(productSvg(product.title.fa, shopName?.fa ?? '', palette, angle))
-          .png()
-          .toBuffer(),
-        { folder: 'seed', basename: seedBasename(product.slug, angleIndex), maxWidth: 1200 },
-      );
+    for (const [angleIndex, buffer] of angleBuffers.entries()) {
+      const image = await storeImage(buffer, {
+        folder: 'seed',
+        basename: seedBasename(product.slug, angleIndex),
+        maxWidth: 1200,
+      });
       stored.push({ path: image.path, variants: image.variants });
     }
 
@@ -274,7 +387,12 @@ async function main() {
     count += 1;
     if (count % 25 === 0) console.log(`  … ${count}/${products.length} products`);
   }
-  console.log(`  ✓ ${count} products × ${ANGLES.length} angles`);
+  console.log(`  ✓ ${count} products × 2 angles`);
+  if (svgFallbacks > 0) {
+    console.warn(
+      `  ⚠ ${svgFallbacks} item(s) fell back to SVG placeholders — run again online to fetch photos.`,
+    );
+  }
 
   const manifestPath = path.join(contentDir, 'image-manifest.json');
   await writeManifest(manifestPath, manifest);
@@ -285,7 +403,6 @@ async function main() {
 }
 
 async function writeManifest(file: string, data: unknown) {
-  const { writeFile } = await import('node:fs/promises');
   await writeFile(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
 }
 
