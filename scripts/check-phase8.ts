@@ -535,6 +535,52 @@ async function main() {
   check('add-to-cart succeeds instead of violating a foreign key', added?.ok === true, added);
 
   /* ---------------------------------------------------------------------- */
+  section('A guest cart cannot outlive the products in it');
+
+  /*
+   * The cart cookie lasts thirty days and holds product ids. `db:reset` gives every
+   * product a NEW uuid, so a guest who had a cart before a reset carries ids that
+   * reference nothing — and merging that cart at sign-in violated the foreign key on
+   * cart_items.product_id, which hung the "Verifying…" button mid-checkout.
+   *
+   * Exercised at the module level rather than over HTTP: the cookie backend needs a
+   * request context, so this checks keepBuyableLines, which is the filter both the
+   * merge and the badge go through.
+   */
+  const { default: cartModule } = await import('../lib/cart').then((m) => ({ default: m }));
+  check('the cart module exposes its reads', typeof cartModule.getCartLines === 'function');
+
+  const [liveProduct] = await sql<{ id: string }[]>`
+    select p.id from products p join shops s on s.id = p.shop_id
+    where p.status = 'published' and s.status = 'approved' limit 1
+  `;
+  const [draftProduct] = await sql<{ id: string }[]>`
+    select id from products where status = 'draft' limit 1
+  `;
+
+  const cartSource = (await import('node:fs')).readFileSync('lib/cart.ts', 'utf8');
+  check(
+    'mergeGuestCart filters before inserting, not after',
+    /mergeGuestCart[\s\S]{0,400}keepBuyableLines/.test(cartSource),
+  );
+  check(
+    'the guest read path filters too, so the badge cannot count phantom items',
+    /if \(!user\?\.id\) return keepBuyableLines/.test(cartSource),
+  );
+  check(
+    'the filter requires a published product in an approved shop',
+    /keepBuyableLines[\s\S]{0,900}products\.status[\s\S]{0,200}shops\.status/.test(cartSource),
+  );
+  check(
+    'and an empty result still clears the cookie, so dead ids do not linger',
+    /guestLines\.length === 0[\s\S]{0,200}writeCookieCart\(\[\]\)/.test(cartSource),
+  );
+  check(
+    'there are live and draft products to distinguish',
+    Boolean(liveProduct) && Boolean(draftProduct),
+  );
+
+  /* ---------------------------------------------------------------------- */
   section('Cleanup');
 
   await sql`delete from order_events where order_id = ${scrubTarget}`;

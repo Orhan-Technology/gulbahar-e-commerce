@@ -106,10 +106,52 @@ async function writeCookieCart(lines: CartLine[]): Promise<void> {
  * Unified reads and writes
  * ------------------------------------------------------------------------ */
 
+/**
+ * Keeps only the lines whose product is still buyable.
+ *
+ * THE COOKIE OUTLIVES THE DATABASE. It holds product ids for thirty days, and
+ * `db:reset` — which the demo control panel runs — gives every product a new uuid.
+ * A guest who had a cart before a reset then carries ids that reference nothing:
+ * the header badge counts phantom items, and merging the cart at sign-in violates
+ * the foreign key on cart_items.product_id, which surfaced as a hung "Verifying…"
+ * button and an unreadable "Failed query".
+ *
+ * Unpublished and suspended-shop products are dropped for the same reason a
+ * customer cannot add them in the first place — a cart line nobody can buy is not a
+ * cart line.
+ */
+async function keepBuyableLines(lines: CartLine[]): Promise<CartLine[]> {
+  if (lines.length === 0) return lines;
+
+  const rows = await db
+    .select({ id: products.id })
+    .from(products)
+    .innerJoin(shops, eq(products.shopId, shops.id))
+    .where(
+      and(
+        inArray(
+          products.id,
+          lines.map((line) => line.productId),
+        ),
+        eq(products.status, 'published'),
+        eq(shops.status, 'approved'),
+      ),
+    );
+
+  const buyable = new Set(rows.map((row) => row.id));
+  return lines.filter((line) => buyable.has(line.productId));
+}
+
 /** Raw cart lines for the active viewer, from whichever backend applies. */
 export async function getCartLines(): Promise<CartLine[]> {
   const user = await currentUser();
-  if (!user?.id) return readCookieCart();
+  /*
+   * Pruned in memory rather than rewritten here: a cookie can only be set from a
+   * Server Action or Route Handler, and this runs during page render too. The
+   * cookie is rewritten by the cart actions and by mergeGuestCart, which are
+   * actions.
+   */
+  if (!user?.id) return keepBuyableLines(await readCookieCart());
 
   const rows = await db
     .select({
@@ -215,8 +257,14 @@ export async function clearCart(): Promise<void> {
  * cookie, so nothing is lost when checkout asks them to verify a phone number.
  */
 export async function mergeGuestCart(userId: string): Promise<number> {
-  const guestLines = await readCookieCart();
-  if (guestLines.length === 0) return 0;
+  // Filtered first: a stale id from before a reseed would violate the foreign key
+  // on cart_items.product_id and fail the whole sign-in (see keepBuyableLines).
+  const guestLines = await keepBuyableLines(await readCookieCart());
+  if (guestLines.length === 0) {
+    // Still clear it, so a cookie full of dead ids does not follow them around.
+    await writeCookieCart([]);
+    return 0;
+  }
 
   for (const line of guestLines) {
     await db
