@@ -479,19 +479,93 @@ async function main() {
   );
 
   /* ---------------------------------------------------------------------- */
+  section('A session cannot outlive its user row');
+
+  /*
+   * Reset gives every user a NEW uuid, but a JWT is self-contained and keeps
+   * asserting the old one. The browser then looks signed in while every write fails
+   * on a foreign key to a user that no longer exists — which is what add-to-cart was
+   * doing after a demo reset. The jwt callback drops a token whose subject is gone.
+   *
+   * Done with a throwaway account: the seeded customer cannot be deleted at all,
+   * because orders reference their user ON DELETE RESTRICT so history can never be
+   * erased. That constraint is correct — it just makes them the wrong subject here.
+   */
+  const GHOST = '0791000199';
+  await sql`delete from users where phone = ${GHOST}`;
+  const [ghost] = await sql<{ id: string }[]>`
+    insert into users (phone, name, role, locale)
+    values (${GHOST}, 'مشتری گذرا', 'customer', 'fa')
+    returning id
+  `;
+
+  const ghostCookie = signIn(GHOST);
+  const liveSession = await (
+    await fetch('http://localhost:3005/api/auth/session', { headers: { cookie: ghostCookie } })
+  ).json();
+  check(
+    'the session is valid while the user exists',
+    liveSession?.user?.id === ghost.id,
+    liveSession?.user?.id,
+  );
+
+  await sql`delete from users where id = ${ghost.id}`;
+
+  const afterDelete = await (
+    await fetch('http://localhost:3005/api/auth/session', { headers: { cookie: ghostCookie } })
+  ).json();
+  check(
+    'a session whose user id is gone is invalidated, not left dangling',
+    afterDelete === null,
+    afterDelete,
+  );
+
+  const cartPage = await status('/fa/cart', ghostCookie);
+  check('and the cart still renders, as an anonymous visitor', cartPage === 200, cartPage);
+
+  // The write that was failing: with the session dropped it uses the cookie cart.
+  const [anyProduct] = await sql<{ id: string; slug: string }[]>`
+    select p.id, p.slug from products p join shops s on s.id = p.shop_id
+    where p.status = 'published' and s.status = 'approved' and p.stock > 0 limit 1
+  `;
+  const cartClient = await ActionClient.create([`/fa/products/${anyProduct.slug}`], ghostCookie);
+  const added = await cartClient.call(ghostCookie, 'addCartItem', [
+    { productId: anyProduct.id, quantity: 1 },
+  ]);
+  check('add-to-cart succeeds instead of violating a foreign key', added?.ok === true, added);
+
+  /* ---------------------------------------------------------------------- */
   section('Cleanup');
 
   await sql`delete from order_events where order_id = ${scrubTarget}`;
   await sql`delete from order_items where order_id = ${scrubTarget}`;
   await sql`delete from orders where id = ${scrubTarget}`;
+  /*
+   * Scoped through shop_members to the applicant shops, NOT by phone prefix. A
+   * `like '0798%'` sweep once matched a seeded customer whose phone an earlier
+   * draft of this script had renamed, and tried to delete a user with eleven
+   * orders behind it. Deleting only what is provably linked to a demo-applicant
+   * shop cannot reach seeded data at all.
+   */
   const applicantShops = await sql<{ id: string }[]>`
     select id from shops where slug like 'demo-applicant-%'
   `;
   if (applicantShops.length > 0) {
-    await sql`delete from shop_members where shop_id in ${sql(applicantShops.map((s2) => s2.id))}`;
-    await sql`delete from shops where id in ${sql(applicantShops.map((s2) => s2.id))}`;
+    const ids = applicantShops.map((row) => row.id);
+    const owners = await sql<{ userId: string }[]>`
+      select user_id as "userId" from shop_members where shop_id in ${sql(ids)}
+    `;
+    await sql`delete from shop_members where shop_id in ${sql(ids)}`;
+    await sql`delete from shops where id in ${sql(ids)}`;
+    if (owners.length > 0) {
+      // Only owners with nothing else referencing them; orders are ON DELETE RESTRICT.
+      await sql`
+        delete from users
+        where id in ${sql(owners.map((row) => row.userId))}
+          and not exists (select 1 from orders o where o.user_id = users.id)
+      `;
+    }
   }
-  await sql`delete from users where phone like '0798%'`;
   // Only what this run created — see the baseline note above.
   const createdIds = (await sql<{ id: string }[]>`select id from notifications`)
     .map((row) => row.id)

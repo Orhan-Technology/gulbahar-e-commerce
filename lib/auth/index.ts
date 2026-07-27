@@ -1,6 +1,9 @@
 import NextAuth, { type DefaultSession } from 'next-auth';
+import { eq } from 'drizzle-orm';
 import Credentials from 'next-auth/providers/credentials';
 
+import { db } from '../db';
+import { users } from '../db/schema';
 import { shopForUser } from '../db/queries/shops';
 import type { DbLocale, UserRole } from '../db/schema';
 import { isDemoMode } from '../demo';
@@ -53,6 +56,12 @@ declare module '@auth/core/jwt' {
     shopId: string | null;
     shopSlug: string | null;
   }
+}
+
+/** Does this user row still exist? See the jwt callback for why this matters. */
+async function userExists(id: string): Promise<boolean> {
+  const [row] = await db.select({ id: users.id }).from(users).where(eq(users.id, id)).limit(1);
+  return Boolean(row);
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -150,6 +159,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.shopId = shop?.shopId ?? null;
         token.shopSlug = shop?.slug ?? null;
       }
+
+      /*
+       * A JWT is self-contained, so it keeps asserting a user id long after that row
+       * has gone — and `npm run db:reset` (which the demo control panel runs, and the
+       * README documents) gives every user a NEW uuid. The browser then looks signed
+       * in, pages render, and every write fails on a foreign key to a user that no
+       * longer exists. That surfaced as an unreadable "Failed query" on add-to-cart.
+       *
+       * So the token is only trusted while its subject still exists. Returning null
+       * invalidates the session, and the visitor is simply signed out — which is the
+       * honest outcome after the database was rebuilt underneath them.
+       *
+       * One primary-key lookup per session read is the price of not lying about who
+       * is signed in.
+       */
+      if (token.sub && !(await userExists(token.sub))) return null;
 
       return token;
     },
