@@ -28,7 +28,28 @@
   },
   "dashboard": {
     "heading": "Shop Dashboard",
-    "placeholder": "This is the shopkeeper panel. Built in Phase 6."
+    "placeholder": "This is the shopkeeper panel. Built in Phase 6.",
+    "todaySales": "Today's sales",
+    "weekSales": "This week",
+    "ordersAwaiting": "Awaiting action",
+    "liveProducts": "Live products",
+    "salesChartHeading": "Sales, last 30 days",
+    "salesChartHint": "Total from fulfilled orders",
+    "chartRevenue": "Sales",
+    "chartOrders": "Orders",
+    "topProductsHeading": "Top products",
+    "queue": {
+      "heading": "Needs your attention",
+      "allCaughtUpTitle": "All caught up",
+      "allCaughtUpBody": "No orders waiting and nothing out of stock.",
+      "newOrder": "New order — {reference}",
+      "newOrderSub": "{count} items · {total}",
+      "markReady": "Mark ready — {reference}",
+      "outOfStock": "Out of stock: {product}",
+      "outOfStockSub": "Update stock so you don't lose sales",
+      "expiring": "Promotion ending: {slot}",
+      "expiringSub": "until {date}"
+    }
   },
   "admin": {
     "heading": "Platform Administration",
@@ -717,5 +738,22 @@
       "invalid_input": "Some details are missing",
       "invalid_phone": "That phone number is not valid"
     }
+  },
+  "dashboardNav": {
+    "label": "Shop panel navigation",
+    "dashboard": "Dashboard",
+    "orders": "Orders",
+    "products": "Products",
+    "promotions": "Promotions",
+    "more": "More",
+    "reviews": "Reviews",
+    "reports": "Reports",
+    "profile": "Shop profile",
+    "settings": "Settings",
+    "notifications": "Notifications",
+    "noNotifications": "Nothing new right now",
+    "shopPanel": "Shop panel",
+    "yourShop": "Your shop",
+    "viewStorefront": "View storefront"
   }
 }

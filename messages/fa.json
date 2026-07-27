@@ -28,7 +28,28 @@
   },
   "dashboard": {
     "heading": "پنل فروشنده",
-    "placeholder": "این پنل مدیریت دکان است. در مرحله ۶ ساخته می‌شود."
+    "placeholder": "این پنل مدیریت دکان است. در مرحله ۶ ساخته می‌شود.",
+    "todaySales": "فروش امروز",
+    "weekSales": "فروش هفته",
+    "ordersAwaiting": "در انتظار اقدام",
+    "liveProducts": "محصولات فعال",
+    "salesChartHeading": "فروش ۳۰ روز گذشته",
+    "salesChartHint": "مجموع فروش سفارش‌های تحویل‌شده",
+    "chartRevenue": "فروش",
+    "chartOrders": "سفارش",
+    "topProductsHeading": "محصولات پرفروش",
+    "queue": {
+      "heading": "کارهای امروز",
+      "allCaughtUpTitle": "همه چیز مرتب است",
+      "allCaughtUpBody": "سفارش در انتظار یا محصول تمام‌شده‌ای ندارید.",
+      "newOrder": "سفارش جدید — {reference}",
+      "newOrderSub": "{count} قلم · {total}",
+      "markReady": "آماده کنید — {reference}",
+      "outOfStock": "تمام شده: {product}",
+      "outOfStockSub": "موجودی را به‌روز کنید تا فروش از دست نرود",
+      "expiring": "تبلیغ در حال ختم: {slot}",
+      "expiringSub": "تا {date}"
+    }
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -717,5 +738,22 @@
       "invalid_input": "اطلاعات کامل نیست",
       "invalid_phone": "شماره تلفن معتبر نیست"
     }
+  },
+  "dashboardNav": {
+    "label": "منوی پنل دکان",
+    "dashboard": "داشبورد",
+    "orders": "سفارش‌ها",
+    "products": "محصولات",
+    "promotions": "تبلیغات",
+    "more": "بیشتر",
+    "reviews": "نظرات",
+    "reports": "گزارش‌ها",
+    "profile": "پروفایل دکان",
+    "settings": "تنظیمات",
+    "notifications": "اطلاع‌رسانی‌ها",
+    "noNotifications": "اطلاع‌رسانی جدیدی نیست",
+    "shopPanel": "پنل دکان",
+    "yourShop": "دکان شما",
+    "viewStorefront": "دیدن در فروشگاه"
   }
 }

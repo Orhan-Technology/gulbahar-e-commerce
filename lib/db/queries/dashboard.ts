@@ -1,6 +1,7 @@
 import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
 
 import { db } from '..';
+import { pickLocale } from '../localized';
 import { campaigns, orderItems, orders, products, wishlistItems } from '../schema';
 
 /**
@@ -252,4 +253,116 @@ export async function unansweredReviewCount(shopId: string) {
   `)) as unknown as Array<{ total: number }>;
 
   return Number(row?.total ?? 0);
+}
+
+export type ActionQueueEntry = {
+  kind: 'new_order' | 'to_ready' | 'out_of_stock' | 'expiring_promotion';
+  id: string;
+  title: string;
+  subtitle: string;
+  href: string;
+  at: Date;
+};
+
+/**
+ * The actual rows behind the action queue, not just the counts (PRD §6.1).
+ *
+ * The queue is the dashboard centrepiece, and its whole value is that each item
+ * DEEP-LINKS to the exact screen and record needing attention — a list of counts
+ * would still leave the shopkeeper hunting. Ordered most-urgent-first: new orders
+ * before orders to mark ready, then stock, then promotions about to lapse.
+ */
+export async function actionQueueItems(
+  shopId: string,
+  locale: string,
+  now: Date = new Date(),
+): Promise<ActionQueueEntry[]> {
+  const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const [orderRows, stockRows, promoRows] = await Promise.all([
+    // Orders sitting at placed (accept/reject) or accepted (mark ready), scoped
+    // to this shop's own lines.
+    db.execute(sql`
+      select o.id, o.reference, o.status, o.created_at,
+             sum(oi.quantity)::int as item_count,
+             sum(oi.price_snapshot * oi.quantity)::int as shop_total
+      from orders o
+      join order_items oi on oi.order_id = o.id
+      where oi.shop_id = ${shopId} and o.status in ('placed', 'accepted')
+      group by o.id
+      order by o.created_at asc
+      limit 12
+    `),
+    db.execute(sql`
+      select p.id, p.slug, p.title, p.created_at
+      from products p
+      where p.shop_id = ${shopId} and p.status = 'published' and p.stock <= 0
+      order by p.title->>'fa' asc
+      limit 8
+    `),
+    db.execute(sql`
+      select c.id, c.ends_at, ps.name as slot_name
+      from campaigns c
+      join promotion_slots ps on ps.id = c.slot_id
+      where c.shop_id = ${shopId} and c.status = 'active' and c.ends_at <= ${in7Days.toISOString()}
+      order by c.ends_at asc
+      limit 6
+    `),
+  ]);
+
+  const orders_ = orderRows as unknown as Array<{
+    id: string;
+    reference: string;
+    status: string;
+    created_at: string;
+    item_count: number;
+    shop_total: number;
+  }>;
+  const stock = stockRows as unknown as Array<{
+    id: string;
+    slug: string;
+    title: Record<string, string>;
+    created_at: string;
+  }>;
+  const promos = promoRows as unknown as Array<{
+    id: string;
+    ends_at: string;
+    slot_name: Record<string, string>;
+  }>;
+
+  const entries: ActionQueueEntry[] = [
+    ...orders_.map((row): ActionQueueEntry => ({
+      kind: row.status === 'placed' ? 'new_order' : 'to_ready',
+      id: row.id,
+      title: row.reference,
+      subtitle: `${row.item_count}|${row.shop_total}`,
+      href: `/dashboard/orders/${row.reference}`,
+      at: new Date(row.created_at),
+    })),
+    ...stock.map((row): ActionQueueEntry => ({
+      kind: 'out_of_stock',
+      id: row.id,
+      title: pickLocale(row.title as never, locale),
+      subtitle: '',
+      href: `/dashboard/products?status=published&stock=out`,
+      at: new Date(row.created_at),
+    })),
+    ...promos.map((row): ActionQueueEntry => ({
+      kind: 'expiring_promotion',
+      id: row.id,
+      title: pickLocale(row.slot_name as never, locale),
+      subtitle: row.ends_at,
+      href: '/dashboard/promotions',
+      at: new Date(row.ends_at),
+    })),
+  ];
+
+  // Urgency order, then oldest first within a kind.
+  const rank: Record<ActionQueueEntry['kind'], number> = {
+    new_order: 0,
+    to_ready: 1,
+    out_of_stock: 2,
+    expiring_promotion: 3,
+  };
+  return entries.sort((a, b) => rank[a.kind] - rank[b.kind] || a.at.getTime() - b.at.getTime());
 }
