@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { clearReadLog, fetchNotificationLog, markLogRead, type LogEntry } from '@/lib/actions/demo';
+import { OPEN_LOG_EVENT } from '@/lib/demo';
 import { formatNumber, formatRelative } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
@@ -68,6 +69,17 @@ export function NotificationLog() {
     setEntries(result.data.entries);
     setUnread(result.data.unread);
   }, [channel, role]);
+
+  /*
+   * Anything can ask the panel to open — the sign-in form does, so a customer
+   * hunting for their code is taken straight to it instead of having to know what
+   * "the notification panel" means and where the button is.
+   */
+  React.useEffect(() => {
+    const onOpen = () => setOpen(true);
+    window.addEventListener(OPEN_LOG_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_LOG_EVENT, onOpen);
+  }, []);
 
   React.useEffect(() => {
     let timer: ReturnType<typeof setInterval> | null = null;

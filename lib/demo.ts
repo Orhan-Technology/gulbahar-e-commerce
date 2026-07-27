@@ -41,3 +41,14 @@ export const QUALITY_BAR_SCREENS = [
   { key: 'dashboard', href: '/dashboard' },
   { key: 'revenue', href: '/admin/revenue' },
 ] as const;
+
+/**
+ * Event name the notification log listens on, so anything can offer an "open the
+ * log" affordance without importing the panel or lifting its state.
+ *
+ * A DOM event rather than shared state because the two components are mounted in
+ * different parts of the tree — the log in the root layout, the caller wherever it
+ * happens to be — and a context provider spanning both would be more machinery than
+ * one string deserves.
+ */
+export const OPEN_LOG_EVENT = 'gulbahar:open-notification-log';

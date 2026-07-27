@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { OPEN_LOG_EVENT } from '@/lib/demo';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { requestOtpAction, verifyOtpAction } from '@/lib/actions/auth';
@@ -103,7 +104,21 @@ export function SignInForm({ redirectTo = '/' }: { redirectTo?: string }) {
           autoComplete="one-time-code"
           required
         />
-        <p className="text-muted-foreground text-xs">{t('codeHint')}</p>
+        {/*
+          The code is never sent anywhere — it renders in the notification log
+          (PRD §9.1). That is easy to miss if you are expecting an SMS, so the hint
+          is a button that opens the log rather than prose describing where to look.
+        */}
+        <p className="text-muted-foreground text-xs">
+          {t('codeHint')}{' '}
+          <button
+            type="button"
+            className="text-primary underline underline-offset-2"
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOG_EVENT))}
+          >
+            {t('openLog')}
+          </button>
+        </p>
       </div>
 
       <div className="space-y-1.5">

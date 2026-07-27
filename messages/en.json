@@ -462,7 +462,8 @@
     },
     "signInToSave": "Sign in to save items",
     "signIn": "Sign in",
-    "codePlaceholder": "123456"
+    "codePlaceholder": "123456",
+    "openLog": "Open the message log"
   },
   "nav": {
     "menu": "Menu",

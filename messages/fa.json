@@ -462,7 +462,8 @@
     },
     "signInToSave": "برای ذخیره کردن وارد شوید",
     "signIn": "ورود",
-    "codePlaceholder": "۱۲۳۴۵۶"
+    "codePlaceholder": "۱۲۳۴۵۶",
+    "openLog": "دیدن پنل پیام‌ها"
   },
   "nav": {
     "menu": "منو",
