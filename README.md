@@ -45,6 +45,13 @@ Both are set in `.env` and `package.json`; change them together if you want diff
 
 `/` redirects to `/fa`.
 
+## Styleguide
+
+`/fa/styleguide` and `/en/styleguide` render the full design system: palette,
+type scale, numerals, spacing, radii, elevation, every shadcn primitive, and all
+12 custom components beside their skeletons. It is the visual regression
+reference for the build — check it in Dari first (PRD §10.3).
+
 ## Scripts
 
 | Command             | Purpose                                 |
@@ -64,8 +71,8 @@ Both are set in `.env` and `package.json`; change them together if you want diff
 | ----- | ---------------------------------------- | ------- |
 | 0     | Project memory (`CLAUDE.md`)             | ✅ done |
 | 1     | Scaffold, i18n/RTL base, Docker Postgres | ✅ done |
-| 2     | Design system + component library        | next    |
-| 3     | Schema, queries, auth, notify            | —       |
+| 2     | Design system + component library        | ✅ done |
+| 3     | Schema, queries, auth, notify            | next    |
 | 4     | Seeded world                             | —       |
 | 5     | Customer storefront                      | —       |
 | 6     | Shop dashboard                           | —       |
