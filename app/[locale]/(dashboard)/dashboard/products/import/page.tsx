@@ -26,8 +26,16 @@ export default async function ImportProductsPage({
   const categories = await selectableCategories(locale);
   const slug = (index: number) => categories[index % Math.max(categories.length, 1)]?.slug ?? '';
 
+  /*
+   * These sample rows stay literal Dari on purpose. They are not UI prose: they are
+   * DATA demonstrating that title_fa takes Dari and title_en takes English, and a
+   * translated sample row would teach the opposite. (audit: sample row)
+   */
   const sample = [
+    // audit-allow hardcoded-dari — DATA, not prose: the row demonstrates that
+    // title_fa takes Dari and title_en takes English.
     `,پیراهن مردانه نمونه,Sample Men's Shirt,توضیح کوتاه,Short description,${slug(0)},1500,1200,10`,
+    // audit-allow hardcoded-dari — as above.
     `,کیف دستی نمونه,Sample Handbag,,,${slug(1)},2400,,4`,
   ];
 

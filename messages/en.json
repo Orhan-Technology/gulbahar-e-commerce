@@ -461,7 +461,8 @@
       "mismatch": "That code is incorrect"
     },
     "signInToSave": "Sign in to save items",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "codePlaceholder": "123456"
   },
   "nav": {
     "menu": "Menu",
@@ -517,7 +518,8 @@
     "floor2Trades": "Electronics, watches, jewellery, home appliances",
     "floor3": "Floor 3",
     "floor3Trades": "Clothing, shoes, bags, toys, sportswear",
-    "copyright": "© 2026 Gulbahar Center — demo build"
+    "copyright": "© 2026 Gulbahar Center — demo build",
+    "phone": "020 220 1400"
   },
   "products": {
     "title": "All products",
@@ -1913,6 +1915,29 @@
       "at_end": "Cannot go further",
       "no_products": "That shop has no products in stock",
       "no_customer": "No customer available to place an order"
+    }
+  },
+  "errorStates": {
+    "retry": "Try again",
+    "shop": {
+      "title": "Something went wrong",
+      "body": "This page did not load. Your cart and orders are untouched — please try again.",
+      "back": "Back to the store"
+    },
+    "dashboard": {
+      "title": "This page did not load",
+      "body": "Your shop's data is safe. Try again, and reload the page if it persists.",
+      "back": "Back to the panel"
+    },
+    "admin": {
+      "title": "This page did not load",
+      "body": "Something failed while loading this section. Please try again.",
+      "back": "Back to the overview"
+    },
+    "onboarding": {
+      "title": "This page did not load",
+      "body": "Nothing you entered was lost. Please try again.",
+      "back": "Back to the store"
     }
   }
 }

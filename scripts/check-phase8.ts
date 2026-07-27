@@ -201,10 +201,19 @@ async function main() {
   const marker = await client.call(admin, 'triggerShopRegistration', []);
   check('a scenario trigger creates an UNREAD entry', marker?.ok === true, marker);
 
-  const [victim] = (
-    await sql<{ id: string }[]>`select id from notifications order by created_at desc`
-  ).filter((row) => isNew(row.id));
-  await sql`update notifications set read = true where id = ${victim.id}`;
+  /*
+   * The row to be cleared is inserted here for the purpose, rather than picked as
+   * "the newest one this run created". That earlier version selected whichever row
+   * happened to be newest — often the trigger's shop.submitted — and clear-read then
+   * destroyed the notification a later section asserts on. The failure moved around
+   * depending on insert ordering, which is the worst kind.
+   */
+  const [victim] = await sql<{ id: string }[]>`
+    insert into notifications
+      (event_key, recipient_user_id, recipient_role, channel, locale, title, body, payload, read)
+    values ('otp', null, 'admin', 'inapp', 'fa', 'بررسی پاک‌سازی', 'ردیف آزمایشی', '{}'::jsonb, true)
+    returning id
+  `;
 
   const [beforeClear] = await sql<{ unread: number; total: number }[]>`
     select count(*) filter (where read = false)::int as unread, count(*)::int as total
@@ -475,8 +484,13 @@ async function main() {
   await sql`delete from order_events where order_id = ${scrubTarget}`;
   await sql`delete from order_items where order_id = ${scrubTarget}`;
   await sql`delete from orders where id = ${scrubTarget}`;
-  await sql`delete from shop_members where shop_id = ${applicant.id}`;
-  await sql`delete from shops where id = ${applicant.id}`;
+  const applicantShops = await sql<{ id: string }[]>`
+    select id from shops where slug like 'demo-applicant-%'
+  `;
+  if (applicantShops.length > 0) {
+    await sql`delete from shop_members where shop_id in ${sql(applicantShops.map((s2) => s2.id))}`;
+    await sql`delete from shops where id in ${sql(applicantShops.map((s2) => s2.id))}`;
+  }
   await sql`delete from users where phone like '0798%'`;
   // Only what this run created — see the baseline note above.
   const createdIds = (await sql<{ id: string }[]>`select id from notifications`)

@@ -43,7 +43,7 @@ export async function SiteFooter() {
           </p>
           <p className="text-muted-foreground flex items-center gap-2">
             <Phone className="h-4 w-4 shrink-0" aria-hidden />
-            <span dir="ltr">۰۲۰ ۲۲۰ ۱۴۰۰</span>
+            <span dir="ltr">{t('footer.phone')}</span>
           </p>
         </div>
 

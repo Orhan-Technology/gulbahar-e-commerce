@@ -38,7 +38,8 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - npm run dev — dev server
 - npm run db:push / db:seed / db:reset — schema, seed, full reset
 - npm run typecheck && npm run lint — must pass before any phase is considered done (lint is the eslint CLI; `next lint` was removed in Next 16)
-- npm run check:phase3 … check:phase6, check:phase6c, check:phase7, check:phase7b, check:phase8, check:journey, check:signin — acceptance checks per phase; they need the dev server up
+- npm run check:phase3 … check:phase9, check:journey, check:signin — acceptance checks per phase; they need the DEV server up (the action ids come from the dev manifest, so `npm run start` cannot drive them)
+- npm run audit — static sweep for physical CSS, hardcoded Dari, motion over 300ms, images without dimensions, missing error boundaries. `// audit-allow <rule> — reason` exempts the next non-comment line
 - npm run check:messages — static audit of t() usage: missing keys, keys shadowed by a namespace, fa/en drift. No dev server needed
 - scripts/login.sh &lt;phone&gt; — signs a seeded account in and prints a cookie jar path, so authenticated screens can be curl'd
 - Never run `npm run build` while `npm run dev` is running — they share .next and the dev chunk manifest gets clobbered
@@ -58,4 +59,11 @@ The shared harness is `scripts/lib/action-client.ts` — use `ActionClient.creat
 
 ## Definition of done for every screen
 
-Renders correctly in fa (RTL) and en (LTR) · skeleton + empty + error states present · mobile viewport verified for (shop) and (dashboard) · no hardcoded strings · typecheck and lint clean
+Renders correctly in fa (RTL) and en (LTR) · skeleton + empty + error states present · mobile viewport verified for (shop) and (dashboard) · no hardcoded strings · typecheck and lint clean · `npm run audit` clean
+
+A page whose whole body waits on one query needs a route-level `loading.tsx`, not an internal Suspense boundary — there is nothing to stream around, so without one the browser shows the PREVIOUS page until the server answers.
+
+Two rules for the check scripts themselves, both learned the hard way:
+
+- An assertion must not depend on "the newest row" when the script also creates rows. check-phase8 picked the newest notification to test clear-read with, which was sometimes the one a later section asserted on; the failure moved depending on insert order.
+- A static auditor must strip comments before matching, or it reports its own explanatory prose — twelve of the first fourteen findings were comments containing the words "right-to-left".

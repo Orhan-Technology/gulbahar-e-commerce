@@ -52,7 +52,16 @@ export function loadActionIds(): Map<string, ActionRef> {
   const found = new Map<string, ActionRef>();
 
   if (!existsSync(root)) {
-    throw new Error(`${root} is missing — start the dev server and load the pages first.`);
+    /*
+     * A production build writes its manifests elsewhere, so the action-driving suites
+     * only run against `npm run dev`. Saying so here saves the next person working
+     * out why a green production smoke test cannot run check:phase6.
+     */
+    throw new Error(
+      `${root} is missing.\n` +
+        'The action-driving checks read the DEV server-reference manifest, so they need\n' +
+        '`npm run dev` (not `npm run start`). Start it, load a page, and re-run.',
+    );
   }
 
   const walk = (dir: string) => {

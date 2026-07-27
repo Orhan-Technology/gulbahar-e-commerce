@@ -76,6 +76,53 @@ written to the notification log, which is where the presenter reads it (PRD §9.
 
 `/` redirects to `/fa`.
 
+## Demo mode
+
+`DEMO_MODE=true` in `.env` enables the presenter tools (PRD §9.2, §9.3). With it off
+they are absent from the page, not merely hidden, and every one of their server
+actions refuses.
+
+**Notification log** — the round button in the bottom trailing corner, on all three
+surfaces. Every SMS the system would send, appearing as it is written: recipient,
+role, the language the template rendered in, and the body. Polls every two seconds,
+so a message lands on screen while the presenter is still talking. This is where the
+OTP is read at sign-in.
+
+**Control panel** — `Ctrl/Cmd + Shift + D` from any page. No visible trigger, so it
+cannot be opened by accident on stage.
+
+| Tab       | What it does                                                                   |
+| --------- | ------------------------------------------------------------------------------ |
+| Roles     | One-click session swap between admin, any shopkeeper and any customer          |
+| Orders    | Step any live order forward or back, writing real events and messages          |
+| Scenarios | Create a realistic incoming order, or land a new shop application in the queue |
+| Links     | The four quality-bar screens                                                   |
+
+Data reset lives on the Scenarios tab behind a double confirm. It runs `db:reset`, so
+it signs you out — the users table is rebuilt.
+
+Stepping an order **back** deletes the event and the notification it is undoing, so
+the log and the customer's timeline never contradict each other.
+
+## The 15-minute walkthrough
+
+Driven entirely from the control panel — no login form, no terminal (PRD §9.5).
+
+**1 · Storefront (4 min)** — `/fa`. Home, search a Dari term, open a product, add to
+cart, checkout with the HesabPay sheet. Open the notification log: the OTP is there,
+then the order confirmation.
+
+**2 · Shop dashboard (4 min)** — swap to the shopkeeper. The order is in the action
+queue. Accept it and watch the customer's SMS appear in the log. Show products,
+create an offer, book a featured slot. Do this at a phone viewport.
+
+**3 · Admin (4 min)** — swap to admin. Approve the pending shop and open its public
+page. Approve the campaign request. Then the revenue view — the screen to linger on.
+
+**4 · Close (3 min)** — swap back to the customer and open their order tracking while
+stepping the order forward from the panel: the timeline advances, each SMS appears in
+the log in the right language.
+
 ## Styleguide
 
 `/fa/styleguide` and `/en/styleguide` render the full design system: palette,
@@ -85,18 +132,37 @@ reference for the build — check it in Dari first (PRD §10.3).
 
 ## Scripts
 
-| Command                 | Purpose                                             |
-| ----------------------- | --------------------------------------------------- |
-| `npm run dev`           | Dev server on port 3005                             |
-| `npm run build`         | Production build                                    |
-| `npm run typecheck`     | `tsc --noEmit`                                      |
-| `npm run lint`          | ESLint                                              |
-| `npm run format`        | Prettier write                                      |
-| `npm run db:push`       | Push Drizzle schema to Postgres                     |
-| `npm run db:seed`       | Seed demo data (implemented in Phase 4)             |
-| `npm run db:reset`      | Drop schema, re-push, re-seed                       |
-| `npm run db:extensions` | Apply pg_trgm, unaccent and trigram indexes         |
-| `npm run check:phase3`  | Data-layer acceptance checks (OTP, queries, search) |
+| Command                    | Purpose                                                       |
+| -------------------------- | ------------------------------------------------------------- |
+| `npm run dev`              | Dev server on port 3005                                       |
+| `npm run build`            | Production build (stop `dev` first — they share `.next`)      |
+| `npm run start`            | Serve the production build on 3005                            |
+| `npm run typecheck`        | `tsc --noEmit`                                                |
+| `npm run lint`             | ESLint                                                        |
+| `npm run format`           | Prettier write                                                |
+| `npm run db:setup`         | Generate seed imagery, then create and seed the database      |
+| `npm run db:reset`         | Drop schema, re-push, re-seed (~3s, deterministic)            |
+| `npm run db:push`          | Push the Drizzle schema to Postgres                           |
+| `npm run db:seed`          | Seed demo data                                                |
+| `npm run db:extensions`    | Apply pg_trgm, unaccent and the trigram indexes               |
+| `npm run audit`            | Static sweep: physical CSS, hardcoded strings, motion, images |
+| `npm run check:messages`   | Translation audit: missing keys, shadowed keys, fa/en drift   |
+| `npm run check:phase3`     | Data layer — OTP, queries, search                             |
+| `npm run check:phase4`     | Seeded world                                                  |
+| `npm run check:phase5`     | Storefront                                                    |
+| `npm run check:phase6`     | Shopkeeper catalogue and bulk import                          |
+| `npm run check:phase6c`    | Shopkeeper orders, promotions, reviews, profile, settings     |
+| `npm run check:phase7`     | Admin shops, taxonomy, catalogue governance                   |
+| `npm run check:phase7b`    | Promotions, revenue, reporting, orders, users                 |
+| `npm run check:phase8`     | Demo apparatus                                                |
+| `npm run check:phase9`     | States, motion, RTL and i18n                                  |
+| `npm run check:journey`    | Checkout and order rules                                      |
+| `npm run check:signin`     | Every demo account signs in                                   |
+| `scripts/login.sh <phone>` | Sign an account in and print a cookie jar, for curl           |
+
+Every `check:*` script needs `npm run dev` running — they drive the real server
+actions over HTTP, and the action ids come from the **dev** build's manifest. They
+also restore whatever they change, so the seeded demo moments survive repeated runs.
 
 ## Build progress
 
@@ -108,7 +174,8 @@ reference for the build — check it in Dari first (PRD §10.3).
 | 3     | Schema, queries, auth, notify            | ✅ done |
 | 4     | Seeded world                             | ✅ done |
 | 5     | Customer storefront                      | ✅ done |
-| 6     | Shop dashboard                           | next    |
-| 7     | Admin                                    | —       |
-| 8     | Demo apparatus                           | —       |
-| 9     | Polish + audits                          | —       |
+| 6     | Shop dashboard                           | ✅ done |
+| 7     | Admin                                    | ✅ done |
+| 8     | Demo apparatus                           | ✅ done |
+| 9     | Polish + audits                          | ✅ done |
+| 10    | Rehearsal (no code)                      | —       |

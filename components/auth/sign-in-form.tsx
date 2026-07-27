@@ -97,7 +97,9 @@ export function SignInForm({ redirectTo = '/' }: { redirectTo?: string }) {
           inputMode="numeric"
           dir="ltr"
           maxLength={6}
-          placeholder="۱۲۳۴۵۶"
+          /* Persian digits in fa, Latin in en — the placeholder shows the
+             SHAPE of the code, so it has to be in the reader's numerals. */
+          placeholder={t('codePlaceholder')}
           autoComplete="one-time-code"
           required
         />
