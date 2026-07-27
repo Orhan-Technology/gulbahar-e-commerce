@@ -238,3 +238,40 @@ export async function wishlistedProductIds(
 
   return new Set(rows.map((row) => row.productId));
 }
+
+/**
+ * The viewer's wishlist with live price and stock (PRD §5.6).
+ *
+ * Price and stock are read fresh rather than snapshotted at save time — the point
+ * of a wishlist is to watch for a change, so a stale price would defeat it.
+ */
+export async function wishlistForUser(userId: string) {
+  const rows = await db
+    .select({
+      id: products.id,
+      slug: products.slug,
+      title: products.title,
+      price: products.price,
+      discountPrice: products.discountPrice,
+      stock: products.stock,
+      status: products.status,
+      shopId: shops.id,
+      shopSlug: shops.slug,
+      shopName: shops.name,
+      imagePath: firstProductImagePath,
+      rating: productRatingAvg,
+      reviewCount: productReviewCount,
+      savedAt: wishlistItems.createdAt,
+    })
+    .from(wishlistItems)
+    .innerJoin(products, eq(wishlistItems.productId, products.id))
+    .innerJoin(shops, eq(products.shopId, shops.id))
+    .where(eq(wishlistItems.userId, userId))
+    .orderBy(desc(wishlistItems.createdAt));
+
+  return rows.map((row) => ({
+    ...row,
+    rating: Number(row.rating),
+    reviewCount: Number(row.reviewCount),
+  }));
+}

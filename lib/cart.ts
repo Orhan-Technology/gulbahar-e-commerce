@@ -2,8 +2,9 @@ import { cookies } from 'next/headers';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from './db';
-import { cartItems, productImages, products, shops } from './db/schema';
+import { cartItems, products, shops } from './db/schema';
 import { discountFraction } from './format';
+import { activeOffersForShops, bestOfferFor, type AppliedOffer } from './offers';
 import { currentUser } from './auth/guards';
 
 /**
@@ -48,7 +49,12 @@ export type CartGroup = {
   shopFloor: number | null;
   shopUnitNumber: string | null;
   lines: CartLineDetail[];
+  /** Sum of line totals, after product-level discounts but before any offer. */
   subtotal: number;
+  /** The single best applicable shop offer, or null (PRD §8.1). */
+  offer: AppliedOffer | null;
+  /** subtotal minus the offer deduction — what this shop actually charges. */
+  total: number;
 };
 
 /* --------------------------------------------------------------------------
@@ -242,12 +248,18 @@ export async function mergeGuestCart(userId: string): Promise<number> {
 export async function getCart(): Promise<{
   groups: CartGroup[];
   itemCount: number;
+  /** Sum of line totals after product-level discounts, before offers. */
   subtotal: number;
-  discountTotal: number;
+  /** Savings from product-level discount prices. */
+  productSavings: number;
+  /** Savings from shop offers, summed across groups. */
+  offerSavings: number;
+  /** What the customer pays before any delivery fee. */
+  total: number;
 }> {
   const lines = await getCartLines();
   if (lines.length === 0) {
-    return { groups: [], itemCount: 0, subtotal: 0, discountTotal: 0 };
+    return { groups: [], itemCount: 0, subtotal: 0, productSavings: 0, offerSavings: 0, total: 0 };
   }
 
   const rows = await db
@@ -282,12 +294,10 @@ export async function getCart(): Promise<{
       ),
     );
 
-  void productImages;
-
   const byId = new Map(rows.map((row) => [row.productId, row]));
   const groups = new Map<string, CartGroup>();
   let subtotal = 0;
-  let discountTotal = 0;
+  let productSavings = 0;
   let itemCount = 0;
 
   for (const line of lines) {
@@ -301,7 +311,7 @@ export async function getCart(): Promise<{
       : 0;
 
     subtotal += lineTotal;
-    discountTotal += saved;
+    productSavings += saved;
     itemCount += line.quantity;
 
     const detail: CartLineDetail = {
@@ -334,9 +344,37 @@ export async function getCart(): Promise<{
         shopUnitNumber: product.shopUnitNumber,
         lines: [detail],
         subtotal: lineTotal,
+        offer: null,
+        total: lineTotal,
       });
     }
   }
 
-  return { groups: [...groups.values()], itemCount, subtotal, discountTotal };
+  /*
+   * Offers are resolved after grouping, because an offer applies to a shop's
+   * basket as a whole (shop-wide or across a set of its products) rather than to
+   * a single line — see lib/offers.ts for the arithmetic and why only the single
+   * best offer per shop applies.
+   */
+  const shopOffers = await activeOffersForShops([...groups.keys()]);
+  let offerSavings = 0;
+
+  for (const group of groups.values()) {
+    const applicable = shopOffers.filter((offer) => offer.shopId === group.shopId);
+    group.offer = bestOfferFor(
+      group.lines.map((line) => ({ productId: line.productId, lineTotal: line.lineTotal })),
+      applicable,
+    );
+    group.total = group.subtotal - (group.offer?.amount ?? 0);
+    offerSavings += group.offer?.amount ?? 0;
+  }
+
+  return {
+    groups: [...groups.values()],
+    itemCount,
+    subtotal,
+    productSavings,
+    offerSavings,
+    total: subtotal - offerSavings,
+  };
 }

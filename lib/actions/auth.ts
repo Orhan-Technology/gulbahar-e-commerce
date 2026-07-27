@@ -4,6 +4,8 @@ import { AuthError } from 'next-auth';
 import { z } from 'zod';
 
 import { signIn, signOut } from '../auth';
+import { mergeGuestCart } from '../cart';
+import { findUserByPhone } from '../auth/otp';
 import { normalizePhone, PHONE_PATTERN, requestOtp } from '../auth/otp';
 
 /**
@@ -62,6 +64,17 @@ export async function verifyOtpAction(formData: FormData): Promise<ActionResult>
       name: parsed.data.name ?? '',
       redirect: false,
     });
+
+    /*
+     * Fold the guest's cookie cart into their account (PRD §5.3).
+     *
+     * Runs after signIn so the user row definitely exists — a first-time customer
+     * is created during verification. Without this, being asked to verify a phone
+     * number at checkout would silently empty the basket, which is the single most
+     * damaging thing that could happen during the demo's checkout walkthrough.
+     */
+    const signedIn = await findUserByPhone(parsed.data.phone);
+    if (signedIn) await mergeGuestCart(signedIn.id);
   } catch (error) {
     if (error instanceof AuthError) {
       // verifyOtp already distinguished the reason; the provider can only signal
