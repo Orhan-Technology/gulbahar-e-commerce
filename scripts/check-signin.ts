@@ -4,53 +4,84 @@ import { desc, eq } from 'drizzle-orm';
 import { db, sql as pg } from '../lib/db';
 import { notifications, users } from '../lib/db/schema';
 import { requestOtp, verifyOtp } from '../lib/auth/otp';
+import { shopForUser } from '../lib/db/queries/shops';
+import { pickLocale } from '../lib/db/localized';
 
 /**
- * Exercises the real sign-in path for an EXISTING privileged user, which the
- * Phase 3 check does not cover: it only creates a new customer.
+ * Drives the real sign-in path for each seeded demo account, the way the
+ * presenter will during the walkthrough: request a code, read it out of the
+ * notification log, verify.
  *
- * Confirms that a returning admin keeps their role rather than being reset to
- * 'customer' by the find-or-create branch — the bug that would silently lock the
- * client out of their own admin panel mid-demo.
+ * Guards the failure that would be worst on stage — a returning privileged user
+ * being reset to 'customer' by the find-or-create branch and losing access to
+ * their own panel.
  */
+const ACCOUNTS = [
+  { phone: '0700000001', label: 'admin', expectRole: 'admin', expectShop: false },
+  { phone: '0700000002', label: 'shopkeeper (owner)', expectRole: 'shopkeeper', expectShop: true },
+  { phone: '0700000004', label: 'shopkeeper (staff)', expectRole: 'shopkeeper', expectShop: true },
+  { phone: '0700000003', label: 'customer', expectRole: 'customer', expectShop: false },
+] as const;
+
+let failures = 0;
+
+function check(label: string, condition: boolean, detail?: unknown) {
+  console.log(`  ${condition ? '✓' : '✗'} ${label}${detail !== undefined ? ` — ${detail}` : ''}`);
+  if (!condition) failures += 1;
+}
+
 async function main() {
-  const phone = '0700000001';
+  console.log('\n── sign-in for every seeded demo account ──\n');
 
-  const before = await db.select().from(users).where(eq(users.phone, phone)).limit(1);
-  if (before.length === 0) {
-    throw new Error(`No user with phone ${phone}. Seed one first.`);
+  for (const account of ACCOUNTS) {
+    const [before] = await db.select().from(users).where(eq(users.phone, account.phone)).limit(1);
+    if (!before) {
+      check(`${account.label} exists`, false, `${account.phone} not seeded`);
+      continue;
+    }
+
+    const requested = await requestOtp(account.phone);
+    if (!requested.ok) {
+      check(`${account.label}: code issued`, false, requested.error);
+      continue;
+    }
+
+    // The code is only reachable through the log — exactly as on stage.
+    const [row] = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.eventKey, 'otp'))
+      .orderBy(desc(notifications.createdAt))
+      .limit(1);
+
+    const code = row?.body.match(/(\d{6})/)?.[1] ?? '';
+    const verified = await verifyOtp(account.phone, code);
+
+    if (!verified.ok) {
+      check(`${account.label}: verified`, false, verified.error);
+      continue;
+    }
+
+    const shop = await shopForUser(verified.user.id);
+
+    check(
+      `${account.label.padEnd(20)} ${account.phone}`,
+      verified.user.role === account.expectRole &&
+        verified.isNewUser === false &&
+        Boolean(shop) === account.expectShop,
+      `role=${verified.user.role} shop=${shop ? pickLocale(shop.name, 'fa') : '—'}` +
+        `${shop ? ` (${shop.memberRole})` : ''}`,
+    );
   }
-  console.log(`  existing user: role=${before[0].role} locale=${before[0].locale}`);
 
-  const requested = await requestOtp(phone);
-  console.log(`  requestOtp ok: ${requested.ok}`);
+  // Housekeeping: the OTP rows this check created are noise in the demo log.
+  await db.delete(notifications).where(eq(notifications.eventKey, 'otp'));
+  console.log('\n  ✓ test OTP rows removed from the log');
 
-  const [row] = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.eventKey, 'otp'))
-    .orderBy(desc(notifications.createdAt))
-    .limit(1);
-
-  const code = row?.body.match(/(\d{6})/)?.[1] ?? '';
-  console.log(`  code from notification log: ${code}`);
-  console.log(`  notification locale: ${row?.locale} (should match the user's)`);
-  console.log(`  addressed to user id: ${row?.recipientUserId ? 'yes' : 'no (anonymous)'}`);
-  console.log(`  recipient role recorded: ${row?.recipientRole}`);
-
-  const result = await verifyOtp(phone, code);
-  if (!result.ok) throw new Error(`verify failed: ${result.error}`);
-
-  console.log(`  verified: isNewUser=${result.isNewUser} role=${result.user.role}`);
-
-  const roleHeld = result.user.role === 'admin';
-  const notNew = result.isNewUser === false;
   console.log(
-    roleHeld && notNew
-      ? '\n✅ returning admin signed in with role intact\n'
-      : '\n❌ role or new-user flag wrong\n',
+    failures === 0 ? '\n✅ every demo account signs in correctly\n' : `\n❌ ${failures} failed\n`,
   );
-  if (!roleHeld || !notNew) process.exitCode = 1;
+  if (failures > 0) process.exitCode = 1;
 }
 
 main()
