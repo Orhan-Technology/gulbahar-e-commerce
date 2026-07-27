@@ -87,9 +87,18 @@ function sample<T>(items: readonly T[], count: number): T[] {
 const NOW = new Date();
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * N days before the seed run, at a given wall-clock hour.
+ *
+ * CLAMPED TO THE PAST. Day 0 with an afternoon hour lands in the future when the
+ * seed runs in the morning, and everything derived from it — order events, reviews,
+ * their notifications — inherited that. Future-dated notifications sat pinned above
+ * every live arrival in the demo log, which read as "the log is not real time".
+ */
 const daysAgo = (days: number, hour = 12, minute = 0) => {
   const date = new Date(NOW.getTime() - days * DAY_MS);
   date.setUTCHours(hour, minute, 0, 0);
+  if (date.getTime() > NOW.getTime()) date.setTime(date.getTime() - DAY_MS);
   return date;
 };
 
@@ -429,7 +438,7 @@ async function main() {
      * 30-day chart has no shape.
      */
     const dayOffset = Math.floor(Math.pow(rand(), 2) * 90);
-    const placedAt = daysAgo(dayOffset, intBetween(8, 20), intBetween(0, 59));
+    let placedAt = daysAgo(dayOffset, intBetween(8, 20), intBetween(0, 59));
 
     const customer = pick(customerRows);
     const fulfillment = chance(0.72) ? 'delivery' : 'pickup';
@@ -477,18 +486,54 @@ async function main() {
     orderStatusCounts[status] = (orderStatusCounts[status] ?? 0) + 1;
 
     const customerAddresses = addressesByUser.get(customer.id) ?? [];
+    /*
+     * Hoisted out of the insert literal, in the SAME evaluation order the literal
+     * had (reference draw, then address pick, then the chain's gap draws that used
+     * to happen after the inserts). The PRNG call sequence is load-bearing: order
+     * references like GC-24788 are named in docs/DEMO-RUNBOOK.md, and one extra or
+     * reordered draw renumbers every order after it.
+     */
+    const reference = `GC-${(referenceCounter += intBetween(1, 9))}`;
+    const chosenAddress =
+      fulfillment === 'delivery' && customerAddresses.length > 0
+        ? pick(customerAddresses)
+        : null;
+    const rejectionGap = status === 'rejected' ? intBetween(20, 240) : 0;
+    const chainGaps =
+      status === 'rejected'
+        ? []
+        : [intBetween(15, 180), intBetween(60, 420), intBetween(120, 2880)];
+
+    /*
+     * A chain can run ~2 days past placedAt (the fulfilled gap alone is up to 48h),
+     * so even a same-day order can produce events dated tomorrow. Compute where the
+     * chain will END and shift the whole order back by whole days until it fits —
+     * whole days, so the believable wall-clock hours survive the shift.
+     */
+    {
+      const order2: OrderStatus[] = ['accepted', 'ready', 'fulfilled'];
+      const steps = status === 'rejected' ? 1 : order2.indexOf(status) + 1;
+      const totalMinutes =
+        status === 'rejected'
+          ? rejectionGap
+          : chainGaps.slice(0, steps).reduce((sum, gap) => sum + gap, 0);
+      const chainEnd = placedAt.getTime() + totalMinutes * 60 * 1000;
+      const ceiling = NOW.getTime() - 5 * 60 * 1000;
+      if (chainEnd > ceiling) {
+        const shiftDays = Math.ceil((chainEnd - ceiling) / DAY_MS);
+        placedAt = new Date(placedAt.getTime() - shiftDays * DAY_MS);
+      }
+    }
+
     const [order] = await db
       .insert(orders)
       .values({
-        reference: `GC-${(referenceCounter += intBetween(1, 9))}`,
+        reference,
         userId: customer.id,
         status,
         fulfillment,
         paymentMethod,
-        addressId:
-          fulfillment === 'delivery' && customerAddresses.length > 0
-            ? pick(customerAddresses).id
-            : null,
+        addressId: chosenAddress?.id ?? null,
         subtotal,
         discountTotal: 0,
         deliveryFee,
@@ -518,15 +563,14 @@ async function main() {
     let cursor = placedAt;
 
     if (status === 'rejected') {
-      cursor = plusMinutes(cursor, intBetween(20, 240));
+      cursor = plusMinutes(cursor, rejectionGap);
       chain.push({ from: 'placed', to: 'rejected', at: cursor });
     } else {
       const order2: OrderStatus[] = ['accepted', 'ready', 'fulfilled'];
       const upto = order2.indexOf(status);
-      const gaps = [intBetween(15, 180), intBetween(60, 420), intBetween(120, 2880)];
       let previous: OrderStatus = 'placed';
       for (let step = 0; step <= upto; step += 1) {
-        cursor = plusMinutes(cursor, gaps[step]);
+        cursor = plusMinutes(cursor, chainGaps[step]);
         chain.push({ from: previous, to: order2[step], at: cursor });
         previous = order2[step];
       }
@@ -588,7 +632,18 @@ async function main() {
         orderItemId: item.orderItemId,
         rating,
         body,
-        createdAt: new Date(item.fulfilledAt.getTime() + intBetween(1, 10) * DAY_MS),
+        /*
+         * 1–10 days after fulfilment, CAPPED IN THE PAST: a recent order would
+         * otherwise carry a review dated next week. The clamp is deterministic —
+         * an extra rand() draw here would renumber everything seeded after it.
+         */
+        createdAt: (() => {
+          const raw = item.fulfilledAt.getTime() + intBetween(1, 10) * DAY_MS;
+          const cap = NOW.getTime() - 6 * 60 * 60 * 1000;
+          const floor = item.fulfilledAt.getTime() + 2 * 60 * 60 * 1000;
+          const clamped = Math.max(Math.min(raw, cap), floor);
+          return new Date(Math.min(clamped, NOW.getTime() - 30 * 60 * 1000));
+        })(),
       })
       .returning();
 
@@ -838,7 +893,13 @@ async function main() {
         body: rendered.body,
         payload: { ...event.values, orderId: order.id },
         read: chance(0.4),
-        createdAt: plusMinutes(order.createdAt, index * 45),
+        // Even a clamped order sits close to NOW; +45min per step must not cross it.
+        createdAt: new Date(
+          Math.min(
+            plusMinutes(order.createdAt, index * 45).getTime(),
+            NOW.getTime() - (2 + index) * 60 * 1000,
+          ),
+        ),
       };
     });
   });

@@ -40,7 +40,9 @@ export async function notificationFeed(filters: NotificationFeedFilters = {}) {
     .from(notifications)
     .leftJoin(users, eq(notifications.recipientUserId, users.id))
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(notifications.createdAt))
+    // Id as tiebreaker: seeded rows share a createdAt second, and an unstable
+    // order makes the polling panel visibly reshuffle between identical polls.
+    .orderBy(desc(notifications.createdAt), desc(notifications.id))
     .limit(filters.limit ?? 60);
 }
 
@@ -70,7 +72,7 @@ export async function userNotifications(userId: string, role: UserRole, limit = 
         ),
       ),
     )
-    .orderBy(desc(notifications.createdAt))
+    .orderBy(desc(notifications.createdAt), desc(notifications.id))
     .limit(limit);
 }
 

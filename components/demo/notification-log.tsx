@@ -191,44 +191,53 @@ export function NotificationLog() {
             <li
               key={entry.id}
               className={cn(
-                'rounded-card border-border bg-card space-y-1.5 border p-3',
-                freshIds.has(entry.id) && 'animate-queue-in border-primary',
+                'rounded-card border-border bg-card flex gap-3 border p-3',
+                freshIds.has(entry.id) && 'animate-queue-in border-primary bg-primary-50',
               )}
             >
-              <div className="flex items-start justify-between gap-2">
-                <span className="flex items-center gap-1.5">
-                  {entry.channel === 'sms' ? (
-                    <Smartphone className="text-primary h-3.5 w-3.5 shrink-0" aria-hidden />
-                  ) : (
-                    <MessageSquare
-                      className="text-muted-foreground h-3.5 w-3.5 shrink-0"
-                      aria-hidden
-                    />
-                  )}
-                  <span className="text-xs font-bold">{entry.title}</span>
-                </span>
-                {/* The language the template rendered in — the multilingual claim. */}
-                <Badge variant="outline" className="shrink-0">
-                  {LOCALE_LABEL[entry.locale] ?? entry.locale}
-                </Badge>
-              </div>
+              {/* Channel avatar: SMS in brand green, in-app muted — scannable at a
+                  glance while the list is moving. */}
+              <span
+                className={cn(
+                  'rounded-pill flex h-8 w-8 shrink-0 items-center justify-center',
+                  entry.channel === 'sms'
+                    ? 'bg-primary-50 text-primary'
+                    : 'bg-muted text-muted-foreground',
+                )}
+                aria-hidden
+              >
+                {entry.channel === 'sms' ? (
+                  <Smartphone className="h-4 w-4" />
+                ) : (
+                  <MessageSquare className="h-4 w-4" />
+                )}
+              </span>
 
-              {/* Rendered in its own language, so a Dari body reads right-to-left
-                  even when the panel is in English. */}
-              <p className="text-sm" dir={entry.locale === 'en' ? 'ltr' : 'rtl'}>
-                {entry.body}
-              </p>
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="truncate text-xs font-bold">{entry.title}</span>
+                  <time className="text-muted-foreground shrink-0 text-xs">
+                    {formatRelative(entry.createdAt, locale)}
+                  </time>
+                </div>
 
-              <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-                <span>
-                  {entry.recipientName ?? t(`roles.${entry.recipientRole}`)}
-                  {entry.recipientPhone && <span dir="ltr"> · {entry.recipientPhone}</span>}
-                </span>
-                <Badge variant="secondary">{t(`roles.${entry.recipientRole}`)}</Badge>
-                <span className="ms-auto" dir="ltr">
-                  {entry.eventKey}
-                </span>
-                <span>{formatRelative(entry.createdAt, locale)}</span>
+                {/* Rendered in its own language, so a Dari body reads right-to-left
+                    even when the panel is in English. */}
+                <p className="text-sm leading-relaxed" dir={entry.locale === 'en' ? 'ltr' : 'rtl'}>
+                  {entry.body}
+                </p>
+
+                <div className="text-muted-foreground flex items-center gap-1.5 pt-0.5 text-xs">
+                  <Badge variant="secondary">{t(`roles.${entry.recipientRole}`)}</Badge>
+                  <span className="truncate">
+                    {entry.recipientName ?? t(`roles.${entry.recipientRole}`)}
+                    {entry.recipientPhone && <span dir="ltr"> · {entry.recipientPhone}</span>}
+                  </span>
+                  {/* The language the template rendered in — the multilingual claim. */}
+                  <Badge variant="outline" className="ms-auto shrink-0">
+                    {LOCALE_LABEL[entry.locale] ?? entry.locale}
+                  </Badge>
+                </div>
               </div>
             </li>
           ))}
