@@ -30,6 +30,19 @@ const IMAGES = [
 
 const STATUSES: OrderStatus[] = ['placed', 'accepted', 'ready', 'fulfilled', 'rejected'];
 
+/*
+ * Captured at module load, not during render. Calling Date.now() inside a
+ * component body is impure and React 19 lints it as such — the value would
+ * change on every re-render.
+ */
+const MINUTE = 60 * 1000;
+const DEMO_NOW = Date.now();
+const QUEUE_TIMESTAMPS = {
+  newOrder: new Date(DEMO_NOW - 8 * MINUTE).toISOString(),
+  outOfStock: new Date(DEMO_NOW - 5 * 60 * MINUTE).toISOString(),
+  expiring: new Date(DEMO_NOW - 26 * 60 * MINUTE).toISOString(),
+};
+
 /**
  * Showcase for the custom component library (Prompt 2.3). Every component is
  * shown beside its skeleton so the two can be compared for layout shift, which
@@ -210,7 +223,7 @@ export function CustomShowcase() {
             icon={<ShoppingCart className="h-5 w-5" />}
             title={t('queueNewOrder')}
             subtitle={t('queueNewOrderSub')}
-            timestamp={new Date(Date.now() - 1000 * 60 * 8).toISOString()}
+            timestamp={QUEUE_TIMESTAMPS.newOrder}
             href="/dashboard/orders"
             isNew
           />
@@ -218,7 +231,7 @@ export function CustomShowcase() {
             icon={<PackageX className="h-5 w-5" />}
             title={t('queueOutOfStock')}
             subtitle={t('queueOutOfStockSub')}
-            timestamp={new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString()}
+            timestamp={QUEUE_TIMESTAMPS.outOfStock}
             href="/dashboard/products"
             tone="danger"
           />
@@ -226,7 +239,7 @@ export function CustomShowcase() {
             icon={<Timer className="h-5 w-5" />}
             title={t('queueExpiring')}
             subtitle={t('queueExpiringSub')}
-            timestamp={new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString()}
+            timestamp={QUEUE_TIMESTAMPS.expiring}
             href="/dashboard/promotions"
             tone="warning"
           />

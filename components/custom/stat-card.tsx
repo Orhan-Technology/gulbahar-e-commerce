@@ -75,18 +75,19 @@ export function StatCard({
 }
 
 /**
- * Animates 0 → target once on mount. Returns the target immediately when the
- * user prefers reduced motion.
+ * Animates 0 → target once on mount.
+ *
+ * Under reduced motion the effect bails out without touching state and the
+ * target is returned directly — no setState inside the effect, which would
+ * trigger the cascading render React 19 warns about. The only setState happens
+ * inside the rAF callback, after the effect has already committed.
  */
 function useCountUp(target: number) {
   const prefersReduced = usePrefersReducedMotion();
-  const [display, setDisplay] = React.useState(prefersReduced ? target : 0);
+  const [animated, setAnimated] = React.useState(0);
 
   React.useEffect(() => {
-    if (prefersReduced) {
-      setDisplay(target);
-      return;
-    }
+    if (prefersReduced) return;
 
     let frame = 0;
     const start = performance.now();
@@ -95,7 +96,7 @@ function useCountUp(target: number) {
       const progress = Math.min(1, (now - start) / COUNT_UP_MS);
       // Ease-out so the number decelerates into its final value.
       const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(Math.round(target * eased));
+      setAnimated(Math.round(target * eased));
       if (progress < 1) frame = requestAnimationFrame(tick);
     };
 
@@ -103,21 +104,28 @@ function useCountUp(target: number) {
     return () => cancelAnimationFrame(frame);
   }, [target, prefersReduced]);
 
-  return display;
+  return prefersReduced ? target : animated;
 }
 
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_MOTION_QUERY);
+  query.addEventListener('change', onChange);
+  return () => query.removeEventListener('change', onChange);
+}
+
+/**
+ * Reads the media query through useSyncExternalStore rather than an
+ * effect-plus-setState pair. The value is therefore correct on the very first
+ * client render, and the server snapshot (`false`) keeps SSR deterministic.
+ */
 export function usePrefersReducedMotion() {
-  const [prefers, setPrefers] = React.useState(false);
-
-  React.useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefers(query.matches);
-    const listener = (event: MediaQueryListEvent) => setPrefers(event.matches);
-    query.addEventListener('change', listener);
-    return () => query.removeEventListener('change', listener);
-  }, []);
-
-  return prefers;
+  return React.useSyncExternalStore(
+    subscribeToReducedMotion,
+    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
+    () => false,
+  );
 }
 
 StatCard.Skeleton = function StatCardSkeleton({ className }: { className?: string }) {

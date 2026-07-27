@@ -1,10 +1,21 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 /**
  * Shopkeeper panel shell. Phase 6.1 replaces this with the mobile-first
  * bottom tab bar, desktop sidebar, and notification bell (PRD §6).
  */
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ locale: string }>;
+}) {
+  // Without this, getTranslations() below reads headers and opts the whole
+  // route group out of static rendering (Next 16 is stricter than 14 here).
+  const { locale } = await params;
+  setRequestLocale(locale);
+
   const t = await getTranslations('dashboard');
 
   return (

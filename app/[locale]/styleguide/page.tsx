@@ -37,11 +37,8 @@ const TYPE_STEPS = [
 ] as const;
 const SPACING_STEPS = [1, 2, 3, 4, 6, 8, 12, 16];
 
-export default async function StyleguidePage({
-  params: { locale },
-}: {
-  params: { locale: string };
-}) {
+export default async function StyleguidePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('styleguide');
 

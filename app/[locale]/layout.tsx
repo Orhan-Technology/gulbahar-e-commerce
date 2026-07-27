@@ -23,11 +23,13 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export async function generateMetadata({
-  params: { locale },
-}: {
-  params: { locale: string };
-}): Promise<Metadata> {
+/**
+ * `params` is a Promise as of Next 15 and required to be awaited in Next 16.
+ */
+type LocaleParams = { params: Promise<{ locale: string }> };
+
+export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'brand' });
   return {
     title: t('name'),
@@ -37,11 +39,10 @@ export async function generateMetadata({
 
 export default async function LocaleLayout({
   children,
-  params: { locale },
-}: {
-  children: React.ReactNode;
-  params: { locale: string };
-}) {
+  params,
+}: LocaleParams & { children: React.ReactNode }) {
+  const { locale } = await params;
+
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }

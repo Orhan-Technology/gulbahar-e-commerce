@@ -1,11 +1,8 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Link } from '@/lib/i18n/navigation';
 
-export default async function DashboardPage({
-  params: { locale },
-}: {
-  params: { locale: string };
-}) {
+export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
 

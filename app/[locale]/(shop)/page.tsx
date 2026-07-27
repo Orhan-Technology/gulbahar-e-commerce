@@ -2,7 +2,8 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { Link } from '@/lib/i18n/navigation';
 
-export default async function HomePage({ params: { locale } }: { params: { locale: string } }) {
+export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations();
 

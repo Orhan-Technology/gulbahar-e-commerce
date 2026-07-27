@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import tailwindcssAnimate from 'tailwindcss-animate';
 
 /**
  * Every value here resolves to a CSS variable from app/globals.css (PRD §10.2).
@@ -179,7 +180,7 @@ const config: Config = {
       xl: 'var(--shadow-overlay)',
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [tailwindcssAnimate],
 };
 
 export default config;
