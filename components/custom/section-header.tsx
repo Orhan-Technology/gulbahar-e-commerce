@@ -33,16 +33,16 @@ export function SectionHeader({
   return (
     <div className={cn('flex items-end justify-between gap-4', className)}>
       <div className="min-w-0">
-        <h2 className="truncate text-lg font-bold text-foreground">{title}</h2>
+        <h2 className="text-foreground truncate text-lg font-bold">{title}</h2>
         {description && (
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground mt-0.5 truncate text-sm">{description}</p>
         )}
       </div>
 
       {href && (
         <Link
           href={href}
-          className="inline-flex shrink-0 items-center gap-1 rounded-control text-sm font-medium text-primary transition-colors duration-fast hover:text-primary-800"
+          className="rounded-control text-primary hover:text-primary-800 inline-flex shrink-0 items-center gap-1 text-sm font-medium transition-colors duration-150"
         >
           {actionLabel ?? t('viewAll')}
           <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden />

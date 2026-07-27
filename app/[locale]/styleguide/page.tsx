@@ -44,10 +44,10 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
 
   return (
     <div className="mx-auto max-w-5xl space-y-12 p-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">
+      <header className="border-border flex flex-wrap items-center justify-between gap-4 border-b pb-6">
         <div>
           <h1 className="text-2xl font-bold">{t('title')}</h1>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
+          <p className="text-muted-foreground text-sm">{t('subtitle')}</p>
         </div>
         <LocaleSwitcher />
       </header>
@@ -73,7 +73,7 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
             {['bg-background', 'bg-card', 'bg-overlay', 'bg-muted'].map((cls) => (
               <div
                 key={cls}
-                className={`${cls} flex h-16 w-32 items-center justify-center rounded-card border border-border text-xs`}
+                className={`${cls} rounded-card border-border flex h-16 w-32 items-center justify-center border text-xs`}
               >
                 <code>{cls}</code>
               </div>
@@ -84,14 +84,14 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('sections.typography')}>
-        <p className="text-sm text-muted-foreground">{t('typography.note')}</p>
+        <p className="text-muted-foreground text-sm">{t('typography.note')}</p>
         <div className="space-y-3">
           {TYPE_STEPS.map(({ name, cls }) => (
             <div
               key={name}
-              className="flex flex-wrap items-baseline gap-4 border-b border-border pb-3"
+              className="border-border flex flex-wrap items-baseline gap-4 border-b pb-3"
             >
-              <code className="w-16 shrink-0 text-xs text-muted-foreground">text-{name}</code>
+              <code className="text-muted-foreground w-16 shrink-0 text-xs">text-{name}</code>
               <span className={`${cls} font-arabic`}>{t('typography.sampleFa')}</span>
               <span className={`${cls} font-latin`}>{t('typography.sampleEn')}</span>
             </div>
@@ -101,7 +101,7 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('sections.numerals')}>
-        <p className="text-sm text-muted-foreground">{t('numerals.note')}</p>
+        <p className="text-muted-foreground text-sm">{t('numerals.note')}</p>
         <dl className="grid gap-3 sm:grid-cols-2">
           <NumeralRow label={t('numerals.price')} value={formatCurrency(24500, locale)} />
           <NumeralRow label={t('numerals.count')} value={formatNumber(1234567, locale)} />
@@ -116,9 +116,9 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
         <div className="space-y-2">
           {SPACING_STEPS.map((step) => (
             <div key={step} className="flex items-center gap-4">
-              <code className="w-12 shrink-0 text-xs text-muted-foreground">{step}</code>
-              <div className={`h-4 bg-primary-600`} style={{ width: `${step * 4}px` }} />
-              <span className="text-xs text-muted-foreground">{step * 4}px</span>
+              <code className="text-muted-foreground w-12 shrink-0 text-xs">{step}</code>
+              <div className={`bg-primary-600 h-4`} style={{ width: `${step * 4}px` }} />
+              <span className="text-muted-foreground text-xs">{step * 4}px</span>
             </div>
           ))}
         </div>
@@ -127,19 +127,19 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
       {/* ---------------------------------------------------------------- */}
       <Section title={t('sections.radiusElevation')}>
         <div className="flex flex-wrap gap-4">
-          <div className="flex h-20 w-32 items-center justify-center rounded-card border border-border bg-card text-xs">
+          <div className="rounded-card border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
             rounded-card
           </div>
-          <div className="flex h-20 w-32 items-center justify-center rounded-control border border-border bg-card text-xs">
+          <div className="rounded-control border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
             rounded-control
           </div>
-          <div className="flex h-20 w-32 items-center justify-center rounded-pill border border-border bg-card text-xs">
+          <div className="rounded-pill border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
             rounded-pill
           </div>
-          <div className="flex h-20 w-32 items-center justify-center rounded-card bg-card text-xs shadow-card">
+          <div className="rounded-card bg-card shadow-card flex h-20 w-32 items-center justify-center text-xs">
             shadow-card
           </div>
-          <div className="flex h-20 w-32 items-center justify-center rounded-card bg-card text-xs shadow-overlay">
+          <div className="rounded-card bg-card shadow-overlay flex h-20 w-32 items-center justify-center text-xs">
             shadow-overlay
           </div>
         </div>
@@ -224,10 +224,10 @@ function Swatches({ label, name, steps }: { label: string; name: string; steps: 
         {steps.map((step) => (
           <div key={step} className="w-16">
             <div
-              className="h-12 rounded-control border border-border"
+              className="rounded-control border-border h-12 border"
               style={{ backgroundColor: `hsl(var(--${name}-${step}))` }}
             />
-            <code className="mt-1 block text-center text-xs text-muted-foreground">{step}</code>
+            <code className="text-muted-foreground mt-1 block text-center text-xs">{step}</code>
           </div>
         ))}
       </div>
@@ -266,8 +266,8 @@ function SemanticSwatch({
 
 function NumeralRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 rounded-control border border-border bg-card px-3 py-2">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
+    <div className="rounded-control border-border bg-card flex items-baseline justify-between gap-4 border px-3 py-2">
+      <dt className="text-muted-foreground text-xs">{label}</dt>
       <dd className="text-base font-semibold">{value}</dd>
     </div>
   );

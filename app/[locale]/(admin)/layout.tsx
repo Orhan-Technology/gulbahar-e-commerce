@@ -20,7 +20,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-foreground/10 px-4 py-3">
+      <header className="border-foreground/10 border-b px-4 py-3">
         <span className="text-sm font-semibold">{t('heading')}</span>
         <span className="ms-2 text-xs opacity-60">(admin)</span>
       </header>

@@ -51,14 +51,14 @@ export function ActionQueueItem({
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-card border border-border bg-card p-3 shadow-card transition-colors duration-fast hover:bg-neutral-50',
+        'rounded-card border-border bg-card shadow-card flex items-center gap-3 border p-3 transition-colors duration-150 hover:bg-neutral-50',
         isNew && 'animate-queue-in',
         className,
       )}
     >
       <span
         className={cn(
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-control',
+          'rounded-control flex h-10 w-10 shrink-0 items-center justify-center',
           TONES[tone],
         )}
         aria-hidden
@@ -67,16 +67,16 @@ export function ActionQueueItem({
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-sm font-semibold text-foreground">{title}</span>
+        <span className="text-foreground block truncate text-sm font-semibold">{title}</span>
         {subtitle && (
-          <span className="block truncate text-xs text-muted-foreground">{subtitle}</span>
+          <span className="text-muted-foreground block truncate text-xs">{subtitle}</span>
         )}
       </span>
 
       {timestamp && (
         <time
           dateTime={new Date(timestamp).toISOString()}
-          className="shrink-0 text-xs text-muted-foreground"
+          className="text-muted-foreground shrink-0 text-xs"
         >
           {formatRelative(timestamp, locale)}
         </time>
@@ -91,11 +91,11 @@ ActionQueueItem.Skeleton = function ActionQueueItemSkeleton({ className }: { cla
   return (
     <div
       className={cn(
-        'flex items-center gap-3 rounded-card border border-border bg-card p-3 shadow-card',
+        'rounded-card border-border bg-card shadow-card flex items-center gap-3 border p-3',
         className,
       )}
     >
-      <Skeleton className="h-10 w-10 shrink-0 rounded-control" />
+      <Skeleton className="rounded-control h-10 w-10 shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-2/3" />
         <Skeleton className="h-3 w-1/3" />

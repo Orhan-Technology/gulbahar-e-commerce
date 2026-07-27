@@ -130,7 +130,7 @@ export function CustomShowcase() {
           <RatingStars.Skeleton />
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">{t('inputMode')}</span>
+          <span className="text-muted-foreground text-sm">{t('inputMode')}</span>
           <RatingStarsInput value={rating} onChange={setRating} />
         </div>
       </Block>
@@ -179,10 +179,10 @@ export function CustomShowcase() {
             </Button>
           ))}
         </div>
-        <div className="w-full max-w-md rounded-card border border-border bg-card p-4">
+        <div className="rounded-card border-border bg-card w-full max-w-md border p-4">
           <OrderStatusTimeline status={status} />
         </div>
-        <div className="w-full max-w-xs rounded-card border border-border bg-card p-4">
+        <div className="rounded-card border-border bg-card w-full max-w-xs border p-4">
           <OrderStatusTimeline status={status} orientation="vertical" />
         </div>
         <div className="w-full max-w-md">
@@ -307,9 +307,9 @@ function Block({
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
+        <h3 className="text-foreground text-base font-semibold">{title}</h3>
         {note && (
-          <p className="mt-0.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-0.5 flex items-start gap-1.5 text-xs">
             <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" aria-hidden />
             {note}
           </p>

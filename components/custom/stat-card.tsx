@@ -46,18 +46,18 @@ export function StatCard({
   const positive = (delta ?? 0) > 0;
 
   return (
-    <div className={cn('rounded-card border border-border bg-card p-4 shadow-card', className)}>
+    <div className={cn('rounded-card border-border bg-card shadow-card border p-4', className)}>
       <div className="flex items-start justify-between gap-2">
-        <span className="text-sm text-muted-foreground">{label}</span>
+        <span className="text-muted-foreground text-sm">{label}</span>
         {icon && <span className="text-primary-600">{icon}</span>}
       </div>
 
       <div className="mt-2 flex flex-wrap items-baseline gap-2">
-        <span className="text-2xl font-bold tabular-nums text-foreground">{formatted}</span>
+        <span className="text-foreground text-2xl font-bold tabular-nums">{formatted}</span>
         {hasDelta && (
           <span
             className={cn(
-              'inline-flex items-center gap-0.5 rounded-pill px-1.5 py-0.5 text-xs font-semibold',
+              'rounded-pill inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs font-semibold',
               positive ? 'bg-success-bg text-success' : 'bg-danger-bg text-danger',
             )}
           >
@@ -130,7 +130,7 @@ export function usePrefersReducedMotion() {
 
 StatCard.Skeleton = function StatCardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('rounded-card border border-border bg-card p-4 shadow-card', className)}>
+    <div className={cn('rounded-card border-border bg-card shadow-card border p-4', className)}>
       <Skeleton className="h-4 w-24" />
       <Skeleton className="mt-3 h-8 w-32" />
     </div>

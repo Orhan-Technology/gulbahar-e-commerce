@@ -53,12 +53,12 @@ export function ShopCard({
     <Link
       href={`/shops/${slug}`}
       className={cn(
-        'group flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-shadow duration-fast hover:shadow-overlay',
+        'group rounded-card border-border bg-card shadow-card hover:shadow-overlay flex flex-col overflow-hidden border transition-shadow duration-150',
         className,
       )}
     >
       {/* Banner strip */}
-      <div className="relative h-20 bg-gradient-to-br from-primary-700 to-primary-900">
+      <div className="from-primary-700 to-primary-900 relative h-20 bg-linear-to-br">
         {bannerPath && (
           <Image
             src={bannerPath}
@@ -77,23 +77,23 @@ export function ShopCard({
 
       <div className="relative px-3 pb-3">
         {/* Logo overlaps the banner edge */}
-        <div className="relative -mt-6 mb-2 flex h-12 w-12 items-center justify-center overflow-hidden rounded-control border-2 border-card bg-primary-100 shadow-card">
+        <div className="rounded-control border-card bg-primary-100 shadow-card relative -mt-6 mb-2 flex h-12 w-12 items-center justify-center overflow-hidden border-2">
           {logoPath ? (
             <Image src={logoPath} alt={name} fill sizes="48px" className="object-cover" />
           ) : (
-            <Store className="h-5 w-5 text-primary-700" aria-hidden />
+            <Store className="text-primary-700 h-5 w-5" aria-hidden />
           )}
         </div>
 
-        <h3 className="clamp-1 text-sm font-semibold text-foreground">{name}</h3>
-        {categoryName && <p className="truncate text-xs text-muted-foreground">{categoryName}</p>}
+        <h3 className="clamp-1 text-foreground text-sm font-semibold">{name}</h3>
+        {categoryName && <p className="text-muted-foreground truncate text-xs">{categoryName}</p>}
 
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           {rating !== undefined && rating > 0 && (
             <RatingStars value={rating} count={reviewCount} size="sm" />
           )}
           {productCount !== undefined && (
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               {t('productCount', { count: formatNumber(productCount, locale) })}
             </span>
           )}
@@ -116,13 +116,13 @@ ShopCard.Skeleton = function ShopCardSkeleton({ className }: { className?: strin
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card',
+        'rounded-card border-border bg-card shadow-card flex flex-col overflow-hidden border',
         className,
       )}
     >
       <Skeleton className="h-20 w-full rounded-none" />
       <div className="px-3 pb-3">
-        <Skeleton className="-mt-6 mb-2 h-12 w-12 rounded-control" />
+        <Skeleton className="rounded-control -mt-6 mb-2 h-12 w-12" />
         <Skeleton className="h-4 w-32" />
         <Skeleton className="mt-1.5 h-3 w-20" />
         <Skeleton className="mt-2 h-3 w-28" />

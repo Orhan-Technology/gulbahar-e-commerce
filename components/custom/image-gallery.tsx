@@ -43,7 +43,7 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
       <div
         className={cn(
           aspectClass,
-          'flex w-full items-center justify-center rounded-card border border-border bg-neutral-100 text-neutral-400',
+          'rounded-card border-border flex w-full items-center justify-center border bg-neutral-100 text-neutral-400',
           className,
         )}
       >
@@ -60,7 +60,7 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
         aria-label={t('zoomImage')}
         className={cn(
           aspectClass,
-          'group relative w-full overflow-hidden rounded-card border border-border bg-neutral-100',
+          'group rounded-card border-border relative w-full overflow-hidden border bg-neutral-100',
         )}
       >
         <Image
@@ -71,13 +71,13 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
           priority
           className="object-cover"
         />
-        <span className="absolute bottom-3 end-3 flex h-9 w-9 items-center justify-center rounded-pill bg-card/90 text-foreground shadow-card backdrop-blur transition-opacity duration-fast">
+        <span className="rounded-pill bg-card/90 text-foreground shadow-card absolute end-3 bottom-3 flex h-9 w-9 items-center justify-center backdrop-blur transition-opacity duration-150">
           <ZoomIn className="h-4 w-4" aria-hidden />
         </span>
       </button>
 
       {images.length > 1 && (
-        <div className="scrollbar-none flex gap-2 overflow-x-auto">
+        <div className="flex scrollbar-none gap-2 overflow-x-auto">
           {images.map((image, index) => (
             <button
               key={image.path}
@@ -86,8 +86,8 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
               aria-label={t('viewImageNumber', { number: index + 1 })}
               aria-current={index === active}
               className={cn(
-                'relative h-16 w-16 shrink-0 overflow-hidden rounded-control border-2 bg-neutral-100 transition-colors duration-fast',
-                index === active ? 'border-primary-600' : 'border-transparent hover:border-border',
+                'rounded-control relative h-16 w-16 shrink-0 overflow-hidden border-2 bg-neutral-100 transition-colors duration-150',
+                index === active ? 'border-primary-600' : 'hover:border-border border-transparent',
               )}
             >
               <Image src={image.path} alt="" fill sizes="64px" className="object-cover" />
@@ -99,7 +99,7 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
       <Dialog open={zoomed} onOpenChange={setZoomed}>
         <DialogContent className="max-w-3xl p-2">
           <DialogTitle className="sr-only">{title}</DialogTitle>
-          <div className="relative aspect-square w-full overflow-hidden rounded-control bg-neutral-100">
+          <div className="rounded-control relative aspect-square w-full overflow-hidden bg-neutral-100">
             <Image
               src={current.path}
               alt={current.alt ?? title}
@@ -126,7 +126,7 @@ ImageGallery.Skeleton = function ImageGallerySkeleton({
       <Skeleton className={cn(aspect === 'square' ? 'aspect-square' : 'aspect-[4/5]', 'w-full')} />
       <div className="flex gap-2">
         {Array.from({ length: 4 }, (_, index) => (
-          <Skeleton key={index} className="h-16 w-16 shrink-0 rounded-control" />
+          <Skeleton key={index} className="rounded-control h-16 w-16 shrink-0" />
         ))}
       </div>
     </div>

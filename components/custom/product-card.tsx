@@ -80,7 +80,7 @@ export function ProductCard({
   return (
     <div
       className={cn(
-        'group relative flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card transition-shadow duration-fast hover:shadow-overlay',
+        'group rounded-card border-border bg-card shadow-card hover:shadow-overlay relative flex flex-col overflow-hidden border transition-shadow duration-150',
         className,
       )}
     >
@@ -94,12 +94,12 @@ export function ProductCard({
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
               priority={priority}
               className={cn(
-                'object-cover transition-transform duration-slow group-hover:scale-[1.03]',
+                'object-cover transition-transform duration-300 group-hover:scale-[1.03]',
                 outOfStock && 'opacity-60',
               )}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary-50 to-neutral-100 text-neutral-400">
+            <div className="from-primary-50 flex h-full w-full items-center justify-center bg-linear-to-br to-neutral-100 text-neutral-400">
               <ImageOff className="h-8 w-8" aria-hidden />
             </div>
           )}
@@ -108,7 +108,7 @@ export function ProductCard({
           <div className="absolute start-2 top-2 flex flex-col items-start gap-1">
             {isSponsored && <SponsoredBadge />}
             {fraction !== null && (
-              <span className="rounded-pill bg-danger px-2 py-0.5 text-xs font-bold text-danger-fg shadow-card">
+              <span className="rounded-pill bg-danger text-danger-fg shadow-card px-2 py-0.5 text-xs font-bold">
                 {t('percentOff', { percent: formatPercent(fraction, locale) })}
               </span>
             )}
@@ -122,8 +122,8 @@ export function ProductCard({
         </div>
 
         <div className="flex flex-1 flex-col gap-1.5 p-3">
-          <h3 className="clamp-2 text-sm font-medium leading-snug text-foreground">{title}</h3>
-          <p className="truncate text-xs text-muted-foreground">{shopName}</p>
+          <h3 className="clamp-2 text-foreground text-sm leading-snug font-medium">{title}</h3>
+          <p className="text-muted-foreground truncate text-xs">{shopName}</p>
 
           {rating !== undefined && rating > 0 && (
             <RatingStars value={rating} count={reviewCount} size="sm" />
@@ -141,11 +141,11 @@ export function ProductCard({
         onAnimationEnd={() => setPopping(false)}
         aria-pressed={saved}
         aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
-        className="absolute end-2 top-2 flex h-8 w-8 items-center justify-center rounded-pill bg-card/90 shadow-card backdrop-blur transition-colors duration-fast hover:bg-card focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="rounded-pill bg-card/90 shadow-card hover:bg-card focus-visible:ring-ring absolute end-2 top-2 flex h-8 w-8 items-center justify-center backdrop-blur transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
       >
         <Heart
           className={cn(
-            'h-4 w-4 transition-colors duration-fast',
+            'h-4 w-4 transition-colors duration-150',
             saved ? 'fill-danger text-danger' : 'text-neutral-500',
             popping && 'animate-heart-pop',
           )}
@@ -159,7 +159,7 @@ ProductCard.Skeleton = function ProductCardSkeleton({ className }: { className?:
   return (
     <div
       className={cn(
-        'flex flex-col overflow-hidden rounded-card border border-border bg-card shadow-card',
+        'rounded-card border-border bg-card shadow-card flex flex-col overflow-hidden border',
         className,
       )}
     >

@@ -58,7 +58,7 @@ export function PriceDisplay({
             {formatCurrency(price, locale)}
           </span>
           {showDiscountPercent && (
-            <span className="rounded-pill bg-danger-bg px-1.5 py-0.5 text-xs font-semibold text-danger">
+            <span className="rounded-pill bg-danger-bg text-danger px-1.5 py-0.5 text-xs font-semibold">
               {t('percentOff', { percent: formatPercent(fraction, locale) })}
             </span>
           )}

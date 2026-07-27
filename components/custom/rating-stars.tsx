@@ -67,7 +67,7 @@ export function RatingStars({ value, size = 'md', count, className }: RatingStar
       </span>
 
       {count !== undefined && (
-        <span className="text-xs text-muted-foreground">({formatNumber(count, locale)})</span>
+        <span className="text-muted-foreground text-xs">({formatNumber(count, locale)})</span>
       )}
     </span>
   );
@@ -120,7 +120,7 @@ export function RatingStarsInput({
             <Star
               className={cn(
                 SIZES[size],
-                'transition-colors duration-fast',
+                'transition-colors duration-150',
                 active ? 'fill-accent-500 text-accent-500' : 'text-neutral-300',
               )}
             />

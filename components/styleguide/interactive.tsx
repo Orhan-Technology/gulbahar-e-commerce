@@ -118,7 +118,7 @@ export function StyleguideInteractive() {
 
       <Group title={t('skeletons')}>
         <div className="w-full max-w-sm space-y-2">
-          <Skeleton className="h-32 w-full rounded-card" />
+          <Skeleton className="rounded-card h-32 w-full" />
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
         </div>
@@ -151,7 +151,7 @@ export function StyleguideInteractive() {
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-muted-foreground">{title}</h3>
+      <h3 className="text-muted-foreground text-sm font-semibold">{title}</h3>
       <div className="flex flex-wrap items-start gap-3">{children}</div>
     </div>
   );

@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
  * The `accent` variant is the gold used by SponsoredBadge (PRD §8.4).
  */
 const badgeVariants = cva(
-  'inline-flex items-center rounded-pill border px-2.5 py-0.5 text-xs font-semibold transition-colors duration-fast focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+  'inline-flex items-center rounded-pill border px-2.5 py-0.5 text-xs font-semibold transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
   {
     variants: {
       variant: {

@@ -46,16 +46,16 @@ export function OrderStatusTimeline({
     return (
       <div
         className={cn(
-          'flex items-center gap-3 rounded-card border border-danger-border bg-danger-bg p-3',
+          'rounded-card border-danger-border bg-danger-bg flex items-center gap-3 border p-3',
           className,
         )}
       >
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-pill bg-danger text-danger-fg">
+        <span className="rounded-pill bg-danger text-danger-fg flex h-9 w-9 shrink-0 items-center justify-center">
           <X className="h-5 w-5" aria-hidden />
         </span>
         <div>
-          <p className="text-sm font-semibold text-danger">{t('rejected')}</p>
-          <p className="text-xs text-danger/80">{t('rejectedHint')}</p>
+          <p className="text-danger text-sm font-semibold">{t('rejected')}</p>
+          <p className="text-danger/80 text-xs">{t('rejectedHint')}</p>
         </div>
       </div>
     );
@@ -80,7 +80,7 @@ export function OrderStatusTimeline({
                 {!isLast && (
                   <span
                     className={cn(
-                      'w-0.5 flex-1 transition-colors duration-slow',
+                      'w-0.5 flex-1 transition-colors duration-300',
                       index < currentIndex ? 'bg-primary-600' : 'bg-neutral-200',
                     )}
                   />
@@ -88,8 +88,8 @@ export function OrderStatusTimeline({
               </div>
               <span
                 className={cn(
-                  'pb-6 pt-1.5 text-sm',
-                  done ? 'font-medium text-foreground' : 'text-muted-foreground',
+                  'pt-1.5 pb-6 text-sm',
+                  done ? 'text-foreground font-medium' : 'text-muted-foreground',
                 )}
               >
                 {t(stepStatus)}
@@ -107,7 +107,7 @@ export function OrderStatusTimeline({
         {/* Connector track, inset by half a dot so it meets the dot centres */}
         <div className="absolute inset-x-5 top-4 h-0.5 -translate-y-1/2 bg-neutral-200" />
         <div
-          className="absolute top-4 h-0.5 -translate-y-1/2 bg-primary-600 transition-[width] duration-slow ease-out"
+          className="bg-primary-600 absolute top-4 h-0.5 -translate-y-1/2 transition-[width] duration-300 ease-out"
           style={{
             insetInlineStart: '1.25rem',
             width: `calc((100% - 2.5rem) * ${progress / 100})`,
@@ -125,7 +125,7 @@ export function OrderStatusTimeline({
                 <span
                   className={cn(
                     'text-xs leading-tight',
-                    done ? 'font-medium text-foreground' : 'text-muted-foreground',
+                    done ? 'text-foreground font-medium' : 'text-muted-foreground',
                   )}
                 >
                   {t(stepStatus)}
@@ -151,11 +151,11 @@ function StepDot({
   return (
     <span
       className={cn(
-        'flex h-8 w-8 shrink-0 items-center justify-center rounded-pill border-2 bg-card transition-colors duration-slow',
+        'rounded-pill bg-card flex h-8 w-8 shrink-0 items-center justify-center border-2 transition-colors duration-300',
         done
           ? 'border-primary-600 bg-primary-600 text-primary-foreground'
           : 'border-neutral-200 text-neutral-400',
-        current && 'ring-2 ring-primary-200 ring-offset-2 ring-offset-background',
+        current && 'ring-primary-200 ring-offset-background ring-2 ring-offset-2',
       )}
       aria-current={current ? 'step' : undefined}
     >
@@ -173,7 +173,7 @@ OrderStatusTimeline.Skeleton = function OrderStatusTimelineSkeleton({
     <div className={cn('flex items-start justify-between', className)}>
       {STEPS.map((step) => (
         <div key={step.status} className="flex w-16 flex-col items-center gap-1.5">
-          <Skeleton className="h-8 w-8 rounded-pill" />
+          <Skeleton className="rounded-pill h-8 w-8" />
           <Skeleton className="h-3 w-12" />
         </div>
       ))}

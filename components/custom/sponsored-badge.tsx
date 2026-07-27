@@ -28,5 +28,5 @@ export function SponsoredBadge({
 }
 
 SponsoredBadge.Skeleton = function SponsoredBadgeSkeleton({ className }: { className?: string }) {
-  return <Skeleton className={cn('h-5 w-20 rounded-pill', className)} />;
+  return <Skeleton className={cn('rounded-pill h-5 w-20', className)} />;
 };

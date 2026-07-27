@@ -46,7 +46,7 @@ export function QuantityStepper({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-control border border-input bg-card',
+        'rounded-control border-input bg-card inline-flex items-center border',
         className,
       )}
     >
@@ -54,7 +54,7 @@ export function QuantityStepper({
         type="button"
         variant="ghost"
         size="icon"
-        className={cn(buttonSize, 'rounded-none rounded-s-control')}
+        className={cn(buttonSize, 'rounded-s-control rounded-none')}
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={disabled || atMin}
         aria-label={t('decreaseQuantity')}
@@ -64,7 +64,7 @@ export function QuantityStepper({
 
       <span
         className={cn(
-          'min-w-10 select-none text-center font-semibold tabular-nums',
+          'min-w-10 text-center font-semibold tabular-nums select-none',
           size === 'sm' ? 'text-sm' : 'text-base',
         )}
         aria-live="polite"
@@ -76,7 +76,7 @@ export function QuantityStepper({
         type="button"
         variant="ghost"
         size="icon"
-        className={cn(buttonSize, 'rounded-none rounded-e-control')}
+        className={cn(buttonSize, 'rounded-e-control rounded-none')}
         onClick={() => onChange(max !== undefined ? Math.min(max, value + 1) : value + 1)}
         disabled={disabled || atMax}
         aria-label={t('increaseQuantity')}

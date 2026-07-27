@@ -20,7 +20,7 @@ export function LocaleSwitcher() {
       <select
         value={locale}
         onChange={(event) => router.replace(pathname, { locale: event.target.value })}
-        className="rounded border border-foreground/20 bg-background px-2 py-1"
+        className="border-foreground/20 bg-background rounded border px-2 py-1"
       >
         {routing.locales.map((value) => (
           <option key={value} value={value}>
