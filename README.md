@@ -107,8 +107,8 @@ reference for the build — check it in Dari first (PRD §10.3).
 | 2     | Design system + component library        | ✅ done |
 | 3     | Schema, queries, auth, notify            | ✅ done |
 | 4     | Seeded world                             | ✅ done |
-| 5     | Customer storefront                      | next    |
-| 6     | Shop dashboard                           | —       |
+| 5     | Customer storefront                      | ✅ done |
+| 6     | Shop dashboard                           | next    |
 | 7     | Admin                                    | —       |
 | 8     | Demo apparatus                           | —       |
 | 9     | Polish + audits                          | —       |
