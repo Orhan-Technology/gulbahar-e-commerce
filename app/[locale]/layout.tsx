@@ -74,7 +74,18 @@ export default async function LocaleLayout({
       dir={localeDirection(locale)}
       className={`${vazirmatn.variable} ${inter.variable}`}
     >
-      <body>
+      {/*
+        suppressHydrationWarning is for ATTRIBUTES INJECTED BY BROWSER EXTENSIONS, not
+        for anything this app renders. Bitdefender's anti-tracker adds `bis_register`
+        and `__processed_<uuid>__` to <body> before React hydrates, and React reports
+        the mismatch it cannot reconcile. It suppresses one level only — a genuine
+        mismatch in our own markup inside <body> is still reported.
+
+        The same extension adds `bis_skin_checked` to arbitrary <div>s deeper in the
+        tree, which nothing here can suppress. Present the demo in a clean profile
+        (docs/DEMO-RUNBOOK.md, checklist item 9) and those disappear too.
+      */}
+      <body suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           {children}
           {/* Toast position follows document direction — see components/ui/sonner.tsx */}

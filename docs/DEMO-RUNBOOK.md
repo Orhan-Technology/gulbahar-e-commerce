@@ -201,12 +201,12 @@ next decisions are yours rather than mine.**
 
 ## If something goes wrong mid-demo
 
-| Symptom                              | Fix                                                                                                                                  |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| A screen errors                      | Every route group has a friendly error page with a retry — press it. It re-renders the segment without losing your place.            |
-| Data looks wrong                     | **⌘⇧D → Scenarios → Reset data** (double confirm). It signs you out, because the users table is rebuilt; sign back in via the log.   |
-| The pending shop is already approved | `npm run check:phase7` restores it.                                                                                                  |
-| The campaign request is gone         | `npm run check:phase7b` restores it.                                                                                                 |
-| No orders left awaiting acceptance   | **⌘⇧D → Scenarios → new order**, as many times as needed.                                                                            |
-| The notification log is empty        | Expected right after a reset of the log only; trigger any action and it repopulates. `npm run db:reset` restores the seeded 23.      |
-| Postgres died                        | `docker compose up -d`, wait for `pg_isready`, then restart `npm run dev` — the connection pool does not survive a database restart. |
+| Symptom                              | Fix                                                                                                                                                              |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A screen errors                      | Every route group has a friendly error page with a retry — press it. It re-renders the segment without losing your place.                                        |
+| Data looks wrong                     | **⌘⇧D → Scenarios → Reset data** (double confirm). It signs you out, because the users table is rebuilt; sign back in via the log.                               |
+| The pending shop is already approved | `npm run check:phase7` restores it.                                                                                                                              |
+| The campaign request is gone         | `npm run check:phase7b` restores it.                                                                                                                             |
+| No orders left awaiting acceptance   | **⌘⇧D → Scenarios → new order**, as many times as needed.                                                                                                        |
+| The notification log is empty        | Expected right after a reset of the log only; trigger any action and it repopulates. `npm run db:reset` restores the seeded 23.                                  |
+| Postgres died                        | `docker compose up -d` and wait for `pg_isready`. The app recovers on its own — the pool closes idle sockets, so it reconnects without restarting `npm run dev`. |

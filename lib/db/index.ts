@@ -13,7 +13,36 @@ if (!connectionString) {
  */
 const globalForDb = globalThis as unknown as { sql?: ReturnType<typeof postgres> };
 
-const sql = globalForDb.sql ?? postgres(connectionString, { max: 10 });
+/**
+ * Pool settings, all of them there to stop a dead socket surfacing as a failed
+ * query in front of an audience.
+ *
+ * The defaults keep a pooled socket open indefinitely. Postgres runs in Docker
+ * behind a port mapping that can drop an idle connection, and the container itself
+ * may be restarted mid-demo — the runbook tells the presenter to do exactly that if
+ * the database dies. Either way postgres.js hands out a socket the other end has
+ * already closed, and the request fails once with a bare "Failed query" carrying no
+ * SQLSTATE, which is as unhelpful as it sounds. The notification log polls every two
+ * seconds, so it is usually the first place this shows up.
+ *
+ *   idle_timeout    — close a socket idle for 20s, so the pool never holds one long
+ *                     enough for the network to drop it underneath us.
+ *   max_lifetime    — rotate every 30 minutes regardless, so a long-lived dev server
+ *                     cannot accumulate stale connections.
+ *   connect_timeout — fail fast and clearly when Postgres is genuinely down, instead
+ *                     of hanging until the browser gives up.
+ *
+ * Deliberately NOT a retry layer: this makes the pool stop offering connections that
+ * cannot work, which is different from hiding failures that are real.
+ */
+const sql =
+  globalForDb.sql ??
+  postgres(connectionString, {
+    max: 10,
+    idle_timeout: 20,
+    max_lifetime: 60 * 30,
+    connect_timeout: 10,
+  });
 
 if (process.env.NODE_ENV !== 'production') {
   globalForDb.sql = sql;
