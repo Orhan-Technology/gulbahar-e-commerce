@@ -114,7 +114,7 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
   );
 }
 
-ImageGallery.Skeleton = function ImageGallerySkeleton({
+export function ImageGallerySkeleton({
   className,
   aspect = 'portrait',
 }: {
@@ -131,4 +131,13 @@ ImageGallery.Skeleton = function ImageGallerySkeleton({
       </div>
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and ImageGallery.Skeleton reads as undefined. Server code
+ * must import ImageGallerySkeleton directly.
+ */
+ImageGallery.Skeleton = ImageGallerySkeleton;

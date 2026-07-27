@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { LocaleSwitcher } from '@/components/locale-switcher';
+import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { CustomShowcase } from '@/components/styleguide/custom-showcase';
 import { StyleguideInteractive } from '@/components/styleguide/interactive';
 import {

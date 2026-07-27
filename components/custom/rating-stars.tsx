@@ -132,6 +132,15 @@ export function RatingStarsInput({
   );
 }
 
-RatingStars.Skeleton = function RatingStarsSkeleton({ className }: { className?: string }) {
+export function RatingStarsSkeleton({ className }: { className?: string }) {
   return <Skeleton className={cn('h-4 w-24', className)} />;
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and RatingStars.Skeleton reads as undefined. Server code
+ * must import RatingStarsSkeleton directly.
+ */
+RatingStars.Skeleton = RatingStarsSkeleton;

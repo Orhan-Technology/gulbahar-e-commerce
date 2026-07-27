@@ -52,11 +52,20 @@ export function SectionHeader({
   );
 }
 
-SectionHeader.Skeleton = function SectionHeaderSkeleton({ className }: { className?: string }) {
+export function SectionHeaderSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-end justify-between gap-4', className)}>
       <Skeleton className="h-6 w-40" />
       <Skeleton className="h-5 w-20" />
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and SectionHeader.Skeleton reads as undefined. Server code
+ * must import SectionHeaderSkeleton directly.
+ */
+SectionHeader.Skeleton = SectionHeaderSkeleton;

@@ -87,7 +87,7 @@ export function ActionQueueItem({
   );
 }
 
-ActionQueueItem.Skeleton = function ActionQueueItemSkeleton({ className }: { className?: string }) {
+export function ActionQueueItemSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
@@ -103,4 +103,13 @@ ActionQueueItem.Skeleton = function ActionQueueItemSkeleton({ className }: { cla
       <Skeleton className="h-3 w-12" />
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and ActionQueueItem.Skeleton reads as undefined. Server code
+ * must import ActionQueueItemSkeleton directly.
+ */
+ActionQueueItem.Skeleton = ActionQueueItemSkeleton;

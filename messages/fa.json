@@ -240,7 +240,8 @@
     "yourRating": "امتیاز شما",
     "starsCount": "{count} ستاره",
     "zoomImage": "بزرگ‌نمایی تصویر",
-    "viewImageNumber": "دیدن تصویر {number}"
+    "viewImageNumber": "دیدن تصویر {number}",
+    "wishlistFailed": "ذخیره ناموفق بود، دوباره تلاش کنید"
   },
   "shop": {
     "productCount": "{count} محصول",
@@ -367,6 +368,58 @@
       "expired": "کد منقضی شده است",
       "too_many_attempts": "تلاش‌های زیاد — کد جدید بگیرید",
       "mismatch": "کد نادرست است"
-    }
+    },
+    "signInToSave": "برای ذخیره کردن وارد شوید",
+    "signIn": "ورود"
+  },
+  "nav": {
+    "menu": "منو",
+    "categories": "دسته‌بندی‌ها",
+    "products": "محصولات",
+    "shops": "دکان‌ها",
+    "offers": "تخفیف‌ها",
+    "cart": "سبد خرید",
+    "cartWithCount": "سبد خرید، {count} قلم",
+    "account": "حساب من",
+    "orders": "سفارش‌های من",
+    "wishlist": "علاقه‌مندی‌ها",
+    "home": "خانه",
+    "search": "جستجو",
+    "mobileNav": "منوی پایین",
+    "searchPlaceholder": "جستجوی محصول یا دکان…"
+  },
+  "home": {
+    "shopByCategory": "خرید بر اساس دسته‌بندی",
+    "activeOffers": "تخفیف‌های فعال",
+    "featuredShops": "دکان‌های ویژه",
+    "trending": "پرفروش‌ترین‌ها",
+    "trendingHint": "بیشترین بازدید این هفته در مرکز گلبهار",
+    "newArrivals": "تازه رسیده‌ها",
+    "newArrivalsHint": "جدیدترین محصولات دکان‌های ما",
+    "heroViewProduct": "دیدن محصول",
+    "heroVisitShop": "دیدن دکان",
+    "heroBrowseAll": "دیدن همه محصولات",
+    "defaultHeroTitle": "مرکز خرید گلبهار، حالا آنلاین",
+    "defaultHeroBody": "از دکان‌های مرکز گلبهار خرید کنید و در کابل تحویل بگیرید — یا خودتان از دکان بگیرید."
+  },
+  "offers": {
+    "title": "تخفیف‌ها",
+    "endingSoon": "به زودی ختم می‌شود",
+    "ended": "ختم شد",
+    "daysLeft": "{days} روز باقی مانده"
+  },
+  "footer": {
+    "tagline": "بازار مرکز گلبهار در انترنت — دکان‌های واقعی، تحویل در کابل.",
+    "visitUs": "آدرس ما",
+    "hours": "شنبه تا پنجشنبه، ۸:۰۰ تا ۱۹:۰۰",
+    "floorGuide": "راهنمای طبقات",
+    "explore": "دسترسی سریع",
+    "floor1": "طبقه اول",
+    "floor1Trades": "موبایل، آرایشی، عطر، قرطاسیه، خشکبار",
+    "floor2": "طبقه دوم",
+    "floor2Trades": "الکترونیک، ساعت، جواهرات، لوازم خانه",
+    "floor3": "طبقه سوم",
+    "floor3Trades": "پوشاک، کفش، کیف، اسباب‌بازی، ورزشی",
+    "copyright": "© ۱۴۰۵ مرکز خرید گلبهار — نسخه نمایشی"
   }
 }

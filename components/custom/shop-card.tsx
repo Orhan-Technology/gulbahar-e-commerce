@@ -112,7 +112,7 @@ export function ShopCard({
   );
 }
 
-ShopCard.Skeleton = function ShopCardSkeleton({ className }: { className?: string }) {
+export function ShopCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
@@ -129,4 +129,13 @@ ShopCard.Skeleton = function ShopCardSkeleton({ className }: { className?: strin
       </div>
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and ShopCard.Skeleton reads as undefined. Server code
+ * must import ShopCardSkeleton directly.
+ */
+ShopCard.Skeleton = ShopCardSkeleton;

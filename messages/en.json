@@ -240,7 +240,8 @@
     "yourRating": "Your rating",
     "starsCount": "{count} stars",
     "zoomImage": "Zoom image",
-    "viewImageNumber": "View image {number}"
+    "viewImageNumber": "View image {number}",
+    "wishlistFailed": "Could not save — please try again"
   },
   "shop": {
     "productCount": "{count} products",
@@ -367,6 +368,58 @@
       "expired": "That code has expired",
       "too_many_attempts": "Too many attempts — request a new code",
       "mismatch": "That code is incorrect"
-    }
+    },
+    "signInToSave": "Sign in to save items",
+    "signIn": "Sign in"
+  },
+  "nav": {
+    "menu": "Menu",
+    "categories": "Categories",
+    "products": "Products",
+    "shops": "Shops",
+    "offers": "Offers",
+    "cart": "Cart",
+    "cartWithCount": "Cart, {count} items",
+    "account": "My account",
+    "orders": "My orders",
+    "wishlist": "Wishlist",
+    "home": "Home",
+    "search": "Search",
+    "mobileNav": "Bottom navigation",
+    "searchPlaceholder": "Search products or shops…"
+  },
+  "home": {
+    "shopByCategory": "Shop by category",
+    "activeOffers": "Active offers",
+    "featuredShops": "Featured shops",
+    "trending": "Trending now",
+    "trendingHint": "Most viewed at Gulbahar Center this week",
+    "newArrivals": "New arrivals",
+    "newArrivalsHint": "The latest from our shops",
+    "heroViewProduct": "View product",
+    "heroVisitShop": "Visit shop",
+    "heroBrowseAll": "Browse all products",
+    "defaultHeroTitle": "Gulbahar Center, now online",
+    "defaultHeroBody": "Shop the Gulbahar Center stores and get it delivered across Kabul — or collect it in person."
+  },
+  "offers": {
+    "title": "Offers",
+    "endingSoon": "Ending soon",
+    "ended": "Ended",
+    "daysLeft": "{days} days left"
+  },
+  "footer": {
+    "tagline": "Gulbahar Center's marketplace online — real shops, delivered in Kabul.",
+    "visitUs": "Visit us",
+    "hours": "Saturday to Thursday, 8:00 to 19:00",
+    "floorGuide": "Floor guide",
+    "explore": "Explore",
+    "floor1": "Floor 1",
+    "floor1Trades": "Mobiles, cosmetics, perfume, stationery, dried fruit",
+    "floor2": "Floor 2",
+    "floor2Trades": "Electronics, watches, jewellery, home appliances",
+    "floor3": "Floor 3",
+    "floor3Trades": "Clothing, shoes, bags, toys, sportswear",
+    "copyright": "© 2026 Gulbahar Center — demo build"
   }
 }

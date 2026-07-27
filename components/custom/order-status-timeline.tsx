@@ -164,11 +164,7 @@ function StepDot({
   );
 }
 
-OrderStatusTimeline.Skeleton = function OrderStatusTimelineSkeleton({
-  className,
-}: {
-  className?: string;
-}) {
+export function OrderStatusTimelineSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-start justify-between', className)}>
       {STEPS.map((step) => (
@@ -179,4 +175,13 @@ OrderStatusTimeline.Skeleton = function OrderStatusTimelineSkeleton({
       ))}
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and OrderStatusTimeline.Skeleton reads as undefined. Server code
+ * must import OrderStatusTimelineSkeleton directly.
+ */
+OrderStatusTimeline.Skeleton = OrderStatusTimelineSkeleton;

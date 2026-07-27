@@ -128,11 +128,20 @@ export function usePrefersReducedMotion() {
   );
 }
 
-StatCard.Skeleton = function StatCardSkeleton({ className }: { className?: string }) {
+export function StatCardSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('rounded-card border-border bg-card shadow-card border p-4', className)}>
       <Skeleton className="h-4 w-24" />
       <Skeleton className="mt-3 h-8 w-32" />
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and StatCard.Skeleton reads as undefined. Server code
+ * must import StatCardSkeleton directly.
+ */
+StatCard.Skeleton = StatCardSkeleton;

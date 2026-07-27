@@ -68,11 +68,20 @@ export function PriceDisplay({
   );
 }
 
-PriceDisplay.Skeleton = function PriceDisplaySkeleton({ className }: { className?: string }) {
+export function PriceDisplaySkeleton({ className }: { className?: string }) {
   return (
     <div className={cn('flex items-baseline gap-2', className)}>
       <Skeleton className="h-5 w-20" />
       <Skeleton className="h-4 w-14" />
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and PriceDisplay.Skeleton reads as undefined. Server code
+ * must import PriceDisplaySkeleton directly.
+ */
+PriceDisplay.Skeleton = PriceDisplaySkeleton;

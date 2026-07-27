@@ -8,6 +8,7 @@
  */
 
 export * from './products';
+export * from './home';
 export * from './shops';
 export * from './orders';
 export * from './dashboard';

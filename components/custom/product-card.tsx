@@ -32,6 +32,12 @@ export interface ProductCardProps {
   className?: string;
   /** Set true for above-the-fold cards so the hero row is not lazy-loaded. */
   priority?: boolean;
+  /**
+   * Suppresses the built-in heart. The storefront overlays its own
+   * WishlistButton, which is wired to a server action and knows the viewer's
+   * saved state; the built-in one is local-only and exists for the styleguide.
+   */
+  hideWishlist?: boolean;
 }
 
 /**
@@ -57,6 +63,7 @@ export function ProductCard({
   stock,
   className,
   priority = false,
+  hideWishlist = false,
 }: ProductCardProps) {
   const locale = useLocale();
   const t = useTranslations('product');
@@ -135,27 +142,29 @@ export function ProductCard({
         </div>
       </Link>
 
-      <button
-        type="button"
-        onClick={toggleWishlist}
-        onAnimationEnd={() => setPopping(false)}
-        aria-pressed={saved}
-        aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
-        className="rounded-pill bg-card/90 shadow-card hover:bg-card focus-visible:ring-ring absolute end-2 top-2 flex h-8 w-8 items-center justify-center backdrop-blur transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
-      >
-        <Heart
-          className={cn(
-            'h-4 w-4 transition-colors duration-150',
-            saved ? 'fill-danger text-danger' : 'text-neutral-500',
-            popping && 'animate-heart-pop',
-          )}
-        />
-      </button>
+      {!hideWishlist && (
+        <button
+          type="button"
+          onClick={toggleWishlist}
+          onAnimationEnd={() => setPopping(false)}
+          aria-pressed={saved}
+          aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
+          className="rounded-pill bg-card/90 shadow-card hover:bg-card focus-visible:ring-ring absolute end-2 top-2 flex h-8 w-8 items-center justify-center backdrop-blur transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
+        >
+          <Heart
+            className={cn(
+              'h-4 w-4 transition-colors duration-150',
+              saved ? 'fill-danger text-danger' : 'text-neutral-500',
+              popping && 'animate-heart-pop',
+            )}
+          />
+        </button>
+      )}
     </div>
   );
 }
 
-ProductCard.Skeleton = function ProductCardSkeleton({ className }: { className?: string }) {
+export function ProductCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
@@ -173,4 +182,13 @@ ProductCard.Skeleton = function ProductCardSkeleton({ className }: { className?:
       </div>
     </div>
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and ProductCard.Skeleton reads as undefined. Server code
+ * must import ProductCardSkeleton directly.
+ */
+ProductCard.Skeleton = ProductCardSkeleton;

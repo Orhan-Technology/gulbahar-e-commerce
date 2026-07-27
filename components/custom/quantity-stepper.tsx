@@ -87,7 +87,7 @@ export function QuantityStepper({
   );
 }
 
-QuantityStepper.Skeleton = function QuantityStepperSkeleton({
+export function QuantityStepperSkeleton({
   className,
   size = 'md',
 }: {
@@ -99,4 +99,13 @@ QuantityStepper.Skeleton = function QuantityStepperSkeleton({
       className={cn('rounded-control', size === 'sm' ? 'h-8 w-28' : 'h-10 w-32', className)}
     />
   );
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and QuantityStepper.Skeleton reads as undefined. Server code
+ * must import QuantityStepperSkeleton directly.
+ */
+QuantityStepper.Skeleton = QuantityStepperSkeleton;

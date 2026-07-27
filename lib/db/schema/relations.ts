@@ -1,5 +1,6 @@
 import { relations } from 'drizzle-orm';
 
+import { cartItems } from './cart';
 import { categories } from './categories';
 import { notifications } from './notifications';
 import { orderEvents, orderItems, orders } from './orders';
@@ -20,6 +21,7 @@ import { addresses, users } from './users';
 
 export const usersRelations = relations(users, ({ many }) => ({
   addresses: many(addresses),
+  cartItems: many(cartItems),
   orders: many(orders),
   reviews: many(reviews),
   wishlistItems: many(wishlistItems),
@@ -65,6 +67,7 @@ export const productsRelations = relations(products, ({ one, many }) => ({
   variants: many(productVariants),
   reviews: many(reviews),
   wishlistItems: many(wishlistItems),
+  cartItems: many(cartItems),
   orderItems: many(orderItems),
   campaigns: many(campaigns),
 }));
@@ -128,6 +131,11 @@ export const campaignsRelations = relations(campaigns, ({ one }) => ({
   slot: one(promotionSlots, { fields: [campaigns.slotId], references: [promotionSlots.id] }),
   shop: one(shops, { fields: [campaigns.shopId], references: [shops.id] }),
   product: one(products, { fields: [campaigns.productId], references: [products.id] }),
+}));
+
+export const cartItemsRelations = relations(cartItems, ({ one }) => ({
+  user: one(users, { fields: [cartItems.userId], references: [users.id] }),
+  product: one(products, { fields: [cartItems.productId], references: [products.id] }),
 }));
 
 export const notificationsRelations = relations(notifications, ({ one }) => ({

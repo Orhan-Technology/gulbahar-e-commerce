@@ -27,6 +27,15 @@ export function SponsoredBadge({
   );
 }
 
-SponsoredBadge.Skeleton = function SponsoredBadgeSkeleton({ className }: { className?: string }) {
+export function SponsoredBadgeSkeleton({ className }: { className?: string }) {
   return <Skeleton className={cn('rounded-pill h-5 w-20', className)} />;
-};
+}
+
+/*
+ * Static alias for client-side call sites (the styleguide). The NAMED export
+ * above is canonical: a static property attached to a 'use client' component
+ * does not survive the RSC boundary — a server component importing it receives
+ * a client reference proxy, and SponsoredBadge.Skeleton reads as undefined. Server code
+ * must import SponsoredBadgeSkeleton directly.
+ */
+SponsoredBadge.Skeleton = SponsoredBadgeSkeleton;
