@@ -171,7 +171,15 @@ export async function allOrders(statuses?: OrderStatus[], limit = 100) {
 /**
  * Platform reporting figures (PRD §7.4): GMV, order volume, active shops.
  */
-export async function platformStats(since: Date) {
+/**
+ * Platform-wide order figures over the last `days`.
+ *
+ * Takes a day count rather than a Date so the clock is read here, not in a
+ * component — React 19's purity rule forbids Date.now() during render, and a
+ * reporting window is a property of the query anyway.
+ */
+export async function platformStats(days: number) {
+  const since = new Date(Date.now() - days * 86_400_000);
   const [totals] = await db
     .select({
       gmv: sum(orders.total),

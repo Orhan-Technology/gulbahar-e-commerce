@@ -233,15 +233,16 @@ async function main() {
     '/fa/dashboard/products/new',
     '/fa/dashboard/products/import',
   ]) {
+    /*
+     * Asserted on the STATUS CODE with redirects unfollowed, not on page text:
+     * next-intl ships the whole message tree to the client on every page, so any
+     * Dari string from messages/fa.json is present in the HTML of the sign-in page
+     * too. A substring check cannot tell a rendered screen from a redirect.
+     */
+    const code = await status(path, shopkeeper);
     const page = await html(path, shopkeeper);
-    // "محصولات" is the heading every one of these screens carries; without it the
-    // response is the sign-in redirect, which would also contain no raw keys.
-    const rendered = page.includes('محصولات');
-    check(
-      `${path} → renders, no raw message keys`,
-      rendered && !/shopProducts\.[A-Za-z]/.test(page),
-      { rendered },
-    );
+    const raw = /shopProducts\.[A-Za-z]/.test(page);
+    check(`${path} → renders, no raw message keys`, code === 200 && !raw, { code, raw });
   }
 
   section('Filter chip counts match the database');

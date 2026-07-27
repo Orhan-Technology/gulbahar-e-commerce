@@ -173,8 +173,7 @@ async function main() {
   }
 
   console.log('\n── admin reporting (PRD §7.4) ──');
-  const since = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const platform = await platformStats(since);
+  const platform = await platformStats(90);
   check('GMV non-zero', platform.gmv > 0, formatCurrency(platform.gmv, 'fa'));
   check('order volume counted', platform.orderCount > 100, platform.orderCount);
   check('active shops counted', platform.activeShops === 13, platform.activeShops);
