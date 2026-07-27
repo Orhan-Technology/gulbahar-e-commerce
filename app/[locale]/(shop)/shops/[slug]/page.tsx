@@ -15,6 +15,7 @@ import { publicShopProducts, shopCategories } from '@/lib/db/queries/listing';
 import { shopDetail } from '@/lib/db/queries/shops';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { decodeSlug } from '@/lib/utils';
 
 /**
  * Shop page (PRD §5.1): banner, logo, derived rating, floor/unit and hours, about,
@@ -30,7 +31,9 @@ export default async function ShopPage({
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ q?: string; category?: string }>;
 }) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
+  const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
   const { q, category } = await searchParams;
   const t = await getTranslations('shop');

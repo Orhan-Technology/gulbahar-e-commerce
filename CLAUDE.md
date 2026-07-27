@@ -19,6 +19,8 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - React 19 lint rules are enforced: no setState synchronously inside an effect, and no impure calls (Date.now(), Math.random()) during render.
 - Server components for reads, server actions for mutations. Zod-validate every action input. No API routes unless technically required.
 - Permission model (PRD §3.1): admin owns the platform, shops own their content. Admin can unpublish but NEVER edit shop content. Enforce in every action.
+- A `[slug]` route param arrives PERCENT-ENCODED when it contains non-ASCII characters. Dari slugs are real (products get slugs from their Dari title), so every lookup-by-slug page must run the param through `decodeSlug()` from lib/utils. The failure is nasty: the page 404s while `generateMetadata` — which resolves params separately — still finds the row, so the response carries the correct `<title>` and only the body is missing.
+- A messages key may be a string OR a namespace, never both. Reusing one key for a label and for a group of nested keys silently makes the object win, and `t('thatKey')` renders the raw key path. Bitten twice (`checkout.hesabpay`, `shopProducts.import`).
 - All monetary values stored as integers (afghanis, no decimals needed). All timestamps UTC.
 - Order status flow: placed → accepted → ready → fulfilled; rejected is terminal from placed. Status changes append to order_events and create notifications.
 
@@ -28,7 +30,16 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - npm run dev — dev server
 - npm run db:push / db:seed / db:reset — schema, seed, full reset
 - npm run typecheck && npm run lint — must pass before any phase is considered done (lint is the eslint CLI; `next lint` was removed in Next 16)
+- npm run check:phase3 … check:phase6, check:journey, check:signin — acceptance checks per phase; they need the dev server up
+- scripts/login.sh &lt;phone&gt; — signs a seeded account in and prints a cookie jar path, so authenticated screens can be curl'd
 - Never run `npm run build` while `npm run dev` is running — they share .next and the dev chunk manifest gets clobbered
+
+## Verifying server actions
+
+scripts/check-phase6.ts drives the real server actions over HTTP instead of re-implementing them, which is the only way to check authorization and validation as shipped. Two non-obvious requirements:
+
+- Action ids come from `.next/dev/server/app/**/server-reference-manifest.json`, and an action is only callable from a page whose manifest lists it. POST to that page with a `Next-Action: <id>` header; the return value comes back as a `<row>:{…}` line in the flight stream.
+- For a multipart call (any argument carrying a File), the FILE PARTS MUST BE APPENDED BEFORE the root argument part `"0"`. React resolves the root model the moment busboy emits it, so a `$K` FormData reference can only see parts that have already arrived — root-first yields a silently EMPTY FormData and the action reports "no files".
 
 ## Definition of done for every screen
 

@@ -18,6 +18,7 @@ import { recordImpressions } from '@/lib/db/queries/promoted';
 import { categoryBySlug, categoryTree } from '@/lib/db/queries/shops';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { decodeSlug } from '@/lib/utils';
 import type { ProductSearchParams } from '../../products/page';
 
 const SORTS: ProductSort[] = ['newest', 'price_asc', 'price_desc', 'rating'];
@@ -33,7 +34,9 @@ export default async function CategoryPage({
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<ProductSearchParams>;
 }) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
+  const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
   const query = await searchParams;
   const t = await getTranslations('categories');

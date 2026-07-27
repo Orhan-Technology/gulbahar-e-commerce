@@ -100,9 +100,14 @@ async function main() {
   const requested = await requestOtp(phone);
   check('requestOtp accepted the number', requested.ok);
 
-  // The code is only reachable via the notification log — exactly how the
-  // presenter reads it during the demo.
-  const [otpRow] = await notificationFeed({ limit: 1 });
+  /*
+   * The code is only reachable via the notification log — exactly how the presenter
+   * reads it during the demo. Must select the OTP row explicitly: seeded order
+   * notifications carry timestamps spread across the whole day, so "the newest
+   * notification" is a seeded row whenever the clock is earlier than the latest
+   * seeded time.
+   */
+  const [otpRow] = (await notificationFeed({ limit: 60 })).filter((row) => row.eventKey === 'otp');
   check('OTP written to the notification log', otpRow?.eventKey === 'otp', otpRow?.body);
 
   const code = otpRow?.body.match(/(\d{6})/)?.[1] ?? '';

@@ -28,6 +28,7 @@ import {
 } from '@/lib/db/queries/reviews';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { decodeSlug } from '@/lib/utils';
 
 /**
  * Product page — quality-bar screen #2 (PRD §10.8, §5.2).
@@ -43,7 +44,9 @@ export default async function ProductPage({
   params: Promise<{ locale: string; slug: string }>;
   searchParams: Promise<{ reviewPage?: string }>;
 }) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
+  const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
   const { reviewPage } = await searchParams;
   const t = await getTranslations('product');
@@ -288,7 +291,9 @@ export async function generateMetadata({
 }: {
   params: Promise<{ locale: string; slug: string }>;
 }) {
-  const { locale, slug } = await params;
+  const { locale, slug: rawSlug } = await params;
+  // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
+  const slug = decodeSlug(rawSlug);
   const product = await productDetail(slug, locale);
   if (!product) return {};
   return {

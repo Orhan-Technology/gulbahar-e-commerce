@@ -23,7 +23,8 @@
     "check:phase4": "tsx scripts/check-phase4.ts",
     "check:signin": "tsx scripts/check-signin.ts",
     "check:phase5": "tsx scripts/check-phase5.ts",
-    "check:journey": "tsx scripts/check-journey.ts"
+    "check:journey": "tsx scripts/check-journey.ts",
+    "check:phase6": "tsx scripts/check-phase6.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",
