@@ -60,7 +60,13 @@ export type NotifyParams = {
   /** 'sms' renders in the log as an outgoing message; 'inapp' feeds the bell. */
   channel?: NotificationChannel;
   locale?: DbLocale;
-  /** Interpolated into the template, and stored for deep-linking from the log. */
+  /**
+   * Interpolated into the template, and stored for deep-linking from the log.
+   *
+   * Monetary amounts MUST be pre-formatted by the caller via
+   * lib/format.ts formatCurrency(), so an SMS reads exactly like the UI —
+   * Persian digits and a ؋ prefix in Dari rather than a bare ASCII integer.
+   */
   values?: Record<string, string | number>;
 };
 
@@ -123,9 +129,19 @@ export async function notifyMany(items: NotifyParams[]) {
 /**
  * Resolves `notifications.<eventKey>.title` and `.body` for a locale.
  *
- * Falls back to Dari, then to the raw key, rather than throwing — a missing
- * template must never take down an order transition mid-demo. The key surfacing
- * in the log panel is a loud, obvious signal to fix it.
+ * Event keys are dotted (`order.placed`) and next-intl treats a dot as nesting,
+ * so the templates in messages/*.json must be NESTED objects, not flat keys
+ * containing dots. A flat `"order.placed"` key resolves to nothing.
+ *
+ * Detection is via onError rather than try/catch: createTranslator does not throw
+ * on a missing message, it returns the key path as the string and reports through
+ * onError. An earlier version wrapped this in try/catch, so the Dari fallback
+ * never ran and every seeded notification stored a raw key as its body — the
+ * exact failure the on-screen log panel exists to make visible.
+ *
+ * Falls back to Dari, then to the key, rather than throwing: a missing template
+ * must never take down an order transition mid-demo. The console warning is what
+ * makes it impossible to miss.
  */
 export function renderTemplate(
   eventKey: NotificationEventKey,
@@ -135,20 +151,25 @@ export function renderTemplate(
   const namespace = `notifications.${eventKey}`;
 
   for (const candidate of [locale, 'fa' as DbLocale]) {
-    try {
-      const t = createTranslator({
-        locale: candidate,
-        messages: MESSAGES[candidate] as never,
-        namespace: namespace as never,
-      });
-      return {
-        title: t('title' as never, values as never) as unknown as string,
-        body: t('body' as never, values as never) as unknown as string,
-      };
-    } catch {
-      // Try the next candidate locale.
-    }
+    let failed = false;
+    const t = createTranslator({
+      locale: candidate,
+      messages: MESSAGES[candidate] as never,
+      namespace: namespace as never,
+      onError: () => {
+        failed = true;
+      },
+    });
+
+    const title = t('title' as never, values as never) as unknown as string;
+    const body = t('body' as never, values as never) as unknown as string;
+
+    if (!failed) return { title, body };
   }
 
+  console.warn(
+    `[notify] missing template for "${eventKey}" — add notifications.${eventKey}.{title,body} ` +
+      'to messages/fa.json and messages/en.json (nested, not a dotted key)',
+  );
   return { title: eventKey, body: JSON.stringify(values) };
 }

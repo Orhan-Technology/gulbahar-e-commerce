@@ -19,7 +19,8 @@
     "db:extensions": "tsx scripts/db-extensions.ts",
     "check:phase3": "tsx scripts/check-phase3.ts",
     "db:setup": "npm run db:seed:images && npm run db:reset",
-    "seed:content": "python3 scripts/author-seed-content.py"
+    "seed:content": "python3 scripts/author-seed-content.py",
+    "check:phase4": "tsx scripts/check-phase4.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

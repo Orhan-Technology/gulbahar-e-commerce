@@ -268,69 +268,77 @@
       "title": "کد ورود گلبهار",
       "body": "کد ورود شما: {code} — تا ۵ دقیقه اعتبار دارد. این کد را با کسی شریک نسازید."
     },
-    "order.placed": {
-      "title": "سفارش شما ثبت شد",
-      "body": "سفارش {reference} ثبت شد. مجموع: {total} افغانی. به زودی از طرف دکان تایید می‌شود."
+    "order": {
+      "placed": {
+        "title": "سفارش شما ثبت شد",
+        "body": "سفارش {reference} ثبت شد. مجموع: {total}. به زودی از طرف دکان تایید می‌شود."
+      },
+      "newForShop": {
+        "title": "سفارش جدید",
+        "body": "سفارش {reference} با {itemCount} قلم به ارزش {total} رسید. لطفاً تایید یا رد کنید."
+      },
+      "accepted": {
+        "title": "سفارش تایید شد",
+        "body": "دکان {shopName} سفارش {reference} را تایید کرد و در حال آماده‌سازی است."
+      },
+      "rejected": {
+        "title": "سفارش رد شد",
+        "body": "متأسفانه دکان {shopName} سفارش {reference} را رد کرد. دلیل: {reason}"
+      },
+      "ready": {
+        "title": "سفارش آماده است",
+        "body": "سفارش {reference} آماده است. {handover}"
+      },
+      "fulfilled": {
+        "title": "سفارش تحویل شد",
+        "body": "سفارش {reference} تحویل داده شد. از خرید شما سپاسگزاریم — نظر خود را ثبت کنید."
+      }
     },
-    "order.newForShop": {
-      "title": "سفارش جدید",
-      "body": "سفارش {reference} با {itemCount} قلم به ارزش {total} افغانی رسید. لطفاً تایید یا رد کنید."
+    "shop": {
+      "submitted": {
+        "title": "درخواست دکان جدید",
+        "body": "دکان «{shopName}» درخواست ثبت داده است و در انتظار بررسی است."
+      },
+      "approved": {
+        "title": "دکان شما تایید شد",
+        "body": "تبریک! دکان «{shopName}» تایید شد و محصولات شما در فروشگاه گلبهار قابل دیدن است."
+      },
+      "rejected": {
+        "title": "درخواست دکان رد شد",
+        "body": "درخواست «{shopName}» رد شد. دلیل: {reason} — می‌توانید اصلاح و دوباره ارسال کنید."
+      },
+      "invited": {
+        "title": "دکان شما آماده است",
+        "body": "مدیریت گلبهار دکان «{shopName}» را برای شما ایجاد کرد. با شماره {phone} وارد شوید."
+      }
     },
-    "order.accepted": {
-      "title": "سفارش تایید شد",
-      "body": "دکان {shopName} سفارش {reference} را تایید کرد و در حال آماده‌سازی است."
+    "campaign": {
+      "requested": {
+        "title": "درخواست تبلیغ جدید",
+        "body": "دکان «{shopName}» جایگاه «{slotName}» را برای {weeks} هفته درخواست کرد."
+      },
+      "approved": {
+        "title": "تبلیغ شما تایید شد",
+        "body": "جایگاه «{slotName}» برای دکان شما فعال شد و تا {endsAt} ادامه دارد."
+      },
+      "rejected": {
+        "title": "درخواست تبلیغ رد شد",
+        "body": "درخواست جایگاه «{slotName}» رد شد. دلیل: {reason}"
+      },
+      "expiring": {
+        "title": "تبلیغ در حال ختم",
+        "body": "جایگاه «{slotName}» در {days} روز ختم می‌شود. برای تمدید اقدام کنید."
+      }
     },
-    "order.rejected": {
-      "title": "سفارش رد شد",
-      "body": "متأسفانه دکان {shopName} سفارش {reference} را رد کرد. دلیل: {reason}"
-    },
-    "order.ready": {
-      "title": "سفارش آماده است",
-      "body": "سفارش {reference} آماده است. {handover}"
-    },
-    "order.fulfilled": {
-      "title": "سفارش تحویل شد",
-      "body": "سفارش {reference} تحویل داده شد. از خرید شما سپاسگزاریم — نظر خود را ثبت کنید."
-    },
-    "shop.submitted": {
-      "title": "درخواست دکان جدید",
-      "body": "دکان «{shopName}» درخواست ثبت داده است و در انتظار بررسی است."
-    },
-    "shop.approved": {
-      "title": "دکان شما تایید شد",
-      "body": "تبریک! دکان «{shopName}» تایید شد و محصولات شما در فروشگاه گلبهار قابل دیدن است."
-    },
-    "shop.rejected": {
-      "title": "درخواست دکان رد شد",
-      "body": "درخواست «{shopName}» رد شد. دلیل: {reason} — می‌توانید اصلاح و دوباره ارسال کنید."
-    },
-    "shop.invited": {
-      "title": "دکان شما آماده است",
-      "body": "مدیریت گلبهار دکان «{shopName}» را برای شما ایجاد کرد. با شماره {phone} وارد شوید."
-    },
-    "campaign.requested": {
-      "title": "درخواست تبلیغ جدید",
-      "body": "دکان «{shopName}» جایگاه «{slotName}» را برای {weeks} هفته درخواست کرد."
-    },
-    "campaign.approved": {
-      "title": "تبلیغ شما تایید شد",
-      "body": "جایگاه «{slotName}» برای دکان شما فعال شد و تا {endsAt} ادامه دارد."
-    },
-    "campaign.rejected": {
-      "title": "درخواست تبلیغ رد شد",
-      "body": "درخواست جایگاه «{slotName}» رد شد. دلیل: {reason}"
-    },
-    "campaign.expiring": {
-      "title": "تبلیغ در حال ختم",
-      "body": "جایگاه «{slotName}» در {days} روز ختم می‌شود. برای تمدید اقدام کنید."
-    },
-    "review.received": {
-      "title": "نظر جدید",
-      "body": "برای «{productTitle}» یک نظر {rating} ستاره ثبت شد."
-    },
-    "review.responded": {
-      "title": "پاسخ دکان",
-      "body": "دکان {shopName} به نظر شما در مورد «{productTitle}» پاسخ داد."
+    "review": {
+      "received": {
+        "title": "نظر جدید",
+        "body": "برای «{productTitle}» یک نظر {rating} ستاره ثبت شد."
+      },
+      "responded": {
+        "title": "پاسخ دکان",
+        "body": "دکان {shopName} به نظر شما در مورد «{productTitle}» پاسخ داد."
+      }
     }
   },
   "auth": {

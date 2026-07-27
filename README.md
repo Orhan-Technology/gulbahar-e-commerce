@@ -16,9 +16,16 @@ Full specification: [`docs/PRD.md`](docs/PRD.md) · build plan: [`docs/BUILD-PRO
 cp .env.example .env      # already done if .env exists
 docker compose up -d      # start Postgres
 npm install
-npm run db:push           # apply schema
+npm run db:setup          # generate seed imagery, then create and seed the database
 npm run dev               # http://localhost:3005
 ```
+
+`db:setup` runs the image generator once and then `db:reset`. Afterwards use
+`npm run db:reset` on its own — it rebuilds the data in about 3 seconds and leaves
+the generated imagery alone, which is what the demo control panel's reset needs.
+
+The seed is **deterministic**: every reset produces byte-identical data, so a
+rehearsed walkthrough still matches after resetting mid-demo.
 
 The first `npm run dev` or `npm run build` downloads the Vazirmatn and Inter webfonts from Google
 Fonts and self-hosts them under `.next/static/media`. After that first run everything — including
@@ -34,6 +41,30 @@ This machine already had services on the conventional ports, so Gulbahar uses:
 | Postgres | `5435` | 5432/5433/5434 are taken by other Postgres |
 
 Both are set in `.env` and `package.json`; change them together if you want different ones.
+
+## Demo sign-in
+
+Sign-in is phone + OTP with no password. The code is never sent anywhere — it is
+written to the notification log, which is where the presenter reads it (PRD §9.2).
+
+| Role       | Phone        | Notes                            |
+| ---------- | ------------ | -------------------------------- |
+| Admin      | `0700000001` | Mall management, all surfaces    |
+| Shopkeeper | `0700000002` | Owner of الکترونیک کابل          |
+| Staff      | `0700000004` | Same shop, staff role            |
+| Customer   | `0700000003` | Has order history and a wishlist |
+
+## Seeded world
+
+| Data      | Amount                                                   |
+| --------- | -------------------------------------------------------- |
+| Shops     | 14 — 13 approved, 1 pending for the live approval moment |
+| Products  | 75 (69 published, 6 draft under the pending shop)        |
+| Orders    | 220 across 90 days, weighted to recent weeks             |
+| Reviews   | 90 verified-purchase, 10 shop replies, 2 reported        |
+| Offers    | 5 active, 2 expired                                      |
+| Campaigns | 8 active, 1 awaiting approval, 2 ended                   |
+| Users     | 1 admin, 14 shopkeepers, 1 staff, 25 customers           |
 
 ## Locales
 
@@ -75,8 +106,8 @@ reference for the build — check it in Dari first (PRD §10.3).
 | 1     | Scaffold, i18n/RTL base, Docker Postgres | ✅ done |
 | 2     | Design system + component library        | ✅ done |
 | 3     | Schema, queries, auth, notify            | ✅ done |
-| 4     | Seeded world                             | next    |
-| 5     | Customer storefront                      | —       |
+| 4     | Seeded world                             | ✅ done |
+| 5     | Customer storefront                      | next    |
 | 6     | Shop dashboard                           | —       |
 | 7     | Admin                                    | —       |
 | 8     | Demo apparatus                           | —       |

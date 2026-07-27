@@ -268,69 +268,77 @@
       "title": "Gulbahar sign-in code",
       "body": "Your sign-in code is {code} — valid for 5 minutes. Do not share it with anyone."
     },
-    "order.placed": {
-      "title": "Order placed",
-      "body": "Order {reference} has been placed. Total: {total} AFN. The shop will confirm shortly."
+    "order": {
+      "placed": {
+        "title": "Order placed",
+        "body": "Order {reference} has been placed. Total: {total}. The shop will confirm shortly."
+      },
+      "newForShop": {
+        "title": "New order",
+        "body": "Order {reference} with {itemCount} items worth {total} has arrived. Please accept or reject it."
+      },
+      "accepted": {
+        "title": "Order accepted",
+        "body": "{shopName} accepted order {reference} and is preparing it."
+      },
+      "rejected": {
+        "title": "Order rejected",
+        "body": "Unfortunately {shopName} rejected order {reference}. Reason: {reason}"
+      },
+      "ready": {
+        "title": "Order ready",
+        "body": "Order {reference} is ready. {handover}"
+      },
+      "fulfilled": {
+        "title": "Order delivered",
+        "body": "Order {reference} has been delivered. Thank you — please leave a review."
+      }
     },
-    "order.newForShop": {
-      "title": "New order",
-      "body": "Order {reference} with {itemCount} items worth {total} AFN has arrived. Please accept or reject it."
+    "shop": {
+      "submitted": {
+        "title": "New shop application",
+        "body": "\"{shopName}\" has applied to join and is awaiting review."
+      },
+      "approved": {
+        "title": "Your shop is approved",
+        "body": "Congratulations! \"{shopName}\" is approved and your products are now visible in the Gulbahar storefront."
+      },
+      "rejected": {
+        "title": "Shop application rejected",
+        "body": "The application for \"{shopName}\" was rejected. Reason: {reason} — you can amend and resubmit."
+      },
+      "invited": {
+        "title": "Your shop is ready",
+        "body": "Gulbahar management created \"{shopName}\" for you. Sign in with {phone}."
+      }
     },
-    "order.accepted": {
-      "title": "Order accepted",
-      "body": "{shopName} accepted order {reference} and is preparing it."
+    "campaign": {
+      "requested": {
+        "title": "New promotion request",
+        "body": "\"{shopName}\" requested the \"{slotName}\" slot for {weeks} weeks."
+      },
+      "approved": {
+        "title": "Your promotion is approved",
+        "body": "The \"{slotName}\" slot is now active for your shop and runs until {endsAt}."
+      },
+      "rejected": {
+        "title": "Promotion request rejected",
+        "body": "The request for \"{slotName}\" was rejected. Reason: {reason}"
+      },
+      "expiring": {
+        "title": "Promotion ending soon",
+        "body": "The \"{slotName}\" slot ends in {days} days. Renew to keep the placement."
+      }
     },
-    "order.rejected": {
-      "title": "Order rejected",
-      "body": "Unfortunately {shopName} rejected order {reference}. Reason: {reason}"
-    },
-    "order.ready": {
-      "title": "Order ready",
-      "body": "Order {reference} is ready. {handover}"
-    },
-    "order.fulfilled": {
-      "title": "Order delivered",
-      "body": "Order {reference} has been delivered. Thank you — please leave a review."
-    },
-    "shop.submitted": {
-      "title": "New shop application",
-      "body": "\"{shopName}\" has applied to join and is awaiting review."
-    },
-    "shop.approved": {
-      "title": "Your shop is approved",
-      "body": "Congratulations! \"{shopName}\" is approved and your products are now visible in the Gulbahar storefront."
-    },
-    "shop.rejected": {
-      "title": "Shop application rejected",
-      "body": "The application for \"{shopName}\" was rejected. Reason: {reason} — you can amend and resubmit."
-    },
-    "shop.invited": {
-      "title": "Your shop is ready",
-      "body": "Gulbahar management created \"{shopName}\" for you. Sign in with {phone}."
-    },
-    "campaign.requested": {
-      "title": "New promotion request",
-      "body": "\"{shopName}\" requested the \"{slotName}\" slot for {weeks} weeks."
-    },
-    "campaign.approved": {
-      "title": "Your promotion is approved",
-      "body": "The \"{slotName}\" slot is now active for your shop and runs until {endsAt}."
-    },
-    "campaign.rejected": {
-      "title": "Promotion request rejected",
-      "body": "The request for \"{slotName}\" was rejected. Reason: {reason}"
-    },
-    "campaign.expiring": {
-      "title": "Promotion ending soon",
-      "body": "The \"{slotName}\" slot ends in {days} days. Renew to keep the placement."
-    },
-    "review.received": {
-      "title": "New review",
-      "body": "\"{productTitle}\" received a {rating} star review."
-    },
-    "review.responded": {
-      "title": "Shop replied",
-      "body": "{shopName} replied to your review of \"{productTitle}\"."
+    "review": {
+      "received": {
+        "title": "New review",
+        "body": "\"{productTitle}\" received a {rating} star review."
+      },
+      "responded": {
+        "title": "Shop replied",
+        "body": "{shopName} replied to your review of \"{productTitle}\"."
+      }
     }
   },
   "auth": {
