@@ -242,7 +242,48 @@
     "starsCount": "{count} stars",
     "zoomImage": "Zoom image",
     "viewImageNumber": "View image {number}",
-    "wishlistFailed": "Could not save — please try again"
+    "wishlistFailed": "Could not save — please try again",
+    "breadcrumbProducts": "Products",
+    "description": "Description",
+    "quantity": "Quantity",
+    "addToCart": "Add to cart",
+    "addedToCart": "Added to cart",
+    "reviewsHeading": "Customer reviews",
+    "reviewCount": "{count} reviews",
+    "noReviewsYet": "No reviews yet — be the first.",
+    "verifiedPurchase": "Verified purchase",
+    "shopReply": "Shop reply",
+    "shopReplied": "{shop} replied",
+    "moreReviews": "More reviews",
+    "previousReviews": "Previous reviews",
+    "relatedHeading": "Related products",
+    "relatedHint": "From this shop and this category",
+    "shopFloorUnit": "Floor {floor} · Unit {unit}",
+    "cartError": {
+      "invalid_input": "That request was not valid",
+      "unavailable": "This product is not available right now",
+      "out_of_stock": "This product is out of stock"
+    },
+    "reviewForm": {
+      "writeTitle": "Write a review",
+      "editTitle": "Edit your review",
+      "description": "Your review helps other customers and the shopkeeper.",
+      "ratingLabel": "Your rating",
+      "bodyLabel": "Your review",
+      "bodyPlaceholder": "Tell others about this product…",
+      "bodyOptional": "Writing text is optional — a rating is enough.",
+      "submit": "Submit review",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "created": "Thanks — your review is posted.",
+      "updated": "Your review has been updated",
+      "errors": {
+        "requires_auth": "Sign in to leave a review",
+        "not_purchased": "Only customers who bought this product can review it",
+        "invalid_input": "Please choose a rating",
+        "unknown_product": "That product could not be found"
+      }
+    }
   },
   "shop": {
     "productCount": "{count} products",

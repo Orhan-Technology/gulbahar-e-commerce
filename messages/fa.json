@@ -242,7 +242,48 @@
     "starsCount": "{count} ستاره",
     "zoomImage": "بزرگ‌نمایی تصویر",
     "viewImageNumber": "دیدن تصویر {number}",
-    "wishlistFailed": "ذخیره ناموفق بود، دوباره تلاش کنید"
+    "wishlistFailed": "ذخیره ناموفق بود، دوباره تلاش کنید",
+    "breadcrumbProducts": "محصولات",
+    "description": "توضیحات",
+    "quantity": "تعداد",
+    "addToCart": "افزودن به سبد",
+    "addedToCart": "به سبد اضافه شد",
+    "reviewsHeading": "نظرات مشتریان",
+    "reviewCount": "{count} نظر",
+    "noReviewsYet": "هنوز نظری ثبت نشده است. اولین نفر باشید!",
+    "verifiedPurchase": "خرید تایید شده",
+    "shopReply": "پاسخ دکان",
+    "shopReplied": "پاسخ {shop}",
+    "moreReviews": "نظرات بیشتر",
+    "previousReviews": "نظرات قبلی",
+    "relatedHeading": "محصولات مرتبط",
+    "relatedHint": "از همین دکان و همین دسته‌بندی",
+    "shopFloorUnit": "طبقه {floor} · دکان {unit}",
+    "cartError": {
+      "invalid_input": "درخواست نامعتبر بود",
+      "unavailable": "این محصول فعلاً موجود نیست",
+      "out_of_stock": "موجودی این محصول تمام شده است"
+    },
+    "reviewForm": {
+      "writeTitle": "ثبت نظر",
+      "editTitle": "ویرایش نظر",
+      "description": "نظر شما به مشتریان دیگر و به دکاندار کمک می‌کند.",
+      "ratingLabel": "امتیاز شما",
+      "bodyLabel": "نظر شما",
+      "bodyPlaceholder": "تجربه خود را از این محصول بنویسید…",
+      "bodyOptional": "نوشتن متن اختیاری است — امتیاز کافی است.",
+      "submit": "ثبت نظر",
+      "saving": "در حال ثبت…",
+      "cancel": "لغو",
+      "created": "نظر شما ثبت شد، تشکر!",
+      "updated": "نظر شما به‌روز شد",
+      "errors": {
+        "requires_auth": "برای ثبت نظر وارد شوید",
+        "not_purchased": "تنها خریداران این محصول می‌توانند نظر بدهند",
+        "invalid_input": "امتیاز را انتخاب کنید",
+        "unknown_product": "این محصول پیدا نشد"
+      }
+    }
   },
   "shop": {
     "productCount": "{count} محصول",

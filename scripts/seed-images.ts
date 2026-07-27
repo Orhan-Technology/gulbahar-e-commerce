@@ -114,6 +114,8 @@ function productSvg(
   title: string,
   shopName: string,
   palette: { from: string; to: string },
+  /** Rotation of the accent square, giving each product a second "angle". */
+  angle = 0,
 ): Buffer {
   const size = 1200;
   const lines = wrap(title, 22, 3);
@@ -141,6 +143,9 @@ function productSvg(
   <!-- One consistent geometric motif, never a fake product silhouette. -->
   <circle cx="${size / 2}" cy="${size / 2}" r="${size * 0.33}" fill="#ffffff" opacity="0.07"/>
   <circle cx="${size / 2}" cy="${size / 2}" r="${size * 0.24}" fill="#ffffff" opacity="0.05"/>
+  <rect x="${size * 0.34}" y="${size * 0.34}" width="${size * 0.32}" height="${size * 0.32}"
+        rx="${size * 0.05}" fill="#ffffff" opacity="0.05"
+        transform="rotate(${angle} ${size / 2} ${size / 2})"/>
   ${titleLines}
   <text x="${size / 2}" y="${size - 96}" font-family="${ARABIC_FONT}" font-size="38"
         fill="#ffffff" opacity="0.72" text-anchor="middle" direction="rtl"
@@ -237,26 +242,39 @@ async function main() {
   }
   console.log(`  ✓ ${shops.length} shop logos and banners`);
 
+  /*
+   * Two angles per product. A single image left the gallery's thumbnail rail and
+   * zoom affordance with nothing to show, and the product page is quality-bar
+   * screen #2 — the rail is part of what makes it read as a real catalogue
+   * (PRD §5.2, §10.4).
+   */
+  const ANGLES = [0, 28];
+
   let count = 0;
   for (const [productIndex, product] of products.entries()) {
     const shopName = shopNames.get(product.shopSlug);
     const palette = pickPalette(productIndex);
 
-    const image = await storeImage(
-      await sharp(productSvg(product.title.fa, shopName?.fa ?? '', palette))
-        .png()
-        .toBuffer(),
-      { folder: 'seed', basename: seedBasename(product.slug), maxWidth: 1200 },
-    );
+    const stored: Array<{ path: string; variants: Record<number, string> }> = [];
+    for (const [angleIndex, angle] of ANGLES.entries()) {
+      const image = await storeImage(
+        await sharp(productSvg(product.title.fa, shopName?.fa ?? '', palette, angle))
+          .png()
+          .toBuffer(),
+        { folder: 'seed', basename: seedBasename(product.slug, angleIndex), maxWidth: 1200 },
+      );
+      stored.push({ path: image.path, variants: image.variants });
+    }
 
     (manifest.products as Record<string, unknown>)[product.slug] = {
-      path: image.path,
-      variants: image.variants,
+      path: stored[0].path,
+      variants: stored[0].variants,
+      images: stored.map((entry) => entry.path),
     };
     count += 1;
     if (count % 25 === 0) console.log(`  … ${count}/${products.length} products`);
   }
-  console.log(`  ✓ ${count} product images`);
+  console.log(`  ✓ ${count} products × ${ANGLES.length} angles`);
 
   const manifestPath = path.join(contentDir, 'image-manifest.json');
   await writeManifest(manifestPath, manifest);

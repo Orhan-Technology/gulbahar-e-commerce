@@ -131,7 +131,7 @@ type ProductSeed = {
 
 type ImageManifest = {
   shops: Record<string, { logoPath: string; bannerPath: string }>;
-  products: Record<string, { path: string; variants: Record<string, string> }>;
+  products: Record<string, { path: string; variants: Record<string, string>; images?: string[] }>;
 };
 
 /** Slot inventory and flat weekly pricing (PRD §8.2, §8.3). */
@@ -372,13 +372,18 @@ async function main() {
     productBySlug.set(product.slug, product);
 
     const image = manifest.products[product.slug];
-    if (image) {
-      await db.insert(productImages).values({
-        productId: row.id,
-        path: image.path,
-        sort: 0,
-        alt: product.title,
-      });
+    // `images` carries every generated angle; `path` is the legacy single-image
+    // field, kept as a fallback so an older manifest still seeds.
+    const paths = image?.images ?? (image ? [image.path] : []);
+    if (paths.length > 0) {
+      await db.insert(productImages).values(
+        paths.map((path, sort) => ({
+          productId: row.id,
+          path,
+          sort,
+          alt: product.title,
+        })),
+      );
     }
 
     for (const [variantIndex, variant] of product.variants.entries()) {
@@ -569,9 +574,6 @@ async function main() {
     const useEnglish = chance(0.12) && REVIEWS_EN[rating];
     const body = useEnglish ? pick(REVIEWS_EN[rating]) : pick(REVIEWS_FA[rating]);
 
-    // Two reported reviews feed the admin moderation queue (PRD §7.2, §9.4).
-    const status = createdReviews.length < 2 && rating <= 2 ? 'reported' : 'visible';
-
     const [row] = await db
       .insert(reviews)
       .values({
@@ -580,7 +582,6 @@ async function main() {
         orderItemId: item.orderItemId,
         rating,
         body,
-        status,
         createdAt: new Date(item.fulfilledAt.getTime() + intBetween(1, 10) * DAY_MS),
       })
       .returning();
@@ -588,8 +589,26 @@ async function main() {
     createdReviews.push({ id: row.id, shopSlug: item.shopSlug, rating });
   }
 
-  // Ten shopkeeper responses (PRD §9.4).
-  const toRespond = sample(createdReviews, 10);
+  /*
+   * Two reported reviews for the admin moderation queue (PRD §7.2, §9.4).
+   *
+   * Chosen after the fact from the lowest-rated reviews. An earlier version
+   * decided this inline with `createdReviews.length < 2 && rating <= 2`, which
+   * required a review to be BOTH among the first two created AND rated 1-2 —
+   * and since ratings skew 4-5 that combination essentially never occurred, so
+   * the moderation queue seeded empty and the demo moment had nothing to show.
+   */
+  const reportable = [...createdReviews].sort((a, b) => a.rating - b.rating).slice(0, 2);
+  for (const review of reportable) {
+    await db.update(reviews).set({ status: 'reported' }).where(eq(reviews.id, review.id));
+  }
+
+  // Ten shopkeeper responses (PRD §9.4). Never on a reported review.
+  const reportedIds = new Set(reportable.map((review) => review.id));
+  const toRespond = sample(
+    createdReviews.filter((review) => !reportedIds.has(review.id)),
+    10,
+  );
   for (const review of toRespond) {
     await db.insert(reviewResponses).values({
       reviewId: review.id,
@@ -695,6 +714,14 @@ async function main() {
       slot: 'category_top',
       shopSlug: approvedShopSlugs[2],
       productSlug: sellable[12].slug,
+      status: 'active',
+    },
+    // Related-products slot, so the product page's promoted strip is occupied —
+    // PRD §9.4 wants every promoted slot visibly in use at demo start.
+    {
+      slot: 'product_related',
+      shopSlug: approvedShopSlugs[4],
+      productSlug: sellable[26].slug,
       status: 'active',
     },
     // One pending request for the admin approval moment (PRD §9.4).
@@ -839,6 +866,7 @@ async function main() {
   console.log(`  categories          ${categoryCount} (8 parents + 16 children)`);
   console.log(`  order statuses      ${JSON.stringify(orderStatusCounts)}`);
   console.log(`  reviews created     ${createdReviews.length} (target ${REVIEW_TARGET})`);
+  console.log(`  reported reviews    ${reportable.length} (admin moderation queue)`);
   console.log(`  fulfilled items     ${fulfilledItems.length} reviewable`);
   console.log(`  wishlist rows       ${wishlistValues.length}`);
   console.log(`  out-of-stock        ${soldOutSlugs.size} products (action queue)`);
