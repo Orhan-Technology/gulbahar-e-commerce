@@ -463,17 +463,17 @@ Read docs/PRD.md §9.5. I'm rehearsing the client demo. Generate: (1) a presente
 
 ## Sequencing summary
 
-| Phase | Output | Rough effort share |
-|---|---|---|
-| 0–1 | Repo, scaffold, i18n/RTL base | 5% |
-| 2 | Design system + component library | 15% |
-| 3 | Schema, queries, auth, notify | 10% |
-| 4 | Seeded world | 10% |
-| 5 | Customer storefront | 25% |
-| 6 | Shop dashboard | 15% |
-| 7 | Admin | 10% |
-| 8 | Demo apparatus | 5% |
-| 9 | Polish + audits | 5% + everything you find |
-| 10 | Rehearsal | — |
+| Phase | Output                            | Rough effort share       |
+| ----- | --------------------------------- | ------------------------ |
+| 0–1   | Repo, scaffold, i18n/RTL base     | 5%                       |
+| 2     | Design system + component library | 15%                      |
+| 3     | Schema, queries, auth, notify     | 10%                      |
+| 4     | Seeded world                      | 10%                      |
+| 5     | Customer storefront               | 25%                      |
+| 6     | Shop dashboard                    | 15%                      |
+| 7     | Admin                             | 10%                      |
+| 8     | Demo apparatus                    | 5%                       |
+| 9     | Polish + audits                   | 5% + everything you find |
+| 10    | Rehearsal                         | —                        |
 
 The share matches PRD §10.8: half the effort lands on the two surfaces the client will judge.

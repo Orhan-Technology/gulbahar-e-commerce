@@ -61,25 +61,25 @@ The demo succeeds if the client:
 
 ## 3. Users and roles
 
-| Role | Who | Primary need |
-|---|---|---|
-| Customer | Kabul residents | Find products, order, track |
-| Shopkeeper | Gulbahar Center tenants | List products, receive and fulfil orders, grow visibility |
-| Admin | Gulbahar mall management | Control who is on the platform, manage taxonomy and promotion inventory, see overall performance |
+| Role       | Who                      | Primary need                                                                                     |
+| ---------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
+| Customer   | Kabul residents          | Find products, order, track                                                                      |
+| Shopkeeper | Gulbahar Center tenants  | List products, receive and fulfil orders, grow visibility                                        |
+| Admin      | Gulbahar mall management | Control who is on the platform, manage taxonomy and promotion inventory, see overall performance |
 
 ### 3.1 Permission boundaries
 
 The governing principle: **admin owns the platform, shops own their content.**
 
-| Capability | Shopkeeper | Admin |
-|---|---|---|
-| Products | Full control — create, edit, price, stock, publish | Unpublish / flag only. Cannot edit. |
-| Shop profile | Edit own | Edit any, approve, suspend, close |
-| Orders | Own shop's orders only | View all |
-| Promotions | Request placement | Define slots, set pricing, approve or reject |
-| Categories | Assign products to existing categories | Create and manage the taxonomy |
-| Reports | Own shop only | Platform-wide |
-| User accounts | Own shop staff | All accounts |
+| Capability    | Shopkeeper                                         | Admin                                        |
+| ------------- | -------------------------------------------------- | -------------------------------------------- |
+| Products      | Full control — create, edit, price, stock, publish | Unpublish / flag only. Cannot edit.          |
+| Shop profile  | Edit own                                           | Edit any, approve, suspend, close            |
+| Orders        | Own shop's orders only                             | View all                                     |
+| Promotions    | Request placement                                  | Define slots, set pricing, approve or reject |
+| Categories    | Assign products to existing categories             | Create and manage the taxonomy               |
+| Reports       | Own shop only                                      | Platform-wide                                |
+| User accounts | Own shop staff                                     | All accounts                                 |
 
 Admin does not edit shop content; moderation is limited to unpublishing. Categories are admin-owned — shops select from a fixed taxonomy.
 
@@ -257,14 +257,14 @@ Discounts funded by the shop: percentage, fixed amount, flash sales with countdo
 
 Visibility purchased from Gulbahar. **This is the platform's revenue mechanism** — foreground it in the demo.
 
-| Slot | Quantity |
-|---|---|
-| Home hero banner | 1 |
-| Featured shops carousel | 6 |
-| Top of search results | 2–3 |
-| Top of category listing | 2–3 |
-| Related products on product page | 2 |
-| Top of shop directory | 3 |
+| Slot                             | Quantity |
+| -------------------------------- | -------- |
+| Home hero banner                 | 1        |
+| Featured shops carousel          | 6        |
+| Top of search results            | 2–3      |
+| Top of category listing          | 2–3      |
+| Related products on product page | 2        |
+| Top of shop directory            | 3        |
 
 ### 8.3 Pricing
 
@@ -282,18 +282,18 @@ Flat fee per slot per week or month. Not CPC, not auction. Mall tenants already 
 
 ### 9.1 Simulated subsystems
 
-| Subsystem | Demo treatment |
-|---|---|
-| HesabPay | Styled payment sheet with success animation; no integration |
-| Cash on delivery | "Pay on delivery" selection; no cash handling |
-| SMS / OTP | All messages render in the on-screen notification log (§9.2) |
-| Delivery | Status advanced from the demo control panel |
-| Analytics | Seeded 90-day history so charts have genuine shape |
-| Payouts | Read-only seeded table |
+| Subsystem        | Demo treatment                                               |
+| ---------------- | ------------------------------------------------------------ |
+| HesabPay         | Styled payment sheet with success animation; no integration  |
+| Cash on delivery | "Pay on delivery" selection; no cash handling                |
+| SMS / OTP        | All messages render in the on-screen notification log (§9.2) |
+| Delivery         | Status advanced from the demo control panel                  |
+| Analytics        | Seeded 90-day history so charts have genuine shape           |
+| Payouts          | Read-only seeded table                                       |
 
 ### 9.2 Notification log panel
 
-A slide-out panel, available in the demo build, showing every SMS the system *would* send — recipient, message, language — appearing in real time. This demos better than real SMS: the client watches the message appear on screen the moment the order is accepted. Templates are authored in Dari and English so the panel itself demonstrates the multilingual capability.
+A slide-out panel, available in the demo build, showing every SMS the system _would_ send — recipient, message, language — appearing in real time. This demos better than real SMS: the client watches the message appear on screen the moment the order is accepted. Templates are authored in Dari and English so the panel itself demonstrates the multilingual capability.
 
 ### 9.3 Demo control panel
 
@@ -340,14 +340,14 @@ Interface quality is the primary success criterion (§1.1), so design is specifi
 
 ### 10.2 Foundations
 
-| Token group | Direction |
-|---|---|
-| Colour | Primary (deep green), accent (gold), semantic success / warning / danger, 10-step neutral scale. All defined as CSS variables; light mode only for the MVP. |
-| Typography | **Vazirmatn** for Dari and Pashto; **Inter** for Latin, weight-matched. Type scale of 6 sizes; no more. Numerals follow locale (Persian digits in Dari UI). |
-| Spacing | 4px base scale (4, 8, 12, 16, 24, 32, 48, 64). No arbitrary values. |
-| Radius | One radius family (e.g. 8px cards, 6px controls, full for pills) applied consistently. |
-| Elevation | Two shadow levels only: card and overlay. |
-| Iconography | Lucide, single stroke weight, mirrored where directional in RTL. |
+| Token group | Direction                                                                                                                                                   |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Colour      | Primary (deep green), accent (gold), semantic success / warning / danger, 10-step neutral scale. All defined as CSS variables; light mode only for the MVP. |
+| Typography  | **Vazirmatn** for Dari and Pashto; **Inter** for Latin, weight-matched. Type scale of 6 sizes; no more. Numerals follow locale (Persian digits in Dari UI). |
+| Spacing     | 4px base scale (4, 8, 12, 16, 24, 32, 48, 64). No arbitrary values.                                                                                         |
+| Radius      | One radius family (e.g. 8px cards, 6px controls, full for pills) applied consistently.                                                                      |
+| Elevation   | Two shadow levels only: card and overlay.                                                                                                                   |
+| Iconography | Lucide, single stroke weight, mirrored where directional in RTL.                                                                                            |
 
 ### 10.3 RTL as the design default
 
@@ -423,28 +423,28 @@ Afghani currency formatting and Persian numeral display follow locale throughout
 
 ### 12.2 Core
 
-| Layer | Choice | Notes |
-|---|---|---|
-| Framework | Next.js 14 (App Router) | One app; route groups `(shop)`, `(dashboard)`, `(admin)` sharing types and components |
-| Language | TypeScript, strict | |
-| Styling | Tailwind CSS | Logical properties for RTL; design tokens as CSS variables |
-| Components | shadcn/ui, restyled | §10.4 |
-| Database | PostgreSQL via Docker Compose | Single container, volume-persisted |
-| ORM | Drizzle | Fast migrations, transparent SQL |
-| Validation | Zod | Shared between forms and server actions |
-| Auth | Auth.js, credentials provider | Phone + OTP; OTP surfaces in the notification log |
-| Charts | Recharts | RTL-verified |
-| i18n | next-intl | §11 |
+| Layer      | Choice                        | Notes                                                                                 |
+| ---------- | ----------------------------- | ------------------------------------------------------------------------------------- |
+| Framework  | Next.js 14 (App Router)       | One app; route groups `(shop)`, `(dashboard)`, `(admin)` sharing types and components |
+| Language   | TypeScript, strict            |                                                                                       |
+| Styling    | Tailwind CSS                  | Logical properties for RTL; design tokens as CSS variables                            |
+| Components | shadcn/ui, restyled           | §10.4                                                                                 |
+| Database   | PostgreSQL via Docker Compose | Single container, volume-persisted                                                    |
+| ORM        | Drizzle                       | Fast migrations, transparent SQL                                                      |
+| Validation | Zod                           | Shared between forms and server actions                                               |
+| Auth       | Auth.js, credentials provider | Phone + OTP; OTP surfaces in the notification log                                     |
+| Charts     | Recharts                      | RTL-verified                                                                          |
+| i18n       | next-intl                     | §11                                                                                   |
 
 ### 12.3 Deliberately local
 
-| Concern | Demo approach | Production path (phase 2) |
-|---|---|---|
-| Search | Postgres `pg_trgm` + `unaccent` — indistinguishable at 80 products | Meilisearch when the catalogue is real (no Dari stemming in Postgres FTS) |
-| Images | Local filesystem volume; `sharp` generates WebP variants and thumbnails at upload | Object storage + CDN |
-| Background work | None — everything synchronous at demo scale | pg-boss when real notifications and imports arrive |
-| SMS | Console/log driver rendering to the notification panel | Afghan gateway behind the same provider interface |
-| Email | None | Optional later |
+| Concern         | Demo approach                                                                     | Production path (phase 2)                                                 |
+| --------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Search          | Postgres `pg_trgm` + `unaccent` — indistinguishable at 80 products                | Meilisearch when the catalogue is real (no Dari stemming in Postgres FTS) |
+| Images          | Local filesystem volume; `sharp` generates WebP variants and thumbnails at upload | Object storage + CDN                                                      |
+| Background work | None — everything synchronous at demo scale                                       | pg-boss when real notifications and imports arrive                        |
+| SMS             | Console/log driver rendering to the notification panel                            | Afghan gateway behind the same provider interface                         |
+| Email           | None                                                                              | Optional later                                                            |
 
 The SMS provider interface is written now with only the log driver implemented — the production gateway becomes a drop-in.
 
@@ -503,16 +503,16 @@ Shop books slot + duration → admin approves → runs → performance visible �
 
 Features retained in this PRD but consciously staged:
 
-| Feature | Demo build | Phase 2 |
-|---|---|---|
-| Reviews | Write flow + seeded data + shop responses | Moderation queue live, reporting flows |
-| Wishlist | Full | Price-drop / restock notifications |
-| Bulk import | Template + validated upload, happy path | Import history, image matching by SKU |
-| Notifications | On-screen log, Dari + English templates | Real SMS gateway, preferences, delivery status |
-| Languages | Dari + English complete | Pashto strings |
-| Search | pg_trgm | Meilisearch, facets at scale |
-| Promotions | Booking + approval + seeded metrics | Real impression/click tracking, billing |
-| Payments | Simulated HesabPay sheet, COD selection | Real HesabPay integration, cash reconciliation |
+| Feature       | Demo build                                | Phase 2                                        |
+| ------------- | ----------------------------------------- | ---------------------------------------------- |
+| Reviews       | Write flow + seeded data + shop responses | Moderation queue live, reporting flows         |
+| Wishlist      | Full                                      | Price-drop / restock notifications             |
+| Bulk import   | Template + validated upload, happy path   | Import history, image matching by SKU          |
+| Notifications | On-screen log, Dari + English templates   | Real SMS gateway, preferences, delivery status |
+| Languages     | Dari + English complete                   | Pashto strings                                 |
+| Search        | pg_trgm                                   | Meilisearch, facets at scale                   |
+| Promotions    | Booking + approval + seeded metrics       | Real impression/click tracking, billing        |
+| Payments      | Simulated HesabPay sheet, COD selection   | Real HesabPay integration, cash reconciliation |
 
 ---
 

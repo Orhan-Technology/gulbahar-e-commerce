@@ -1,0 +1,37 @@
+{
+  "brand": {
+    "name": "Gulbahar Online Shopping",
+    "shortName": "Gulbahar",
+    "tagline": "Gulbahar Center, Malik Azghar Square, Kabul"
+  },
+  "common": {
+    "currency": "AFN",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "viewAll": "View all",
+    "search": "Search",
+    "language": "Language"
+  },
+  "locales": {
+    "fa": "دری",
+    "en": "English",
+    "ps": "پشتو"
+  },
+  "storefront": {
+    "heading": "Gulbahar Storefront",
+    "placeholder": "This is the customer home page. Built in Phase 5."
+  },
+  "dashboard": {
+    "heading": "Shop Dashboard",
+    "placeholder": "This is the shopkeeper panel. Built in Phase 6."
+  },
+  "admin": {
+    "heading": "Platform Administration",
+    "placeholder": "This is the mall management panel. Built in Phase 7."
+  },
+  "errors": {
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "This page does not exist or has been moved.",
+    "backHome": "Back to home"
+  }
+}

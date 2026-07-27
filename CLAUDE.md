@@ -3,6 +3,7 @@
 Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces in ONE Next.js 14 app via route groups: (shop) customer storefront, (dashboard) shopkeeper panel, (admin) mall management. Full spec: docs/PRD.md — consult it before implementing any feature.
 
 ## Hard rules
+
 - Demo MVP: everything runs locally. NO external services — no CDN, no object storage, no real SMS, no analytics SDKs, no Redis. Postgres runs in Docker Compose. Images on local filesystem. SMS renders to an in-app notification log.
 - UI/UX is the primary success criterion. Every screen ships with designed loading (skeleton), empty, and error states. No spinners on content, no blank flashes, no unstyled intermediate states.
 - RTL-first: default locale is Dari (fa). Design and verify every screen in RTL first, then check English LTR. CSS logical properties ONLY (inline-start/end, never left/right). Directional icons mirror in RTL.
@@ -17,10 +18,12 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - Order status flow: placed → accepted → ready → fulfilled; rejected is terminal from placed. Status changes append to order_events and create notifications.
 
 ## Commands
+
 - docker compose up -d — start Postgres
 - npm run dev — dev server
 - npm run db:push / db:seed / db:reset — schema, seed, full reset
 - npm run typecheck && npm run lint — must pass before any phase is considered done
 
 ## Definition of done for every screen
+
 Renders correctly in fa (RTL) and en (LTR) · skeleton + empty + error states present · mobile viewport verified for (shop) and (dashboard) · no hardcoded strings · typecheck and lint clean

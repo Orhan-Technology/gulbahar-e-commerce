@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Phase 1 baseline only — the full design token system (palette, type scale,
+ * radii, elevation) lands in Phase 2 per PRD §10.2. Light mode only for the
+ * MVP: no prefers-color-scheme dark handling by design (PRD §16).
+ */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14% 12%;
+
+  /* Font stacks are injected per-locale by the root layout. */
+  --font-app: var(--font-inter);
+}
+
+/* Dari and Pashto render in Vazirmatn; English in Inter (PRD §10.2). */
+html[lang='fa'],
+html[lang='ps'] {
+  --font-app: var(--font-vazirmatn);
+}
+
+@layer base {
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-app), system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  /* Persian-Indic digits for Dari UI (PRD §10.2, §11). */
+  .digits-locale {
+    font-variant-numeric: normal;
+  }
+  html[lang='fa'] .digits-locale,
+  html[lang='ps'] .digits-locale {
+    font-feature-settings: 'ss02';
+  }
+}

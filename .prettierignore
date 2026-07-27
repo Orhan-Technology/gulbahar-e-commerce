@@ -1,0 +1,5 @@
+.next
+node_modules
+public/uploads
+package-lock.json
+lib/db/migrations
