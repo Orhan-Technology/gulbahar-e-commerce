@@ -7,7 +7,7 @@ import { Clock, MapPin, PackageSearch, Phone, Store } from 'lucide-react';
 import { EmptyState } from '@/components/custom/empty-state';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
-import { ShopSearchBox } from '@/components/shop/shop-search-box';
+import { SearchBox } from '@/components/custom/search-box';
 import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
@@ -131,7 +131,7 @@ export default async function ShopPage({
       <div className="mt-6 space-y-4">
         <h2 className="text-base font-bold">{t('catalogue')}</h2>
 
-        <ShopSearchBox placeholder={t('searchInShop')} />
+        <SearchBox placeholder={t('searchInShop')} />
 
         {categories.length > 1 && (
           <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">

@@ -12,10 +12,13 @@ import { usePathname, useRouter } from '@/lib/i18n/navigation';
 /**
  * Search box that writes `q` into the URL of whatever page it sits on.
  *
- * Used by the shop directory and by an individual shop's own catalogue search
- * (PRD §5.1), so both stay server-rendered and shareable.
+ * Used by all three surfaces — the storefront directory and search, the shop's own
+ * catalogue, and the admin user list — because writing the term into the URL is what
+ * keeps every one of those pages server-rendered and shareable. It was
+ * `ShopSearchBox` until admin needed the identical behaviour; nothing about it was
+ * ever shop-specific.
  */
-export function ShopSearchBox({ placeholder }: { placeholder: string }) {
+export function SearchBox({ placeholder }: { placeholder: string }) {
   const t = useTranslations('common');
   const router = useRouter();
   const pathname = usePathname();

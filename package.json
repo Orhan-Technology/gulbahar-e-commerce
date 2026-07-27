@@ -27,7 +27,8 @@
     "check:phase6": "tsx scripts/check-phase6.ts",
     "check:messages": "tsx scripts/check-messages.ts",
     "check:phase6c": "tsx scripts/check-phase6c.ts",
-    "check:phase7": "tsx scripts/check-phase7.ts"
+    "check:phase7": "tsx scripts/check-phase7.ts",
+    "check:phase7b": "tsx scripts/check-phase7b.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

@@ -18,12 +18,15 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - Tailwind v4 is CSS-first: there is NO tailwind.config.ts. The `@theme` block in app/globals.css IS the theme. `--color-*`, `--text-*` and `--shadow-*` are reset to `initial` there, so Tailwind default colours, text-4xl and shadow-2xl genuinely do not exist — use our tokens only.
 - React 19 lint rules are enforced: no setState synchronously inside an effect, and no impure calls (Date.now(), Math.random()) during render.
 - Server components for reads, server actions for mutations. Zod-validate every action input. No API routes unless technically required.
-- Permission model (PRD §3.1): admin owns the platform, shops own their content. Admin can unpublish but NEVER edit shop content. Enforce in every action.
+- Permission model (PRD §3.1): admin owns the platform, shops own their content. Admin can unpublish but NEVER edit shop content. Enforce in every action. The boundary is kept by the SHAPE of the action files — lib/actions/admin-*.ts has no product or profile writer at all, so no future edit can widen it by accident.
 - A `[slug]` route param arrives PERCENT-ENCODED when it contains non-ASCII characters. Dari slugs are real (products get slugs from their Dari title), so every lookup-by-slug page must run the param through `decodeSlug()` from lib/utils. The failure is nasty: the page 404s while `generateMetadata` — which resolves params separately — still finds the row, so the response carries the correct `<title>` and only the body is missing.
 - A messages key may be a string OR a namespace, never both. Reusing one key for a label and for a group of nested keys silently makes the object win, and `t('thatKey')` renders the raw key path. Bitten twice (`checkout.hesabpay`, `shopProducts.import`). `npm run check:messages` now catches this, plus missing keys and fa/en drift.
 - A function exported from a `'use client'` module cannot be CALLED from a server component — only rendered as a component or passed as a prop. Doing so is a runtime 500 ("Attempted to call X from the server"), not a type error.
 - Clock reads belong on the server. A client component may not call `Date.now()`/`new Date()` during render (React 19 purity), so pass `now` down as an ISO string; in a query module, take a day count and derive the window inside the query.
 - A JS `Date` interpolated into a RAW `sql` fragment has no column to infer a type from, so postgres.js rejects it with `The "string" argument must be of type string or an instance of Buffer` — nowhere near the real cause. Pass `date.toISOString()` with an explicit `::timestamptz`.
+- Drizzle wraps driver errors in `DrizzleQueryError`, whose own `code` is undefined — the PostgresError with the SQLSTATE is at `.cause`. Checking `error.code` for a unique violation (23505) makes the catch dead code and the action 500s.
+- next-intl ships the WHOLE message tree to the client on every page, so any translated string is present in the HTML of every other page too. A test that asserts a screen rendered by grepping for one of its strings will also pass on a redirect — assert the status code with redirects unfollowed instead.
+- `/dashboard/register-shop` lives in its own `(onboarding)` route group, NOT in `(dashboard)`. The dashboard layout guard redirects a shopkeeper without a shop to that path, so putting the page inside the guarded group makes it redirect to itself forever. Route groups do not appear in the URL, so the path is unchanged.
 - `shops.hours` is free text, stored canonically as ASCII `HH:MM-HH:MM` and localised by `formatOpeningHours()`. Storing the display string freezes one language's digits into the column — which the first seed did, leaving English visitors reading Persian numerals.
 - All monetary values stored as integers (afghanis, no decimals needed). All timestamps UTC.
 - Order status flow: placed → accepted → ready → fulfilled; rejected is terminal from placed. Status changes append to order_events and create notifications.
@@ -34,7 +37,7 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - npm run dev — dev server
 - npm run db:push / db:seed / db:reset — schema, seed, full reset
 - npm run typecheck && npm run lint — must pass before any phase is considered done (lint is the eslint CLI; `next lint` was removed in Next 16)
-- npm run check:phase3 … check:phase6, check:phase6c, check:journey, check:signin — acceptance checks per phase; they need the dev server up
+- npm run check:phase3 … check:phase6, check:phase6c, check:phase7, check:phase7b, check:journey, check:signin — acceptance checks per phase; they need the dev server up
 - npm run check:messages — static audit of t() usage: missing keys, keys shadowed by a namespace, fa/en drift. No dev server needed
 - scripts/login.sh &lt;phone&gt; — signs a seeded account in and prints a cookie jar path, so authenticated screens can be curl'd
 - Never run `npm run build` while `npm run dev` is running — they share .next and the dev chunk manifest gets clobbered
@@ -46,7 +49,9 @@ scripts/check-phase6.ts drives the real server actions over HTTP instead of re-i
 - Action ids come from `.next/dev/server/app/**/server-reference-manifest.json`, and an action is only callable from a page whose manifest lists it. POST to that page with a `Next-Action: <id>` header; the return value comes back as a `<row>:{…}` line in the flight stream.
 - For a multipart call (any argument carrying a File), the FILE PARTS MUST BE APPENDED BEFORE the root argument part `"0"`. React resolves the root model the moment busboy emits it, so a `$K` FormData reference can only see parts that have already arrived — root-first yields a silently EMPTY FormData and the action reports "no files".
 
-A check that drives a real state change must UNDO it (check-phase6c restores the order it accepts). Otherwise every run eats one of the ten seeded `placed` orders and the demo's action queue is empty by the third rehearsal.
+A check that drives a real state change must UNDO it (check-phase6c restores the order it accepts; check-phase7 restores the pending shop and the two reported reviews; check-phase7b restores the requested campaign). Otherwise every run eats a seeded demo moment and the walkthrough is hollow by the third rehearsal.
+
+The shared harness is `scripts/lib/action-client.ts` — use `ActionClient.create(pages, cookie)` rather than re-implementing the manifest lookup.
 
 ## Definition of done for every screen
 

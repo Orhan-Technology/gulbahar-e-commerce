@@ -7,7 +7,7 @@ import { ProductTable } from '@/components/dashboard/products/product-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ShopSearchBox } from '@/components/shop/shop-search-box';
+import { SearchBox } from '@/components/custom/search-box';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { hasTranslation, pickLocale } from '@/lib/db/localized';
 import { shopCatalogue, shopCatalogueCounts } from '@/lib/db/queries/shop-products';
@@ -95,7 +95,7 @@ export default async function ShopProductsPage({
         </div>
       </div>
 
-      <ShopSearchBox placeholder={t('searchPlaceholder')} />
+      <SearchBox placeholder={t('searchPlaceholder')} />
 
       <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
         {chips.map((chip) => (

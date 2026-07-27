@@ -7,7 +7,7 @@ import { SectionHeader } from '@/components/custom/section-header';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { ShopGrid, ShopGridSkeleton } from '@/components/shop/shop-grid';
-import { ShopSearchBox } from '@/components/shop/shop-search-box';
+import { SearchBox } from '@/components/custom/search-box';
 import { currentUser } from '@/lib/auth/guards';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot } from '@/lib/db/queries/listing';
@@ -42,7 +42,7 @@ export default async function SearchPage({
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
       <h1 className="text-xl font-bold">{term ? t('resultsFor', { term }) : t('title')}</h1>
 
-      <ShopSearchBox placeholder={t('placeholder')} />
+      <SearchBox placeholder={t('placeholder')} />
 
       {term && (
         <div role="tablist" className="border-border flex gap-2 border-b">

@@ -11,7 +11,7 @@ import { recordImpressions } from '@/lib/db/queries/promoted';
 import { categoryBySlug, categoryTree, shopDirectory } from '@/lib/db/queries/shops';
 import { searchShops } from '@/lib/db/queries/search';
 import { Link } from '@/lib/i18n/navigation';
-import { ShopSearchBox } from '@/components/shop/shop-search-box';
+import { SearchBox } from '@/components/custom/search-box';
 
 /**
  * Shop directory (PRD §5.1).
@@ -38,7 +38,7 @@ export default async function ShopsPage({
       <h1 className="text-xl font-bold">{t('title')}</h1>
       <p className="text-muted-foreground text-sm">{t('subtitle')}</p>
 
-      <ShopSearchBox placeholder={t('searchPlaceholder')} />
+      <SearchBox placeholder={t('searchPlaceholder')} />
 
       <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
         <Link
