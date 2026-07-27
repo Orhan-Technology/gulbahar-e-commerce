@@ -50,7 +50,8 @@
       "buttons": "دکمه‌ها",
       "badges": "نشان‌ها",
       "inputsCards": "ورودی‌ها و کارت‌ها",
-      "interactive": "سطوح تعاملی"
+      "interactive": "سطوح تعاملی",
+      "custom": "اجزای اختصاصی"
     },
     "palette": {
       "primary": "اصلی — سبز تیره",
@@ -175,6 +176,48 @@
       "rowPhone": "سامسونگ گلکسی A54",
       "rowPerfume": "عطر مردانه",
       "rowWatch": "ساعت مچی"
+    },
+    "custom": {
+      "productCard": "کارت محصول",
+      "productCardNote": "تصویر ۱:۱ با ابعاد ثابت — بین اسکلتون و محتوا هیچ جابجایی نباید رخ دهد.",
+      "priceDisplay": "نمایش قیمت",
+      "ratingStars": "ستاره‌های امتیاز",
+      "ratingStarsNote": "پرشدن کسری: ۴٫۴ باید ستاره چهارم را نیمه‌پر نشان دهد و از سمت راست پر شود.",
+      "inputMode": "حالت ورودی:",
+      "shopCard": "کارت دکان",
+      "orderTimeline": "خط زمانی سفارش",
+      "orderTimelineNote": "وضعیت را تغییر دهید تا انیمیشن پیشرفت را ببینید؛ در دری از راست به چپ پیش می‌رود.",
+      "statCard": "کارت آمار",
+      "statCardNote": "اعداد در بارگذاری اول شمارش می‌شوند (زیر ۳۰۰ میلی‌ثانیه).",
+      "actionQueue": "صف اقدامات",
+      "emptyState": "حالت خالی",
+      "misc": "نشان تبلیغ، شمارنده تعداد، سرصفحه بخش",
+      "imageGallery": "گالری تصاویر",
+      "imageGalleryNote": "روی تصویر اصلی کلیک کنید تا بزرگ‌نمایی باز شود.",
+      "emptyGallery": "گالری بدون تصویر",
+      "sampleProductTitle": "موبایل سامسونگ گلکسی A54 ۱۲۸ گیگابایت",
+      "sampleProduct2Title": "عطر مردانه شرقی ۱۰۰ میلی‌لیتر",
+      "sampleProduct3Title": "ساعت مچی کلاسیک چرمی",
+      "sampleProduct4Title": "کیف دستی زنانه",
+      "sampleShopName": "الکترونیک کابل",
+      "sampleShop2Name": "عطریات طلایی",
+      "sampleShop3Name": "ساعت‌فروشی نور",
+      "sampleCategory": "الکترونیک و موبایل",
+      "sampleCategory2": "عطر و لوازم آرایشی",
+      "todaySales": "فروش امروز",
+      "weekSales": "فروش این هفته",
+      "ordersAwaiting": "سفارش‌های در انتظار",
+      "queueNewOrder": "سفارش جدید — GC-24815",
+      "queueNewOrderSub": "۳ قلم · ۴٬۸۰۰ افغانی · تحویل در آدرس",
+      "queueOutOfStock": "۲ محصول تمام شده",
+      "queueOutOfStockSub": "موجودی را به‌روز کنید تا فروش از دست نرود",
+      "queueExpiring": "تبلیغ در حال ختم",
+      "queueExpiringSub": "بنر صفحه اصلی — ۲ روز باقی مانده",
+      "emptyTitle": "هنوز محصولی ندارید",
+      "emptyDescription": "اولین محصول خود را اضافه کنید تا در فروشگاه گلبهار دیده شود.",
+      "emptyAction": "افزودن محصول",
+      "sectionTitle": "محصولات پرفروش",
+      "sectionDescription": "بیشترین فروش هفته گذشته"
     }
   },
   "pagination": {
@@ -184,5 +227,40 @@
     "previousAria": "رفتن به صفحه قبلی",
     "nextAria": "رفتن به صفحه بعدی",
     "morePages": "صفحات بیشتر"
+  },
+  "product": {
+    "originalPrice": "قیمت اصلی",
+    "percentOff": "{percent} تخفیف",
+    "outOfStock": "موجود نیست",
+    "lowStock": "تنها {count} عدد باقی مانده",
+    "inStock": "موجود",
+    "addToWishlist": "افزودن به لیست علاقه‌مندی",
+    "removeFromWishlist": "حذف از لیست علاقه‌مندی",
+    "ratingOutOfFive": "امتیاز {rating} از ۵",
+    "yourRating": "امتیاز شما",
+    "starsCount": "{count} ستاره",
+    "zoomImage": "بزرگ‌نمایی تصویر",
+    "viewImageNumber": "دیدن تصویر {number}"
+  },
+  "shop": {
+    "productCount": "{count} محصول",
+    "floorUnit": "طبقه {floor} · دکان {unit}"
+  },
+  "cart": {
+    "increaseQuantity": "افزایش تعداد",
+    "decreaseQuantity": "کاهش تعداد"
+  },
+  "promotions": {
+    "sponsored": "تبلیغ شده"
+  },
+  "order": {
+    "status": {
+      "placed": "ثبت شد",
+      "accepted": "تایید شد",
+      "ready": "آماده است",
+      "fulfilled": "تحویل شد",
+      "rejected": "رد شد",
+      "rejectedHint": "دکان این سفارش را رد کرد و سفارش لغو شد."
+    }
   }
 }

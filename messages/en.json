@@ -50,7 +50,8 @@
       "buttons": "Buttons",
       "badges": "Badges",
       "inputsCards": "Inputs and cards",
-      "interactive": "Interactive"
+      "interactive": "Interactive",
+      "custom": "Custom components"
     },
     "palette": {
       "primary": "Primary — deep green",
@@ -175,6 +176,48 @@
       "rowPhone": "Samsung Galaxy A54",
       "rowPerfume": "Men's perfume",
       "rowWatch": "Wristwatch"
+    },
+    "custom": {
+      "productCard": "Product card",
+      "productCardNote": "Fixed 1:1 image box — there must be no layout shift between skeleton and content.",
+      "priceDisplay": "Price display",
+      "ratingStars": "Rating stars",
+      "ratingStarsNote": "Fractional fill: 4.4 should half-fill the fourth star, filling from the inline start.",
+      "inputMode": "Input mode:",
+      "shopCard": "Shop card",
+      "orderTimeline": "Order status timeline",
+      "orderTimelineNote": "Change the status to see the progression animate; it advances right-to-left in Dari.",
+      "statCard": "Stat card",
+      "statCardNote": "Values count up on first mount (under 300ms).",
+      "actionQueue": "Action queue",
+      "emptyState": "Empty state",
+      "misc": "Sponsored badge, quantity stepper, section header",
+      "imageGallery": "Image gallery",
+      "imageGalleryNote": "Click the main image to open the zoom dialog.",
+      "emptyGallery": "Gallery with no images",
+      "sampleProductTitle": "Samsung Galaxy A54 128GB",
+      "sampleProduct2Title": "Oriental men's perfume 100ml",
+      "sampleProduct3Title": "Classic leather wristwatch",
+      "sampleProduct4Title": "Women's handbag",
+      "sampleShopName": "Kabul Electronics",
+      "sampleShop2Name": "Golden Perfumes",
+      "sampleShop3Name": "Noor Watches",
+      "sampleCategory": "Electronics and mobiles",
+      "sampleCategory2": "Perfume and cosmetics",
+      "todaySales": "Today's sales",
+      "weekSales": "This week's sales",
+      "ordersAwaiting": "Orders awaiting action",
+      "queueNewOrder": "New order — GC-24815",
+      "queueNewOrderSub": "3 items · 4,800 AFN · delivery",
+      "queueOutOfStock": "2 products out of stock",
+      "queueOutOfStockSub": "Update stock so you don't lose sales",
+      "queueExpiring": "Campaign ending soon",
+      "queueExpiringSub": "Home hero banner — 2 days left",
+      "emptyTitle": "No products yet",
+      "emptyDescription": "Add your first product so it appears in the Gulbahar storefront.",
+      "emptyAction": "Add product",
+      "sectionTitle": "Best sellers",
+      "sectionDescription": "Most sold in the past week"
     }
   },
   "pagination": {
@@ -184,5 +227,40 @@
     "previousAria": "Go to previous page",
     "nextAria": "Go to next page",
     "morePages": "More pages"
+  },
+  "product": {
+    "originalPrice": "Original price",
+    "percentOff": "{percent} off",
+    "outOfStock": "Out of stock",
+    "lowStock": "Only {count} left",
+    "inStock": "In stock",
+    "addToWishlist": "Add to wishlist",
+    "removeFromWishlist": "Remove from wishlist",
+    "ratingOutOfFive": "Rated {rating} out of 5",
+    "yourRating": "Your rating",
+    "starsCount": "{count} stars",
+    "zoomImage": "Zoom image",
+    "viewImageNumber": "View image {number}"
+  },
+  "shop": {
+    "productCount": "{count} products",
+    "floorUnit": "Floor {floor} · Unit {unit}"
+  },
+  "cart": {
+    "increaseQuantity": "Increase quantity",
+    "decreaseQuantity": "Decrease quantity"
+  },
+  "promotions": {
+    "sponsored": "Sponsored"
+  },
+  "order": {
+    "status": {
+      "placed": "Placed",
+      "accepted": "Accepted",
+      "ready": "Ready",
+      "fulfilled": "Fulfilled",
+      "rejected": "Rejected",
+      "rejectedHint": "The shop rejected this order and it was cancelled."
+    }
   }
 }

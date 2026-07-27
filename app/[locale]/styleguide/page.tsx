@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { LocaleSwitcher } from '@/components/locale-switcher';
+import { CustomShowcase } from '@/components/styleguide/custom-showcase';
 import { StyleguideInteractive } from '@/components/styleguide/interactive';
 import {
   formatCompact,
@@ -177,6 +178,11 @@ export default async function StyleguidePage({
           <Badge variant="destructive">{t('badges.destructive')}</Badge>
           <Badge variant="outline">{t('badges.outline')}</Badge>
         </div>
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      <Section title={t('sections.custom')}>
+        <CustomShowcase />
       </Section>
 
       {/* ---------------------------------------------------------------- */}
