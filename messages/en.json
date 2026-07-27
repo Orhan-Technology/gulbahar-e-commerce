@@ -1817,5 +1817,102 @@
       "not_found": "That account was not found",
       "cannot_deactivate_self": "You cannot deactivate your own account"
     }
+  },
+  "demoLog": {
+    "open": "Message log",
+    "title": "Message log",
+    "subtitle": "Every SMS the system would send, as it is written.",
+    "channels": {
+      "all": "All",
+      "sms": "SMS",
+      "inapp": "In-app"
+    },
+    "roles": {
+      "all": "All",
+      "customer": "Customer",
+      "shopkeeper": "Shopkeeper",
+      "admin": "Management"
+    },
+    "empty": "No messages yet. Place an order or change a status.",
+    "clearRead": "Clear read",
+    "clearNote": "Unread messages are left alone.",
+    "cleared": "{count} messages cleared"
+  },
+  "demoPanel": {
+    "title": "Demo panel",
+    "subtitle": "Presenter tools. Only available in demo mode.",
+    "loading": "Loading…",
+    "shortcutHint": "Toggle this panel with Ctrl/Cmd + Shift + D",
+    "tabs": {
+      "roles": "Roles",
+      "orders": "Orders",
+      "scenarios": "Scenarios",
+      "links": "Links"
+    },
+    "roles": {
+      "hint": "Switch account in one click. Your locale and current page are kept.",
+      "admin": "Mall management",
+      "shopkeeper": "Shopkeepers",
+      "customer": "Customers",
+      "switched": "Account switched"
+    },
+    "orders": {
+      "hint": "Step any order forward or back. Real events and messages are written; stepping back removes them again.",
+      "none": "No orders in progress.",
+      "forward": "Step forward",
+      "back": "Step back",
+      "movedTo": {
+        "placed": "Back to awaiting acceptance",
+        "accepted": "Moved to accepted",
+        "ready": "Moved to ready",
+        "fulfilled": "Moved to fulfilled"
+      }
+    },
+    "status": {
+      "placed": "Awaiting acceptance",
+      "accepted": "Accepted",
+      "ready": "Ready",
+      "fulfilled": "Fulfilled",
+      "rejected": "Rejected"
+    },
+    "scenarios": {
+      "newOrderHeading": "New order",
+      "newOrderHint": "Builds a real order from that shop's own products; it lands in the shopkeeper's action queue.",
+      "newOrder": "Create a new order",
+      "orderCreated": "Order {reference} created",
+      "newShopHeading": "New shop application",
+      "newShopHint": "A fresh application lands in the admin pending queue.",
+      "newShop": "Create a shop application",
+      "shopCreated": "“{name}” is in the review queue"
+    },
+    "reset": {
+      "heading": "Reset data",
+      "hint": "Everything returns to the seeded state. Because the users table is rebuilt too, you will be signed out.",
+      "start": "Reset data",
+      "confirmBody": "This removes every order, product and change you made and reinstates the seeded data. It cannot be undone.",
+      "confirm": "Yes, reset",
+      "cancel": "Cancel",
+      "running": "Resetting…",
+      "runningHint": "Rebuilding 90 days of history takes a minute or two. Do not close the page.",
+      "done": "Data reset",
+      "failed": "The reset failed"
+    },
+    "links": {
+      "hint": "The four screens the walkthrough lingers on.",
+      "home": "Storefront home",
+      "product": "Products",
+      "dashboard": "Shop dashboard",
+      "revenue": "Placement revenue"
+    },
+    "errors": {
+      "demo_disabled": "Demo mode is off",
+      "invalid_input": "That input is not valid",
+      "not_found": "Not found",
+      "switch_failed": "The account switch failed",
+      "off_sequence": "That order is off the normal path",
+      "at_end": "Cannot go further",
+      "no_products": "That shop has no products in stock",
+      "no_customer": "No customer available to place an order"
+    }
   }
 }

@@ -3,7 +3,8 @@ import Credentials from 'next-auth/providers/credentials';
 
 import { shopForUser } from '../db/queries/shops';
 import type { DbLocale, UserRole } from '../db/schema';
-import { verifyOtp } from './otp';
+import { isDemoMode } from '../demo';
+import { findUserByPhone, verifyOtp } from './otp';
 
 /**
  * Auth.js v5 with a phone + OTP credentials provider (PRD §5.7, §12.2).
@@ -85,6 +86,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           phone: result.user.phone,
           role: result.user.role,
           locale: result.user.locale,
+          shopId: shop?.shopId ?? null,
+          shopSlug: shop?.slug ?? null,
+        };
+      },
+    }),
+
+    /**
+     * DEMO ONLY — signs in as any existing account from a phone number alone, with
+     * no code (PRD §9.3). This is what lets the presenter move between admin,
+     * shopkeeper and customer mid-sentence instead of running the OTP dance three
+     * times on stage.
+     *
+     * It is obviously a back door, so authorize() refuses unless DEMO_MODE is
+     * literally 'true' AND the account already exists. It cannot create a user, and
+     * it never touches otp_codes — so the real flow's attempt limits and expiry are
+     * unaffected by anything that happens here.
+     */
+    Credentials({
+      id: 'demo',
+      name: 'Demo role switch',
+      credentials: { phone: { label: 'Phone', type: 'tel' } },
+      async authorize(credentials) {
+        if (!isDemoMode()) return null;
+
+        const phone = typeof credentials?.phone === 'string' ? credentials.phone : '';
+        const user = await findUserByPhone(phone);
+        // No find-or-create: the switcher only ever moves between seeded accounts.
+        if (!user || !user.active) return null;
+
+        const shop = await shopForUser(user.id);
+        return {
+          id: user.id,
+          name: user.name,
+          phone: user.phone,
+          role: user.role,
+          locale: user.locale,
           shopId: shop?.shopId ?? null,
           shopSlug: shop?.slug ?? null,
         };

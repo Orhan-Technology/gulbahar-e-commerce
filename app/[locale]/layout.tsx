@@ -4,6 +4,10 @@ import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
 import { Toaster } from '@/components/ui/sonner';
+import { DemoControlPanel } from '@/components/demo/control-panel';
+import { NotificationLog } from '@/components/demo/notification-log';
+import { currentUser } from '@/lib/auth/guards';
+import { isDemoMode } from '@/lib/demo';
 import { localeDirection, routing } from '@/lib/i18n/routing';
 import '../globals.css';
 
@@ -52,6 +56,18 @@ export default async function LocaleLayout({
 
   const messages = await getMessages();
 
+  /*
+   * The presenter tools are mounted here so they exist on ALL THREE surfaces
+   * (PRD §9.2) — the log has to be openable during checkout, on the shop dashboard
+   * and in admin without three separate integrations.
+   *
+   * Gated on DEMO_MODE at the LAYOUT level, so outside a demo build the components
+   * are absent from the tree rather than merely hidden. Their server actions check
+   * the same flag independently, because an action is reachable without its button.
+   */
+  const demo = isDemoMode();
+  const demoUser = demo ? await currentUser() : null;
+
   return (
     <html
       lang={locale}
@@ -63,6 +79,12 @@ export default async function LocaleLayout({
           {children}
           {/* Toast position follows document direction — see components/ui/sonner.tsx */}
           <Toaster />
+          {demo && (
+            <>
+              <NotificationLog />
+              <DemoControlPanel currentShopId={demoUser?.shopId ?? null} />
+            </>
+          )}
         </NextIntlClientProvider>
       </body>
     </html>

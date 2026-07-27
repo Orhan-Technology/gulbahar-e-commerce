@@ -30,6 +30,7 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - `shops.hours` is free text, stored canonically as ASCII `HH:MM-HH:MM` and localised by `formatOpeningHours()`. Storing the display string freezes one language's digits into the column — which the first seed did, leaving English visitors reading Persian numerals.
 - All monetary values stored as integers (afghanis, no decimals needed). All timestamps UTC.
 - Order status flow: placed → accepted → ready → fulfilled; rejected is terminal from placed. Status changes append to order_events and create notifications.
+- The presenter tools (notification log, control panel, role swap) are gated on `DEMO_MODE` in THREE places, each load-bearing: the layout so they are absent not hidden, every demo server action because an action is reachable without its button, and the `demo` auth provider's authorize() which is the last gate before a session is minted.
 
 ## Commands
 
@@ -37,7 +38,7 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - npm run dev — dev server
 - npm run db:push / db:seed / db:reset — schema, seed, full reset
 - npm run typecheck && npm run lint — must pass before any phase is considered done (lint is the eslint CLI; `next lint` was removed in Next 16)
-- npm run check:phase3 … check:phase6, check:phase6c, check:phase7, check:phase7b, check:journey, check:signin — acceptance checks per phase; they need the dev server up
+- npm run check:phase3 … check:phase6, check:phase6c, check:phase7, check:phase7b, check:phase8, check:journey, check:signin — acceptance checks per phase; they need the dev server up
 - npm run check:messages — static audit of t() usage: missing keys, keys shadowed by a namespace, fa/en drift. No dev server needed
 - scripts/login.sh &lt;phone&gt; — signs a seeded account in and prints a cookie jar path, so authenticated screens can be curl'd
 - Never run `npm run build` while `npm run dev` is running — they share .next and the dev chunk manifest gets clobbered
@@ -49,7 +50,9 @@ scripts/check-phase6.ts drives the real server actions over HTTP instead of re-i
 - Action ids come from `.next/dev/server/app/**/server-reference-manifest.json`, and an action is only callable from a page whose manifest lists it. POST to that page with a `Next-Action: <id>` header; the return value comes back as a `<row>:{…}` line in the flight stream.
 - For a multipart call (any argument carrying a File), the FILE PARTS MUST BE APPENDED BEFORE the root argument part `"0"`. React resolves the root model the moment busboy emits it, so a `$K` FormData reference can only see parts that have already arrived — root-first yields a silently EMPTY FormData and the action reports "no files".
 
-A check that drives a real state change must UNDO it (check-phase6c restores the order it accepts; check-phase7 restores the pending shop and the two reported reviews; check-phase7b restores the requested campaign). Otherwise every run eats a seeded demo moment and the walkthrough is hollow by the third rehearsal.
+A check that drives a real state change must UNDO it (check-phase6c restores the order it accepts; check-phase7 restores the pending shop and the two reported reviews; check-phase7b restores the requested campaign; check-phase8 restores the notification log). Otherwise every run eats a seeded demo moment and the walkthrough is hollow by the third rehearsal.
+
+Scope that cleanup BY ID, captured before anything else runs — not by timestamp and not by "recent". Seeded notifications carry timestamps spread across the current day, so `created_at > now() - interval '1 hour'` deletes seed data; and `scripts/login.sh` requests an OTP, so every `signIn()` in a check writes a notification of its own. check-phase8 got both wrong first and emptied the table.
 
 The shared harness is `scripts/lib/action-client.ts` — use `ActionClient.create(pages, cookie)` rather than re-implementing the manifest lookup.
 

@@ -1,0 +1,250 @@
+'use client';
+
+import * as React from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { Eraser, MessageSquare, Radio, Smartphone } from 'lucide-react';
+import { toast } from 'sonner';
+
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { clearReadLog, fetchNotificationLog, markLogRead, type LogEntry } from '@/lib/actions/demo';
+import { formatNumber, formatRelative } from '@/lib/format';
+import { cn } from '@/lib/utils';
+
+type ChannelFilter = 'all' | 'sms' | 'inapp';
+type RoleFilter = 'all' | 'customer' | 'shopkeeper' | 'admin';
+
+const LOCALE_LABEL: Record<string, string> = { fa: 'دری', en: 'EN', ps: 'پښتو' };
+
+/**
+ * The demo notification log (PRD §9.2).
+ *
+ * Every SMS the system WOULD send, appearing as it is written. This demos better
+ * than real SMS: the client watches the message land on screen the moment the
+ * shopkeeper accepts the order, and the panel shows the Dari and English templates
+ * side by side, which is the multilingual claim made visible rather than asserted.
+ *
+ * Polls every two seconds. A poll rather than a socket for the same reason as the
+ * rest of the app — the demo runs on one machine with no external services
+ * (PRD §12.1) — and a two-second beat is fast enough that an arrival feels live
+ * while the presenter is still talking.
+ *
+ * Entries that are new SINCE THE LAST POLL animate in. That is tracked by id rather
+ * than by the `read` flag, so an arrival is visibly new even when the panel is
+ * already open and marking things read as it goes.
+ */
+export function NotificationLog() {
+  const t = useTranslations('demoLog');
+  const locale = useLocale();
+
+  const [open, setOpen] = React.useState(false);
+  const [entries, setEntries] = React.useState<LogEntry[]>([]);
+  const [unread, setUnread] = React.useState(0);
+  const [channel, setChannel] = React.useState<ChannelFilter>('all');
+  const [role, setRole] = React.useState<RoleFilter>('all');
+  const [pending, startTransition] = React.useTransition();
+
+  // Ids seen on the previous poll; anything outside this set animates in.
+  const seenRef = React.useRef<Set<string>>(new Set());
+  const [freshIds, setFreshIds] = React.useState<Set<string>>(new Set());
+
+  const load = React.useCallback(async () => {
+    const result = await fetchNotificationLog({
+      channel: channel === 'all' ? undefined : channel,
+      role: role === 'all' ? undefined : role,
+      limit: 60,
+    });
+    if (!result.ok) return;
+
+    const ids = new Set(result.data.entries.map((entry) => entry.id));
+    const fresh = new Set(
+      result.data.entries.filter((entry) => !seenRef.current.has(entry.id)).map((e) => e.id),
+    );
+    // First load is not "fresh" — otherwise sixty seeded rows all slide in at once.
+    setFreshIds(seenRef.current.size === 0 ? new Set() : fresh);
+    seenRef.current = ids;
+
+    setEntries(result.data.entries);
+    setUnread(result.data.unread);
+  }, [channel, role]);
+
+  React.useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null;
+    let cancelled = false;
+
+    const tick = () => {
+      if (document.visibilityState === 'visible') void load();
+    };
+
+    void (async () => {
+      await load();
+      if (cancelled) return;
+      timer = setInterval(tick, 2000);
+    })();
+
+    return () => {
+      cancelled = true;
+      if (timer !== null) clearInterval(timer);
+    };
+  }, [load]);
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        // Opening the panel is the presenter acknowledging what is in it.
+        if (next) startTransition(async () => void (await markLogRead()));
+      }}
+    >
+      <SheetTrigger asChild>
+        <Button
+          variant="default"
+          size="icon"
+          aria-label={t('open')}
+          // Fixed, above the mobile tab bar, on the trailing side so it never sits
+          // under the RTL back gesture area.
+          className="rounded-pill shadow-overlay fixed end-4 bottom-24 z-40 h-11 w-11 md:bottom-6"
+        >
+          <Radio className="h-5 w-5" aria-hidden />
+          {unread > 0 && (
+            <span
+              className="rounded-pill bg-danger text-danger-fg absolute end-0 -top-1 flex h-5 min-w-5 items-center justify-center px-1 text-xs font-bold"
+              aria-hidden
+            >
+              {formatNumber(unread, locale)}
+            </span>
+          )}
+        </Button>
+      </SheetTrigger>
+
+      {/* `end` is LOGICAL — our Sheet resolves it per document direction, so the
+          panel slides in from the left in Dari and the right in English without a
+          conditional here (PRD §9.2 "correct side per locale"). */}
+      <SheetContent side="end" className="flex w-full flex-col sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle className="flex items-center gap-2">
+            <Radio className="h-4 w-4" aria-hidden />
+            {t('title')}
+          </SheetTitle>
+          <p className="text-muted-foreground text-xs">{t('subtitle')}</p>
+        </SheetHeader>
+
+        <div className="space-y-2 px-4">
+          <div className="flex flex-wrap gap-1.5">
+            {(['all', 'sms', 'inapp'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setChannel(option)}
+                className={cn(
+                  'rounded-pill border px-2.5 py-1 text-xs',
+                  channel === option
+                    ? 'border-primary bg-primary-50 text-primary font-medium'
+                    : 'border-border hover:border-primary',
+                )}
+              >
+                {t(`channels.${option}`)}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {(['all', 'customer', 'shopkeeper', 'admin'] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setRole(option)}
+                className={cn(
+                  'rounded-pill border px-2.5 py-1 text-xs',
+                  role === option
+                    ? 'border-primary bg-primary-50 text-primary font-medium'
+                    : 'border-border hover:border-primary',
+                )}
+              >
+                {t(`roles.${option}`)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <ul className="flex-1 space-y-2 overflow-y-auto px-4 pb-4">
+          {entries.length === 0 && (
+            <li className="text-muted-foreground rounded-card border-border border border-dashed p-6 text-center text-sm">
+              {t('empty')}
+            </li>
+          )}
+
+          {entries.map((entry) => (
+            <li
+              key={entry.id}
+              className={cn(
+                'rounded-card border-border bg-card space-y-1.5 border p-3',
+                freshIds.has(entry.id) && 'animate-queue-in border-primary',
+              )}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="flex items-center gap-1.5">
+                  {entry.channel === 'sms' ? (
+                    <Smartphone className="text-primary h-3.5 w-3.5 shrink-0" aria-hidden />
+                  ) : (
+                    <MessageSquare
+                      className="text-muted-foreground h-3.5 w-3.5 shrink-0"
+                      aria-hidden
+                    />
+                  )}
+                  <span className="text-xs font-bold">{entry.title}</span>
+                </span>
+                {/* The language the template rendered in — the multilingual claim. */}
+                <Badge variant="outline" className="shrink-0">
+                  {LOCALE_LABEL[entry.locale] ?? entry.locale}
+                </Badge>
+              </div>
+
+              {/* Rendered in its own language, so a Dari body reads right-to-left
+                  even when the panel is in English. */}
+              <p className="text-sm" dir={entry.locale === 'en' ? 'ltr' : 'rtl'}>
+                {entry.body}
+              </p>
+
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+                <span>
+                  {entry.recipientName ?? t(`roles.${entry.recipientRole}`)}
+                  {entry.recipientPhone && <span dir="ltr"> · {entry.recipientPhone}</span>}
+                </span>
+                <Badge variant="secondary">{t(`roles.${entry.recipientRole}`)}</Badge>
+                <span className="ms-auto" dir="ltr">
+                  {entry.eventKey}
+                </span>
+                <span>{formatRelative(entry.createdAt, locale)}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <div className="border-border flex items-center gap-2 border-t p-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const result = await clearReadLog();
+                if (result.ok) {
+                  toast.success(t('cleared', { count: formatNumber(result.data.removed, locale) }));
+                  seenRef.current = new Set();
+                  await load();
+                }
+              })
+            }
+          >
+            <Eraser />
+            {t('clearRead')}
+          </Button>
+          {/* Unread entries are never destroyed — an arrival mid-demo survives. */}
+          <span className="text-muted-foreground text-xs">{t('clearNote')}</span>
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
