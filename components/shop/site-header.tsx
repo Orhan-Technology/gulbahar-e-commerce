@@ -5,11 +5,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Menu, Search, ShoppingCart, Store, User } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { HeaderSearch } from '@/components/shop/search/header-search';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { formatNumber } from '@/lib/format';
-import { Link, useRouter } from '@/lib/i18n/navigation';
+import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 export type SiteHeaderProps = {
@@ -29,9 +29,7 @@ export type SiteHeaderProps = {
 export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const router = useRouter();
   const [scrolled, setScrolled] = React.useState(false);
-  const [query, setQuery] = React.useState('');
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -39,12 +37,6 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-
-  function submitSearch(event: React.FormEvent) {
-    event.preventDefault();
-    const term = query.trim();
-    router.push(term ? `/search?q=${encodeURIComponent(term)}` : '/search');
-  }
 
   return (
     <header
@@ -120,21 +112,7 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
           </Link>
         </nav>
 
-        <form onSubmit={submitSearch} className="ms-auto hidden max-w-sm flex-1 sm:block">
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-neutral-400"
-              aria-hidden
-            />
-            <Input
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={t('nav.searchPlaceholder')}
-              aria-label={t('common.search')}
-              className="ps-9"
-            />
-          </div>
-        </form>
+        <HeaderSearch className="ms-auto hidden max-w-sm flex-1 sm:block" />
 
         <div className="ms-auto flex shrink-0 items-center gap-1 sm:ms-0">
           <Button

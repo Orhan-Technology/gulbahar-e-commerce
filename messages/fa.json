@@ -14,7 +14,8 @@
     "close": "بستن",
     "cancel": "لغو",
     "confirm": "تایید",
-    "save": "ذخیره"
+    "save": "ذخیره",
+    "clear": "پاک کردن"
   },
   "locales": {
     "fa": "دری",
@@ -245,7 +246,14 @@
   },
   "shop": {
     "productCount": "{count} محصول",
-    "floorUnit": "طبقه {floor} · دکان {unit}"
+    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "catalogue": "محصولات این دکان",
+    "searchInShop": "جستجو در محصولات این دکان…",
+    "allProducts": "همه محصولات",
+    "noMatchTitle": "در این دکان چیزی برای «{term}» نبود",
+    "noMatchBody": "کلمه دیگری را امتحان کنید.",
+    "noProductsTitle": "این دکان فعلاً محصولی ندارد",
+    "noProductsBody": "به زودی محصولات اضافه می‌شود."
   },
   "cart": {
     "increaseQuantity": "افزایش تعداد",
@@ -406,7 +414,13 @@
     "title": "تخفیف‌ها",
     "endingSoon": "به زودی ختم می‌شود",
     "ended": "ختم شد",
-    "daysLeft": "{days} روز باقی مانده"
+    "daysLeft": "{days} روز باقی مانده",
+    "subtitle": "تخفیف‌هایی که دکان‌های گلبهار خودشان پیشکش می‌کنند.",
+    "discountedProducts": "محصولات با تخفیف",
+    "biggestFirst": "بیشترین تخفیف در بالا",
+    "emptyTitle": "فعلاً تخفیفی نیست",
+    "emptyBody": "به زودی تخفیف‌های تازه اضافه می‌شود.",
+    "browseAll": "دیدن همه محصولات"
   },
   "footer": {
     "tagline": "بازار مرکز گلبهار در انترنت — دکان‌های واقعی، تحویل در کابل.",
@@ -421,5 +435,69 @@
     "floor3": "طبقه سوم",
     "floor3Trades": "پوشاک، کفش، کیف، اسباب‌بازی، ورزشی",
     "copyright": "© ۱۴۰۵ مرکز خرید گلبهار — نسخه نمایشی"
+  },
+  "products": {
+    "title": "همه محصولات",
+    "resultCount": "{count} محصول",
+    "promotedNote": "این محصولات جایگاه تبلیغاتی خریداری کرده‌اند",
+    "emptyTitle": "محصولی با این مشخصات پیدا نشد",
+    "emptyBody": "فیلترها را کمتر کنید یا دسته‌بندی دیگری را امتحان کنید.",
+    "emptyAction": "دیدن همه محصولات"
+  },
+  "filters": {
+    "title": "فیلترها",
+    "clearAll": "پاک کردن همه فیلترها",
+    "category": "دسته‌بندی",
+    "priceRange": "محدوده قیمت",
+    "priceHint": "از {min} تا {max}",
+    "from": "از",
+    "to": "تا",
+    "minRating": "حداقل امتیاز",
+    "andUp": "و بالاتر",
+    "shop": "دکان",
+    "inStockOnly": "فقط محصولات موجود",
+    "sort": {
+      "label": "ترتیب",
+      "newest": "جدیدترین",
+      "price_asc": "قیمت: کم به زیاد",
+      "price_desc": "قیمت: زیاد به کم",
+      "rating": "بیشترین امتیاز"
+    }
+  },
+  "categories": {
+    "title": "دسته‌بندی‌ها",
+    "productCount": "{count} محصول"
+  },
+  "shops": {
+    "title": "دکان‌های مرکز گلبهار",
+    "subtitle": "۱۳ دکان فعال در سه طبقه — همه در یک جای.",
+    "searchPlaceholder": "نام دکان را بنویسید…",
+    "allCategories": "همه دسته‌بندی‌ها",
+    "promotedNote": "این دکان‌ها جایگاه تبلیغاتی خریداری کرده‌اند",
+    "noResultsTitle": "دکانی به نام «{term}» پیدا نشد",
+    "noResultsBody": "املای نام را بررسی کنید یا فهرست کامل دکان‌ها را ببینید.",
+    "clearSearch": "پاک کردن جستجو",
+    "emptyTitle": "دکانی در این دسته‌بندی نیست",
+    "emptyBody": "دسته‌بندی دیگری را انتخاب کنید.",
+    "allShops": "همه دکان‌ها"
+  },
+  "search": {
+    "title": "جستجو",
+    "placeholder": "محصول یا دکان را جستجو کنید…",
+    "resultsFor": "نتایج برای «{term}»",
+    "products": "محصولات",
+    "shops": "دکان‌ها",
+    "productCount": "{count} محصول پیدا شد",
+    "promotedNote": "نتایج تبلیغاتی — ترتیب نتایج عادی تغییر نکرده است",
+    "noResultsTitle": "برای «{term}» چیزی پیدا نشد",
+    "noResultsBody": "املا را بررسی کنید یا کلمه کوتاه‌تری را امتحان کنید.",
+    "noShopsTitle": "دکانی برای «{term}» پیدا نشد",
+    "noShopsBody": "فهرست کامل دکان‌ها را ببینید.",
+    "browseAll": "دیدن همه محصولات",
+    "allShops": "همه دکان‌ها",
+    "popularTitle": "محصولات پرطرفدار",
+    "noSuggestions": "پیشنهادی نیست",
+    "seeAllFor": "دیدن همه نتایج برای «{term}»",
+    "shopLabel": "دکان"
   }
 }

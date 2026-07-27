@@ -137,11 +137,25 @@ export async function productList(filters: ProductListFilters) {
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  const [{ total } = { total: 0 }] = await db
-    .select({ total: count() })
+  /*
+   * The count must go through the SAME grouped-and-having query as the rows.
+   *
+   * A plain count over the where clause ignores the rating HAVING, so with
+   * minRating set the header claimed 69 results while the grid showed far fewer,
+   * and pagination offered pages that render empty. Counting rows of the grouped
+   * subquery keeps the two in agreement by construction.
+   */
+  const grouped = db
+    .select({ id: products.id })
     .from(products)
     .innerJoin(shops, eq(products.shopId, shops.id))
-    .where(where);
+    .leftJoin(reviews, eq(reviews.productId, products.id))
+    .where(where)
+    .groupBy(products.id)
+    .having(minRating !== undefined ? gte(ratingExpr, minRating) : undefined)
+    .as('matching_products');
+
+  const [{ total } = { total: 0 }] = await db.select({ total: count() }).from(grouped);
 
   return {
     items: rows.map((row) => ({

@@ -322,6 +322,17 @@ async function main() {
   const pendingShopSlug = shopSeed.find((shop) => shop.status === 'pending')!.slug;
 
   // ----------------------------------------------------------------- products
+  /*
+   * A handful of deliberately sold-out products, drawn from the two busiest shops
+   * so the shopkeeper the presenter signs in as actually has some.
+   */
+  const soldOutSlugs = new Set(
+    productSeed
+      .filter((product) => ['kabul-electronics', 'markaz-mobile'].includes(product.shopSlug))
+      .filter((_product, index) => index % 3 === 2)
+      .map((product) => product.slug),
+  );
+
   const productIds = new Map<string, string>();
   const productBySlug = new Map<string, ProductSeed>();
 
@@ -339,7 +350,16 @@ async function main() {
         categoryId: categoryIds.get(product.categorySlug) ?? null,
         price: product.price,
         discountPrice: product.discountPrice,
-        stock: product.stock,
+        /*
+         * Every third product in the top two shops is forced out of stock.
+         *
+         * The authored catalogue gives everything positive stock, which left the
+         * "out of stock products" item in the shop dashboard's action queue
+         * permanently at zero and made the storefront's in-stock filter a no-op.
+         * The action queue is the dashboard centrepiece (PRD §6.1), so it needs a
+         * real example of every row type it can show.
+         */
+        stock: soldOutSlugs.has(product.slug) ? 0 : product.stock,
         // The pending shop has its whole catalogue ready but unpublished, so
         // approval genuinely flips one switch (PRD §7.1).
         status: isPendingShop ? 'draft' : 'published',
@@ -821,6 +841,7 @@ async function main() {
   console.log(`  reviews created     ${createdReviews.length} (target ${REVIEW_TARGET})`);
   console.log(`  fulfilled items     ${fulfilledItems.length} reviewable`);
   console.log(`  wishlist rows       ${wishlistValues.length}`);
+  console.log(`  out-of-stock        ${soldOutSlugs.size} products (action queue)`);
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');
   console.log('  admin        0700000001');

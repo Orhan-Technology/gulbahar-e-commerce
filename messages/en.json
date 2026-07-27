@@ -14,7 +14,8 @@
     "close": "Close",
     "cancel": "Cancel",
     "confirm": "Confirm",
-    "save": "Save"
+    "save": "Save",
+    "clear": "Clear"
   },
   "locales": {
     "fa": "دری",
@@ -245,7 +246,14 @@
   },
   "shop": {
     "productCount": "{count} products",
-    "floorUnit": "Floor {floor} · Unit {unit}"
+    "floorUnit": "Floor {floor} · Unit {unit}",
+    "catalogue": "Products from this shop",
+    "searchInShop": "Search this shop's products…",
+    "allProducts": "All products",
+    "noMatchTitle": "Nothing in this shop for \"{term}\"",
+    "noMatchBody": "Try a different term.",
+    "noProductsTitle": "This shop has no products yet",
+    "noProductsBody": "Products will be added soon."
   },
   "cart": {
     "increaseQuantity": "Increase quantity",
@@ -406,7 +414,13 @@
     "title": "Offers",
     "endingSoon": "Ending soon",
     "ended": "Ended",
-    "daysLeft": "{days} days left"
+    "daysLeft": "{days} days left",
+    "subtitle": "Discounts the Gulbahar shops are funding themselves.",
+    "discountedProducts": "Discounted products",
+    "biggestFirst": "Biggest discounts first",
+    "emptyTitle": "No offers right now",
+    "emptyBody": "New offers are added regularly.",
+    "browseAll": "Browse all products"
   },
   "footer": {
     "tagline": "Gulbahar Center's marketplace online — real shops, delivered in Kabul.",
@@ -421,5 +435,69 @@
     "floor3": "Floor 3",
     "floor3Trades": "Clothing, shoes, bags, toys, sportswear",
     "copyright": "© 2026 Gulbahar Center — demo build"
+  },
+  "products": {
+    "title": "All products",
+    "resultCount": "{count} products",
+    "promotedNote": "These products have purchased placement",
+    "emptyTitle": "No products match those filters",
+    "emptyBody": "Try widening your filters or a different category.",
+    "emptyAction": "Browse all products"
+  },
+  "filters": {
+    "title": "Filters",
+    "clearAll": "Clear all filters",
+    "category": "Category",
+    "priceRange": "Price range",
+    "priceHint": "From {min} to {max}",
+    "from": "From",
+    "to": "To",
+    "minRating": "Minimum rating",
+    "andUp": "and up",
+    "shop": "Shop",
+    "inStockOnly": "In stock only",
+    "sort": {
+      "label": "Sort",
+      "newest": "Newest",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low",
+      "rating": "Highest rated"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "productCount": "{count} products"
+  },
+  "shops": {
+    "title": "Shops at Gulbahar Center",
+    "subtitle": "13 active shops across three floors — all in one place.",
+    "searchPlaceholder": "Search shop names…",
+    "allCategories": "All categories",
+    "promotedNote": "These shops have purchased placement",
+    "noResultsTitle": "No shop found for \"{term}\"",
+    "noResultsBody": "Check the spelling or browse the full directory.",
+    "clearSearch": "Clear search",
+    "emptyTitle": "No shops in this category",
+    "emptyBody": "Try another category.",
+    "allShops": "All shops"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search products or shops…",
+    "resultsFor": "Results for \"{term}\"",
+    "products": "Products",
+    "shops": "Shops",
+    "productCount": "{count} products found",
+    "promotedNote": "Promoted results — organic ranking is unchanged",
+    "noResultsTitle": "Nothing found for \"{term}\"",
+    "noResultsBody": "Check the spelling or try a shorter term.",
+    "noShopsTitle": "No shops found for \"{term}\"",
+    "noShopsBody": "Browse the full shop directory.",
+    "browseAll": "Browse all products",
+    "allShops": "All shops",
+    "popularTitle": "Popular products",
+    "noSuggestions": "No suggestions",
+    "seeAllFor": "See all results for \"{term}\"",
+    "shopLabel": "Shop"
   }
 }
