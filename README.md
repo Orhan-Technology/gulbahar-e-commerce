@@ -54,16 +54,18 @@ reference for the build — check it in Dari first (PRD §10.3).
 
 ## Scripts
 
-| Command             | Purpose                                 |
-| ------------------- | --------------------------------------- |
-| `npm run dev`       | Dev server on port 3005                 |
-| `npm run build`     | Production build                        |
-| `npm run typecheck` | `tsc --noEmit`                          |
-| `npm run lint`      | ESLint                                  |
-| `npm run format`    | Prettier write                          |
-| `npm run db:push`   | Push Drizzle schema to Postgres         |
-| `npm run db:seed`   | Seed demo data (implemented in Phase 4) |
-| `npm run db:reset`  | Drop schema, re-push, re-seed           |
+| Command                 | Purpose                                             |
+| ----------------------- | --------------------------------------------------- |
+| `npm run dev`           | Dev server on port 3005                             |
+| `npm run build`         | Production build                                    |
+| `npm run typecheck`     | `tsc --noEmit`                                      |
+| `npm run lint`          | ESLint                                              |
+| `npm run format`        | Prettier write                                      |
+| `npm run db:push`       | Push Drizzle schema to Postgres                     |
+| `npm run db:seed`       | Seed demo data (implemented in Phase 4)             |
+| `npm run db:reset`      | Drop schema, re-push, re-seed                       |
+| `npm run db:extensions` | Apply pg_trgm, unaccent and trigram indexes         |
+| `npm run check:phase3`  | Data-layer acceptance checks (OTP, queries, search) |
 
 ## Build progress
 
@@ -72,8 +74,8 @@ reference for the build — check it in Dari first (PRD §10.3).
 | 0     | Project memory (`CLAUDE.md`)             | ✅ done |
 | 1     | Scaffold, i18n/RTL base, Docker Postgres | ✅ done |
 | 2     | Design system + component library        | ✅ done |
-| 3     | Schema, queries, auth, notify            | next    |
-| 4     | Seeded world                             | —       |
+| 3     | Schema, queries, auth, notify            | ✅ done |
+| 4     | Seeded world                             | next    |
 | 5     | Customer storefront                      | —       |
 | 6     | Shop dashboard                           | —       |
 | 7     | Admin                                    | —       |
