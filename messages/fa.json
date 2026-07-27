@@ -33,5 +33,73 @@
     "notFoundTitle": "صفحه پیدا نشد",
     "notFoundBody": "این صفحه وجود ندارد یا منتقل شده است.",
     "backHome": "بازگشت به صفحه اصلی"
+  },
+  "styleguide": {
+    "title": "راهنمای طراحی گلبهار",
+    "subtitle": "مرجع بصری برای تمام صفحات — رنگ، تایپوگرافی، فاصله و اجزا",
+    "sections": {
+      "palette": "پالت رنگ",
+      "typography": "تایپوگرافی",
+      "numerals": "اعداد، پول و تاریخ",
+      "spacing": "مقیاس فاصله",
+      "radiusElevation": "گردی گوشه و سایه",
+      "buttons": "دکمه‌ها",
+      "badges": "نشان‌ها",
+      "inputsCards": "ورودی‌ها و کارت‌ها"
+    },
+    "palette": {
+      "primary": "اصلی — سبز تیره",
+      "accent": "تأکیدی — طلایی گرم",
+      "neutral": "خنثی — خاکستری گرم",
+      "semantic": "رنگ‌های معنایی",
+      "success": "موفقیت",
+      "warning": "هشدار",
+      "danger": "خطا",
+      "surfaces": "سطوح"
+    },
+    "typography": {
+      "note": "وزیرمتن برای دری و پشتو، اینتر برای انگلیسی. هفت اندازه، نه بیشتر.",
+      "sampleFa": "خرید از مرکز گلبهار",
+      "sampleEn": "Shop at Gulbahar"
+    },
+    "numerals": {
+      "note": "اعداد فارسی، جداکننده ٬ و واحد افغانی — همه از طریق Intl با زبان fa-AF.",
+      "price": "قیمت",
+      "count": "تعداد",
+      "compact": "خلاصه",
+      "discount": "تخفیف",
+      "date": "تاریخ"
+    },
+    "buttons": {
+      "default": "افزودن به سبد",
+      "accent": "تبلیغ کن",
+      "secondary": "ثانویه",
+      "outline": "حاشیه‌دار",
+      "ghost": "ساده",
+      "destructive": "حذف",
+      "link": "پیوند",
+      "disabled": "غیرفعال",
+      "small": "کوچک",
+      "medium": "متوسط",
+      "large": "بزرگ"
+    },
+    "badges": {
+      "default": "جدید",
+      "sponsored": "تبلیغ شده",
+      "secondary": "ثانویه",
+      "success": "تکمیل شد",
+      "warning": "در انتظار",
+      "destructive": "رد شد",
+      "outline": "حاشیه‌دار"
+    },
+    "inputs": {
+      "placeholder": "نام محصول را بنویسید",
+      "disabled": "غیرفعال"
+    },
+    "card": {
+      "title": "کارت نمونه",
+      "description": "توضیح کوتاه زیر عنوان کارت",
+      "body": "بدنه کارت با گردی و سایه استاندارد."
+    }
   }
 }

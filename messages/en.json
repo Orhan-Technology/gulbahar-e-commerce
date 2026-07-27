@@ -33,5 +33,73 @@
     "notFoundTitle": "Page not found",
     "notFoundBody": "This page does not exist or has been moved.",
     "backHome": "Back to home"
+  },
+  "styleguide": {
+    "title": "Gulbahar Design System",
+    "subtitle": "Visual reference for every screen — colour, type, spacing, components",
+    "sections": {
+      "palette": "Colour palette",
+      "typography": "Typography",
+      "numerals": "Numerals, currency and dates",
+      "spacing": "Spacing scale",
+      "radiusElevation": "Radius and elevation",
+      "buttons": "Buttons",
+      "badges": "Badges",
+      "inputsCards": "Inputs and cards"
+    },
+    "palette": {
+      "primary": "Primary — deep green",
+      "accent": "Accent — warm gold",
+      "neutral": "Neutral — warm grey",
+      "semantic": "Semantic colours",
+      "success": "Success",
+      "warning": "Warning",
+      "danger": "Danger",
+      "surfaces": "Surfaces"
+    },
+    "typography": {
+      "note": "Vazirmatn for Dari and Pashto, Inter for English. Seven sizes, no more.",
+      "sampleFa": "خرید از مرکز گلبهار",
+      "sampleEn": "Shop at Gulbahar"
+    },
+    "numerals": {
+      "note": "Persian digits, ٬ separators and afghani — all via Intl with the fa-AF locale.",
+      "price": "Price",
+      "count": "Count",
+      "compact": "Compact",
+      "discount": "Discount",
+      "date": "Date"
+    },
+    "buttons": {
+      "default": "Add to cart",
+      "accent": "Promote",
+      "secondary": "Secondary",
+      "outline": "Outline",
+      "ghost": "Ghost",
+      "destructive": "Delete",
+      "link": "Link",
+      "disabled": "Disabled",
+      "small": "Small",
+      "medium": "Medium",
+      "large": "Large"
+    },
+    "badges": {
+      "default": "New",
+      "sponsored": "Sponsored",
+      "secondary": "Secondary",
+      "success": "Fulfilled",
+      "warning": "Pending",
+      "destructive": "Rejected",
+      "outline": "Outline"
+    },
+    "inputs": {
+      "placeholder": "Enter a product name",
+      "disabled": "Disabled"
+    },
+    "card": {
+      "title": "Sample card",
+      "description": "Short description under the card title",
+      "body": "Card body with the standard radius and elevation."
+    }
   }
 }
