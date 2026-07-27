@@ -9,5 +9,10 @@ export default defineConfig({
     url: process.env.DATABASE_URL!,
   },
   verbose: true,
-  strict: true,
+  /*
+   * strict: true makes push ask for interactive confirmation, which fails in any
+   * non-TTY context (npm scripts, db:reset, CI). The demo database is disposable
+   * and rebuilt by `npm run db:reset`, so applying directly is correct here.
+   */
+  strict: false,
 });

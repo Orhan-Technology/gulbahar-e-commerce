@@ -1,11 +1,17 @@
 /**
- * Drizzle schema barrel.
+ * Drizzle schema barrel — the full data model from PRD §14.
  *
- * The full data model (PRD §14) is Phase 3.1's deliverable: users, shops,
- * shop_members, categories, products, product_images, product_variants,
- * orders, order_items, order_events, reviews, review_responses,
- * wishlist_items, offers, promotion_slots, campaigns, notifications,
- * addresses. Table modules get added here as they land.
+ * Table modules are ordered by dependency so they never import each other
+ * cyclically; all relations() declarations live in ./relations.
  */
 
-export {};
+export * from './shared';
+export * from './users';
+export * from './categories';
+export * from './shops';
+export * from './products';
+export * from './orders';
+export * from './reviews';
+export * from './promotions';
+export * from './notifications';
+export * from './relations';
