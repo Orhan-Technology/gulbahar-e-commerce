@@ -167,6 +167,34 @@ Every `check:*` script needs `npm run dev` running — they drive the real serve
 actions over HTTP, and the action ids come from the **dev** build's manifest. They
 also restore whatever they change, so the seeded demo moments survive repeated runs.
 
+## Troubleshooting
+
+### "A tree hydrated but some attributes… didn't match" with `bis_skin_checked`
+
+Bitdefender's browser extension (Anti-tracker / Online Threat Prevention) writes
+`bis_skin_checked`, `bis_register` and `__processed_<uuid>__` into the DOM before
+React hydrates. Every diff line in the warning is one of those attributes with a `-`
+prefix — present on the client, absent from the server HTML — which is the signature
+of something injected after delivery. Confirmed: the string appears nowhere in this
+repository or in `node_modules`, and the server response contains 165 `<div>`s and
+zero occurrences.
+
+It is console noise, not breakage: React keeps the DOM node and the page works. It
+will not appear on a machine without the extension.
+
+To silence it while developing, do one of:
+
+- Add `localhost` to Bitdefender's exceptions (Protection → Online Threat Prevention
+  → Settings → Manage exceptions → `http://localhost:3005`).
+- Use a browser profile with no extensions — which the demo checklist already calls
+  for, so the client never sees this.
+- Open the app in a private window with extensions disabled.
+
+`<body>` carries `suppressHydrationWarning` for the two attributes the extension puts
+there. The ones on inner `<div>`s cannot be suppressed without putting
+`suppressHydrationWarning` on every element in the tree — which would also hide
+genuine mismatches in our own markup, and is not worth trading away.
+
 ## Build progress
 
 | Phase | Scope                                    | Status  |
