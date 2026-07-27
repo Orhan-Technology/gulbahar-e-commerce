@@ -101,9 +101,7 @@ export function CheckoutForm({
     });
   }
 
-  function onPlaceOrder(event: React.FormEvent) {
-    event.preventDefault();
-
+  function onPlaceOrder() {
     if (fulfillment === 'delivery' && !addressId) {
       toast.error(t('errors.address_required'));
       return;
@@ -139,7 +137,20 @@ export function CheckoutForm({
 
   return (
     <>
-      <form onSubmit={onPlaceOrder} className="space-y-6">
+      {/*
+        A DIV, not a form — and deliberately.
+
+        The address block below is a real <form> with required fields, and a <form>
+        cannot legally contain another. Browsers drop the inner one, which broke
+        hydration. Of the two, the address block is the one that needs to be a form:
+        it has native validation and wants Enter to submit. This outer wrapper had no
+        inputs of its own — only controlled radio groups and the button — so it lost
+        nothing by becoming a div.
+
+        Pressing Enter in an address field now saves the address instead of placing
+        the order, which is also the safer of the two behaviours.
+      */}
+      <div className="space-y-6">
         {/* Fulfilment */}
         <section className="rounded-card border-border bg-card space-y-3 border p-4">
           <h2 className="text-sm font-bold">{t('fulfillmentHeading')}</h2>
@@ -346,7 +357,13 @@ export function CheckoutForm({
             </div>
           </dl>
 
-          <Button type="submit" size="lg" className="w-full" disabled={pending}>
+          <Button
+            type="button"
+            onClick={onPlaceOrder}
+            size="lg"
+            className="w-full"
+            disabled={pending}
+          >
             {pending
               ? t('placing')
               : paymentMethod === 'hesabpay'
@@ -354,7 +371,7 @@ export function CheckoutForm({
                 : t('placeOrder')}
           </Button>
         </section>
-      </form>
+      </div>
 
       <HesabPaySheet
         open={payOpen}

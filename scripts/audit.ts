@@ -202,6 +202,35 @@ for (const file of sourceFiles) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* 2b. Nested <form> — invalid HTML that breaks hydration                      */
+
+/*
+ * A <form> inside a <form> is illegal: the browser drops the inner one, the client
+ * tree stops matching the server tree, and React regenerates the subtree. It shipped
+ * in the checkout, where an inline "add address" form sat inside the outer one.
+ *
+ * Counted per file by walking the JSX: any depth above one is the bug. Comments are
+ * already stripped, so prose mentioning <form> does not count.
+ */
+for (const file of sourceFiles) {
+  const source = stripComments(readFileSync(file, 'utf8')).join('\n');
+  let depth = 0;
+  let deepest = 0;
+  let deepestLine = 0;
+
+  for (const match of source.matchAll(/<(\/?)form\b/g)) {
+    depth += match[1] ? -1 : 1;
+    if (depth > deepest) {
+      deepest = depth;
+      deepestLine = source.slice(0, match.index).split('\n').length - 1;
+    }
+  }
+  if (deepest > 1) {
+    report('nested-form', file, deepestLine, `<form> nested ${deepest} deep — invalid HTML`);
+  }
+}
+
+/* -------------------------------------------------------------------------- */
 /* 3. Route-group error boundaries and not-found (PRD §10.5)                   */
 
 const GROUPS = ['(shop)', '(dashboard)', '(admin)', '(onboarding)'];
