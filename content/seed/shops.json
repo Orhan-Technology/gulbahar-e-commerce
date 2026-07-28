@@ -12,7 +12,7 @@
       "fa": "فروش لوازم برقی و الکترونیکی اصل با گرانتی. بیش از ۱۵ سال در مرکز گلبهار.",
       "en": "Genuine electronics and appliances with warranty. Over 15 years in Gulbahar Center."
     },
-    "hours": "۸:۰۰ – ۱۹:۰۰",
+    "hours": "8:00-19:00",
     "phone": "0700100201"
   },
   {
@@ -28,7 +28,7 @@
       "fa": "نمایندگی رسمی موبایل و تابلت. تبدیل، خرید و فروش با قیمت مناسب.",
       "en": "Official mobile and tablet dealer. Trade-in, buy and sell at fair prices."
     },
-    "hours": "۸:۳۰ – ۲۰:۰۰",
+    "hours": "8:30-20:00",
     "phone": "0700100202"
   },
   {
@@ -44,7 +44,7 @@
       "fa": "لوازم آرایشی اصل از برندهای معروف جهان. مشوره رایگان از طرف کارمندان ما.",
       "en": "Authentic cosmetics from well-known international brands. Free advice from our staff."
     },
-    "hours": "۹:۰۰ – ۱۹:۳۰",
+    "hours": "9:00-19:30",
     "phone": "0700100203"
   },
   {
@@ -60,7 +60,7 @@
       "fa": "عطر و ادکلن اصل شرقی و فرانسوی. امکان تست همه عطرها در دکان.",
       "en": "Authentic oriental and French fragrances. Try any scent in store."
     },
-    "hours": "۹:۰۰ – ۲۰:۰۰",
+    "hours": "9:00-20:00",
     "phone": "0700100204"
   },
   {
@@ -76,7 +76,7 @@
       "fa": "ساعت مردانه و زنانه از برندهای معتبر. ترمیم و تبدیل باتری در جای.",
       "en": "Men's and women's watches from trusted brands. On-site repair and battery change."
     },
-    "hours": "۸:۳۰ – ۱۹:۰۰",
+    "hours": "8:30-19:00",
     "phone": "0700100205"
   },
   {
@@ -92,7 +92,7 @@
       "fa": "پوشاک مردانه و زنانه، دوخت ترکی و وطنی. سایزهای مختلف موجود است.",
       "en": "Men's and women's clothing, Turkish and locally tailored. All sizes available."
     },
-    "hours": "۹:۰۰ – ۱۹:۳۰",
+    "hours": "9:00-19:30",
     "phone": "0700100206"
   },
   {
@@ -108,7 +108,7 @@
       "fa": "کفش چرمی اصل، مردانه و زنانه. کفش مکتب و کفش ورزشی هم موجود است.",
       "en": "Genuine leather shoes for men and women. School and sports shoes also available."
     },
-    "hours": "۸:۰۰ – ۱۹:۰۰",
+    "hours": "8:00-19:00",
     "phone": "0700100207"
   },
   {
@@ -124,7 +124,7 @@
       "fa": "همه لوازم آشپزخانه و خانه در یک جای. تحویل رایگان در شهر کابل.",
       "en": "Every kitchen and household item in one place. Free delivery within Kabul."
     },
-    "hours": "۸:۰۰ – ۱۹:۰۰",
+    "hours": "8:00-19:00",
     "phone": "0700100208"
   },
   {
@@ -140,7 +140,7 @@
       "fa": "اسباب‌بازی سالم و بی‌خطر برای هر سن. تحفه‌های تولد و عیدی.",
       "en": "Safe, well-made toys for every age. Birthday and Eid gifts."
     },
-    "hours": "۹:۰۰ – ۱۹:۰۰",
+    "hours": "9:00-19:00",
     "phone": "0700100209"
   },
   {
@@ -156,7 +156,7 @@
       "fa": "قرطاسیه مکتب و دفتر، کتاب و لوازم رسامی. تخفیف برای مکاتب.",
       "en": "School and office stationery, books and art supplies. Discounts for schools."
     },
-    "hours": "۷:۳۰ – ۱۸:۳۰",
+    "hours": "7:30-18:30",
     "phone": "0700100210"
   },
   {
@@ -172,7 +172,7 @@
       "fa": "طلا و نقره با عیار تضمینی. ساخت سفارشی زیورات به سلیقه شما.",
       "en": "Gold and silver with guaranteed purity. Custom jewellery made to order."
     },
-    "hours": "۹:۰۰ – ۱۸:۳۰",
+    "hours": "9:00-18:30",
     "phone": "0700100211"
   },
   {
@@ -188,7 +188,7 @@
       "fa": "کیف دستی، بکس مکتب و چمدان سفر. جنس مقاوم با قیمت مناسب.",
       "en": "Handbags, school backpacks and travel luggage. Durable goods at fair prices."
     },
-    "hours": "۸:۳۰ – ۱۹:۰۰",
+    "hours": "8:30-19:00",
     "phone": "0700100212"
   },
   {
@@ -204,7 +204,7 @@
       "fa": "لباس و لوازم ورزشی برای فوتبال، کرکت و جمنازیم.",
       "en": "Sportswear and equipment for football, cricket and the gym."
     },
-    "hours": "۹:۰۰ – ۱۹:۳۰",
+    "hours": "9:00-19:30",
     "phone": "0700100213"
   },
   {
@@ -220,7 +220,7 @@
       "fa": "خشکبار تازه افغانی: پسته، بادام، کشمش و شیرینی خانگی. بسته‌بندی تحفه‌ای.",
       "en": "Fresh Afghan dried fruit: pistachios, almonds, raisins and homemade sweets. Gift packaging."
     },
-    "hours": "۸:۰۰ – ۱۹:۰۰",
+    "hours": "8:00-19:00",
     "phone": "0700100214",
     "status": "pending"
   }

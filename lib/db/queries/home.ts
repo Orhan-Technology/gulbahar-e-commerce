@@ -166,6 +166,19 @@ export async function activeOffers(limit = 8, now: Date = new Date()) {
       shopName: shops.name,
       shopFloor: shops.floor,
       shopLogoPath: shops.logoPath,
+      /*
+       * A photo for the offer chip and the home page's promo card. Offers do not
+       * own imagery — they are a discount rule, not a product — so this borrows
+       * the shop's most-viewed product shot. Without it the promo card was a
+       * headline over an empty panel.
+       */
+      imagePath: sql<string | null>`(
+        select pi.path from products p
+        join product_images pi on pi.product_id = p.id
+        where p.shop_id = ${shops.id} and p.status = 'published'
+        order by p.view_count desc, pi.sort asc
+        limit 1
+      )`,
     })
     .from(offers)
     .innerJoin(shops, eq(offers.shopId, shops.id))
@@ -277,4 +290,143 @@ export async function wishlistForUser(userId: string) {
     rating: Number(row.rating),
     reviewCount: Number(row.reviewCount),
   }));
+}
+
+/**
+ * Bestsellers within one ROOT category, for the home page's per-category rails
+ * (PRD §5.1).
+ *
+ * Matches the category itself or any of its children, because every product is
+ * filed in a leaf — the same reason categoryProductCount counts self-or-child.
+ * Ordered by view count with rating as the tiebreaker: "bestseller" on a demo
+ * with no purchase history is really "most looked at", and rating alone put
+ * five-star products with two reviews above genuinely popular ones.
+ *
+ * Returns [] for a category whose shops are all unapproved — the food category
+ * is exactly that until the pending shop is approved on stage — so callers must
+ * be ready to render nothing rather than an empty rail.
+ */
+export async function categoryBestsellers(rootSlug: string, limit = 5) {
+  const rows = await db
+    .select({
+      id: products.id,
+      slug: products.slug,
+      title: products.title,
+      price: products.price,
+      discountPrice: products.discountPrice,
+      stock: products.stock,
+      shopId: shops.id,
+      shopSlug: shops.slug,
+      shopName: shops.name,
+      shopFloor: shops.floor,
+      imagePath: firstProductImagePath,
+      rating: productRatingAvg,
+      reviewCount: productReviewCount,
+    })
+    .from(products)
+    .innerJoin(shops, eq(products.shopId, shops.id))
+    .innerJoin(categories, eq(products.categoryId, categories.id))
+    .where(
+      and(
+        eq(products.status, 'published'),
+        eq(shops.status, 'approved'),
+        sql`(${categories.slug} = ${rootSlug} or ${categories.parentId} = (
+          select id from ${categories} root where root.slug = ${rootSlug}
+        ))`,
+      ),
+    )
+    .orderBy(desc(products.viewCount), desc(productRatingAvg))
+    .limit(limit);
+
+  return rows.map((row) => ({
+    ...row,
+    rating: Number(row.rating),
+    reviewCount: Number(row.reviewCount),
+  }));
+}
+
+/**
+ * One shop and a handful of its products, for the home page's spotlight block.
+ *
+ * The mockup fills this band with four promo tiles for a single tenant. Those
+ * are artwork a shop would have to supply and this build has none, so the block
+ * is the shop's banner beside its own products instead — same shape, real
+ * content. Picks the best-rated approved shop with enough stock to fill the row,
+ * so the band is never half empty.
+ *
+ * MIN_REVIEWS is the whole trick: rating alone spotlighted the stationery shop
+ * on the strength of one five-star review, over a shop rated 4.7 across
+ * fourteen. A demo's shop of the week cannot be a sample-size artifact.
+ */
+const SPOTLIGHT_MIN_REVIEWS = 5;
+
+export async function shopSpotlight(productLimit = 4) {
+  const columns = {
+    id: shops.id,
+    slug: shops.slug,
+    name: shops.name,
+    description: shops.description,
+    floor: shops.floor,
+    bannerPath: shops.bannerPath,
+    logoPath: shops.logoPath,
+    rating: shopRatingAvg,
+    reviewCount: shopReviewCount,
+    productCount: shopPublishedProductCount,
+  };
+
+  const pick = (minReviews: number) =>
+    db
+      .select(columns)
+      .from(shops)
+      .where(
+        and(
+          eq(shops.status, 'approved'),
+          gte(shopPublishedProductCount, productLimit),
+          gte(shopReviewCount, minReviews),
+        ),
+      )
+      .orderBy(desc(shopRatingAvg), desc(shopReviewCount))
+      .limit(1);
+
+  // Falls back to no threshold so a freshly reset database still fills the band.
+  const reviewed = await pick(SPOTLIGHT_MIN_REVIEWS);
+  const [shop] = reviewed.length > 0 ? reviewed : await pick(0);
+
+  if (!shop) return null;
+
+  const items = await db
+    .select({
+      id: products.id,
+      slug: products.slug,
+      title: products.title,
+      price: products.price,
+      discountPrice: products.discountPrice,
+      stock: products.stock,
+      shopId: shops.id,
+      shopSlug: shops.slug,
+      shopName: shops.name,
+      shopFloor: shops.floor,
+      imagePath: firstProductImagePath,
+      rating: productRatingAvg,
+      reviewCount: productReviewCount,
+    })
+    .from(products)
+    .innerJoin(shops, eq(products.shopId, shops.id))
+    .where(and(eq(products.shopId, shop.id), eq(products.status, 'published')))
+    .orderBy(desc(products.viewCount))
+    .limit(productLimit);
+
+  return {
+    shop: {
+      ...shop,
+      rating: Number(shop.rating),
+      reviewCount: Number(shop.reviewCount),
+      productCount: Number(shop.productCount),
+    },
+    items: items.map((row) => ({
+      ...row,
+      rating: Number(row.rating),
+      reviewCount: Number(row.reviewCount),
+    })),
+  };
 }

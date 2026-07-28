@@ -21,6 +21,13 @@ export interface ShopCardProps {
   logoPath?: string | null;
   bannerPath?: string | null;
   isSponsored?: boolean;
+  /**
+   * `card` is the banner-and-logo tile. `row` is the mall directory's compact
+   * form — a monogram disc beside the name and one line of metadata — which is
+   * how the mockup lists eight shops in two tidy rows instead of eight banners
+   * competing with the product photography above them.
+   */
+  layout?: 'card' | 'row';
   className?: string;
 }
 
@@ -42,12 +49,65 @@ export function ShopCard({
   logoPath,
   bannerPath,
   isSponsored = false,
+  layout = 'card',
   className,
 }: ShopCardProps) {
   const locale = useLocale();
   const t = useTranslations('shop');
+  const common = useTranslations('common');
 
   const hasLocation = floor !== null && floor !== undefined;
+
+  if (layout === 'row') {
+    return (
+      <Link
+        href={`/shops/${slug}`}
+        className={cn(
+          'rounded-media group flex items-center gap-4 bg-neutral-50 p-4 transition-colors duration-150 hover:bg-neutral-100',
+          className,
+        )}
+      >
+        {/* 48px, not the mockup's 52: 52 is off our 4/8/12/16 spacing scale and
+            the difference is invisible beside a 16px pad. */}
+        <span className="rounded-pill bg-card relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden">
+          {logoPath ? (
+            <Image src={logoPath} alt="" fill sizes="48px" className="object-cover" />
+          ) : (
+            <Store className="text-primary h-5 w-5" aria-hidden />
+          )}
+        </span>
+
+        <span className="flex min-w-0 flex-col gap-1.5">
+          <span className="flex items-center gap-2">
+            <span className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150">
+              {name}
+            </span>
+            {isSponsored && <SponsoredBadge tone="inline" />}
+          </span>
+
+          {/*
+           * One metadata line, in the order a mall customer reads it: how good,
+           * how much, and where to walk. The mockup's "delivery within 24h" is
+           * not here — there is no per-shop SLA in the data, and inventing one
+           * would be a promise the shop never made.
+           */}
+          <span className="truncate text-xs text-neutral-500">
+            {[
+              rating !== undefined && rating > 0
+                ? `★ ${formatNumber(Number(rating.toFixed(1)), locale)}`
+                : null,
+              productCount !== undefined
+                ? t('productCount', { count: formatNumber(productCount, locale) })
+                : null,
+              hasLocation ? common('floorName', { floor }) : null,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </span>
+      </Link>
+    );
+  }
 
   return (
     <Link
@@ -112,7 +172,25 @@ export function ShopCard({
   );
 }
 
-export function ShopCardSkeleton({ className }: { className?: string }) {
+export function ShopCardSkeleton({
+  layout = 'card',
+  className,
+}: {
+  layout?: 'card' | 'row';
+  className?: string;
+}) {
+  if (layout === 'row') {
+    return (
+      <div className={cn('rounded-media flex items-center gap-4 bg-neutral-50 p-4', className)}>
+        <Skeleton className="rounded-pill h-12 w-12 shrink-0" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-40" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(

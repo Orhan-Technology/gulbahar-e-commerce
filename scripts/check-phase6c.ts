@@ -576,8 +576,25 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   section('Profile');
 
-  const [before] = await sql<{ hours: string | null; phone: string | null }[]>`
-    select hours, phone from shops where id = ${shop.id}
+  /*
+   * The whole profile, not just the two columns the assertions read back.
+   * saveShopProfile writes name, description, floor, unit and both contact
+   * fields in one go, so restoring a subset leaves the rest of the test payload
+   * in the seeded shop for good — which is how «آزمایش فاز ۶.۳» ended up as the
+   * electronics shop's description on the storefront hero, one run at a time.
+   */
+  const [before] = await sql<
+    {
+      name: unknown;
+      description: unknown;
+      floor: number | null;
+      unit_number: string | null;
+      hours: string | null;
+      phone: string | null;
+    }[]
+  >`
+    select name, description, floor, unit_number, hours, phone
+    from shops where id = ${shop.id}
   `;
 
   const badHours = await callAction(shopkeeper, 'saveShopProfile', [
@@ -628,7 +645,16 @@ async function main() {
     shopPageEn.includes('9:15') && shopPageEn.includes('20:45'),
   );
 
-  await sql`update shops set hours = ${before.hours}, phone = ${before.phone} where id = ${shop.id}`;
+  await sql`
+    update shops set
+      name = ${JSON.stringify(before.name)}::jsonb,
+      description = ${JSON.stringify(before.description)}::jsonb,
+      floor = ${before.floor},
+      unit_number = ${before.unit_number},
+      hours = ${before.hours},
+      phone = ${before.phone}
+    where id = ${shop.id}
+  `;
 
   /* ---------------------------------------------------------------------- */
   section('Settings: staff');

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 import {
   Baby,
@@ -13,16 +14,19 @@ import {
 
 import { SectionHeader, SectionHeaderSkeleton } from '@/components/custom/section-header';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatNumber } from '@/lib/format';
 import { pickLocale } from '@/lib/db/localized';
 import { categoryTree } from '@/lib/db/queries/shops';
+import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
- * Category tiles (PRD §5.1). Horizontal scroll on mobile, grid from sm up.
+ * Category tiles (PRD §5.1). Eight across on desktop, horizontal scroll on
+ * mobile — the scroller inherits document direction, so in Dari it starts at the
+ * right and scrolls leftward with no per-locale duplication (PRD §10.3).
  *
- * The scroller inherits document direction, so in Dari it starts at the right and
- * scrolls leftward — no per-locale duplication (PRD §10.3).
+ * A category has an image when one has been set and falls back to its icon on a
+ * tinted disc. Both are round tiles of the same size, so a mixed row still reads
+ * as one rhythm rather than as some tiles being broken.
  */
 const ICONS: Record<string, LucideIcon> = {
   electronics: Smartphone,
@@ -44,24 +48,38 @@ export async function CategoryTiles() {
   if (tree.length === 0) return null;
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <SectionHeader title={t('shopByCategory')} href="/categories" />
 
-      <div className="-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 lg:grid-cols-8">
+      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:px-0 lg:grid-cols-8">
         {tree.map((category) => {
           const Icon = ICONS[category.slug] ?? Sparkles;
           return (
             <Link
               key={category.id}
               href={`/categories/${category.slug}`}
-              className="group rounded-card border-border bg-card shadow-card hover:shadow-overlay flex w-24 shrink-0 flex-col items-center gap-2 border p-3 text-center transition-shadow duration-150 sm:w-auto"
+              className="group flex w-24 shrink-0 flex-col items-center gap-3 text-center sm:w-auto"
             >
-              <span className="rounded-pill bg-primary-50 text-primary-700 group-hover:bg-primary-100 flex h-12 w-12 items-center justify-center transition-colors duration-150">
-                <Icon className="h-5 w-5" aria-hidden />
+              <span className="rounded-pill relative flex aspect-square w-full max-w-24 items-center justify-center overflow-hidden bg-neutral-100 transition-transform duration-150 group-hover:scale-105">
+                {category.imagePath ? (
+                  <Image
+                    src={category.imagePath}
+                    alt=""
+                    fill
+                    sizes="96px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <span className="bg-primary-50 text-primary flex h-full w-full items-center justify-center">
+                    <Icon className="h-6 w-6" aria-hidden />
+                  </span>
+                )}
               </span>
-              <span className="clamp-2 text-foreground text-xs leading-tight font-medium">
+
+              <span className="clamp-2 text-foreground group-hover:text-primary text-sm leading-tight font-semibold transition-colors duration-150">
                 {pickLocale(category.name, locale)}
               </span>
+
               {/*
                * Hidden at zero rather than rendered as a bare "٠". The food
                * category legitimately has none — its only shop is the pending
@@ -69,7 +87,7 @@ export async function CategoryTiles() {
                * under a tile reads as a broken counter, not as "nothing yet".
                */}
               {category.productCount > 0 && (
-                <span className="text-muted-foreground text-2xs">
+                <span className="text-2xs -mt-1 text-neutral-500">
                   {tCategories('productCount', {
                     count: formatNumber(category.productCount, locale),
                   })}
@@ -85,17 +103,14 @@ export async function CategoryTiles() {
 
 export function CategoryTilesSkeleton() {
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <SectionHeaderSkeleton />
-      <div className="-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-4 sm:px-0 lg:grid-cols-8">
+      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:px-0 lg:grid-cols-8">
         {Array.from({ length: 8 }, (_, index) => (
-          <div
-            key={index}
-            className="rounded-card border-border bg-card flex w-24 shrink-0 flex-col items-center gap-2 border p-3 sm:w-auto"
-          >
-            <Skeleton className="rounded-pill h-12 w-12" />
+          <div key={index} className="flex w-24 shrink-0 flex-col items-center gap-3 sm:w-auto">
+            <Skeleton className="rounded-pill aspect-square w-full max-w-24" />
             <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-3 w-8" />
+            <Skeleton className="h-3 w-10" />
           </div>
         ))}
       </div>

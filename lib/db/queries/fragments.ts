@@ -105,6 +105,27 @@ export const categoryProductCount: SQL<number> = sql<number>`(
     and p.status = 'published' and s.status = 'approved'
 )`;
 
+/**
+ * Outer query must select FROM categories. A representative photo for the
+ * category, taken from its most-viewed publicly visible product.
+ *
+ * Derived rather than stored: a categories.image_path column would need its own
+ * artwork, its own seed step and its own upload path, and it would go stale the
+ * moment the catalogue moved on. This is always a real product from the category
+ * the tile leads to, and it needs no schema at all. Null for a category with no
+ * visible stock, so the tile falls back to its icon.
+ */
+export const categoryImagePath: SQL<string | null> = sql<string | null>`(
+  select pi.path from products p
+  join shops s on s.id = p.shop_id
+  join categories pc on pc.id = p.category_id
+  join product_images pi on pi.product_id = p.id
+  where (pc.id = categories.id or pc.parent_id = categories.id)
+    and p.status = 'published' and s.status = 'approved'
+  order by p.view_count desc, pi.sort asc
+  limit 1
+)`;
+
 /** Outer query must select FROM orders. */
 export const orderItemQuantity: SQL<number> = sql<number>`(
   select coalesce(sum(oi.quantity), 0)::int from order_items oi

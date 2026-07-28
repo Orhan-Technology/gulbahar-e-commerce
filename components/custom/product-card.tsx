@@ -145,9 +145,13 @@ export function ProductCard({
           {title}
         </h3>
 
-        {rating !== undefined && rating > 0 && (
-          <RatingStars value={rating} count={reviewCount} size="sm" />
-        )}
+        {/*
+         * The rating row is ALWAYS rendered, greyed out at zero reviews rather
+         * than omitted. Hiding it shortened those cards by one line, which threw
+         * the price and shop lines out of alignment across a five-card row — the
+         * single thing that made the grid look untidy.
+         */}
+        <RatingStars value={rating ?? 0} count={reviewCount} size="sm" />
 
         <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
 

@@ -4,6 +4,7 @@ import { db } from '..';
 import { localizedColumn } from '../localized';
 import { categories, products, reviews, shopMembers, shops, users } from '../schema';
 import {
+  categoryImagePath,
   categoryProductCount,
   shopPublishedProductCount,
   shopRatingAvg,
@@ -173,6 +174,7 @@ export async function categoryTree(locale: string) {
       parentId: categories.parentId,
       sort: categories.sort,
       productCount: categoryProductCount,
+      imagePath: categoryImagePath,
     })
     .from(categories)
     .orderBy(asc(categories.sort), asc(localizedColumn(categories.name, locale)));

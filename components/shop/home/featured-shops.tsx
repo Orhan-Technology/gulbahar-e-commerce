@@ -27,13 +27,16 @@ export async function FeaturedShops() {
   void recordImpressions(campaignIds);
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <SectionHeader title={t('featuredShops')} href="/shops" />
 
-      <div className="-mx-4 flex snap-x snap-mandatory scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-4">
+      {/* Compact rows, four across: eight shop banners here would have competed
+          with the product photography in the rails above and below. */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {shops.map((shop) => (
-          <div key={shop.id} className="w-64 shrink-0 snap-start sm:w-auto">
+          <div key={shop.id}>
             <ShopCard
+              layout="row"
               slug={shop.slug}
               name={pickLocale(shop.name, locale)}
               categoryName={shop.categoryName ? pickLocale(shop.categoryName, locale) : undefined}
@@ -55,12 +58,12 @@ export async function FeaturedShops() {
 
 export function FeaturedShopsSkeleton() {
   return (
-    <section className="space-y-3">
+    <section className="space-y-5">
       <SectionHeaderSkeleton />
-      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:px-0 lg:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div key={index} className="w-64 shrink-0 sm:w-auto">
-            <ShopCardSkeleton />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div key={index}>
+            <ShopCardSkeleton layout="row" />
           </div>
         ))}
       </div>
