@@ -159,7 +159,7 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
         </div>
 
         <div className="text-end">
-          <p className="text-accent-700 text-base font-bold">
+          <p className="text-foreground text-base font-bold">
             {formatCurrency(campaign.pricePaid, locale)}
           </p>
           {(campaign.status === 'active' || campaign.status === 'ended') && (

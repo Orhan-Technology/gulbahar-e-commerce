@@ -281,10 +281,22 @@ try {
 const FEEDBACK_MS = 300;
 const DECORATIVE_MS = 500;
 
-function motionBudget(line: string): number {
-  return /hover|reveal|carousel|marquee|decorative|pulse|caret/.test(line)
-    ? DECORATIVE_MS
-    : FEEDBACK_MS;
+const DECORATIVE = /hover|reveal|carousel|marquee|decorative|pulse|caret/;
+
+/*
+ * The marker is looked for in a small WINDOW around the duration, not on the
+ * same line. A Tailwind class list built with cn() routinely spans four or
+ * five lines, and the duration and the `group-hover:` that justifies it land
+ * on different ones — which flagged the product card's pop-out as a slow
+ * feedback transition when it is the clearest decorative animation we have.
+ *
+ * Two lines either side covers a class list without reaching into the next
+ * statement, so the looser budget still has to be claimed by something
+ * adjacent and visible.
+ */
+function motionBudget(lines: string[], index: number): number {
+  const window = lines.slice(Math.max(0, index - 2), index + 3).join(' ');
+  return DECORATIVE.test(window) ? DECORATIVE_MS : FEEDBACK_MS;
 }
 
 for (const file of [...sourceFiles, ...walk('app', /\.css$/)]) {
@@ -292,7 +304,7 @@ for (const file of [...sourceFiles, ...walk('app', /\.css$/)]) {
   lines.forEach((line, index) => {
     // An infinite animation has no end to be too far away.
     if (/\binfinite\b/.test(line)) return;
-    const budget = motionBudget(line);
+    const budget = motionBudget(lines, index);
 
     // Tailwind duration utilities.
     for (const match of line.matchAll(/duration-(\d+)/g)) {

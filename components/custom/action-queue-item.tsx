@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
  */
 const TONES = {
   primary: 'bg-primary-700',
-  warning: 'bg-accent-500',
+  warning: 'bg-warning',
   danger: 'bg-danger',
   success: 'bg-success',
   muted: 'bg-neutral-400',

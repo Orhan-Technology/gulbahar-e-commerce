@@ -53,7 +53,7 @@ export function SectionHeader({
       {href && (
         <Link
           href={href}
-          className="rounded-control text-primary hover:text-accent-600 ms-auto inline-flex shrink-0 items-center gap-1 text-sm font-semibold transition-colors duration-150"
+          className="rounded-control text-primary hover:text-primary-800 ms-auto inline-flex shrink-0 items-center gap-1 text-sm font-semibold transition-colors duration-150"
         >
           {actionLabel ?? t('viewAll')}
           <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden />

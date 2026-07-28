@@ -124,10 +124,10 @@ async function Directory({
   return (
     <div className="space-y-6">
       {promoted.length > 0 && !categoryRow && (
-        <section className="rounded-card border-accent-200 bg-accent-50/40 space-y-3 border p-3">
+        <section className="rounded-card border-border bg-neutral-100/70 space-y-3 border p-3">
           <div className="flex items-center gap-2">
             <SponsoredBadge />
-            <span className="text-accent-800 text-xs">{t('promotedNote')}</span>
+            <span className="text-xs text-neutral-600">{t('promotedNote')}</span>
           </div>
           <ShopGrid items={promoted.map((shop) => ({ ...shop, sponsored: true }))} />
         </section>

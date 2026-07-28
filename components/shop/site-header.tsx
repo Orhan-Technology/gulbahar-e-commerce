@@ -2,7 +2,16 @@
 
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { LayoutGrid, MapPin, Menu, Search, ShoppingCart, Sparkles, Store, User } from 'lucide-react';
+import {
+  LayoutGrid,
+  MapPin,
+  Menu,
+  Search,
+  ShoppingCart,
+  Sparkles,
+  Store,
+  User,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -89,7 +98,7 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
               </Link>
               <Link
                 href="/offers"
-                className="rounded-control text-accent-600 hover:bg-accent-50 flex items-center gap-2 px-3 py-2 text-sm font-medium"
+                className="rounded-control text-primary-600 hover:bg-primary-50 flex items-center gap-2 px-3 py-2 text-sm font-medium"
               >
                 <Sparkles className="h-4 w-4" />
                 {t('nav.bestDeals')}
@@ -144,7 +153,7 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
             <span className="hidden text-sm font-semibold sm:inline">{t('nav.cart')}</span>
             {cartCount > 0 && (
               <span
-                className="rounded-pill bg-primary text-primary-foreground animate-badge-pop text-2xs absolute -top-2 flex h-5 min-w-5 items-center justify-center px-1 font-bold end-full"
+                className="rounded-pill bg-primary text-primary-foreground animate-badge-pop text-2xs absolute end-full -top-2 flex h-5 min-w-5 items-center justify-center px-1 font-bold"
                 aria-hidden
               >
                 {formatNumber(cartCount, locale)}
@@ -192,7 +201,7 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
 
         <Link
           href="/offers"
-          className="text-primary hover:text-accent-600 flex shrink-0 items-center gap-2 text-sm font-bold transition-colors duration-150"
+          className="text-primary hover:text-primary-600 flex shrink-0 items-center gap-2 text-sm font-bold transition-colors duration-150"
         >
           <Sparkles className="text-accent h-4 w-4" aria-hidden />
           {t('nav.bestDeals')}

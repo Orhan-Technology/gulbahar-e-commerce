@@ -28,7 +28,7 @@ export interface StatCardProps {
   /**
    * `tile` is the default surface: a tinted block with no border, which is how
    * stats are drawn throughout. `card` keeps the older bordered treatment for
-   * the reports screens, and `feature` is the one filled green tile that leads
+   * the reports screens, and `feature` is the one filled blue tile that leads
    * a stat row.
    */
   variant?: keyof typeof SURFACES;
@@ -36,7 +36,7 @@ export interface StatCardProps {
 }
 
 const SURFACES = {
-  tile: 'rounded-card bg-neutral-50 p-5',
+  tile: 'rounded-card bg-neutral-100 p-5',
   card: 'rounded-card border-border bg-card shadow-card border p-4',
   feature: 'rounded-card bg-primary-700 text-primary-foreground p-5',
 } as const;
@@ -52,9 +52,9 @@ const HINT_TONES = {
   muted: 'text-neutral-500',
   success: 'text-success',
   danger: 'text-danger',
-  warning: 'text-accent-600',
-  /** On the filled green tile, where gold is the only readable highlight. */
-  onDark: 'text-accent-400',
+  warning: 'text-warning',
+  /** On the filled blue tile, where only a pale tint of the same hue reads. */
+  onDark: 'text-primary-200',
 } as const;
 
 const COUNT_UP_MS = 280;

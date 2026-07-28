@@ -155,7 +155,7 @@ function Stat({
     <div className="rounded-card border-border bg-card border p-4">
       <dt className="text-muted-foreground text-xs">{label}</dt>
       <dd
-        className={`mt-1 text-lg font-bold ${tone === 'accent' ? 'text-accent-700' : 'text-foreground'}`}
+        className={`mt-1 text-lg font-bold ${tone === 'accent' ? 'text-primary-700' : 'text-foreground'}`}
       >
         {value}
       </dd>

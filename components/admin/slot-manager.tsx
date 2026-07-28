@@ -145,7 +145,7 @@ function SlotCard({ slot, locale }: { slot: SlotRow; locale: string }) {
       ) : (
         <>
           <div className="text-end">
-            <p className="text-accent-700 text-sm font-bold">
+            <p className="text-foreground text-sm font-bold">
               {t('perWeek', { price: formatCurrency(slot.pricePerWeek, locale) })}
             </p>
             <p className="text-muted-foreground text-xs">

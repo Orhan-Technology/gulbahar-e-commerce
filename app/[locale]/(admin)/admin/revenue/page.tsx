@@ -100,9 +100,9 @@ export default async function AdminRevenuePage({
         marketplace trustworthy, and the person who could quietly break it is
         the one reading this page.
       */}
-      <aside className="rounded-card bg-accent-50 flex flex-wrap items-baseline gap-x-4 gap-y-1 p-5">
-        <span className="text-accent-600 text-sm font-bold">{t('guardrailLabel')}</span>
-        <p className="text-accent-800 min-w-64 flex-1 text-sm leading-relaxed">
+      <aside className="rounded-card bg-warning-bg flex flex-wrap items-baseline gap-x-4 gap-y-1 p-5">
+        <span className="text-warning-fg text-sm font-bold">{t('guardrailLabel')}</span>
+        <p className="text-warning-fg/80 min-w-64 flex-1 text-sm leading-relaxed">
           {t('guardrailBody')}
         </p>
       </aside>
@@ -285,7 +285,7 @@ async function SlotInventory({ locale }: { locale: string }) {
                       full
                         ? 'text-primary-700 px-5 py-4 font-semibold'
                         : slot.occupancy >= 0.5
-                          ? 'text-accent-600 px-5 py-4 font-semibold'
+                          ? 'text-warning px-5 py-4 font-semibold'
                           : 'px-5 py-4 font-semibold text-neutral-400'
                     }
                   >
@@ -341,7 +341,7 @@ async function TopSpenders({ locale, className }: { locale: string; className?: 
               {/* Grows from the inline start, so it fills right-to-left in Dari. */}
               <div className="rounded-pill h-1.5 w-full overflow-hidden bg-neutral-100">
                 <div
-                  className="bg-accent-500 rounded-pill h-full"
+                  className="bg-primary-500 rounded-pill h-full"
                   style={{ width: `${top > 0 ? Math.round((shop.spend / top) * 100) : 0}%` }}
                 />
               </div>

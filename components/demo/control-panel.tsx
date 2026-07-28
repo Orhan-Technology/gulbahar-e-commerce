@@ -122,7 +122,7 @@ export function DemoControlPanel({ currentShopId }: { currentShopId: string | nu
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="text-accent-600 h-4 w-4" aria-hidden />
+            <Sparkles className="text-primary-600 h-4 w-4" aria-hidden />
             {t('title')}
           </DialogTitle>
           <DialogDescription>{t('subtitle')}</DialogDescription>

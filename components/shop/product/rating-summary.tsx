@@ -51,7 +51,7 @@ export async function RatingSummary({ average, total, distribution }: RatingSumm
               </span>
               <span className="rounded-pill relative h-2 flex-1 overflow-hidden bg-neutral-200">
                 <span
-                  className="rounded-pill bg-accent-500 absolute inset-y-0 start-0"
+                  className="rounded-pill bg-primary-600 absolute inset-y-0 start-0"
                   style={{ width: `${percent}%` }}
                 />
               </span>

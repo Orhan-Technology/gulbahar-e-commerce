@@ -44,20 +44,57 @@ export interface ProductCardProps {
    * saved state; the built-in one is local-only and exists for the styleguide.
    */
   hideWishlist?: boolean;
+  /**
+   * The storefront's real wishlist control, rendered INSIDE the media panel.
+   *
+   * It used to be positioned over the card by ProductGrid, which was fine
+   * until the panel started scaling on hover: an overlay outside the panel
+   * stays put while the panel grows around it, leaving the heart stranded in
+   * the middle of the enlarged photo. Passing it in makes it part of the thing
+   * that transforms.
+   */
+  wishlistSlot?: React.ReactNode;
+  /**
+   * Where the hover pop-out grows FROM.
+   *
+   * A centred origin is right for a card with neighbours on both sides, but a
+   * card at the end of a row grows straight into the page gutter and gets
+   * clipped. Anchoring the outermost cards to their outer edge makes them
+   * expand inwards instead, so the whole panel stays on screen. Physical
+   * left/right chosen per direction — `transform-origin` has no logical
+   * keyword, so this follows the same `ltr:`/`rtl:` pattern the gradients use.
+   */
+  edge?: 'start' | 'end';
 }
 
 /**
  * The storefront's workhorse card (PRD §10.4).
  *
- * BORDERLESS by design, per the approved mockup: the image is a rounded 1:1
- * tile floating on the page, with the text stacked beneath it at a 12px rhythm
- * and no container, border or resting shadow. At five cards to a row a bordered
- * box drew a grid of frames that competed with the photography; the photos do
- * the separating instead.
+ * BORDERLESS by design: the photo sits on a rounded tinted panel floating on
+ * the page, with the text stacked beneath it and no container, border or
+ * resting shadow. At five cards to a row a bordered box drew a grid of frames
+ * that competed with the photography; the photos do the separating instead.
+ *
+ * THE HOVER is the reference design's signature move, and the one thing that
+ * makes a dense grid feel alive: pointing at a card enlarges its media panel
+ * to 1.4× and lifts it over its neighbours. Three details make it work rather
+ * than merely happen:
+ *
+ *   - The PANEL scales, not the whole card. The title and price stay where
+ *     they are at their own size, so a row does not visibly reflow and the
+ *     text under the neighbouring cards stays readable.
+ *   - `hover:z-30` is on the card ROOT, not the panel. A `position: relative`
+ *     element with `z-index: auto` does not create a stacking context, so a
+ *     z-index set on the panel would be resolved against the grid and lose to
+ *     any card later in DOM order — the effect would work on the last card in
+ *     a row and be silently painted over on every other one.
+ *   - It is `sm:` and up only. Below that the grid is a horizontal scroller,
+ *     where a scaled child is both clipped by the overflow and added to the
+ *     scrollable width. Tailwind v4 also wraps `hover:` in `(hover: hover)`,
+ *     so a touch device never fires it in the first place.
  *
  * The image box has explicit dimensions so there is zero layout shift between
- * skeleton and content (PRD §9.3). Hover zooms the photo inside its tile — the
- * only motion on the card besides the wishlist heart's single pop (PRD §10.6).
+ * skeleton and content (PRD §9.3).
  */
 export function ProductCard({
   slug,
@@ -76,6 +113,8 @@ export function ProductCard({
   className,
   priority = false,
   hideWishlist = false,
+  wishlistSlot,
+  edge,
 }: ProductCardProps) {
   const locale = useLocale();
   const t = useTranslations('product');
@@ -98,88 +137,125 @@ export function ProductCard({
   }
 
   return (
-    <div className={cn('group relative flex flex-col gap-3', className)}>
-      <Link href={`/products/${slug}`} className="flex flex-col gap-3">
-        <div className="rounded-media relative aspect-square overflow-hidden bg-neutral-100">
-          {imagePath ? (
-            <Image
-              src={imagePath}
-              alt={title}
-              fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
-              priority={priority}
+    <div className={cn('group relative flex flex-col gap-3 hover:z-30', className)}>
+      {/*
+        `duration-[420ms]` is inside the 500ms decorative budget, not the
+        300ms feedback one: nothing is waiting on a hover, and the unhurried
+        settle is the whole character of the gesture (PRD §10.6, revised).
+
+        `sm:group-hover:z-20` is not decoration. Scaling gives the panel a
+        stacking context of its own, which would trap the heart inside it
+        BELOW the stretched link — leaving the wishlist button unclickable
+        for exactly as long as the pointer is on the card.
+      */}
+      <div
+        className={cn(
+          'rounded-media relative aspect-square overflow-hidden bg-neutral-100',
+          edge === 'start'
+            ? 'ltr:origin-left rtl:origin-right'
+            : edge === 'end'
+              ? 'ltr:origin-right rtl:origin-left'
+              : 'origin-center',
+          // `scale`, not `transform`: Tailwind v4 compiles scale-* to the
+          // standalone `scale` property, so a transition list naming only
+          // `transform` animates nothing and the panel snaps to full size.
+          'transition-[scale,box-shadow] duration-[420ms] ease-[var(--ease-settle)]',
+          'sm:group-hover:shadow-overlay sm:group-hover:z-20 sm:group-hover:scale-[1.4]',
+        )}
+      >
+        {imagePath ? (
+          <Image
+            src={imagePath}
+            alt={title}
+            fill
+            // The panel grows to 1.4x on hover, so ask for the larger source
+            // up front rather than letting a 240px image be scaled up.
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 340px"
+            priority={priority}
+            className={cn('object-cover', outOfStock && 'opacity-60')}
+          />
+        ) : (
+          <div className="from-primary-50 flex h-full w-full items-center justify-center bg-linear-to-br to-neutral-100 text-neutral-400">
+            <ImageOff className="h-8 w-8" aria-hidden />
+          </div>
+        )}
+
+        {/*
+          Both controls sit at z-20 — above the stretched link below, which is
+          what keeps them clickable through the card-wide click target.
+        */}
+        {wishlistSlot && <div className="absolute end-2.5 top-2.5 z-20">{wishlistSlot}</div>}
+
+        {!hideWishlist && !wishlistSlot && (
+          <button
+            type="button"
+            onClick={toggleWishlist}
+            onAnimationEnd={() => setPopping(false)}
+            aria-pressed={saved}
+            aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
+            className="rounded-pill bg-card shadow-card focus-visible:ring-ring absolute end-2.5 top-2.5 z-20 flex h-8 w-8 items-center justify-center transition-colors duration-150 hover:bg-neutral-50 focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
+            <Heart
               className={cn(
-                'object-cover transition-transform duration-300 group-hover:scale-[1.04]',
-                outOfStock && 'opacity-60',
+                'h-4 w-4 transition-colors duration-150',
+                saved ? 'fill-danger text-danger' : 'text-neutral-500',
+                popping && 'animate-heart-pop',
               )}
             />
-          ) : (
-            <div className="from-primary-50 flex h-full w-full items-center justify-center bg-linear-to-br to-neutral-100 text-neutral-400">
-              <ImageOff className="h-8 w-8" aria-hidden />
-            </div>
-          )}
+          </button>
+        )}
 
-          {/* Ribbons sit at the inline start so they never collide with the heart. */}
-          <div className="absolute start-2.5 top-2.5 flex flex-col items-start gap-1">
-            {fraction !== null && (
-              <span className="rounded-pill bg-danger text-danger-fg text-2xs px-2.5 py-1.5 font-bold">
-                {t('percentOff', { percent: formatPercent(fraction, locale) })}
-              </span>
-            )}
-            {isSponsored && <SponsoredBadge />}
-          </div>
-
-          {outOfStock && (
-            <div className="absolute inset-x-0 bottom-0 bg-neutral-900/75 py-1 text-center text-xs font-medium text-neutral-50">
-              {t('outOfStock')}
-            </div>
+        {/* Ribbons sit at the inline start so they never collide with the heart. */}
+        <div className="absolute start-2.5 top-2.5 z-20 flex flex-col items-start gap-1">
+          {fraction !== null && (
+            <span className="rounded-pill bg-accent text-accent-foreground text-2xs px-2.5 py-1.5 font-bold">
+              {t('percentOff', { percent: formatPercent(fraction, locale) })}
+            </span>
           )}
+          {isSponsored && <SponsoredBadge />}
         </div>
 
-        {/*
-         * Two lines reserved whether the title needs them or not, so a row of
-         * cards keeps its price and shop lines aligned across differing title
-         * lengths — a ragged baseline is what makes a dense grid look untidy.
-         */}
-        <h3 className="clamp-2 text-foreground group-hover:text-primary min-h-[2.625rem] text-base leading-normal font-normal transition-colors duration-150">
-          {title}
-        </h3>
+        {outOfStock && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-neutral-900/75 py-1 text-center text-xs font-medium text-neutral-50">
+            {t('outOfStock')}
+          </div>
+        )}
+      </div>
 
-        {/*
-         * The rating row is ALWAYS rendered, greyed out at zero reviews rather
-         * than omitted. Hiding it shortened those cards by one line, which threw
-         * the price and shop lines out of alignment across a five-card row — the
-         * single thing that made the grid look untidy.
-         */}
-        <RatingStars value={rating ?? 0} count={reviewCount} size="sm" />
-
-        <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
-
-        <span className="text-2xs truncate text-neutral-500">
-          {shopFloor === undefined || shopFloor === null
-            ? shopName
-            : `${shopName} · ${common('floorName', { floor: shopFloor })}`}
-        </span>
-      </Link>
-
-      {!hideWishlist && (
-        <button
-          type="button"
-          onClick={toggleWishlist}
-          onAnimationEnd={() => setPopping(false)}
-          aria-pressed={saved}
-          aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
-          className="rounded-pill bg-card shadow-card hover:bg-neutral-50 focus-visible:ring-ring absolute end-2.5 top-2.5 flex h-8 w-8 items-center justify-center transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
+      {/*
+       * Two lines reserved whether the title needs them or not, so a row of
+       * cards keeps its price and shop lines aligned across differing title
+       * lengths — a ragged baseline is what makes a dense grid look untidy.
+       *
+       * The link is STRETCHED over the whole card by its ::after rather than
+       * wrapping it. The card has to contain a button — the wishlist heart —
+       * and a button inside an anchor is invalid HTML that the parser hoists
+       * out, which surfaces as a hydration error nowhere near its cause.
+       */}
+      <h3 className="clamp-2 text-foreground min-h-[2.625rem] text-base leading-normal font-normal">
+        <Link
+          href={`/products/${slug}`}
+          className="group-hover:text-primary transition-colors duration-150 after:absolute after:inset-0 after:z-10 after:content-['']"
         >
-          <Heart
-            className={cn(
-              'h-4 w-4 transition-colors duration-150',
-              saved ? 'fill-danger text-danger' : 'text-neutral-500',
-              popping && 'animate-heart-pop',
-            )}
-          />
-        </button>
-      )}
+          {title}
+        </Link>
+      </h3>
+
+      {/*
+       * The rating row is ALWAYS rendered, greyed out at zero reviews rather
+       * than omitted. Hiding it shortened those cards by one line, which threw
+       * the price and shop lines out of alignment across a five-card row — the
+       * single thing that made the grid look untidy.
+       */}
+      <RatingStars value={rating ?? 0} count={reviewCount} size="sm" />
+
+      <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
+
+      <span className="text-2xs truncate text-neutral-500">
+        {shopFloor === undefined || shopFloor === null
+          ? shopName
+          : `${shopName} · ${common('floorName', { floor: shopFloor })}`}
+      </span>
     </div>
   );
 }

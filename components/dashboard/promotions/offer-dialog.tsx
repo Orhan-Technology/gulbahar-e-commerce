@@ -302,7 +302,7 @@ export function OfferDialog({
                     <span className="text-muted-foreground line-through">
                       {formatCurrency(product.price, locale)}
                     </span>{' '}
-                    <span className="text-accent-700 font-medium">
+                    <span className="text-foreground font-medium">
                       {formatCurrency(product.after, locale)}
                     </span>
                   </span>

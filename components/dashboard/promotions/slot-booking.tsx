@@ -82,7 +82,7 @@ export function SlotGrid({
                 )}
               </div>
 
-              <p className="text-accent-700 text-base font-bold">
+              <p className="text-foreground text-base font-bold">
                 {t('perWeek', { price: formatCurrency(slot.pricePerWeek, locale) })}
               </p>
 

@@ -60,7 +60,7 @@ export function RatingStars({ value, size = 'md', count, className }: RatingStar
         >
           <span className="inline-flex">
             {Array.from({ length: 5 }, (_, index) => (
-              <Star key={index} className={cn(SIZES[size], 'fill-accent-500 text-accent-500')} />
+              <Star key={index} className={cn(SIZES[size], 'fill-primary-600 text-primary-600')} />
             ))}
           </span>
         </span>
@@ -121,7 +121,7 @@ export function RatingStarsInput({
               className={cn(
                 SIZES[size],
                 'transition-colors duration-150',
-                active ? 'fill-accent-500 text-accent-500' : 'text-neutral-300',
+                active ? 'fill-primary-600 text-primary-600' : 'text-neutral-300',
               )}
             />
             <span className="sr-only">{t('starsCount', { count: star })}</span>

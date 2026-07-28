@@ -76,9 +76,9 @@ export function RatingTrendChart({ data }: { data: RatingPoint[] }) {
           <Line
             type="monotone"
             dataKey="average"
-            stroke="var(--color-accent-600)"
+            stroke="var(--color-primary-600)"
             strokeWidth={2}
-            dot={{ r: 3, fill: 'var(--color-accent-600)' }}
+            dot={{ r: 3, fill: 'var(--color-primary-600)' }}
             activeDot={{ r: 5 }}
           />
         </LineChart>

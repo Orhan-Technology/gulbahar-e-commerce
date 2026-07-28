@@ -77,11 +77,18 @@ export async function ProductGrid({
             stock={item.stock}
             isSponsored={item.sponsored}
             priority={priority && index < 4}
-            hideWishlist
+            // Outermost cards grow inwards so the pop-out is never clipped by
+            // the page edge.
+            edge={index === 0 ? 'start' : index === items.length - 1 ? 'end' : undefined}
+            /*
+             * Passed IN rather than overlaid on top. The media panel scales on
+             * hover, and a heart positioned over the card from outside stays
+             * where it was while the panel grows away from underneath it.
+             */
+            wishlistSlot={
+              <WishlistButton productId={item.id} initialSaved={savedIds?.has(item.id) ?? false} />
+            }
           />
-          <div className="absolute end-2 top-2 z-10">
-            <WishlistButton productId={item.id} initialSaved={savedIds?.has(item.id) ?? false} />
-          </div>
         </div>
       ))}
     </div>

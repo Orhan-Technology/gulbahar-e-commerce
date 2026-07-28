@@ -71,7 +71,7 @@ export async function ShopSpotlight() {
             <span className="mt-1 flex items-center gap-3">
               <RatingStars value={shop.rating} count={shop.reviewCount} size="sm" />
             </span>
-            <span className="text-accent-300 mt-2 flex items-center gap-1 text-sm font-bold">
+            <span className="text-primary-300 mt-2 flex items-center gap-1 text-sm font-bold">
               {t('spotlightVisit')}
               <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
             </span>

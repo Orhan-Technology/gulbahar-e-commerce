@@ -187,7 +187,7 @@ async function TopShops({ period, locale }: { period: PlatformPeriod; locale: st
               </div>
               <div className="rounded-pill h-1.5 w-full overflow-hidden bg-neutral-100">
                 <div
-                  className="bg-primary-400 rounded-pill h-full"
+                  className="bg-primary-500 rounded-pill h-full"
                   style={{ width: `${top > 0 ? Math.round((shop.revenue / top) * 100) : 0}%` }}
                 />
               </div>
@@ -223,7 +223,7 @@ async function TopCategories({ period, locale }: { period: PlatformPeriod; local
               </div>
               <div className="rounded-pill h-1.5 w-full overflow-hidden bg-neutral-100">
                 <div
-                  className="bg-accent-400 rounded-pill h-full"
+                  className="bg-primary-500 rounded-pill h-full"
                   style={{ width: `${top > 0 ? Math.round((category.revenue / top) * 100) : 0}%` }}
                 />
               </div>

@@ -43,8 +43,17 @@ export default async function ShopLayout({
         categories={categories}
       />
 
-      {/* pb-20 on mobile clears the fixed bottom tab bar. */}
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      {/*
+        pb-20 on mobile clears the fixed bottom tab bar.
+
+        `overflow-x-clip` contains the product cards' hover pop-out. A card at
+        the end of a row scales past the page gutter, and without this the
+        document grows a horizontal scrollbar that appears and disappears as
+        the pointer moves — the page visibly twitching under the cursor.
+        `clip` rather than `hidden` deliberately: `hidden` would make this a
+        scroll container and break the header's `position: sticky`.
+      */}
+      <main className="flex-1 overflow-x-clip pb-20 md:pb-0">{children}</main>
 
       <SiteFooter />
       <MobileTabBar />
