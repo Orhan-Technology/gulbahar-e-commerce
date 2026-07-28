@@ -53,7 +53,7 @@
       "expiring": "تبلیغ در حال ختم: {slot}",
       "expiringSub": "تا {date}"
     },
-    "vsYesterday": "نسبت به دیروز",
+    "vsYesterday": "نسبت به دیروز، همین ساعت",
     "weekOrders": "{n, plural, other {{count} سفارش}}",
     "newOrdersHint": "{n, plural, other {{count} سفارش نو}}",
     "queueClear": "چیزی در انتظار نیست",

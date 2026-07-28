@@ -53,7 +53,7 @@
       "expiring": "Promotion ending: {slot}",
       "expiringSub": "until {date}"
     },
-    "vsYesterday": "vs yesterday",
+    "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
     "newOrdersHint": "{n, plural, one {{count} new order} other {{count} new orders}}",
     "queueClear": "Nothing waiting",

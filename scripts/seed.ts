@@ -87,6 +87,7 @@ function sample<T>(items: readonly T[], count: number): T[] {
 
 const NOW = new Date();
 const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
 
 /**
  * N days before the seed run, at a given wall-clock hour.
@@ -104,6 +105,9 @@ const daysAgo = (days: number, hour = 12, minute = 0) => {
 };
 
 const plusMinutes = (date: Date, minutes: number) => new Date(date.getTime() + minutes * 60 * 1000);
+
+const sameUtcDay = (a: Date, b: Date) =>
+  a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
 
 // ---------------------------------------------------------------------------
 // Seed content types
@@ -528,9 +532,34 @@ async function main() {
           : chainGaps.slice(0, steps).reduce((sum, gap) => sum + gap, 0);
       const chainEnd = placedAt.getTime() + totalMinutes * 60 * 1000;
       const ceiling = NOW.getTime() - 5 * 60 * 1000;
+      const available = ceiling - placedAt.getTime();
+
       if (chainEnd > ceiling) {
-        const shiftDays = Math.ceil((chainEnd - ceiling) / DAY_MS);
-        placedAt = new Date(placedAt.getTime() - shiftDays * DAY_MS);
+        if (status !== 'rejected' && sameUtcDay(placedAt, NOW) && available > 20 * 60 * 1000) {
+          /*
+           * An order placed EARLIER TODAY is compressed into the hours it has
+           * left rather than pushed into yesterday.
+           *
+           * Shifting whole days is right for the rest of the history, but
+           * applied to today it empties today of finished orders — the chain
+           * alone can run 48 hours, so almost every same-day fulfilled order
+           * was moved off the day it was drawn for. Every shop's "today's
+           * sales" then read ؋۰ at demo start, on the LEAD TILE of the
+           * dashboard, and the number a shopkeeper opens the app for was
+           * always zero.
+           *
+           * Scaling the drawn gaps keeps their proportions — accept quickly,
+           * ready slower, hand over slowest — and consumes no random numbers,
+           * so every order reference is unchanged.
+           */
+          const scale = available / (chainEnd - placedAt.getTime());
+          for (let step = 0; step < chainGaps.length; step += 1) {
+            chainGaps[step] = Math.max(1, Math.round(chainGaps[step] * scale));
+          }
+        } else {
+          const shiftDays = Math.ceil((chainEnd - ceiling) / DAY_MS);
+          placedAt = new Date(placedAt.getTime() - shiftDays * DAY_MS);
+        }
       }
     }
 
@@ -722,8 +751,20 @@ async function main() {
           ? null
           : shopProducts.map((product) => productIds.get(product.slug)!),
         startsAt: daysAgo(intBetween(3, 14)),
-        // Short windows so the storefront countdown chips are meaningful.
-        endsAt: new Date(NOW.getTime() + intBetween(2, 12) * DAY_MS),
+        /*
+         * The first offer is the FLASH sale, ending in HOURS. The storefront's
+         * "today's best deals" band pins its countdown to the soonest-ending
+         * live offer, and a chip reading «۴ روز باقی مانده» is a date, not a
+         * countdown — the urgency the band is built around only exists if
+         * something really is about to expire. The rest run for days, so the
+         * band still has depth once the flash lapses.
+         *
+         * Same single draw either way, so the offer values above are unchanged.
+         */
+        endsAt:
+          index === 0
+            ? new Date(NOW.getTime() + intBetween(2, 12) * HOUR_MS)
+            : new Date(NOW.getTime() + intBetween(2, 12) * DAY_MS),
         active: true,
       };
     }),
@@ -758,7 +799,21 @@ async function main() {
     shopSlug: string;
     productSlug?: string;
     status: 'active' | 'requested' | 'ended';
+    /** Set only on the historical run below; see HISTORY_MONTHS. */
+    monthsAgo?: number;
   };
+
+  /*
+   * How many months back each historical placement starts — roughly one a month
+   * a year ago rising to three recently. The admin revenue screen charts twelve
+   * months, and without a year of history behind the live campaigns nine of its
+   * twelve bars are empty, which reads as a broken chart rather than as a young
+   * business. A rising shape tells the true story instead: the mall started
+   * selling placements slowly and the business is growing.
+   */
+  const HISTORY_MONTHS = [
+    11, 11, 10, 10, 9, 9, 8, 8, 8, 7, 7, 6, 6, 6, 5, 5, 5, 4, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1,
+  ];
 
   const plans: CampaignPlan[] = [
     // Home hero occupied, so the storefront's most prominent slot is never empty.
@@ -799,6 +854,25 @@ async function main() {
     // Two ended, so the revenue trend has history behind it.
     { slot: 'home_hero', shopSlug: approvedShopSlugs[5], status: 'ended' },
     { slot: 'featured_shops', shopSlug: approvedShopSlugs[6], status: 'ended' },
+
+    /*
+     * A year of ended placements behind the live ones. APPENDED, never
+     * interleaved: every plan above keeps the exact PRNG draws it had, so the
+     * hero campaign, the ؋۱۴٬۰۰۰ request the runbook names, and the two ended
+     * campaigns are all byte-identical to before.
+     *
+     * Slots and shops are cycled rather than drawn, so the history spreads
+     * evenly across the mall's inventory and its tenants without spending a
+     * single random number — which is what keeps the append safe.
+     */
+    ...HISTORY_MONTHS.map(
+      (monthsAgo, index): CampaignPlan => ({
+        slot: SLOTS[index % SLOTS.length].key,
+        shopSlug: approvedShopSlugs[index % approvedShopSlugs.length],
+        status: 'ended',
+        monthsAgo,
+      }),
+    ),
   ];
 
   for (const plan of plans) {
@@ -806,11 +880,15 @@ async function main() {
     const weeks = intBetween(2, 8);
 
     const startsAt =
-      plan.status === 'ended'
-        ? daysAgo(intBetween(50, 80))
-        : plan.status === 'requested'
-          ? new Date(NOW.getTime() + 3 * DAY_MS)
-          : daysAgo(intBetween(4, 20));
+      plan.monthsAgo !== undefined
+        ? // Anywhere within that month, so the twelve-month chart is not a
+          // picket fence of placements all booked on the first.
+          daysAgo(plan.monthsAgo * 30 + intBetween(0, 27))
+        : plan.status === 'ended'
+          ? daysAgo(intBetween(50, 80))
+          : plan.status === 'requested'
+            ? new Date(NOW.getTime() + 3 * DAY_MS)
+            : daysAgo(intBetween(4, 20));
 
     const endsAt =
       plan.status === 'ended'

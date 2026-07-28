@@ -26,6 +26,17 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   const startOfYesterday = new Date(startOfToday);
   startOfYesterday.setUTCDate(startOfYesterday.getUTCDate() - 1);
 
+  /*
+   * Yesterday measured only as far into the day as today has got.
+   *
+   * Comparing a morning's takings against a whole previous day is not a
+   * comparison — it reports a collapse every day until closing time, on the
+   * lead tile of the dashboard. This window closes at the same clock time, so
+   * the delta means "ahead of or behind where I was this time yesterday",
+   * which is the question a shopkeeper is actually asking.
+   */
+  const yesterdayToNow = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
   const startOfWeek = new Date(startOfToday);
   startOfWeek.setUTCDate(startOfWeek.getUTCDate() - 6);
 
@@ -70,9 +81,7 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
     topProductRows,
   ] = await Promise.all([
     revenueBetween(startOfToday),
-    // Closed window, so today's takings never leak into the baseline they are
-    // compared against.
-    revenueBetween(startOfYesterday, startOfToday),
+    revenueBetween(startOfYesterday, yesterdayToNow),
     revenueBetween(startOfWeek),
 
     // Action queue: orders sitting at placed (accept/reject) or accepted (mark ready).
@@ -188,9 +197,10 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
     todaySales,
     yesterdaySales,
     /**
-     * Signed fraction against yesterday, or null when there is no baseline —
-     * "+100% on a day the shop was shut" is not a fact worth showing, and the
-     * tile drops the line entirely rather than printing an infinity.
+     * Signed fraction against the same hours yesterday, or null when there is
+     * no baseline — "+100% on a day the shop was shut" is not a fact worth
+     * showing, and the tile drops the line entirely rather than printing an
+     * infinity.
      */
     todayDelta: yesterdaySales > 0 ? (todaySales - yesterdaySales) / yesterdaySales : null,
     weekSales: Number(weekRows[0]?.total ?? 0),

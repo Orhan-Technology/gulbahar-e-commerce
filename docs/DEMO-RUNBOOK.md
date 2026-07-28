@@ -63,7 +63,7 @@ Move to the 390px window for this segment.
 | **⌘⇧D → Roles → بلال پوپل** (الکترونیک کابل)       | "Same browser, no logout. This is the shopkeeper's view — designed for a phone behind the counter, because that is where it will be used." |
 | Point at the action queue                          | "Two questions answered in three seconds: did I make money, and what needs me now."                                                        |
 | **⌘⇧D → Scenarios → new order** for الکترونیک کابل | "An order just came in." — it appears without a reload                                                                                     |
-| Open the order, press **تایید سفارش**              | "One tap. Now watch the log."                                                                                                              |
+| Press **تایید سفارش** on the queue row itself      | "One tap, without leaving this screen — a shopkeeper with a customer at the counter should not have to open the order to say yes. Now watch the log." |
 | Open the notification log                          | "The customer's SMS, in Dari, sent the moment he accepted. The customer's tracking screen has already moved."                              |
 | `محصولات` → tap a stock number, change it          | "Stock is the number that costs a shopkeeper money when it is stale, so it is editable in place."                                          |
 | `تبلیغات` → Offers tab → create a 20% offer        | "A discount the shop funds itself. It goes live immediately — no approval, because it is their margin."                                    |
@@ -83,8 +83,8 @@ Back to the desktop window.
 | `دکان‌ها` → pending → open **خشکبار و شیرینی کابل**         | "This shop registered and has already built six products with photos while invisible. You are approving a real shop, not a form."                                                                                      |
 | Press **تایید دکان**, then open its public page             | "Live. One switch."                                                                                                                                                                                                    |
 | `تبلیغات` → approve the request from لوازم خانه سلام        | "Their booking, your decision. They are told either way — and if you reject, they are told why."                                                                                                                       |
-| `درآمد` — pause here                                        | "**؋ ۳۶۹٬۵۰۰** from placement so far. This is your income, not the shops' sales. The bars are shaded by occupancy: the green one is sold out, which means it is underpriced. The empty ones tell you what to reprice." |
-| Scroll: monthly trend, biggest spenders, running placements | "Seven tenants already paying. Every figure is the price snapshotted when they booked, so changing your rate card never rewrites history."                                                                             |
+| `درآمد` — pause here                                        | "**؋ ۲۳۸٬۵۰۰ this month**, ؋ ۱٬۲۰۲٬۰۰۰ to date. This is your income, not the shops' sales. Occupancy is at 50% — nine of eighteen places sold." |
+| Scroll: twelve-month trend, then the slot inventory          | "A year of it, growing. And this table is what you have left to sell — the vacant row is revenue on the floor. Every figure is the price snapshotted when they booked, so changing your rate card never rewrites history." |
 | `گزارش‌ها` briefly                                          | "And the marketplace view — GMV, order volume, which categories move."                                                                                                                                                 |
 
 **Talking point — the one to land:** "Every shop you sign up is a customer for this
@@ -112,7 +112,7 @@ That is deliberate — it means what you have seen is what exists."
 | Pending shop                     | خشکبار و شیرینی کابل — floor 1, unit ۱۴۱, 6 draft products  |
 | Live hero placement              | الکترونیک کابل, ؋ ۹۶٬۰۰۰                                    |
 | Campaign awaiting approval       | لوازم خانه سلام — بالای فهرست دکان‌ها, ؋ ۱۴٬۰۰۰             |
-| Total placement revenue          | ؋ ۳۶۹٬۵۰۰ across 7 shops                                    |
+| Placement revenue                | ؋ ۲۳۸٬۵۰۰ this month · ؋ ۱٬۲۰۲٬۰۰۰ across 12 months          |
 | Orders                           | 220 over 90 days · 10 awaiting acceptance                   |
 | Reported reviews                 | 2, in the admin moderation queue                            |
 | Demo customer                    | عبدالله احمدی · `0700000003` · Dari · 11 orders             |
