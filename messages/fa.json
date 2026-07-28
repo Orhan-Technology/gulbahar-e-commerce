@@ -6,6 +6,8 @@
   },
   "common": {
     "currency": "؋",
+    "currencyWord": "افغانی",
+    "floorName": "{floor, select, 0 {طبقه همکف} 1 {طبقه اول} 2 {طبقه دوم} 3 {طبقه سوم} 4 {طبقه چهارم} other {طبقه {floor}}}",
     "loading": "در حال بارگذاری…",
     "retry": "تلاش دوباره",
     "viewAll": "دیدن همه",

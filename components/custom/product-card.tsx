@@ -17,6 +17,12 @@ export interface ProductCardProps {
   slug: string;
   title: string;
   shopName: string;
+  /**
+   * Floor the shop trades on. Rendered after the shop name — the mall is the
+   * product here, and "which floor" is the thing a Gulbahar customer actually
+   * navigates by (PRD §5.1).
+   */
+  shopFloor?: number | null;
   price: number;
   discountPrice?: number | null;
   rating?: number;
@@ -43,15 +49,21 @@ export interface ProductCardProps {
 /**
  * The storefront's workhorse card (PRD §10.4).
  *
- * Image is a fixed 1:1 box with explicit dimensions so there is zero layout
- * shift between skeleton and content (PRD §9.3). Hover lifts the card from
- * card to overlay elevation over 150ms — the only motion on the card besides
- * the wishlist heart's single pop (PRD §10.6).
+ * BORDERLESS by design, per the approved mockup: the image is a rounded 1:1
+ * tile floating on the page, with the text stacked beneath it at a 12px rhythm
+ * and no container, border or resting shadow. At five cards to a row a bordered
+ * box drew a grid of frames that competed with the photography; the photos do
+ * the separating instead.
+ *
+ * The image box has explicit dimensions so there is zero layout shift between
+ * skeleton and content (PRD §9.3). Hover zooms the photo inside its tile — the
+ * only motion on the card besides the wishlist heart's single pop (PRD §10.6).
  */
 export function ProductCard({
   slug,
   title,
   shopName,
+  shopFloor,
   price,
   discountPrice,
   rating,
@@ -67,6 +79,7 @@ export function ProductCard({
 }: ProductCardProps) {
   const locale = useLocale();
   const t = useTranslations('product');
+  const common = useTranslations('common');
 
   const [saved, setSaved] = React.useState(isWishlisted);
   // Keeps the heart from popping on first paint — only on user action.
@@ -85,14 +98,9 @@ export function ProductCard({
   }
 
   return (
-    <div
-      className={cn(
-        'group rounded-card border-border bg-card shadow-card hover:shadow-overlay relative flex flex-col overflow-hidden border transition-shadow duration-150',
-        className,
-      )}
-    >
-      <Link href={`/products/${slug}`} className="flex flex-1 flex-col">
-        <div className="relative aspect-square overflow-hidden bg-neutral-100">
+    <div className={cn('group relative flex flex-col gap-3', className)}>
+      <Link href={`/products/${slug}`} className="flex flex-col gap-3">
+        <div className="rounded-media relative aspect-square overflow-hidden bg-neutral-100">
           {imagePath ? (
             <Image
               src={imagePath}
@@ -101,7 +109,7 @@ export function ProductCard({
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 240px"
               priority={priority}
               className={cn(
-                'object-cover transition-transform duration-300 group-hover:scale-[1.03]',
+                'object-cover transition-transform duration-300 group-hover:scale-[1.04]',
                 outOfStock && 'opacity-60',
               )}
             />
@@ -112,13 +120,13 @@ export function ProductCard({
           )}
 
           {/* Ribbons sit at the inline start so they never collide with the heart. */}
-          <div className="absolute start-2 top-2 flex flex-col items-start gap-1">
-            {isSponsored && <SponsoredBadge />}
+          <div className="absolute start-2.5 top-2.5 flex flex-col items-start gap-1">
             {fraction !== null && (
-              <span className="rounded-pill bg-danger text-danger-fg shadow-card px-2 py-0.5 text-xs font-bold">
+              <span className="rounded-pill bg-danger text-danger-fg text-2xs px-2.5 py-1.5 font-bold">
                 {t('percentOff', { percent: formatPercent(fraction, locale) })}
               </span>
             )}
+            {isSponsored && <SponsoredBadge />}
           </div>
 
           {outOfStock && (
@@ -128,18 +136,26 @@ export function ProductCard({
           )}
         </div>
 
-        <div className="flex flex-1 flex-col gap-1.5 p-3">
-          <h3 className="clamp-2 text-foreground text-sm leading-snug font-medium">{title}</h3>
-          <p className="text-muted-foreground truncate text-xs">{shopName}</p>
+        {/*
+         * Two lines reserved whether the title needs them or not, so a row of
+         * cards keeps its price and shop lines aligned across differing title
+         * lengths — a ragged baseline is what makes a dense grid look untidy.
+         */}
+        <h3 className="clamp-2 text-foreground group-hover:text-primary min-h-[2.625rem] text-base leading-normal font-normal transition-colors duration-150">
+          {title}
+        </h3>
 
-          {rating !== undefined && rating > 0 && (
-            <RatingStars value={rating} count={reviewCount} size="sm" />
-          )}
+        {rating !== undefined && rating > 0 && (
+          <RatingStars value={rating} count={reviewCount} size="sm" />
+        )}
 
-          <div className="mt-auto pt-1">
-            <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
-          </div>
-        </div>
+        <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
+
+        <span className="text-2xs truncate text-neutral-500">
+          {shopFloor === undefined || shopFloor === null
+            ? shopName
+            : `${shopName} · ${common('floorName', { floor: shopFloor })}`}
+        </span>
       </Link>
 
       {!hideWishlist && (
@@ -149,7 +165,7 @@ export function ProductCard({
           onAnimationEnd={() => setPopping(false)}
           aria-pressed={saved}
           aria-label={saved ? t('removeFromWishlist') : t('addToWishlist')}
-          className="rounded-pill bg-card/90 shadow-card hover:bg-card focus-visible:ring-ring absolute end-2 top-2 flex h-8 w-8 items-center justify-center backdrop-blur transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
+          className="rounded-pill bg-card shadow-card hover:bg-neutral-50 focus-visible:ring-ring absolute end-2.5 top-2.5 flex h-8 w-8 items-center justify-center transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
         >
           <Heart
             className={cn(
@@ -166,20 +182,15 @@ export function ProductCard({
 
 export function ProductCardSkeleton({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'rounded-card border-border bg-card shadow-card flex flex-col overflow-hidden border',
-        className,
-      )}
-    >
-      {/* Matches the 1:1 image box exactly, so nothing shifts on swap. */}
-      <Skeleton className="aspect-square w-full rounded-none" />
-      <div className="space-y-2 p-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
-        <Skeleton className="h-3 w-1/2" />
-        <Skeleton className="h-5 w-24" />
-      </div>
+    <div className={cn('flex flex-col gap-3', className)}>
+      {/* Matches the 1:1 tile and the reserved two-line title exactly, so
+          nothing shifts on swap. */}
+      <Skeleton className="rounded-media aspect-square w-full" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="h-3 w-24" />
+      <Skeleton className="h-5 w-28" />
+      <Skeleton className="h-3 w-1/2" />
     </div>
   );
 }

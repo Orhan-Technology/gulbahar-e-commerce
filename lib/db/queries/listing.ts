@@ -54,6 +54,7 @@ export type PromotedProduct = {
   shopId: string;
   shopSlug: string;
   shopName: (typeof shops.$inferSelect)['name'];
+  shopFloor: number | null;
   imagePath: string | null;
   rating: number;
   reviewCount: number;
@@ -88,6 +89,7 @@ export async function promotedProductsForSlot(
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: productRatingAvg,
       reviewCount: productReviewCount,
@@ -123,6 +125,7 @@ export async function promotedProductsForSlot(
     stock: row.stock,
     shopId: row.shopId,
     shopSlug: row.shopSlug,
+    shopFloor: row.shopFloor,
     shopName: row.shopName,
     imagePath: row.imagePath,
     rating: Number(row.rating),
@@ -188,6 +191,7 @@ export async function publicShopProducts(
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       categoryId: products.categoryId,
       imagePath: firstProductImagePath,
       rating: productRatingAvg,

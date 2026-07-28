@@ -38,6 +38,7 @@ const ICONS: Record<string, LucideIcon> = {
 export async function CategoryTiles() {
   const locale = await getLocale();
   const t = await getTranslations('home');
+  const tCategories = await getTranslations('categories');
   const tree = await categoryTree(locale);
 
   if (tree.length === 0) return null;
@@ -61,9 +62,19 @@ export async function CategoryTiles() {
               <span className="clamp-2 text-foreground text-xs leading-tight font-medium">
                 {pickLocale(category.name, locale)}
               </span>
-              <span className="text-muted-foreground text-xs">
-                {formatNumber(category.productCount, locale)}
-              </span>
+              {/*
+               * Hidden at zero rather than rendered as a bare "٠". The food
+               * category legitimately has none — its only shop is the pending
+               * one held back for the live approval moment — and a lone zero
+               * under a tile reads as a broken counter, not as "nothing yet".
+               */}
+              {category.productCount > 0 && (
+                <span className="text-muted-foreground text-2xs">
+                  {tCategories('productCount', {
+                    count: formatNumber(category.productCount, locale),
+                  })}
+                </span>
+              )}
             </Link>
           );
         })}

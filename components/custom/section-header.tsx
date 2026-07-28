@@ -1,3 +1,4 @@
+import type * as React from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight } from 'lucide-react';
 
@@ -12,6 +13,11 @@ export interface SectionHeaderProps {
   href?: string;
   /** Overrides the default "view all" label. */
   actionLabel?: string;
+  /**
+   * Rendered immediately after the title, before the "view all" link — the
+   * flash-sale countdown pill and the sponsored marker both live here.
+   */
+  adornment?: React.ReactNode;
   className?: string;
 }
 
@@ -19,30 +25,35 @@ export interface SectionHeaderProps {
  * Section title plus optional "view all" affordance, used across the storefront
  * home and listing pages (PRD §5.1).
  *
- * The chevron mirrors in RTL so it always points forward in reading order.
+ * Title and adornment sit together at the inline start with the link pushed to
+ * the far end by a spacer, exactly as the mockup's band headings do. The chevron
+ * mirrors in RTL so it always points forward in reading order.
  */
 export function SectionHeader({
   title,
   description,
   href,
   actionLabel,
+  adornment,
   className,
 }: SectionHeaderProps) {
   const t = useTranslations('common');
 
   return (
-    <div className={cn('flex items-end justify-between gap-4', className)}>
+    <div className={cn('flex flex-wrap items-center gap-3', className)}>
       <div className="min-w-0">
-        <h2 className="text-foreground truncate text-lg font-bold">{title}</h2>
+        <h2 className="text-foreground truncate text-2xl font-bold">{title}</h2>
         {description && (
-          <p className="text-muted-foreground mt-0.5 truncate text-sm">{description}</p>
+          <p className="text-muted-foreground mt-1 truncate text-sm">{description}</p>
         )}
       </div>
+
+      {adornment}
 
       {href && (
         <Link
           href={href}
-          className="rounded-control text-primary hover:text-primary-800 inline-flex shrink-0 items-center gap-1 text-sm font-medium transition-colors duration-150"
+          className="rounded-control text-primary hover:text-accent-600 ms-auto inline-flex shrink-0 items-center gap-1 text-sm font-semibold transition-colors duration-150"
         >
           {actionLabel ?? t('viewAll')}
           <ChevronRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
@@ -54,9 +65,9 @@ export function SectionHeader({
 
 export function SectionHeaderSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-end justify-between gap-4', className)}>
-      <Skeleton className="h-6 w-40" />
-      <Skeleton className="h-5 w-20" />
+    <div className={cn('flex items-center gap-3', className)}>
+      <Skeleton className="h-8 w-52" />
+      <Skeleton className="ms-auto h-5 w-20" />
     </div>
   );
 }

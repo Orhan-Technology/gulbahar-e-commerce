@@ -164,6 +164,7 @@ export async function activeOffers(limit = 8, now: Date = new Date()) {
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       shopLogoPath: shops.logoPath,
     })
     .from(offers)
@@ -198,6 +199,7 @@ export async function discountedProducts(limit = 12) {
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: productRatingAvg,
       reviewCount: productReviewCount,
@@ -258,6 +260,7 @@ export async function wishlistForUser(userId: string) {
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: productRatingAvg,
       reviewCount: productReviewCount,

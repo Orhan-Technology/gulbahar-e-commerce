@@ -9,7 +9,7 @@ import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const SIZES = {
-  sm: 'h-3.5 w-3.5',
+  sm: 'h-3 w-3',
   md: 'h-4 w-4',
   lg: 'h-6 w-6',
 } as const;

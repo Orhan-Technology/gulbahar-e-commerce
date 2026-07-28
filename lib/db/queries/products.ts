@@ -46,6 +46,7 @@ export type ProductListItem = {
   shopId: string;
   shopName: LocalizedText;
   shopSlug: string;
+  shopFloor: number | null;
   imagePath: string | null;
   rating: number;
   reviewCount: number;
@@ -123,6 +124,7 @@ export async function productList(filters: ProductListFilters) {
       shopId: shops.id,
       shopName: shops.name,
       shopSlug: shops.slug,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: ratingExpr,
       reviewCount: reviewCountExpr,
@@ -312,6 +314,7 @@ export async function trendingProducts(locale: string, limit = 12) {
       shopId: shops.id,
       shopName: shops.name,
       shopSlug: shops.slug,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: productRatingAvg,
       reviewCount: productReviewCount,

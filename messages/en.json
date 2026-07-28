@@ -6,6 +6,8 @@
   },
   "common": {
     "currency": "AFN",
+    "currencyWord": "AFN",
+    "floorName": "{floor, select, 0 {Ground floor} 1 {First floor} 2 {Second floor} 3 {Third floor} 4 {Fourth floor} other {Floor {floor}}}",
     "loading": "Loading…",
     "retry": "Try again",
     "viewAll": "View all",

@@ -1,13 +1,17 @@
 import { useLocale, useTranslations } from 'next-intl';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { discountFraction, formatCurrency, formatPercent } from '@/lib/format';
+import { discountFraction, formatNumber, formatPercent } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
+/**
+ * Per-size treatment. The unit stays small and muted at every size — it is a
+ * label on the number, never part of the number's weight.
+ */
 const SIZES = {
-  sm: { current: 'text-sm font-semibold', original: 'text-xs' },
-  md: { current: 'text-base font-semibold', original: 'text-sm' },
-  lg: { current: 'text-xl font-bold', original: 'text-base' },
+  sm: { current: 'text-base font-bold', unit: 'text-2xs', original: 'text-2xs' },
+  md: { current: 'text-lg font-bold', unit: 'text-2xs', original: 'text-xs' },
+  lg: { current: 'text-2xl font-bold', unit: 'text-xs', original: 'text-base' },
 } as const;
 
 export interface PriceDisplayProps {
@@ -22,11 +26,18 @@ export interface PriceDisplayProps {
 }
 
 /**
- * Money, formatted for the active locale (PRD §11). Dari renders Persian digits,
- * `٬` separators and a `؋` prefix; English renders "AFN 1,250".
+ * Money, formatted for the active locale (PRD §11).
  *
- * When discounted, the original is struck through and the live price takes the
- * accent colour — the one place gold appears at body-text size.
+ * The number and its unit are SEPARATE elements — bold ink figure, then a small
+ * muted «افغانی» — which is how the approved mockup renders every price. The
+ * `؋` symbol from `formatCurrency` is not used here: at card density a glyph
+ * that reads as part of the figure made prices harder to scan, and the mockup
+ * drops it everywhere in favour of the spelled unit.
+ *
+ * The discounted price does NOT take the accent colour. Gold on a 14px card
+ * with a gold star row beside it put two competing highlights in one block; the
+ * mockup keeps the live price in ink and lets the struck original and the red
+ * discount pill carry the signal instead.
  */
 export function PriceDisplay({
   price,
@@ -37,6 +48,7 @@ export function PriceDisplay({
 }: PriceDisplayProps) {
   const locale = useLocale();
   const t = useTranslations('product');
+  const common = useTranslations('common');
   const styles = SIZES[size];
 
   const fraction = discountFraction(price, discountPrice ?? null);
@@ -44,21 +56,24 @@ export function PriceDisplay({
   const current = hasDiscount ? discountPrice! : price;
 
   return (
-    <div className={cn('flex flex-wrap items-baseline gap-2', className)}>
-      <span className={cn(styles.current, hasDiscount ? 'text-accent-700' : 'text-foreground')}>
-        {formatCurrency(current, locale)}
+    <div className={cn('flex flex-wrap items-baseline gap-1.5', className)}>
+      <span className={cn(styles.current, 'text-foreground tabular-nums')}>
+        {formatNumber(current, locale)}
+      </span>
+      <span className={cn(styles.unit, 'text-neutral-600 font-medium')}>
+        {common('currencyWord')}
       </span>
 
       {hasDiscount && (
         <>
           <span
-            className={cn(styles.original, 'text-muted-foreground line-through')}
+            className={cn(styles.original, 'text-neutral-400 tabular-nums line-through')}
             aria-label={t('originalPrice')}
           >
-            {formatCurrency(price, locale)}
+            {formatNumber(price, locale)}
           </span>
           {showDiscountPercent && (
-            <span className="rounded-pill bg-danger-bg text-danger px-1.5 py-0.5 text-xs font-semibold">
+            <span className="rounded-pill bg-danger-bg text-danger text-2xs px-1.5 py-0.5 font-bold">
               {t('percentOff', { percent: formatPercent(fraction, locale) })}
             </span>
           )}
@@ -70,9 +85,9 @@ export function PriceDisplay({
 
 export function PriceDisplaySkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('flex items-baseline gap-2', className)}>
+    <div className={cn('flex items-baseline gap-1.5', className)}>
       <Skeleton className="h-5 w-20" />
-      <Skeleton className="h-4 w-14" />
+      <Skeleton className="h-3 w-10" />
     </div>
   );
 }

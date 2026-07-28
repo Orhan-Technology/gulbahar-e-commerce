@@ -266,8 +266,16 @@ for (const file of [...sourceFiles, ...walk('app', /\.css$/)]) {
       const ms = Number(match[1]);
       if (ms > 300) report('motion-too-slow', file, index, `duration-${ms}`);
     }
-    // Raw CSS durations, e.g. `animation: x 450ms`.
-    for (const match of line.matchAll(/(\d+(?:\.\d+)?)\s*(m?s)\b/g)) {
+    /*
+     * Raw CSS durations, e.g. `animation: x 450ms`.
+     *
+     * The `(?!-)` is load-bearing. `\b` matches between `s` and `-`, so
+     * `hover:text-accent-600 ms-auto` — a colour token followed by the logical
+     * margin utility we are required to use — parsed as "600 ms" and reported
+     * a 600ms transition on a line whose only duration was duration-150.
+     * Nothing that is genuinely a CSS time is followed by a hyphen.
+     */
+    for (const match of line.matchAll(/(\d+(?:\.\d+)?)\s*(m?s)\b(?!-)/g)) {
       const ms = match[2] === 's' ? Number(match[1]) * 1000 : Number(match[1]);
       if (ms > 300 && /animation|transition/.test(line)) {
         report('motion-too-slow', file, index, `${match[0]} in ${line.trim().slice(0, 40)}`);

@@ -84,11 +84,24 @@ export const shopTotalProductCount: SQL<number> = sql<number>`(
   where p.shop_id = shops.id
 )`;
 
-/** Outer query must select FROM categories. Publicly visible products only. */
+/**
+ * Outer query must select FROM categories. Publicly visible products only.
+ *
+ * Counts the category's own products AND its children's. Every seeded product
+ * sits in a LEAF category — nothing is filed directly under a root — so the
+ * direct-members-only version this replaces returned 0 for all eight root
+ * categories, and the home page's category tiles each rendered a zero.
+ *
+ * Two levels is the whole taxonomy (roots + leaves, verified: max depth 2), so
+ * self-or-child is exact rather than an approximation. A third level would be
+ * undercounted, which is why the join is on the product's category row: adding
+ * `or pc.parent_id in (...)` there is the only change a deeper tree would need.
+ */
 export const categoryProductCount: SQL<number> = sql<number>`(
   select count(*)::int from products p
   join shops s on s.id = p.shop_id
-  where p.category_id = categories.id
+  join categories pc on pc.id = p.category_id
+  where (pc.id = categories.id or pc.parent_id = categories.id)
     and p.status = 'published' and s.status = 'approved'
 )`;
 

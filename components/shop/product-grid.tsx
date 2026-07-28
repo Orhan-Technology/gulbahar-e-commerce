@@ -14,6 +14,8 @@ export type ProductGridItem = {
   discountPrice: number | null;
   stock: number;
   shopName: LocalizedText;
+  /** Floor the shop trades on, rendered after its name (PRD §5.1). */
+  shopFloor?: number | null;
   imagePath: string | null;
   rating?: number;
   reviewCount?: number;
@@ -52,8 +54,8 @@ export async function ProductGrid({
     <div
       className={cn(
         layout === 'row'
-          ? '-mx-4 flex snap-x snap-mandatory scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-5'
-          : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4',
+          ? '-mx-4 flex snap-x snap-mandatory scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:px-0 lg:grid-cols-5'
+          : 'grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4',
         className,
       )}
     >
@@ -66,6 +68,7 @@ export async function ProductGrid({
             slug={item.slug}
             title={pickLocale(item.title, locale)}
             shopName={pickLocale(item.shopName, locale)}
+            shopFloor={item.shopFloor}
             price={item.price}
             discountPrice={item.discountPrice}
             rating={item.rating}
@@ -96,8 +99,8 @@ export function ProductGridSkeleton({
     <div
       className={
         layout === 'row'
-          ? '-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:px-0 lg:grid-cols-5'
-          : 'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4'
+          ? '-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-6 sm:px-0 lg:grid-cols-5'
+          : 'grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4'
       }
     >
       {Array.from({ length: count }, (_, index) => (

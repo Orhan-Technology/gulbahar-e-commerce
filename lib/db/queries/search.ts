@@ -36,6 +36,7 @@ export type ProductSearchResult = {
   shopId: string;
   shopSlug: string;
   shopName: (typeof shops.$inferSelect)['name'];
+  shopFloor: number | null;
   imagePath: string | null;
   rating: number;
   reviewCount: number;
@@ -66,6 +67,7 @@ export async function searchProducts(
       shopId: shops.id,
       shopSlug: shops.slug,
       shopName: shops.name,
+      shopFloor: shops.floor,
       imagePath: firstProductImagePath,
       rating: ratingExpr,
       reviewCount: productReviewCount,
