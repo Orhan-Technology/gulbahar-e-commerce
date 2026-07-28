@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { Package, Search, Store } from 'lucide-react';
+import { Package, Search, Sparkle, Store } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { fetchSuggestions, type Suggestion } from '@/lib/actions/search';
@@ -19,7 +19,18 @@ import { cn } from '@/lib/utils';
  */
 const DEBOUNCE_MS = 200;
 
-export function HeaderSearch({ className }: { className?: string }) {
+export function HeaderSearch({
+  className,
+  /**
+   * `pill` is the storefront header's treatment: a wide neutral capsule with a
+   * gold mark and a solid green submit button, per the approved mockup. `plain`
+   * is the bare bordered input, kept for narrow contexts.
+   */
+  variant = 'plain',
+}: {
+  className?: string;
+  variant?: 'plain' | 'pill';
+}) {
   const t = useTranslations('nav');
   const tSearch = useTranslations('search');
   const locale = useLocale();
@@ -102,11 +113,20 @@ export function HeaderSearch({ className }: { className?: string }) {
           event.preventDefault();
           runSearch();
         }}
+        className={cn(
+          variant === 'pill' &&
+            'rounded-pill focus-within:ring-primary-200 flex items-center gap-2 bg-neutral-100 p-1.5 ps-4 transition-shadow duration-150 focus-within:ring-2',
+        )}
       >
-        <Search
-          className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-neutral-400"
-          aria-hidden
-        />
+        {variant === 'pill' ? (
+          <Sparkle className="text-accent pointer-events-none h-4 w-4 shrink-0" aria-hidden />
+        ) : (
+          <Search
+            className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-neutral-400"
+            aria-hidden
+          />
+        )}
+
         <Input
           value={query}
           onChange={(event) => {
@@ -120,8 +140,24 @@ export function HeaderSearch({ className }: { className?: string }) {
           aria-expanded={showPanel}
           aria-autocomplete="list"
           role="combobox"
-          className="ps-9"
+          className={cn(
+            variant === 'pill'
+              ? // The capsule owns the border, background and focus ring, so the
+                // field itself has to surrender all three or they double up.
+                'h-9 border-none bg-transparent px-0 shadow-none focus-visible:ring-0'
+              : 'ps-9',
+          )}
         />
+
+        {variant === 'pill' && (
+          <button
+            type="submit"
+            aria-label={t('searchSubmit')}
+            className="rounded-pill bg-primary text-primary-foreground hover:bg-primary-600 focus-visible:ring-ring flex h-9 w-9 shrink-0 items-center justify-center transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2"
+          >
+            <Search className="h-4 w-4" aria-hidden />
+          </button>
+        )}
       </form>
 
       {showPanel && (

@@ -2,7 +2,8 @@
   "brand": {
     "name": "Gulbahar Online Shopping",
     "shortName": "Gulbahar",
-    "tagline": "Gulbahar Center, Malik Azghar Square, Kabul"
+    "tagline": "Gulbahar Center, Malik Azghar Square, Kabul",
+    "mallShort": "Gulbahar Center"
   },
   "common": {
     "currency": "AFN",
@@ -481,7 +482,12 @@
     "home": "Home",
     "search": "Search",
     "mobileNav": "Bottom navigation",
-    "searchPlaceholder": "Search products or shops…"
+    "searchPlaceholder": "Search products or shops…",
+    "allCategories": "All categories",
+    "deliverTo": "Deliver to Kabul",
+    "bestDeals": "Best deals",
+    "searchSubmit": "Run search",
+    "registerShop": "Register a shop"
   },
   "home": {
     "shopByCategory": "Shop by category",
@@ -522,7 +528,22 @@
     "floor3": "Floor 3",
     "floor3Trades": "Clothing, shoes, bags, toys, sportswear",
     "copyright": "© 2026 Gulbahar Center — demo build",
-    "phone": "020 220 1400"
+    "phone": "020 220 1400",
+    "trustPickupTitle": "Free in-store pickup",
+    "trustPickupBody": "From the shop, at Gulbahar Center",
+    "trustDeliveryTitle": "Fast Kabul delivery",
+    "trustDeliveryBody": "1–2 days · {fee} AFN, free over {threshold} AFN",
+    "trustPaymentTitle": "Easy payment",
+    "trustPaymentBody": "Cash on delivery or HesabPay",
+    "trustSupportTitle": "Support every day",
+    "trustSupportBody": "Saturday to Thursday, 8am to 7pm",
+    "aboutHeading": "About Gulbahar",
+    "shoppingHeading": "Orders & shopping",
+    "categoriesHeading": "Popular categories",
+    "shopsHeading": "Shops & services",
+    "trackOrder": "Track an order",
+    "paymentMethods": "Payment methods",
+    "cashOnDelivery": "Cash on delivery"
   },
   "products": {
     "title": "All products",

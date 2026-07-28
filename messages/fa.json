@@ -2,7 +2,8 @@
   "brand": {
     "name": "خرید آنلاین گلبهار",
     "shortName": "گلبهار",
-    "tagline": "مرکز خرید گلبهار، چهارراهی ملک اصغر، کابل"
+    "tagline": "مرکز خرید گلبهار، چهارراهی ملک اصغر، کابل",
+    "mallShort": "مرکز گلبهار"
   },
   "common": {
     "currency": "؋",
@@ -481,7 +482,12 @@
     "home": "خانه",
     "search": "جستجو",
     "mobileNav": "منوی پایین",
-    "searchPlaceholder": "جستجوی محصول یا دکان…"
+    "searchPlaceholder": "جستجوی محصول یا دکان…",
+    "allCategories": "همه دسته‌ها",
+    "deliverTo": "تحویل به کابل",
+    "bestDeals": "بهترین تخفیف‌ها",
+    "searchSubmit": "جستجو کن",
+    "registerShop": "ثبت فروشگاه"
   },
   "home": {
     "shopByCategory": "خرید بر اساس دسته‌بندی",
@@ -522,7 +528,22 @@
     "floor3": "طبقه سوم",
     "floor3Trades": "پوشاک، کفش، کیف، اسباب‌بازی، ورزشی",
     "copyright": "© ۱۴۰۵ مرکز خرید گلبهار — نسخه نمایشی",
-    "phone": "۰۲۰ ۲۲۰ ۱۴۰۰"
+    "phone": "۰۲۰ ۲۲۰ ۱۴۰۰",
+    "trustPickupTitle": "تسلیمی حضوری رایگان",
+    "trustPickupBody": "از دکان، در مرکز گلبهار",
+    "trustDeliveryTitle": "تحویل سریع در کابل",
+    "trustDeliveryBody": "۱ تا ۲ روز · {fee} افغانی، بالای {threshold} افغانی رایگان",
+    "trustPaymentTitle": "پرداخت آسان",
+    "trustPaymentBody": "نقد هنگام تحویل یا حساب‌پی",
+    "trustSupportTitle": "پشتیبانی هر روز",
+    "trustSupportBody": "شنبه تا پنجشنبه، ۸ صبح تا ۷ شام",
+    "aboutHeading": "درباره گلبهار",
+    "shoppingHeading": "سفارش و خرید",
+    "categoriesHeading": "دسته‌های محبوب",
+    "shopsHeading": "دکان‌ها و خدمات",
+    "trackOrder": "پیگیری سفارش",
+    "paymentMethods": "روش‌های پرداخت",
+    "cashOnDelivery": "نقد هنگام تحویل"
   },
   "products": {
     "title": "همه محصولات",
