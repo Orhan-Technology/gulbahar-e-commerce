@@ -27,6 +27,7 @@ const NEUTRAL_STEPS = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900];
  * literal class strings, so `text-${step}` would never be generated.
  */
 const TYPE_STEPS = [
+  { name: '2xs', cls: 'text-2xs' },
   { name: 'xs', cls: 'text-xs' },
   { name: 'sm', cls: 'text-sm' },
   { name: 'base', cls: 'text-base' },
@@ -130,6 +131,9 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
           <div className="rounded-card border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
             rounded-card
           </div>
+          <div className="rounded-media border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
+            rounded-media
+          </div>
           <div className="rounded-control border-border bg-card flex h-20 w-32 items-center justify-center border text-xs">
             rounded-control
           </div>
@@ -223,9 +227,16 @@ function Swatches({ label, name, steps }: { label: string; name: string; steps: 
       <div className="flex flex-wrap gap-1">
         {steps.map((step) => (
           <div key={step} className="w-16">
+            {/*
+             * `var(--color-NAME-STEP)`, not `hsl(var(--NAME-STEP))`: our tokens
+             * are called --color-* and hold complete colours, not the bare HSL
+             * channel triplets shadcn's default theme uses. The old form
+             * resolved to hsl() of an undefined variable, so every swatch on the
+             * palette reference rendered transparent.
+             */}
             <div
               className="rounded-control border-border h-12 border"
-              style={{ backgroundColor: `hsl(var(--${name}-${step}))` }}
+              style={{ backgroundColor: `var(--color-${name}-${step})` }}
             />
             <code className="text-muted-foreground mt-1 block text-center text-xs">{step}</code>
           </div>

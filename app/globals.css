@@ -24,8 +24,15 @@
  * project. Nothing outside these tokens can be referenced by accident.
  *
  * Light mode only for the MVP — no dark variants by design (PRD §16).
+ *
+ * `static` is load-bearing: a plain @theme block TREE-SHAKES, emitting only
+ * the custom properties some generated utility happens to reference. Anything
+ * reading a token at runtime — an inline style, the styleguide's palette
+ * swatches, a chart colour passed to Recharts — then resolves var(--color-…)
+ * to nothing and silently renders transparent. `static` emits the whole
+ * theme, which is about 100 declarations and worth it for that guarantee.
  */
-@theme {
+@theme static {
   --color-*: initial;
   --text-*: initial;
   --shadow-*: initial;
@@ -36,56 +43,74 @@
   --color-inherit: inherit;
 
   /* ----------------------------------------------------------------
-   * PRIMARY — deep green. The brand colour: premium and warm, never
-   * neon. Working direction pending client assets (PRD §10.1, §17.3).
+   * PRIMARY — deep green, taken from the approved mockup (#0F4A2F at
+   * 700, the solid brand colour; #0B3A25 at 800 for the hero gradient's
+   * dark end). PRD §10.1, §17.3.
+   *
+   * The 400→500 jump in saturation is deliberate and matches the
+   * mockup's real usage: the tints (50–400) are DESATURATED sage,
+   * used for tinted surfaces and for text sitting on dark green, while
+   * the solids (500–950) are saturated forest. A smoothly interpolated
+   * ramp would have made every tinted surface read minty.
    * ---------------------------------------------------------------- */
-  --color-primary-50: hsl(150 38% 97%);
-  --color-primary-100: hsl(150 36% 92%);
-  --color-primary-200: hsl(150 32% 83%);
-  --color-primary-300: hsl(150 30% 70%);
-  --color-primary-400: hsl(150 32% 54%);
-  --color-primary-500: hsl(150 38% 42%);
-  --color-primary-600: hsl(150 45% 33%);
-  --color-primary-700: hsl(149 52% 25%);
-  --color-primary-800: hsl(148 56% 20%);
-  --color-primary-900: hsl(147 58% 16%);
-  --color-primary-950: hsl(146 62% 10%);
+  /* Hex, not hsl(): these are the mockup's literal values, and a hand
+     conversion drifted every one of them by 1–2/255. Only the steps the
+     mockup does not specify (900, 950) are interpolated. */
+  --color-primary-50: #edf3ef; /* tinted surface */
+  --color-primary-100: #e4ebe7;
+  --color-primary-200: #cfe0d6; /* text on dark green */
+  --color-primary-300: #b9cfc1;
+  --color-primary-400: #86a695; /* muted text on dark green */
+  --color-primary-500: #1c6e45; /* hero gradient, light end */
+  --color-primary-600: #145536;
+  --color-primary-700: #0f4a2f; /* THE brand green */
+  --color-primary-800: #0b3a25; /* hero gradient, dark end */
+  --color-primary-900: #082c1c;
+  --color-primary-950: #051d12;
   --color-primary: var(--color-primary-700);
-  --color-primary-foreground: var(--color-primary-50);
+  --color-primary-foreground: hsl(0 0% 100%);
 
   /* ----------------------------------------------------------------
-   * ACCENT — warm gold. Used sparingly: badges, highlights, and the
-   * Sponsored marker (PRD §8.4). Never as a large surface.
+   * ACCENT — gold. Used sparingly: the logo dot, rating stars, deal
+   * markers (PRD §8.4). Never as a large surface.
+   *
+   * --color-accent is 500 (#C8901C), the mockup's brand gold, and it is
+   * for MARKS and ICONS. Small text on white wants accent-600 (#A17615)
+   * — 500 lands at ~3:1 against white, which is fine for a 5px dot and
+   * a star glyph but thin for a 12px label.
    * ---------------------------------------------------------------- */
-  --color-accent-50: hsl(45 90% 96%);
-  --color-accent-100: hsl(45 88% 90%);
-  --color-accent-200: hsl(44 86% 78%);
-  --color-accent-300: hsl(43 84% 65%);
-  --color-accent-400: hsl(43 82% 54%);
-  --color-accent-500: hsl(43 84% 45%);
-  --color-accent-600: hsl(43 89% 38%);
-  --color-accent-700: hsl(41 88% 31%);
-  --color-accent-800: hsl(39 84% 25%);
-  --color-accent-900: hsl(37 80% 20%);
-  --color-accent-950: hsl(36 82% 12%);
-  --color-accent: var(--color-accent-600);
-  /* Gold at 38% lightness is dark enough to carry white text. */
-  --color-accent-foreground: var(--color-accent-50);
+  --color-accent-50: #fbf3e3; /* warm banner surface */
+  --color-accent-100: #f6e5c0;
+  --color-accent-200: #efd293;
+  --color-accent-300: #e4b75b;
+  --color-accent-400: #d5a233;
+  --color-accent-500: #c8901c; /* brand gold — marks and icons */
+  --color-accent-600: #a17615; /* gold text on white */
+  --color-accent-700: #815e11;
+  --color-accent-800: #644909;
+  --color-accent-900: #4a3607;
+  --color-accent-950: #2e2104;
+  --color-accent: var(--color-accent-500);
+  /* Solid-gold surfaces are rare; when they happen they carry dark ink,
+     because white on 45% gold is not readable. */
+  --color-accent-foreground: var(--color-neutral-900);
 
   /* ----------------------------------------------------------------
-   * NEUTRAL — 10-step warm grey. Warm-tinted so it sits with the
-   * green and gold rather than fighting them with a cold blue-grey.
+   * NEUTRAL — 10-step COOL grey, from the mockup: #0E1420 ink through
+   * #8A93A2 muted to the #F8F9FB / #F4F5F7 surfaces. Cool rather than
+   * warm: against #0F4A2F a warm grey went muddy, and the mockup's
+   * marketplace density depends on greys receding.
    * ---------------------------------------------------------------- */
-  --color-neutral-50: hsl(30 20% 98%);
-  --color-neutral-100: hsl(30 16% 96%);
-  --color-neutral-200: hsl(28 14% 91%);
-  --color-neutral-300: hsl(28 12% 83%);
-  --color-neutral-400: hsl(26 10% 64%);
-  --color-neutral-500: hsl(26 9% 48%);
-  --color-neutral-600: hsl(26 10% 38%);
-  --color-neutral-700: hsl(26 12% 28%);
-  --color-neutral-800: hsl(26 14% 18%);
-  --color-neutral-900: hsl(26 16% 11%);
+  --color-neutral-50: #f8f9fb; /* page bands */
+  --color-neutral-100: #f4f5f7; /* search field, category tiles */
+  --color-neutral-200: #eceef1; /* hairline borders */
+  --color-neutral-300: #e4e7eb; /* dividers */
+  --color-neutral-400: #a8b0be; /* struck-through price */
+  --color-neutral-500: #8a93a2; /* muted text */
+  --color-neutral-600: #5b6474; /* secondary text */
+  --color-neutral-700: #3c4553; /* nav links */
+  --color-neutral-800: #232b38;
+  --color-neutral-900: #0e1420; /* ink */
 
   /* ----------------------------------------------------------------
    * SEMANTIC — success / warning / danger, each with fg (text on the
@@ -93,31 +118,44 @@
    * is a brighter grass green, deliberately distinguishable from the
    * muted forest primary.
    * ---------------------------------------------------------------- */
-  --color-success: hsl(142 66% 36%);
-  --color-success-fg: hsl(0 0% 100%);
-  --color-success-bg: hsl(142 60% 95%);
-  --color-success-border: hsl(142 45% 78%);
+  --color-success: #0f7a3d; /* the mockup's ▲ trend green */
+  --color-success-fg: #ffffff;
+  --color-success-bg: #e8f5ec;
+  --color-success-border: #a6d5b7;
 
-  --color-warning: hsl(38 92% 48%);
-  --color-warning-fg: hsl(30 40% 12%);
-  --color-warning-bg: hsl(45 95% 95%);
-  --color-warning-border: hsl(40 85% 76%);
+  --color-warning: #d9930f;
+  --color-warning-fg: var(--color-neutral-900);
+  --color-warning-bg: #fcf3e1;
+  --color-warning-border: #edcb84;
 
-  --color-danger: hsl(0 72% 48%);
-  --color-danger-fg: hsl(0 0% 100%);
-  --color-danger-bg: hsl(0 80% 96%);
-  --color-danger-border: hsl(0 70% 85%);
+  /* Brick red, not fire-engine: #A83228 for the discount pill, #FDF1EF
+     behind the flash-sale countdown. */
+  --color-danger: #a83228;
+  --color-danger-fg: #ffffff;
+  --color-danger-bg: #fdf1ef;
+  --color-danger-border: #efc3bc;
 
   /* ----------------------------------------------------------------
-   * SURFACES
+   * SURFACES — the page is WHITE in the mockup, with bands of
+   * neutral-50/100 doing the separating rather than a tinted body.
    * ---------------------------------------------------------------- */
-  --color-background: hsl(40 30% 99%);
+  --color-background: #ffffff;
   --color-foreground: var(--color-neutral-900);
-  --color-card: hsl(0 0% 100%);
+  --color-card: #ffffff;
   --color-card-foreground: var(--color-neutral-900);
-  --color-overlay: hsl(0 0% 100%);
+  --color-overlay: #ffffff;
   --color-overlay-foreground: var(--color-neutral-900);
   --color-scrim: var(--color-neutral-900);
+
+  /*
+   * Promo-banner tints. The mockup runs its banner blocks in three
+   * surfaces — brand green, a COOL blue-grey, and a warm cream — cycling
+   * them so a row of three banners never repeats a background. The cool
+   * one is bluer than anything in the neutral ramp, so it is its own
+   * token rather than an approximation.
+   */
+  --color-tint-cool: #e9edf4;
+  --color-tint-warm: var(--color-accent-50);
   --color-border: var(--color-neutral-200);
   --color-input: var(--color-neutral-300);
   --color-ring: var(--color-primary-600);
@@ -143,21 +181,30 @@
   /* ----------------------------------------------------------------
    * TYPOGRAPHY — a closed scale (the --text-* reset above removed
    * Tailwind's). Nothing larger than 3xl exists (PRD §10.2).
+   *
+   * Retuned to the mockup, which is a whole step denser than the first
+   * pass: body copy is 14px and labels 13px, not 16/14. Every size below
+   * appears literally in the mockup — 11px micro labels ("افغانی", the
+   * sponsored marker), 13px navigation, 14px card titles, 18px prices,
+   * 26px section headings, 38px hero. Sizes were retuned in place rather
+   * than renamed, so existing text-* usages simply tighten.
    * ---------------------------------------------------------------- */
-  --text-xs: 0.75rem;
+  --text-2xs: 0.6875rem; /* 11px — micro labels, unit suffixes */
+  --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem; /* 12px — meta, ratings count */
   --text-xs--line-height: 1.125rem;
-  --text-sm: 0.875rem;
-  --text-sm--line-height: 1.375rem;
-  --text-base: 1rem;
-  --text-base--line-height: 1.625rem;
-  --text-lg: 1.25rem;
-  --text-lg--line-height: 1.875rem;
-  --text-xl: 1.625rem;
-  --text-xl--line-height: 2.125rem;
-  --text-2xl: 2rem;
-  --text-2xl--line-height: 2.5rem;
-  --text-3xl: 2.5rem;
-  --text-3xl--line-height: 3rem;
+  --text-sm: 0.8125rem; /* 13px — navigation, labels, buttons */
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.875rem; /* 14px — body copy, card titles */
+  --text-base--line-height: 1.3125rem;
+  --text-lg: 1.125rem; /* 18px — card price */
+  --text-lg--line-height: 1.5rem;
+  --text-xl: 1.25rem; /* 20px — sub-headings */
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.625rem; /* 26px — section headings */
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 2.375rem; /* 38px — hero, KPI figures */
+  --text-3xl--line-height: 2.875rem;
 
   /* ----------------------------------------------------------------
    * FONTS — injected per-locale by the root layout.
@@ -169,21 +216,32 @@
   /* ----------------------------------------------------------------
    * RADIUS — one family, applied consistently (PRD §10.2). sm/md/lg
    * are aliased so vendored shadcn markup lands on our family.
+   *
+   * The mockup uses exactly four: 14px on cards, banners and panels,
+   * 12px on product media, 10px on inputs and small controls, and full
+   * pills on every button and chip.
    * ---------------------------------------------------------------- */
-  --radius-card: 8px;
-  --radius-control: 6px;
+  --radius-card: 14px;
+  --radius-media: 12px;
+  --radius-control: 10px;
   --radius-pill: 9999px;
   --radius-sm: var(--radius-control);
   --radius-md: var(--radius-control);
   --radius-lg: var(--radius-card);
 
   /* ----------------------------------------------------------------
+   * CONTAINER — the mockup's page width. Every band is
+   * `max-w-page mx-auto px-7`, which is 1400px + 28px gutters.
+   * ---------------------------------------------------------------- */
+  --container-page: 87.5rem;
+
+  /* ----------------------------------------------------------------
    * ELEVATION — exactly two levels. The --shadow-* reset removed
    * Tailwind's scale; xs/sm/md/lg/xl are aliases onto our two, so even
    * third-party component code cannot introduce a third.
    * ---------------------------------------------------------------- */
-  --shadow-card: 0 1px 2px hsl(26 16% 11% / 0.04), 0 2px 8px hsl(26 16% 11% / 0.06);
-  --shadow-overlay: 0 8px 30px hsl(26 16% 11% / 0.16), 0 2px 8px hsl(26 16% 11% / 0.08);
+  --shadow-card: 0 1px 2px hsl(220 39% 9% / 0.04), 0 2px 8px hsl(220 39% 9% / 0.07);
+  --shadow-overlay: 0 8px 30px hsl(220 39% 9% / 0.16), 0 2px 8px hsl(220 39% 9% / 0.08);
   --shadow-xs: var(--shadow-card);
   --shadow-sm: var(--shadow-card);
   --shadow-md: var(--shadow-card);
@@ -194,6 +252,7 @@
    * MOTION — nothing over 300ms (PRD §10.6).
    * ---------------------------------------------------------------- */
   --animate-heart-pop: heart-pop 280ms ease-out;
+  --animate-badge-pop: badge-pop 280ms ease-out;
   --animate-queue-in: queue-in 200ms ease-out;
   --animate-fade-in: fade-in 150ms ease-out;
 
@@ -207,6 +266,23 @@
     }
     70% {
       transform: scale(0.94);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  /*
+   * Cart badge on add-to-cart. No undershoot, unlike the wishlist heart:
+   * the badge is also changing its NUMBER, and a rebound made the new
+   * digit hard to read mid-animation.
+   */
+  @keyframes badge-pop {
+    0% {
+      transform: scale(1);
+    }
+    45% {
+      transform: scale(1.35);
     }
     100% {
       transform: scale(1);
