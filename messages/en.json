@@ -524,7 +524,12 @@
     "deliverTo": "Deliver to Kabul",
     "bestDeals": "Best deals",
     "searchSubmit": "Run search",
-    "registerShop": "Register a shop"
+    "registerShop": "Register a shop",
+    "searchHint1": "Search for a product or shop…",
+    "searchHint2": "Looking for something specific?",
+    "searchHint3": "Find what you need",
+    "searchHint4": "Discover new products",
+    "liveNow": "Gulbahar Live"
   },
   "home": {
     "shopByCategory": "Shop by category",

@@ -26,6 +26,16 @@ export type SiteHeaderProps = {
   /** Null when nobody is signed in. */
   user: { name?: string | null; role: string } | null;
   categories: Array<{ slug: string; label: string }>;
+  /**
+   * True while a flash offer is actually running, which lights the live badge.
+   *
+   * The reference design carries a permanently-lit "Live" entry for a
+   * live-shopping feature. We have no such feature, and a badge that pulses at
+   * every visitor forever while pointing at nothing is the kind of detail that
+   * gets noticed in a demo. This one is wired to real state — the soonest
+   * offer's countdown — and is simply ABSENT when nothing is expiring.
+   */
+  liveOffer?: boolean;
 };
 
 /**
@@ -37,13 +47,12 @@ export type SiteHeaderProps = {
  * The scroll listener is passive and toggles a boolean once per threshold
  * crossing, so it never becomes the reason a long listing page feels heavy.
  *
- * The mockup also draws a location picker ("تحویل به کابل · تغییر موقعیت") and a
- * "گلبهار زنده" live badge. Delivery is Kabul-wide at one flat fee (PRD §5.5) and
- * there is no live-shopping feature, so the location reads as the statement of
- * fact it actually is — with no change affordance that would lead nowhere — and
- * the live badge is left out rather than faked.
+ * The reference draws a location picker and a pulsing "Live" entry. Delivery is
+ * Kabul-wide at one flat fee (PRD §5.5), so the location reads as the statement
+ * of fact it actually is, with no change affordance that would lead nowhere.
+ * The live badge is real but CONDITIONAL — see `liveOffer`.
  */
-export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
+export function SiteHeader({ cartCount, user, categories, liveOffer = false }: SiteHeaderProps) {
   const t = useTranslations();
   const locale = useLocale();
   const [scrolled, setScrolled] = React.useState(false);
@@ -107,13 +116,13 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
           </SheetContent>
         </Sheet>
 
-        {/* Brand. The gold dot is the accent's smallest possible appearance and
-            the only place it touches the wordmark. */}
+        {/* Brand. The dot is the blue's smallest possible appearance and the
+            only place it touches the wordmark. */}
         <Link href="/" className="flex shrink-0 items-baseline gap-1">
           <span className="text-foreground text-xl leading-none font-extrabold tracking-tight sm:text-2xl">
             {t('brand.shortName')}
           </span>
-          <span className="rounded-pill bg-accent h-1.5 w-1.5" aria-hidden />
+          <span className="rounded-pill bg-primary h-1.5 w-1.5" aria-hidden />
         </Link>
 
         <HeaderSearch variant="pill" className="hidden max-w-[700px] flex-1 sm:block" />
@@ -203,9 +212,32 @@ export function SiteHeader({ cartCount, user, categories }: SiteHeaderProps) {
           href="/offers"
           className="text-primary hover:text-primary-600 flex shrink-0 items-center gap-2 text-sm font-bold transition-colors duration-150"
         >
-          <Sparkles className="text-accent h-4 w-4" aria-hidden />
+          <Sparkles className="h-4 w-4" aria-hidden />
           {t('nav.bestDeals')}
         </Link>
+
+        {liveOffer && (
+          <>
+            <span className="h-4 w-px shrink-0 bg-neutral-300" aria-hidden />
+            <Link
+              href="/offers"
+              className="text-foreground hover:text-primary flex shrink-0 items-center gap-2 text-sm font-bold transition-colors duration-150"
+            >
+              {t('nav.liveNow')}
+              {/*
+                The ring expands OUT of the dot rather than the dot itself
+                pulsing: a growing-and-shrinking dot at 6px reads as a
+                rendering glitch, an expanding ring reads as a broadcast.
+                Indefinite, and stopped entirely by the global
+                prefers-reduced-motion rule in globals.css.
+              */}
+              <span
+                className="rounded-pill bg-accent animate-pulse-ring h-1.5 w-1.5 shrink-0"
+                aria-hidden
+              />
+            </Link>
+          </>
+        )}
 
         <span className="h-4 w-px shrink-0 bg-neutral-300" aria-hidden />
 

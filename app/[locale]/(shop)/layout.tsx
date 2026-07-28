@@ -6,6 +6,7 @@ import { SiteHeader } from '@/components/shop/site-header';
 import { currentUser } from '@/lib/auth/guards';
 import { getCartCount } from '@/lib/cart';
 import { pickLocale } from '@/lib/db/localized';
+import { activeOffers } from '@/lib/db/queries/home';
 import { categoryTree } from '@/lib/db/queries/shops';
 
 /**
@@ -24,10 +25,14 @@ export default async function ShopLayout({
   const { locale } = await params;
   setRequestLocale(locale);
 
-  const [user, cartCount, tree] = await Promise.all([
+  const [user, cartCount, tree, live] = await Promise.all([
     currentUser(),
     getCartCount(),
     categoryTree(locale),
+    // Lights the header's live badge — see SiteHeader's `liveOffer`. One row,
+    // already indexed, and it is the difference between a badge that means
+    // something and a badge that is decoration.
+    activeOffers(1),
   ]);
 
   const categories = tree.map((category) => ({
@@ -41,6 +46,7 @@ export default async function ShopLayout({
         cartCount={cartCount}
         user={user ? { name: user.name, role: user.role } : null}
         categories={categories}
+        liveOffer={live.length > 0}
       />
 
       {/*

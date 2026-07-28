@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Package, Search, Sparkle, Store } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
+import { TypedPlaceholder, useTypedPlaceholder } from '@/components/shop/search/typed-placeholder';
 import { fetchSuggestions, type Suggestion } from '@/lib/actions/search';
 import { useRouter } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -37,6 +38,20 @@ export function HeaderSearch({
   const router = useRouter();
 
   const [query, setQuery] = React.useState('');
+  const [focused, setFocused] = React.useState(false);
+
+  /*
+   * Frozen once, not rebuilt each render: the typing hook takes the array as a
+   * dependency, and a fresh array literal every render would restart the
+   * animation from the first character on every keystroke.
+   */
+  const hints = React.useMemo(
+    () => [t('searchHint1'), t('searchHint2'), t('searchHint3'), t('searchHint4')],
+    [t],
+  );
+  // Stops while the field is in use — a placeholder animating under a cursor
+  // that is already typing is noise, not personality.
+  const typed = useTypedPlaceholder(hints, variant === 'pill' && !focused && query.length === 0);
   const [items, setItems] = React.useState<Suggestion[]>([]);
   const [open, setOpen] = React.useState(false);
   const [highlighted, setHighlighted] = React.useState(-1);
@@ -119,7 +134,7 @@ export function HeaderSearch({
         )}
       >
         {variant === 'pill' ? (
-          <Sparkle className="text-accent pointer-events-none h-4 w-4 shrink-0" aria-hidden />
+          <Sparkle className="text-primary-500 pointer-events-none h-4 w-4 shrink-0" aria-hidden />
         ) : (
           <Search
             className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-neutral-400"
@@ -127,27 +142,38 @@ export function HeaderSearch({
           />
         )}
 
-        <Input
-          value={query}
-          onChange={(event) => {
-            setQuery(event.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder={t('searchPlaceholder')}
-          aria-label={t('searchPlaceholder')}
-          aria-expanded={showPanel}
-          aria-autocomplete="list"
-          role="combobox"
-          className={cn(
-            variant === 'pill'
-              ? // The capsule owns the border, background and focus ring, so the
-                // field itself has to surrender all three or they double up.
-                'h-9 border-none bg-transparent px-0 shadow-none focus-visible:ring-0'
-              : 'ps-9',
+        <span className={cn('relative block', variant === 'pill' && 'min-w-0 flex-1')}>
+          {variant === 'pill' && query.length === 0 && (
+            <TypedPlaceholder text={typed} caret={!focused} />
           )}
-        />
+          <Input
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => {
+              setFocused(true);
+              setOpen(true);
+            }}
+            onBlur={() => setFocused(false)}
+            onKeyDown={onKeyDown}
+            // The pill draws its own animated placeholder above; a native one
+            // would sit underneath it, showing two labels at once.
+            placeholder={variant === 'pill' ? undefined : t('searchPlaceholder')}
+            aria-label={t('searchPlaceholder')}
+            aria-expanded={showPanel}
+            aria-autocomplete="list"
+            role="combobox"
+            className={cn(
+              variant === 'pill'
+                ? // The capsule owns the border, background and focus ring, so the
+                  // field itself has to surrender all three or they double up.
+                  'h-9 w-full border-none bg-transparent px-0 shadow-none focus-visible:ring-0'
+                : 'ps-9',
+            )}
+          />
+        </span>
 
         {variant === 'pill' && (
           <button
