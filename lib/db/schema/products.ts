@@ -4,6 +4,13 @@ import { categories } from './categories';
 import { createdAt, productStatusEnum, type LocalizedText } from './shared';
 import { shops } from './shops';
 
+/** One row of the product page's spec table. */
+export type ProductSpec = {
+  /** Label key under the `product.specs` message namespace. */
+  key: string;
+  value: LocalizedText;
+};
+
 /**
  * Shop-owned content (PRD §3.1). Admin can unpublish but never edit — that is
  * enforced in the server actions, not here.
@@ -25,6 +32,17 @@ export const products = pgTable(
     /** Null when not discounted. Only counts when strictly below `price`. */
     discountPrice: integer('discount_price'),
     stock: integer('stock').notNull().default(0),
+    /**
+     * Spec table on the product page (PRD §5.2): an ORDERED list, because
+     * "screen, storage, memory, battery" is a reading order a keyed object
+     * would lose. `key` names a translated label in product.specs.*, so the
+     * label is localised once and only the value is per-product.
+     *
+     * Null for the many products that have nothing to tabulate — a bag has a
+     * description, not specifications — and the section is then absent rather
+     * than an empty table.
+     */
+    specs: jsonb('specs').$type<ProductSpec[]>(),
     status: productStatusEnum('status').notNull().default('draft'),
     /** Seeded view counter backing the dashboard's top-products table (PRD §6.1). */
     viewCount: integer('view_count').notNull().default(0),

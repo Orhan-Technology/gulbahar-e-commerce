@@ -307,7 +307,35 @@
         "invalid_input": "امتیاز را انتخاب کنید",
         "unknown_product": "این محصول پیدا نشد"
       }
-    }
+    },
+    "specsHeading": "مشخصات",
+    "specs": {
+      "screen": "صفحه",
+      "storage": "حافظه",
+      "ram": "رم",
+      "battery": "بتری",
+      "camera": "کمره",
+      "processor": "پروسیسر",
+      "capacity": "ظرفیت",
+      "power": "توان",
+      "material": "جنس",
+      "movement": "میکانیزم",
+      "size": "اندازه",
+      "weight": "وزن",
+      "origin": "ساخت",
+      "warranty": "گرانتی"
+    },
+    "fulfilmentHeading": "تحویل و تسلیمی",
+    "deliveryTitle": "تحویل در کابل",
+    "deliveryBody": "۱ تا ۲ روز کاری",
+    "deliveryFee": "{fee} افغانی",
+    "deliveryFree": "رایگان بالای {threshold} افغانی",
+    "pickupTitle": "تسلیمی حضوری از دکان",
+    "pickupFree": "رایگان",
+    "paymentTitle": "پرداخت",
+    "paymentBody": "نقد هنگام تحویل یا حساب‌پی",
+    "youSave": "{amount} افغانی صرفه‌جویی",
+    "buyNow": "خرید فوری"
   },
   "shop": {
     "productCount": "{count} محصول",

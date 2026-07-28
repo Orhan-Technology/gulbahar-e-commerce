@@ -23,6 +23,7 @@ import {
   users,
   wishlistItems,
   type LocalizedText,
+  type ProductSpec,
   type OrderStatus,
   type PromotionSlotKey,
 } from '../lib/db/schema';
@@ -192,11 +193,18 @@ async function main() {
   const started = Date.now();
   const contentDir = path.join(process.cwd(), 'content', 'seed');
 
-  const [categorySeed, shopSeed, productSeed, manifest] = await Promise.all([
+  const [categorySeed, shopSeed, productSeed, manifest, specSeed] = await Promise.all([
     readJson<CategorySeed[]>(path.join(contentDir, 'categories.json')),
     readJson<ShopSeed[]>(path.join(contentDir, 'shops.json')),
     readJson<ProductSeed[]>(path.join(contentDir, 'products.json')),
     readJson<ImageManifest>(path.join(contentDir, 'image-manifest.json')).catch(() => null),
+    /*
+     * Spec tables live in their own file rather than in products.json: only
+     * about a third of the catalogue has anything to tabulate, and threading
+     * empty arrays through the other fifty entries made the product content
+     * harder to read for no gain.
+     */
+    readJson<Record<string, ProductSpec[]>>(path.join(contentDir, 'specs.json')),
   ]);
 
   if (!manifest) {
@@ -375,6 +383,7 @@ async function main() {
          * real example of every row type it can show.
          */
         stock: soldOutSlugs.has(product.slug) ? 0 : product.stock,
+        specs: specSeed[product.slug] ?? null,
         // The pending shop has its whole catalogue ready but unpublished, so
         // approval genuinely flips one switch (PRD §7.1).
         status: isPendingShop ? 'draft' : 'published',

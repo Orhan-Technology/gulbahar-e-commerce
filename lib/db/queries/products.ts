@@ -196,6 +196,7 @@ export async function productDetail(slug: string, locale: string) {
       shopSlug: shops.slug,
       shopName: shops.name,
       shopLogoPath: shops.logoPath,
+      specs: products.specs,
       shopFloor: shops.floor,
       shopUnitNumber: shops.unitNumber,
       shopStatus: shops.status,

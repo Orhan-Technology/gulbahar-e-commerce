@@ -7,8 +7,9 @@ import { MapPin, Store } from 'lucide-react';
 import { ImageGallery, ImageGallerySkeleton } from '@/components/custom/image-gallery';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SectionHeader } from '@/components/custom/section-header';
-import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
+import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
+import { SpecTable } from '@/components/shop/product/spec-table';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
 import { ReviewList } from '@/components/shop/product/review-list';
 import { WriteReviewDialog } from '@/components/shop/product/write-review-dialog';
@@ -84,7 +85,7 @@ export default async function ProductPage({
   const currentReviewPage = Math.max(1, Number(reviewPage ?? 1) || 1);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-4 pb-28 sm:py-6 md:pb-6">
+    <div className="max-w-page mx-auto px-4 py-4 pb-28 sm:px-7 sm:py-6 md:pb-6">
       {/* Breadcrumb */}
       <nav className="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
         <Link href="/products" className="hover:text-primary">
@@ -102,12 +103,17 @@ export default async function ProductPage({
         <span className="clamp-1 text-foreground">{title}</span>
       </nav>
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-2 lg:gap-10">
+      {/*
+       * Thumbnail rail, main image, then a 380px buy column that STICKS: the
+       * mockup's 88px | 1fr | 380px. The rail lives inside ImageGallery, which
+       * owns the active-image state, so the page only has to split two ways.
+       */}
+      <div className="mt-4 grid items-start gap-6 lg:grid-cols-[1fr_380px] lg:gap-8">
         <Suspense fallback={<ImageGallerySkeleton />}>
-          <ImageGallery images={galleryImages} title={title} aspect="portrait" />
+          <ImageGallery images={galleryImages} title={title} aspect="square" rail="side" />
         </Suspense>
 
-        <div className="space-y-5">
+        <div className="space-y-5 lg:sticky lg:top-28">
           <div className="space-y-2">
             <h1 className="text-xl leading-snug font-bold sm:text-2xl">{title}</h1>
 
@@ -164,14 +170,23 @@ export default async function ProductPage({
             initialSaved={saved.has(product.id)}
           />
 
+          <FulfilmentPanel floor={product.shopFloor} unitNumber={product.shopUnitNumber} />
+        </div>
+      </div>
+
+      {/* Description and specs run under the gallery, clear of the buy column. */}
+      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:gap-8">
+        <div className="space-y-8">
           {product.description && (
-            <section className="border-border space-y-2 border-t pt-4">
-              <h2 className="text-sm font-semibold">{t('description')}</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
+            <section className="space-y-3">
+              <h2 className="text-foreground text-xl font-bold">{t('description')}</h2>
+              <p className="max-w-prose text-base leading-relaxed text-neutral-600">
                 {pickLocale(product.description, locale)}
               </p>
             </section>
           )}
+
+          {product.specs && product.specs.length > 0 && <SpecTable specs={product.specs} />}
         </div>
       </div>
 
@@ -256,18 +271,18 @@ async function RelatedProducts({
 
   void recordImpressions(promoted.map((item) => item.campaignId));
 
+  /*
+   * Promoted items lead the SAME grid rather than sitting in their own tinted
+   * panel. The panel held a single card at full width, and it repeated the
+   * Sponsored marker the card already carries — the disclosure belongs on the
+   * item, which is what PRD §8.4 asks for and what the mockup draws.
+   */
+  const items = [...promoted.map((item) => ({ ...item, sponsored: true })), ...organic];
+
   return (
-    <section className="mt-10 space-y-4">
+    <section className="mt-10 space-y-5">
       <SectionHeader title={t('relatedHeading')} description={t('relatedHint')} />
-
-      {promoted.length > 0 && (
-        <div className="rounded-card border-accent-200 bg-accent-50/40 space-y-2 border p-3">
-          <SponsoredBadge />
-          <ProductGrid items={promoted.map((i) => ({ ...i, sponsored: true }))} savedIds={saved} />
-        </div>
-      )}
-
-      <ProductGrid items={organic} savedIds={saved} />
+      <ProductGrid items={items} savedIds={saved} layout="row" />
     </section>
   );
 }

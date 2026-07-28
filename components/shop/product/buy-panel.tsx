@@ -62,25 +62,43 @@ export function BuyPanel({
 
   const outOfStock = stock <= 0;
   const lowStock = !outOfStock && stock <= LOW_STOCK_THRESHOLD;
+  const saving = discountPrice !== null && discountPrice < price ? price - discountPrice : 0;
+
+  async function add() {
+    const result = await addCartItem({
+      productId,
+      quantity,
+      variantSelection:
+        variants.length > 0 ? variants.map((v) => selection[v.id] ?? v.options[0]) : null,
+    });
+
+    if (!result.ok) {
+      toast.error(t(`cartError.${result.error}` as never));
+      return false;
+    }
+    return true;
+  }
 
   function onAdd() {
     startTransition(async () => {
-      const result = await addCartItem({
-        productId,
-        quantity,
-        variantSelection:
-          variants.length > 0 ? variants.map((v) => selection[v.id] ?? v.options[0]) : null,
-      });
-
-      if (!result.ok) {
-        toast.error(t(`cartError.${result.error}` as never));
-        return;
-      }
+      if (!(await add())) return;
 
       setAdded(true);
       // Refresh so the header badge picks up the new count from the server.
       router.refresh();
       window.setTimeout(() => setAdded(false), 1600);
+    });
+  }
+
+  /*
+   * Buy now is add-to-cart plus a jump to checkout, not a second purchase path.
+   * A separate express flow would have to duplicate the cart's offer, stock and
+   * delivery-fee rules, and the two would drift.
+   */
+  function onBuyNow() {
+    startTransition(async () => {
+      if (!(await add())) return;
+      router.push('/checkout');
     });
   }
 
@@ -110,7 +128,14 @@ export function BuyPanel({
 
   return (
     <div className="space-y-4">
-      <PriceDisplay price={price} discountPrice={discountPrice} size="lg" showDiscountPercent />
+      <div className="space-y-1.5">
+        <PriceDisplay price={price} discountPrice={discountPrice} size="lg" showDiscountPercent />
+        {saving > 0 && (
+          <p className="text-success text-sm font-semibold">
+            {t('youSave', { amount: formatNumber(saving, locale) })}
+          </p>
+        )}
+      </div>
 
       {/* Stock status chip */}
       <div>
@@ -170,6 +195,18 @@ export function BuyPanel({
           {addButton}
           <WishlistButton productId={productId} initialSaved={initialSaved} variant="inline" />
         </div>
+
+        {!outOfStock && (
+          <Button
+            onClick={onBuyNow}
+            disabled={pending}
+            size="lg"
+            variant="outline"
+            className="w-full"
+          >
+            {t('buyNow')}
+          </Button>
+        )}
       </div>
     </div>
   );

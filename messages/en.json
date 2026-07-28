@@ -307,7 +307,35 @@
         "invalid_input": "Please choose a rating",
         "unknown_product": "That product could not be found"
       }
-    }
+    },
+    "specsHeading": "Specifications",
+    "specs": {
+      "screen": "Screen",
+      "storage": "Storage",
+      "ram": "Memory",
+      "battery": "Battery",
+      "camera": "Camera",
+      "processor": "Processor",
+      "capacity": "Capacity",
+      "power": "Power",
+      "material": "Material",
+      "movement": "Movement",
+      "size": "Size",
+      "weight": "Weight",
+      "origin": "Origin",
+      "warranty": "Warranty"
+    },
+    "fulfilmentHeading": "Delivery & pickup",
+    "deliveryTitle": "Delivery in Kabul",
+    "deliveryBody": "1–2 working days",
+    "deliveryFee": "{fee} AFN",
+    "deliveryFree": "Free over {threshold} AFN",
+    "pickupTitle": "Collect from the shop",
+    "pickupFree": "Free",
+    "paymentTitle": "Payment",
+    "paymentBody": "Cash on delivery or HesabPay",
+    "youSave": "You save {amount} AFN",
+    "buyNow": "Buy now"
   },
   "shop": {
     "productCount": "{count} products",

@@ -114,9 +114,16 @@ async function main() {
     limit 1
   `;
 
-  const { formatCurrency } = await import('../lib/format');
-  const faPrice = formatCurrency(product.price, 'fa');
-  const enPrice = formatCurrency(product.price, 'en');
+  /*
+   * The FIGURE, not formatCurrency's «؋ ۴۶٬۰۰۰». PriceDisplay renders the amount
+   * and its unit as separate elements now, so the symbol form appears nowhere on
+   * a product page — asserting on it tested the old markup rather than the thing
+   * that matters, which is that each locale gets its own numerals and only its
+   * own.
+   */
+  const { formatNumber } = await import('../lib/format');
+  const faPrice = formatNumber(product.price, 'fa');
+  const enPrice = formatNumber(product.price, 'en');
 
   const faPage = await html(`/fa/products/${encodeURIComponent(product.slug)}`);
   const enPage = await html(`/en/products/${encodeURIComponent(product.slug)}`);
@@ -127,6 +134,10 @@ async function main() {
     'and the Dari page does not leak the Latin form of the same amount',
     !faPage.includes(enPrice),
     enPrice,
+  );
+  check(
+    'both spell the currency in their own language',
+    faPage.includes('افغانی') && enPage.includes('AFN'),
   );
 
   check('the Dari document is rtl', /<html[^>]*dir="rtl"/.test(faPage));

@@ -21,6 +21,13 @@ export interface ImageGalleryProps {
   className?: string;
   /** 4:5 on product pages, 1:1 elsewhere (PRD §10.7). */
   aspect?: 'square' | 'portrait';
+  /**
+   * `side` puts the thumbnail rail in a column beside the main image, which is
+   * how the product page is drawn. It stays BELOW the image on small screens
+   * regardless — a vertical rail on a 390px phone costs a fifth of the width
+   * the photograph needs.
+   */
+  rail?: 'below' | 'side';
 }
 
 /**
@@ -30,13 +37,20 @@ export interface ImageGalleryProps {
  * it scrolls from the right. Explicit aspect boxes mean no layout shift while
  * images decode (PRD §9.3).
  */
-export function ImageGallery({ images, title, className, aspect = 'portrait' }: ImageGalleryProps) {
+export function ImageGallery({
+  images,
+  title,
+  className,
+  aspect = 'portrait',
+  rail = 'below',
+}: ImageGalleryProps) {
   const t = useTranslations('product');
   const [active, setActive] = React.useState(0);
   const [zoomed, setZoomed] = React.useState(false);
 
   const aspectClass = aspect === 'square' ? 'aspect-square' : 'aspect-[4/5]';
   const current = images[active];
+  const side = rail === 'side';
 
   if (images.length === 0) {
     return (
@@ -53,7 +67,12 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <div
+      className={cn(
+        side ? 'flex flex-col gap-3 sm:flex-row-reverse sm:gap-4' : 'space-y-3',
+        className,
+      )}
+    >
       <button
         type="button"
         onClick={() => setZoomed(true)}
@@ -61,6 +80,7 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
         className={cn(
           aspectClass,
           'group rounded-card border-border relative w-full overflow-hidden border bg-neutral-100',
+          side && 'sm:flex-1',
         )}
       >
         <Image
@@ -77,7 +97,13 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
       </button>
 
       {images.length > 1 && (
-        <div className="flex scrollbar-none gap-2 overflow-x-auto">
+        <div
+          className={cn(
+            'flex scrollbar-none gap-2 overflow-x-auto',
+            // Vertical rail from sm up; still a horizontal scroller on phones.
+            side && 'sm:w-18 sm:flex-col sm:overflow-x-visible',
+          )}
+        >
           {images.map((image, index) => (
             <button
               key={image.path}
@@ -87,10 +113,11 @@ export function ImageGallery({ images, title, className, aspect = 'portrait' }: 
               aria-current={index === active}
               className={cn(
                 'rounded-control relative h-16 w-16 shrink-0 overflow-hidden border-2 bg-neutral-100 transition-colors duration-150',
+                side && 'sm:h-auto sm:w-full sm:aspect-square',
                 index === active ? 'border-primary-600' : 'hover:border-border border-transparent',
               )}
             >
-              <Image src={image.path} alt="" fill sizes="64px" className="object-cover" />
+              <Image src={image.path} alt="" fill sizes="72px" className="object-cover" />
             </button>
           ))}
         </div>
