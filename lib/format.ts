@@ -76,6 +76,45 @@ export function formatOpeningHours(value: string | null | undefined, locale: str
   return `${digits(openHour)}:${pad(openMinute)} – ${digits(closeHour)}:${pad(closeMinute)}`;
 }
 
+/**
+ * A shop's unit number, e.g. "۲۱۴" / "214".
+ *
+ * `shops.unit_number` is free text with the same rule as `shops.hours`: stored
+ * CANONICALLY in ASCII and localised here. The first seed stored the Dari form
+ * directly, which left English visitors reading «۲۱۴» — the identical bug the
+ * opening hours had, in a column nobody thought of as numeric.
+ *
+ * Anything that is not a plain run of digits — "B-12", "کنار پله" — is passed
+ * through untouched, because a unit number is a label, not an integer.
+ */
+export function formatUnitNumber(value: string | null | undefined, locale: string): string {
+  if (!value) return '';
+  const trimmed = value.trim();
+  return /^\d+$/.test(trimmed) ? formatNumber(Number(trimmed), locale) : trimmed;
+}
+
+/**
+ * Joins names the way the locale does: "a, b" in English, «a، b» in Dari.
+ *
+ * Hard-coding either separator puts the wrong comma in the other language —
+ * an ASCII comma reads as a full stop mid-Dari-sentence, and «،» in English
+ * looks like a typo. Intl.ListFormat knows both.
+ */
+export function formatList(items: string[], locale: string): string {
+  // `short`, not `narrow`: the narrow style drops the separator entirely in
+  // English, turning two shop names into one nonsense name.
+  return new Intl.ListFormat(intlLocale(locale), { style: 'short', type: 'unit' }).format(items);
+}
+
+/** Day and month alone, for a 30-bar daily axis: "۶/۲۹" / "6/29". */
+export function formatDayMonth(date: Date | string | number, locale: string): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    day: 'numeric',
+    month: 'numeric',
+    timeZone: 'Asia/Kabul',
+  }).format(new Date(date));
+}
+
 export function formatDate(
   date: Date | string | number,
   locale: string,
@@ -83,6 +122,20 @@ export function formatDate(
 ): string {
   return new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: style,
+    timeZone: 'Asia/Kabul',
+  }).format(new Date(date));
+}
+
+/**
+ * Month name alone, for a 12-bar axis, e.g. "اسد" / "Aug".
+ *
+ * A full date under twelve bars is unreadable at any width, and in fa-AF the
+ * short date style renders as a numeric "۱۴۰۵/۵/۱" that says nothing a reader
+ * can scan. Intl gives the Afghan solar month names here for free.
+ */
+export function formatMonth(date: Date | string | number, locale: string): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    month: 'short',
     timeZone: 'Asia/Kabul',
   }).format(new Date(date));
 }

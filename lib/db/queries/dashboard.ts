@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lt, sql } from 'drizzle-orm';
 
 import { db } from '..';
 import { pickLocale } from '../localized';
@@ -16,9 +16,15 @@ import { campaigns, orderItems, orders, products, wishlistItems } from '../schem
  */
 export type ShopDashboardStats = Awaited<ReturnType<typeof shopDashboardStats>>;
 
+/** Matches the storefront's own "only N left" threshold (PRD §5.2). */
+const LOW_STOCK_THRESHOLD = 5;
+
 export async function shopDashboardStats(shopId: string, now: Date = new Date()) {
   const startOfToday = new Date(now);
   startOfToday.setUTCHours(0, 0, 0, 0);
+
+  const startOfYesterday = new Date(startOfToday);
+  startOfYesterday.setUTCDate(startOfYesterday.getUTCDate() - 1);
 
   const startOfWeek = new Date(startOfToday);
   startOfWeek.setUTCDate(startOfWeek.getUTCDate() - 6);
@@ -29,8 +35,12 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   const in7Days = new Date(now);
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
 
-  /** This shop's revenue over a window, counting fulfilled orders only. */
-  const revenueSince = (since: Date) =>
+  /**
+   * This shop's revenue over a window, counting fulfilled orders only. `until`
+   * is exclusive, which is what makes a closed window — yesterday — expressible
+   * without a second helper.
+   */
+  const revenueBetween = (since: Date, until?: Date) =>
     db
       .select({
         total: sql<number>`coalesce(sum(${orderItems.priceSnapshot} * ${orderItems.quantity}), 0)`,
@@ -42,22 +52,28 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
         and(
           eq(orderItems.shopId, shopId),
           gte(orders.createdAt, since),
+          until ? lt(orders.createdAt, until) : undefined,
           eq(orders.status, 'fulfilled'),
         ),
       );
 
   const [
     todayRows,
+    yesterdayRows,
     weekRows,
     awaitingRows,
     liveProductRows,
     outOfStockRows,
+    lowStockRows,
     expiringRows,
     seriesRows,
     topProductRows,
   ] = await Promise.all([
-    revenueSince(startOfToday),
-    revenueSince(startOfWeek),
+    revenueBetween(startOfToday),
+    // Closed window, so today's takings never leak into the baseline they are
+    // compared against.
+    revenueBetween(startOfYesterday, startOfToday),
+    revenueBetween(startOfWeek),
 
     // Action queue: orders sitting at placed (accept/reject) or accepted (mark ready).
     db
@@ -85,6 +101,19 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
           eq(products.shopId, shopId),
           eq(products.status, 'published'),
           sql`${products.stock} <= 0`,
+        ),
+      ),
+
+    // Still sellable but nearly gone — the warning that lets a shopkeeper
+    // restock BEFORE the product drops out of the catalogue.
+    db
+      .select({ total: count() })
+      .from(products)
+      .where(
+        and(
+          eq(products.shopId, shopId),
+          eq(products.status, 'published'),
+          sql`${products.stock} > 0 and ${products.stock} <= ${LOW_STOCK_THRESHOLD}`,
         ),
       ),
 
@@ -152,12 +181,23 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
 
   const awaiting = Object.fromEntries(awaitingRows.map((row) => [row.status, Number(row.total)]));
 
+  const todaySales = Number(todayRows[0]?.total ?? 0);
+  const yesterdaySales = Number(yesterdayRows[0]?.total ?? 0);
+
   return {
-    todaySales: Number(todayRows[0]?.total ?? 0),
+    todaySales,
+    yesterdaySales,
+    /**
+     * Signed fraction against yesterday, or null when there is no baseline —
+     * "+100% on a day the shop was shut" is not a fact worth showing, and the
+     * tile drops the line entirely rather than printing an infinity.
+     */
+    todayDelta: yesterdaySales > 0 ? (todaySales - yesterdaySales) / yesterdaySales : null,
     weekSales: Number(weekRows[0]?.total ?? 0),
     todayOrderCount: Number(todayRows[0]?.orderCount ?? 0),
     weekOrderCount: Number(weekRows[0]?.orderCount ?? 0),
     liveProducts: Number(liveProductRows[0]?.total ?? 0),
+    lowStockProducts: Number(lowStockRows[0]?.total ?? 0),
     actionQueue: {
       newOrders: awaiting.placed ?? 0,
       toMarkReady: awaiting.accepted ?? 0,

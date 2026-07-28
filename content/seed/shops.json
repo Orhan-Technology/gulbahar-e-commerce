@@ -3,7 +3,7 @@
     "slug": "kabul-electronics",
     "category": "electronics",
     "floor": 2,
-    "unit": "۲۱۴",
+    "unit": "214",
     "name": {
       "fa": "الکترونیک کابل",
       "en": "Kabul Electronics"
@@ -19,7 +19,7 @@
     "slug": "markaz-mobile",
     "category": "mobiles-tablets",
     "floor": 1,
-    "unit": "۱۰۵",
+    "unit": "105",
     "name": {
       "fa": "موبایل مرکز",
       "en": "Markaz Mobile"
@@ -35,7 +35,7 @@
     "slug": "bahar-cosmetics",
     "category": "cosmetics",
     "floor": 1,
-    "unit": "۱۲۸",
+    "unit": "128",
     "name": {
       "fa": "آرایشی بهار",
       "en": "Bahar Cosmetics"
@@ -51,7 +51,7 @@
     "slug": "golden-perfumes",
     "category": "perfume",
     "floor": 1,
-    "unit": "۱۳۲",
+    "unit": "132",
     "name": {
       "fa": "عطریات طلایی",
       "en": "Golden Perfumes"
@@ -67,7 +67,7 @@
     "slug": "noor-watches",
     "category": "watches",
     "floor": 2,
-    "unit": "۲۰۷",
+    "unit": "207",
     "name": {
       "fa": "ساعت‌فروشی نور",
       "en": "Noor Watches"
@@ -83,7 +83,7 @@
     "slug": "ariana-clothing",
     "category": "menswear",
     "floor": 3,
-    "unit": "۳۱۱",
+    "unit": "311",
     "name": {
       "fa": "پوشاک آریانا",
       "en": "Ariana Clothing"
@@ -99,7 +99,7 @@
     "slug": "pamir-shoes",
     "category": "shoes",
     "floor": 3,
-    "unit": "۳۰۴",
+    "unit": "304",
     "name": {
       "fa": "کفش پامیر",
       "en": "Pamir Shoes"
@@ -115,7 +115,7 @@
     "slug": "salam-home",
     "category": "kitchen-appliances",
     "floor": 2,
-    "unit": "۲۲۶",
+    "unit": "226",
     "name": {
       "fa": "لوازم خانه سلام",
       "en": "Salam Home Appliances"
@@ -131,7 +131,7 @@
     "slug": "kudak-toys",
     "category": "toys",
     "floor": 3,
-    "unit": "۳۲۲",
+    "unit": "322",
     "name": {
       "fa": "اسباب‌بازی کودک",
       "en": "Kudak Toys"
@@ -147,7 +147,7 @@
     "slug": "danesh-stationery",
     "category": "stationery",
     "floor": 1,
-    "unit": "۱۱۹",
+    "unit": "119",
     "name": {
       "fa": "قرطاسیه دانش",
       "en": "Danesh Stationery"
@@ -163,7 +163,7 @@
     "slug": "herat-jewellery",
     "category": "jewellery",
     "floor": 2,
-    "unit": "۲۰۱",
+    "unit": "201",
     "name": {
       "fa": "جواهرات هرات",
       "en": "Herat Jewellery"
@@ -179,7 +179,7 @@
     "slug": "zarin-bags",
     "category": "bags",
     "floor": 3,
-    "unit": "۳۱۸",
+    "unit": "318",
     "name": {
       "fa": "کیف و چمدان زرین",
       "en": "Zarin Bags & Luggage"
@@ -195,7 +195,7 @@
     "slug": "alborz-sports",
     "category": "sportswear",
     "floor": 3,
-    "unit": "۳۲۷",
+    "unit": "327",
     "name": {
       "fa": "ورزشی البرز",
       "en": "Alborz Sportswear"
@@ -211,7 +211,7 @@
     "slug": "kabul-dried-fruit",
     "category": "dried-fruit-sweets",
     "floor": 1,
-    "unit": "۱۴۱",
+    "unit": "141",
     "name": {
       "fa": "خشکبار و شیرینی کابل",
       "en": "Kabul Dried Fruit & Sweets"

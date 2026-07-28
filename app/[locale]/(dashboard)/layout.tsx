@@ -8,6 +8,7 @@ import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { shopById } from '@/lib/db/queries/shops';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
+import { formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
 
   const user = await requireShopkeeper(locale);
   const t = await getTranslations('dashboardNav');
+  const common = await getTranslations('common');
 
   const [shop, notifications, unread] = await Promise.all([
     shopById(user.shopId),
@@ -39,34 +41,51 @@ export default async function DashboardLayout({
     unreadNotificationCount(user.id, user.role),
   ]);
 
+  const shopName = shop ? pickLocale(shop.name, locale) : t('yourShop');
+
+  // Floor, unit and approval state in one line — the shopkeeper's own address in
+  // the mall, which is also what a customer sees on the storefront.
+  const shopMeta = shop
+    ? [
+        shop.floor !== null ? common('floorName', { floor: shop.floor }) : null,
+        shop.unitNumber ? t('unit', { number: formatUnitNumber(shop.unitNumber, locale) }) : null,
+        t(`shopStatus.${shop.status}`),
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    : t('shopPanel');
+
   return (
-    <div className="min-h-screen bg-neutral-50">
-      <header className="border-border bg-background sticky top-0 z-30 border-b">
-        <div className="flex h-14 items-center gap-3 px-4">
+    <div className="bg-background min-h-screen">
+      {/*
+        Deep green, not a white bar: this header is the shop's own identity block,
+        and on a phone it is the only thing that says WHOSE dashboard this is.
+      */}
+      <header className="bg-primary-700 text-primary-foreground sticky top-0 z-30">
+        <div className="mx-auto flex h-16 max-w-5xl items-center gap-3 px-4">
           {/* Shop switcher: single shop today, but the shape is future-proofed for
               a tenant running two units in the mall (PRD §6.1). */}
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="rounded-control bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center">
-              <Store className="h-4 w-4" aria-hidden />
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="rounded-pill bg-primary-500 flex h-9 w-9 shrink-0 items-center justify-center text-sm font-bold">
+              {shopName.trim().charAt(0) || <Store className="h-4 w-4" aria-hidden />}
             </span>
             <div className="min-w-0">
-              <p className="truncate text-sm leading-tight font-bold">
-                {shop ? pickLocale(shop.name, locale) : t('yourShop')}
-              </p>
-              <p className="text-muted-foreground text-xs">{t('shopPanel')}</p>
+              <p className="truncate text-sm leading-tight font-bold">{shopName}</p>
+              <p className="text-primary-300 truncate text-2xs">{shopMeta}</p>
             </div>
           </div>
 
           <div className="ms-auto flex shrink-0 items-center gap-1">
             <Link
               href={shop ? `/shops/${shop.slug}` : '/'}
-              className="rounded-control text-muted-foreground hidden items-center gap-1 px-2 py-1.5 text-xs hover:bg-neutral-100 sm:flex"
+              className="rounded-control text-primary-200 hover:bg-primary-600 hidden items-center gap-1 px-2 py-1.5 text-xs transition-colors duration-150 sm:flex"
             >
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               {t('viewStorefront')}
             </Link>
-            <LocaleSwitcher />
+            <LocaleSwitcher className="text-primary-foreground hover:bg-primary-600 hover:text-primary-foreground" />
             <NotificationBell
+              onDark
               unreadCount={unread}
               notifications={notifications.map((item) => ({
                 id: item.id,

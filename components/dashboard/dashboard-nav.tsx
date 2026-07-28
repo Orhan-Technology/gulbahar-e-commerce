@@ -59,7 +59,7 @@ export function DashboardSidebar() {
 
   return (
     <nav
-      className="border-border bg-card hidden w-56 shrink-0 border-e md:block"
+      className="border-border hidden w-56 shrink-0 border-e bg-neutral-50 md:block"
       aria-label={t('label')}
     >
       <ul className="sticky top-0 space-y-1 p-3">
@@ -74,8 +74,8 @@ export function DashboardSidebar() {
                 className={cn(
                   'rounded-control flex items-center gap-2.5 px-3 py-2 text-sm transition-colors duration-150',
                   active
-                    ? 'bg-primary-50 text-primary font-semibold'
-                    : 'text-foreground hover:bg-neutral-100',
+                    ? 'bg-primary-700 text-primary-foreground font-semibold'
+                    : 'text-neutral-700 hover:bg-neutral-200',
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />

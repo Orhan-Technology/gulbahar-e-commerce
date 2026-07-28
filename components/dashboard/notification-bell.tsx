@@ -7,6 +7,7 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { formatNumber, formatRelative } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 export type BellNotification = {
   id: string;
@@ -26,9 +27,16 @@ export type BellNotification = {
 export function NotificationBell({
   notifications,
   unreadCount,
+  onDark = false,
 }: {
   notifications: BellNotification[];
   unreadCount: number;
+  /**
+   * The shop panel's header is deep green. Red on green is the one badge
+   * pairing that goes muddy, so the count switches to gold there — the same
+   * choice the header's own accents make.
+   */
+  onDark?: boolean;
 }) {
   const t = useTranslations('dashboardNav');
   const locale = useLocale();
@@ -36,11 +44,22 @@ export function NotificationBell({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative" aria-label={t('notifications')}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            'relative',
+            onDark && 'text-primary-foreground hover:bg-primary-600 hover:text-primary-foreground',
+          )}
+          aria-label={t('notifications')}
+        >
           <Bell />
           {unreadCount > 0 && (
             <span
-              className="rounded-pill bg-danger text-danger-fg absolute end-0 -top-0.5 flex h-5 min-w-5 items-center justify-center px-1 text-xs font-bold"
+              className={cn(
+                'rounded-pill absolute end-0 -top-0.5 flex h-5 min-w-5 items-center justify-center px-1 text-xs font-bold',
+                onDark ? 'bg-accent-500 text-accent-foreground' : 'bg-danger text-danger-fg',
+              )}
               aria-hidden
             >
               {formatNumber(unreadCount, locale)}

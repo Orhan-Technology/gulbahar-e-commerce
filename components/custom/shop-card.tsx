@@ -5,7 +5,7 @@ import { Store } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -163,7 +163,7 @@ export function ShopCard({
           <p className="mt-1.5 text-xs text-neutral-500">
             {t('floorUnit', {
               floor: formatNumber(floor, locale),
-              unit: unitNumber ?? '—',
+              unit: formatUnitNumber(unitNumber, locale) || '—',
             })}
           </p>
         )}

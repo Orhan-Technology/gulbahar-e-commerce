@@ -7,15 +7,20 @@ import { formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
+/**
+ * Urgency is carried by a rail down the inline-start edge rather than by a
+ * tinted icon tile: four rows of coloured tiles read as decoration, whereas a
+ * 3px rail is a severity scale you can scan in one pass.
+ */
 const TONES = {
-  primary: 'bg-primary-50 text-primary-700',
-  warning: 'bg-warning-bg text-warning-fg',
-  danger: 'bg-danger-bg text-danger',
-  success: 'bg-success-bg text-success',
+  primary: 'bg-primary-700',
+  warning: 'bg-accent-500',
+  danger: 'bg-danger',
+  success: 'bg-success',
+  muted: 'bg-neutral-400',
 } as const;
 
 export interface ActionQueueItemProps {
-  icon: React.ReactNode;
   title: string;
   subtitle?: string;
   /** ISO string or Date. Rendered as a localized relative time. */
@@ -23,6 +28,13 @@ export interface ActionQueueItemProps {
   /** Deep link to the exact screen and item (PRD §6.1). */
   href: string;
   tone?: keyof typeof TONES;
+  /**
+   * Controls that resolve the item without leaving the dashboard — accept an
+   * order, mark it ready. Their presence turns the row from a link into a
+   * container: a button inside an anchor is invalid, so the title carries the
+   * link instead and the chevron is dropped.
+   */
+  actions?: React.ReactNode;
   /** Applies the slide-in animation for items that just arrived (PRD §10.6). */
   isNew?: boolean;
   className?: string;
@@ -32,56 +44,71 @@ export interface ActionQueueItemProps {
  * A single row of the shopkeeper's action queue — the dashboard centrepiece
  * (PRD §6.1). Every item deep-links to the screen where the action is taken.
  *
- * The chevron mirrors in RTL, and new arrivals slide in via the `queue-in`
- * keyframe rather than an ad-hoc transition.
+ * The row carries no border of its own; the queue panel draws the hairlines,
+ * so a run of items reads as one list rather than a stack of cards.
  */
 export function ActionQueueItem({
-  icon,
   title,
   subtitle,
   timestamp,
   href,
   tone = 'primary',
+  actions,
   isNew = false,
   className,
 }: ActionQueueItemProps) {
   const locale = useLocale();
 
+  const time = timestamp ? (
+    <time
+      dateTime={new Date(timestamp).toISOString()}
+      className="shrink-0 text-xs text-neutral-400"
+    >
+      {formatRelative(timestamp, locale)}
+    </time>
+  ) : null;
+
+  const rail = (
+    <span className={cn('rounded-pill w-[3px] shrink-0 self-stretch', TONES[tone])} aria-hidden />
+  );
+
+  if (actions) {
+    return (
+      <div className={cn('flex gap-3 p-4', isNew && 'animate-queue-in', className)}>
+        {rail}
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex flex-wrap items-baseline gap-x-2">
+            <Link href={href} className="hover:text-primary text-sm font-semibold">
+              {title}
+            </Link>
+            {time}
+          </div>
+          {subtitle && <p className="text-xs leading-relaxed text-neutral-600">{subtitle}</p>}
+          {actions}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Link
       href={href}
       className={cn(
-        'rounded-card border-border bg-card shadow-card flex items-center gap-3 border p-3 transition-colors duration-150 hover:bg-neutral-50',
+        'flex items-center gap-3 p-4 transition-colors duration-150 hover:bg-neutral-50',
         isNew && 'animate-queue-in',
         className,
       )}
     >
-      <span
-        className={cn(
-          'rounded-control flex h-10 w-10 shrink-0 items-center justify-center',
-          TONES[tone],
-        )}
-        aria-hidden
-      >
-        {icon}
-      </span>
-
+      {rail}
       <span className="min-w-0 flex-1">
-        <span className="text-foreground block truncate text-sm font-semibold">{title}</span>
+        <span className="flex flex-wrap items-baseline gap-x-2">
+          <span className="text-foreground text-sm font-semibold">{title}</span>
+          {time}
+        </span>
         {subtitle && (
-          <span className="text-muted-foreground block truncate text-xs">{subtitle}</span>
+          <span className="mt-1 block text-xs leading-relaxed text-neutral-600">{subtitle}</span>
         )}
       </span>
-
-      {timestamp && (
-        <time
-          dateTime={new Date(timestamp).toISOString()}
-          className="text-muted-foreground shrink-0 text-xs"
-        >
-          {formatRelative(timestamp, locale)}
-        </time>
-      )}
-
       <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400 rtl:rotate-180" aria-hidden />
     </Link>
   );
@@ -89,13 +116,8 @@ export function ActionQueueItem({
 
 export function ActionQueueItemSkeleton({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        'rounded-card border-border bg-card shadow-card flex items-center gap-3 border p-3',
-        className,
-      )}
-    >
-      <Skeleton className="rounded-control h-10 w-10 shrink-0" />
+    <div className={cn('flex items-center gap-3 p-4', className)}>
+      <Skeleton className="rounded-pill h-10 w-[3px] shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-2/3" />
         <Skeleton className="h-3 w-1/3" />

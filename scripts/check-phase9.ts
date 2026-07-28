@@ -107,10 +107,13 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   section('RTL: the same data, two numeral systems');
 
+  // Ordered, not merely `limit 1`: an arbitrary row makes this section's result
+  // depend on physical row order, which a reseed is free to change.
   const [product] = await sql<{ slug: string; price: number }[]>`
     select p.slug, p.price from products p
     join shops s on s.id = p.shop_id
     where p.status = 'published' and s.status = 'approved' and p.discount_price is null
+    order by p.slug
     limit 1
   `;
 
@@ -130,9 +133,21 @@ async function main() {
 
   check(`the Dari page prices in Persian numerals (${faPrice})`, faPage.includes(faPrice));
   check(`the English page prices in Latin numerals (${enPrice})`, enPage.includes(enPrice));
+  /*
+   * Scripts stripped first. The RSC flight payload is embedded in <script> tags
+   * and carries the RAW props every client component needs — `"price":980` for
+   * the buy panel — so the Latin form of any amount is ALWAYS present there.
+   * Searching the whole document made this assertion silently depend on the
+   * price having a thousands separator: "46,000" never appears in JSON, but a
+   * bare "980" always does, and the check flipped to failing the moment the
+   * chosen product had a three-digit price. What is being asserted is that no
+   * Latin numeral reaches the RENDERED page.
+   */
+  const rendered = (page: string) => page.replace(/<script[\s\S]*?<\/script>/g, '');
+
   check(
     'and the Dari page does not leak the Latin form of the same amount',
-    !faPage.includes(enPrice),
+    !rendered(faPage).includes(enPrice),
     enPrice,
   );
   check(

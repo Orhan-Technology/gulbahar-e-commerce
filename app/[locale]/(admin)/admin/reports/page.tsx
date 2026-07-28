@@ -125,14 +125,21 @@ async function Totals({ period, locale }: { period: PlatformPeriod; locale: stri
         />
       </dl>
 
-      {/* A rejection rate is exactly what platform reporting exists to surface. */}
-      <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+      {/*
+        A rejection rate is exactly what platform reporting exists to surface.
+
+        A div, not a p: `Badge` renders a <div>, and a <div> inside a <p> is
+        invalid HTML that the parser HOISTS OUT — so the server markup and the
+        client tree disagree and React throws a hydration error for what looks
+        like a styling choice.
+      */}
+      <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
         <span>{t('approvedShops', { count: formatNumber(shops.approved, locale) })}</span>
         <Badge variant={rejectionRate > 0.1 ? 'warning' : 'secondary'}>
           {t('rejectionRate', { value: formatPercent(rejectionRate, locale) })}
         </Badge>
         <span>{t('gmvNote')}</span>
-      </p>
+      </div>
     </>
   );
 }

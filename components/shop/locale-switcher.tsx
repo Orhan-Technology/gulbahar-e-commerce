@@ -22,7 +22,7 @@ import { routing } from '@/lib/i18n/routing';
  * next-intl's locale-aware router, so a customer reading a product page in Dari
  * lands on the same product in English rather than being sent home.
  */
-export function LocaleSwitcher() {
+export function LocaleSwitcher({ className }: { className?: string }) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -31,7 +31,9 @@ export function LocaleSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label={t('common.language')}>
+        {/* `className` exists for the one dark surface that hosts this — the
+            shop panel's green header, where the ghost button's ink disappears. */}
+        <Button variant="ghost" size="icon" aria-label={t('common.language')} className={className}>
           <Languages />
         </Button>
       </DropdownMenuTrigger>

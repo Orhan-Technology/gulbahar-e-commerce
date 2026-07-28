@@ -43,15 +43,19 @@ export default async function AdminLayout({
   const badge = (value: number) => (value > 0 ? formatNumber(value, locale) : null);
 
   return (
-    <div className="min-h-screen bg-neutral-50">
+    <div className="bg-background min-h-screen">
       <header className="border-border bg-background sticky top-0 z-30 border-b">
         <div className="flex h-14 items-center gap-3 px-4">
-          <span className="rounded-control bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center">
-            <ShieldCheck className="h-4 w-4" aria-hidden />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm leading-tight font-bold">{t('brand')}</p>
-            <p className="text-muted-foreground text-xs">{t('subtitle')}</p>
+          {/* The rail carries the brand from lg up; below that it is a scroller
+              with no room for it, so the header takes over. */}
+          <div className="flex min-w-0 items-center gap-2 lg:hidden">
+            <span className="rounded-control bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center">
+              <ShieldCheck className="h-4 w-4" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-sm leading-tight font-bold">{t('brand')}</p>
+              <p className="text-muted-foreground text-xs">{t('subtitle')}</p>
+            </div>
           </div>
 
           <div className="ms-auto flex shrink-0 items-center gap-1">

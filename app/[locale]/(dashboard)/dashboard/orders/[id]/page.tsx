@@ -170,11 +170,13 @@ export default async function ShopOrderPage({
             </p>
           )}
 
-          <p className="text-sm">
+          {/* Not a <p>: Badge renders a <div>, which the parser hoists out of a
+              paragraph and turns into a hydration error. */}
+          <div className="text-sm">
             <Badge variant={order.paymentMethod === 'cod' ? 'secondary' : 'default'}>
               {t(`payment.${order.paymentMethod}`)}
             </Badge>
-          </p>
+          </div>
         </section>
       </div>
 

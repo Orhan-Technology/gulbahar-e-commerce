@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopReview } from '@/lib/db/queries/admin';
-import { formatDate, formatNumber, formatOpeningHours } from '@/lib/format';
+import { formatDate, formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 const STATUS_BADGE = {
@@ -159,7 +159,7 @@ export default async function AdminShopReviewPage({
               <MapPin className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
               {t('floorUnit', {
                 floor: formatNumber(shop.floor, locale),
-                unit: shop.unitNumber ?? '—',
+                unit: formatUnitNumber(shop.unitNumber, locale) || '—',
               })}
             </p>
           )}

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useTranslations } from 'next-intl';
-import { AlertTriangle, PackageX, ShoppingCart, Store, Timer, Wallet } from 'lucide-react';
+import { AlertTriangle, ShoppingCart, Store, Wallet } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -218,9 +218,8 @@ export function CustomShowcase() {
 
       {/* ---------------------------------------------------------------- */}
       <Block title={t('actionQueue')}>
-        <div className="w-full max-w-lg space-y-2">
+        <div className="rounded-card border-border bg-card divide-border w-full max-w-lg divide-y overflow-hidden border">
           <ActionQueueItem
-            icon={<ShoppingCart className="h-5 w-5" />}
             title={t('queueNewOrder')}
             subtitle={t('queueNewOrderSub')}
             timestamp={QUEUE_TIMESTAMPS.newOrder}
@@ -228,7 +227,6 @@ export function CustomShowcase() {
             isNew
           />
           <ActionQueueItem
-            icon={<PackageX className="h-5 w-5" />}
             title={t('queueOutOfStock')}
             subtitle={t('queueOutOfStockSub')}
             timestamp={QUEUE_TIMESTAMPS.outOfStock}
@@ -236,7 +234,6 @@ export function CustomShowcase() {
             tone="danger"
           />
           <ActionQueueItem
-            icon={<Timer className="h-5 w-5" />}
             title={t('queueExpiring')}
             subtitle={t('queueExpiringSub')}
             timestamp={QUEUE_TIMESTAMPS.expiring}

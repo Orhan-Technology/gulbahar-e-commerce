@@ -1,10 +1,10 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Eye, MousePointerClick, TrendingUp, Wallet } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
-import { MonthlyRevenueChart, SlotRevenueChart } from '@/components/admin/revenue-charts';
+import { MonthlyRevenueChart } from '@/components/admin/revenue-charts';
+import { CampaignQueue } from '@/components/admin/campaign-queue';
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
@@ -15,10 +15,12 @@ import {
   revenueTotals,
   topPayingShops,
 } from '@/lib/db/queries/admin-revenue';
+import { activeShopCount, platformTotals } from '@/lib/db/queries/admin-reports';
 import {
   formatCompact,
   formatCurrency,
   formatDate,
+  formatList,
   formatNumber,
   formatPercent,
 } from '@/lib/format';
@@ -29,12 +31,15 @@ import { Link } from '@/lib/i18n/navigation';
  *
  * The "this is your new income" moment, so it gets storefront-grade polish rather
  * than admin-plain. It is built to answer one question in five seconds — where is
- * our money coming from — and then let the viewer drill: headline total, then which
- * slots earn it, then which weeks, then which tenants, then the individual
- * placements.
+ * our money coming from — and then let the viewer drill: the month's take, then
+ * the twelve months behind it, then what is waiting on a decision, then the slot
+ * inventory that produced all of it.
  *
  * Every number here is `campaigns.price_paid`, snapshotted at booking. See
- * lib/db/queries/admin-revenue.ts for why that matters.
+ * lib/db/queries/admin-revenue.ts for why that matters. The one exception is the
+ * platform GMV tile, which is the shops' trade rather than the mall's income —
+ * it is on this page because the honest way to present placement revenue is
+ * beside the number it is a small fraction of.
  */
 export default async function AdminRevenuePage({
   params,
@@ -47,26 +52,40 @@ export default async function AdminRevenuePage({
   const t = await getTranslations('adminRevenue');
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-lg font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground max-w-prose text-sm">{t('intro')}</p>
+    <div className="space-y-6 p-4 lg:p-8">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        <div>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="mt-1.5 max-w-prose text-sm text-neutral-500">{t('intro')}</p>
+        </div>
+
+        <Link
+          href="/admin/promotions"
+          className="rounded-pill bg-primary text-primary-foreground hover:bg-primary-800 ms-auto inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold transition-colors duration-150"
+        >
+          <Plus className="h-3.5 w-3.5" aria-hidden />
+          {t('manageCampaigns')}
+        </Link>
       </div>
 
       <Suspense fallback={<HeadlineSkeleton />}>
         <Headline locale={locale} />
       </Suspense>
 
-      <div className="grid gap-4 xl:grid-cols-5">
+      <div className="grid items-start gap-4 xl:grid-cols-5">
         <Suspense fallback={<PanelSkeleton className="xl:col-span-3" />}>
-          <BySlot locale={locale} className="xl:col-span-3" />
+          <ByMonth locale={locale} className="xl:col-span-3" />
         </Suspense>
         <Suspense fallback={<PanelSkeleton className="xl:col-span-2" />}>
-          <ByMonth className="xl:col-span-2" />
+          <PendingRequests locale={locale} className="xl:col-span-2" />
         </Suspense>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-5">
+      <Suspense fallback={<PanelSkeleton />}>
+        <SlotInventory locale={locale} />
+      </Suspense>
+
+      <div className="grid items-start gap-4 xl:grid-cols-5">
         <Suspense fallback={<PanelSkeleton className="xl:col-span-2" />}>
           <TopSpenders locale={locale} className="xl:col-span-2" />
         </Suspense>
@@ -74,6 +93,19 @@ export default async function AdminRevenuePage({
           <ActiveTable locale={locale} className="xl:col-span-3" />
         </Suspense>
       </div>
+
+      {/*
+        PRD §8.4, stated on the screen that sells the placements rather than
+        buried in a policy document. It is the single sentence that keeps the
+        marketplace trustworthy, and the person who could quietly break it is
+        the one reading this page.
+      */}
+      <aside className="rounded-card bg-accent-50 flex flex-wrap items-baseline gap-x-4 gap-y-1 p-5">
+        <span className="text-accent-600 text-sm font-bold">{t('guardrailLabel')}</span>
+        <p className="text-accent-800 min-w-64 flex-1 text-sm leading-relaxed">
+          {t('guardrailBody')}
+        </p>
+      </aside>
     </div>
   );
 }
@@ -82,114 +114,207 @@ export default async function AdminRevenuePage({
  * The headline. `StatCard` counts up on first paint (PRD §10.6), which is the beat
  * this screen is built around — the total should land while the presenter is still
  * saying the sentence.
+ *
+ * The lead tile is THIS MONTH, not lifetime: a mall manager bills monthly, and a
+ * cumulative total only ever goes up, which makes it useless as a signal.
  */
 async function Headline({ locale }: { locale: string }) {
   const t = await getTranslations('adminRevenue');
-  const totals = await revenueTotals();
-  const ctr = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
+
+  const [totals, months, slots, platform, shops] = await Promise.all([
+    revenueTotals(),
+    revenueByMonth(12),
+    revenueBySlot(),
+    platformTotals(30),
+    activeShopCount(30),
+  ]);
+
+  const thisMonth = months.at(-1)?.revenue ?? 0;
+  const lastMonth = months.at(-2)?.revenue ?? 0;
+  // Null rather than +100% when there is no baseline — see StatCard.
+  const monthDelta = lastMonth > 0 ? (thisMonth - lastMonth) / lastMonth : null;
+
+  const capacity = slots.reduce((sum, slot) => sum + slot.capacity, 0);
+  const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
 
   return (
-    <section className="space-y-3">
-      <div className="rounded-card from-primary-700 to-primary-900 shadow-card p-6 text-white ltr:bg-linear-to-r rtl:bg-linear-to-l">
-        <p className="text-sm opacity-80">{t('totalLabel')}</p>
-        <p className="mt-1 text-3xl font-bold">
-          {/* Wrapped so the currency formatting matches every other amount. */}
-          {formatCurrency(totals.total, locale)}
-        </p>
-        <p className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs opacity-90">
-          <span>{t('fromShops', { count: formatNumber(totals.payingShops, locale) })}</span>
-          <span>
-            {t('runningNow', {
-              count: formatNumber(totals.activeCount, locale),
-              amount: formatCurrency(totals.activeRevenue, locale),
-            })}
-          </span>
-        </p>
-      </div>
-
-      <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          label={t('activeRevenue')}
-          value={totals.activeRevenue}
-          format="currency"
-          icon={<Wallet className="h-4 w-4" />}
-        />
-        <StatCard
-          label={t('impressions')}
-          value={totals.impressions}
-          icon={<Eye className="h-4 w-4" />}
-        />
-        <StatCard
-          label={t('clicks')}
-          value={totals.clicks}
-          icon={<MousePointerClick className="h-4 w-4" />}
-        />
-        <div className="rounded-card border-border bg-card shadow-card border p-4">
-          <dt className="text-muted-foreground text-xs">{t('ctr')}</dt>
-          <dd className="mt-1 text-2xl font-bold">{formatPercent(ctr, locale)}</dd>
-        </div>
-      </dl>
-
-      {totals.requestedCount > 0 && (
-        <Link
-          href="/admin/promotions"
-          className="rounded-card border-warning-border bg-warning-bg text-warning hover:border-warning flex items-center gap-2 border p-3 text-xs"
-        >
-          <TrendingUp className="h-4 w-4 shrink-0" aria-hidden />
-          {t('pendingRequests', { count: formatNumber(totals.requestedCount, locale) })}
-        </Link>
-      )}
-    </section>
+    <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <StatCard
+        variant="feature"
+        label={t('monthRevenueLabel')}
+        value={thisMonth}
+        format="currency"
+        delta={monthDelta}
+        hint={monthDelta !== null ? t('vsLastMonth') : t('lifetime', {
+          amount: formatCurrency(totals.total, locale),
+        })}
+      />
+      <StatCard
+        label={t('occupancyLabel')}
+        value={capacity > 0 ? occupied / capacity : 0}
+        format="percent"
+        hint={t('occupancyHint', {
+          occupied: formatNumber(occupied, locale),
+          capacity: formatNumber(capacity, locale),
+        })}
+      />
+      <StatCard
+        label={t('activeCampaigns')}
+        value={totals.activeCount}
+        hint={
+          totals.requestedCount > 0
+            ? t('pendingHint', {
+                n: totals.requestedCount,
+                count: formatNumber(totals.requestedCount, locale),
+              })
+            : t('noPendingHint')
+        }
+        hintTone={totals.requestedCount > 0 ? 'danger' : 'muted'}
+      />
+      <StatCard
+        label={t('platformGmv')}
+        value={platform.gmv}
+        format="compact"
+        hint={t('gmvHint', {
+          orders: formatNumber(platform.orderCount, locale),
+          shops: formatNumber(shops.trading, locale),
+        })}
+      />
+    </dl>
   );
 }
 
-async function BySlot({ locale, className }: { locale: string; className?: string }) {
+async function ByMonth({ locale, className }: { locale: string; className?: string }) {
   const t = await getTranslations('adminRevenue');
-  const slots = await revenueBySlot();
+  const months = await revenueByMonth(12);
+  const total = months.reduce((sum, month) => sum + month.revenue, 0);
 
   return (
-    <Panel title={t('bySlotHeading')} className={className}>
-      <SlotRevenueChart
-        data={slots.map((slot) => ({
-          key: slot.key,
-          name: pickLocale(slot.name, locale),
-          revenue: slot.revenue,
-          occupancy: slot.occupancy,
-        }))}
+    <Panel
+      title={t('byMonthHeading')}
+      note={t('twelveMonths', { total: formatCurrency(total, locale) })}
+      className={className}
+    >
+      <MonthlyRevenueChart
+        data={months.map((month) => ({ month: month.month, revenue: month.revenue }))}
       />
-
-      {/* The chart shows scale; the list gives the exact figures and the occupancy
-          each bar's colour encodes. */}
-      <ul className="divide-border divide-y text-xs">
-        {slots.map((slot) => (
-          <li key={slot.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2">
-            <span className="min-w-32 flex-1 font-medium">{pickLocale(slot.name, locale)}</span>
-            <span className="text-muted-foreground">
-              {t('perWeek', { price: formatCurrency(slot.pricePerWeek, locale) })}
-            </span>
-            <Badge variant={slot.occupancy >= 1 ? 'success' : 'secondary'}>
-              {t('occupancyValue', { value: formatPercent(slot.occupancy, locale) })}
-            </Badge>
-            <span className="text-accent-700 font-bold">
-              {formatCurrency(slot.revenue, locale)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      <p className="text-2xs text-neutral-400">{t('byMonthNote')}</p>
     </Panel>
   );
 }
 
-async function ByMonth({ className }: { className?: string }) {
+/**
+ * The decision queue, on the page where the money is. Rows carry the real
+ * approve and reject controls — `CampaignQueue` owns the mandatory rejection
+ * reason, so this page does not reimplement half of it.
+ */
+async function PendingRequests({ locale, className }: { locale: string; className?: string }) {
   const t = await getTranslations('adminRevenue');
-  const months = await revenueByMonth(6);
+  const requested = await campaignLedger('requested');
 
   return (
-    <Panel title={t('byMonthHeading')} className={className}>
-      <MonthlyRevenueChart
-        data={months.map((month) => ({ month: month.month, revenue: month.revenue }))}
-      />
-      <p className="text-muted-foreground text-xs">{t('byMonthNote')}</p>
+    <Panel
+      title={t('pendingHeading')}
+      count={requested.length > 0 ? formatNumber(requested.length, locale) : undefined}
+      className={className}
+    >
+      {requested.length === 0 ? (
+        <p className="py-6 text-center text-sm text-neutral-500">{t('noPending')}</p>
+      ) : (
+        <CampaignQueue
+          variant="compact"
+          campaigns={requested.map((campaign) => ({
+            id: campaign.id,
+            status: campaign.status,
+            shopId: campaign.shopId,
+            shopName: pickLocale(campaign.shopName, locale),
+            slotName: pickLocale(campaign.slotName, locale),
+            productTitle: campaign.productTitle
+              ? pickLocale(campaign.productTitle, locale)
+              : null,
+            startsAt: campaign.startsAt.toISOString(),
+            endsAt: campaign.endsAt.toISOString(),
+            weeks: campaign.weeks,
+            pricePaid: campaign.pricePaid,
+            impressions: campaign.impressions,
+            clicks: campaign.clicks,
+            rejectionReason: campaign.rejectionReason,
+          }))}
+        />
+      )}
+    </Panel>
+  );
+}
+
+/**
+ * Slot inventory — what the mall has to sell, how much of it is sold, and to
+ * whom. This is the table a manager prices from, so it shows the fixed weekly
+ * rate beside the occupancy it is producing.
+ */
+async function SlotInventory({ locale }: { locale: string }) {
+  const t = await getTranslations('adminRevenue');
+  const slots = await revenueBySlot();
+
+  return (
+    <Panel title={t('inventoryHeading')} note={t('inventoryNote')} bleed>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-3xl text-sm">
+          <thead>
+            <tr className="text-2xs bg-neutral-50 font-semibold text-neutral-500">
+              <th className="px-5 py-3 text-start font-semibold">{t('colSlotName')}</th>
+              <th className="px-5 py-3 text-start font-semibold">{t('colCapacity')}</th>
+              <th className="px-5 py-3 text-start font-semibold">{t('colOccupied')}</th>
+              <th className="px-5 py-3 text-start font-semibold">{t('colCurrentShops')}</th>
+              <th className="px-5 py-3 text-end font-semibold">{t('colWeeklyPrice')}</th>
+              <th className="px-5 py-3 text-end font-semibold">{t('colMonthRevenue')}</th>
+            </tr>
+          </thead>
+          <tbody className="divide-border divide-y">
+            {slots.map((slot) => {
+              const full = slot.capacity > 0 && slot.occupied >= slot.capacity;
+              const names = slot.currentShops.map((name) => pickLocale(name, locale));
+
+              return (
+                <tr key={slot.id}>
+                  <td className="px-5 py-4 font-medium">{pickLocale(slot.name, locale)}</td>
+                  <td className="px-5 py-4 tabular-nums">
+                    {formatNumber(slot.capacity, locale)}
+                  </td>
+                  <td
+                    className={
+                      full
+                        ? 'text-primary-700 px-5 py-4 font-semibold'
+                        : slot.occupancy >= 0.5
+                          ? 'text-accent-600 px-5 py-4 font-semibold'
+                          : 'px-5 py-4 font-semibold text-neutral-400'
+                    }
+                  >
+                    {t('occupiedOf', {
+                      occupied: formatNumber(slot.occupied, locale),
+                      capacity: formatNumber(slot.capacity, locale),
+                    })}
+                    {full ? ` · ${t('full')}` : ''}
+                  </td>
+                  {/* Two names fit; beyond that the count is the useful fact. */}
+                  <td className="px-5 py-4 text-neutral-600">
+                    {names.length === 0
+                      ? t('slotVacant')
+                      : names.length <= 2
+                        ? formatList(names, locale)
+                        : t('shopCount', { count: formatNumber(names.length, locale) })}
+                  </td>
+                  <td className="px-5 py-4 text-end tabular-nums">
+                    {formatCurrency(slot.pricePerWeek, locale)}
+                  </td>
+                  <td className="px-5 py-4 text-end font-bold tabular-nums">
+                    {formatCurrency(slot.monthRevenue, locale)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </Panel>
   );
 }
@@ -202,7 +327,7 @@ async function TopSpenders({ locale, className }: { locale: string; className?: 
   return (
     <Panel title={t('topShopsHeading')} className={className}>
       {shops.length === 0 ? (
-        <p className="text-muted-foreground py-6 text-center text-sm">{t('noRevenue')}</p>
+        <p className="py-6 text-center text-sm text-neutral-500">{t('noRevenue')}</p>
       ) : (
         <ul className="space-y-2.5">
           {shops.map((shop) => (
@@ -220,8 +345,11 @@ async function TopSpenders({ locale, className }: { locale: string; className?: 
                   style={{ width: `${top > 0 ? Math.round((shop.spend / top) * 100) : 0}%` }}
                 />
               </div>
-              <p className="text-muted-foreground text-xs">
-                {t('campaignCount', { count: formatNumber(shop.campaignCount, locale) })}
+              <p className="text-2xs text-neutral-500">
+                {t('campaignCount', {
+                  n: shop.campaignCount,
+                  count: formatNumber(shop.campaignCount, locale),
+                })}
               </p>
             </li>
           ))}
@@ -233,21 +361,30 @@ async function TopSpenders({ locale, className }: { locale: string; className?: 
 
 async function ActiveTable({ locale, className }: { locale: string; className?: string }) {
   const t = await getTranslations('adminRevenue');
-  const all = await campaignLedger();
+  const [all, totals] = await Promise.all([campaignLedger(), revenueTotals()]);
   // Running placements are what the money is buying right now.
   const rows = all.filter(
     (campaign) => campaign.status === 'active' || campaign.status === 'approved',
   );
+  const ctr = totals.impressions > 0 ? totals.clicks / totals.impressions : 0;
 
   return (
-    <Panel title={t('activeHeading')} className={className}>
+    <Panel
+      title={t('activeHeading')}
+      note={t('reachSummary', {
+        impressions: formatCompact(totals.impressions, locale),
+        clicks: formatCompact(totals.clicks, locale),
+        ctr: formatPercent(ctr, locale),
+      })}
+      className={className}
+    >
       {rows.length === 0 ? (
-        <p className="text-muted-foreground py-6 text-center text-sm">{t('noActive')}</p>
+        <p className="py-6 text-center text-sm text-neutral-500">{t('noActive')}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-lg text-xs">
             <thead>
-              <tr className="text-muted-foreground border-border border-b text-start">
+              <tr className="border-border border-b text-start text-neutral-500">
                 <th className="pb-2 text-start font-normal">{t('colShop')}</th>
                 <th className="pb-2 text-start font-normal">{t('colSlot')}</th>
                 <th className="pb-2 text-start font-normal">{t('colWindow')}</th>
@@ -269,19 +406,19 @@ async function ActiveTable({ locale, className }: { locale: string; className?: 
                   <td className="py-2">
                     {pickLocale(campaign.slotName, locale)}
                     {campaign.productTitle && (
-                      <span className="text-muted-foreground clamp-1 block">
+                      <span className="clamp-1 block text-neutral-500">
                         {pickLocale(campaign.productTitle, locale)}
                       </span>
                     )}
                   </td>
-                  <td className="text-muted-foreground py-2">
+                  <td className="py-2 text-neutral-500">
                     {formatDate(campaign.startsAt, locale, 'short')} —{' '}
                     {formatDate(campaign.endsAt, locale, 'short')}
                   </td>
                   <td className="py-2 text-end font-bold">
                     {formatCurrency(campaign.pricePaid, locale)}
                   </td>
-                  <td className="text-muted-foreground py-2 text-end">
+                  <td className="py-2 text-end text-neutral-500">
                     {formatCompact(campaign.impressions, locale)}
                   </td>
                 </tr>
@@ -294,34 +431,51 @@ async function ActiveTable({ locale, className }: { locale: string; className?: 
   );
 }
 
+/**
+ * `bleed` drops the body padding for panels whose content draws its own — a
+ * table needs its header band to reach the panel edge, or the tinted strip
+ * floats with a white margin around it.
+ */
 function Panel({
   title,
+  note,
+  count,
+  bleed = false,
   className,
   children,
 }: {
   title: string;
+  note?: string;
+  count?: string;
+  bleed?: boolean;
   className?: string;
   children: React.ReactNode;
 }) {
   return (
     <section
-      className={`rounded-card border-border bg-card space-y-3 border p-4 ${className ?? ''}`}
+      className={`rounded-card border-border bg-card overflow-hidden border ${className ?? ''}`}
     >
-      <h2 className="text-sm font-bold">{title}</h2>
-      {children}
+      <header className="border-border flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b p-5">
+        <h2 className="text-base font-bold">{title}</h2>
+        {count && (
+          <span className="rounded-pill bg-danger text-danger-fg text-2xs px-2 py-1 font-bold tabular-nums">
+            {count}
+          </span>
+        )}
+        {note && <p className="text-xs text-neutral-500">{note}</p>}
+      </header>
+
+      <div className={bleed ? '' : 'space-y-3 p-5'}>{children}</div>
     </section>
   );
 }
 
 function HeadlineSkeleton() {
   return (
-    <div className="space-y-3">
-      <Skeleton className="rounded-card h-28 w-full" />
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <StatCardSkeleton key={index} />
-        ))}
-      </div>
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {Array.from({ length: 4 }, (_, index) => (
+        <StatCardSkeleton key={index} />
+      ))}
     </div>
   );
 }
@@ -329,10 +483,14 @@ function HeadlineSkeleton() {
 function PanelSkeleton({ className }: { className?: string }) {
   return (
     <section
-      className={`rounded-card border-border bg-card space-y-3 border p-4 ${className ?? ''}`}
+      className={`rounded-card border-border bg-card overflow-hidden border ${className ?? ''}`}
     >
-      <Skeleton className="h-4 w-32" />
-      <Skeleton className="h-48 w-full" />
+      <div className="border-border border-b p-5">
+        <Skeleton className="h-5 w-40" />
+      </div>
+      <div className="p-5">
+        <Skeleton className="h-48 w-full" />
+      </div>
     </section>
   );
 }

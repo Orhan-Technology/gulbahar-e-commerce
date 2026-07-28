@@ -33,6 +33,11 @@ export type AdminBadgeCounts = {
  * the surface is still usable on a tablet during the walkthrough without pretending
  * to be a phone-first design.
  *
+ * Dark, where every other surface in the product is light. That is the point:
+ * this is the only place in the system where someone can unpublish a tenant's
+ * shop, and the rail should not be mistakable for the shopkeeper's own panel at
+ * a glance across a room.
+ *
  * Counts are passed in as pre-FORMATTED strings, so the numerals are Persian in
  * Dari without this component needing the locale.
  */
@@ -59,14 +64,14 @@ export function AdminNav({ counts }: { counts: AdminBadgeCounts }) {
   return (
     <nav
       aria-label={t('label')}
-      className="border-border bg-card border-b lg:h-screen lg:w-56 lg:shrink-0 lg:border-e lg:border-b-0"
+      className="bg-neutral-900 lg:min-h-screen lg:w-56 lg:shrink-0"
     >
-      <div className="hidden px-4 py-4 lg:block">
-        <p className="text-primary text-sm font-bold">{t('brand')}</p>
-        <p className="text-muted-foreground text-xs">{t('subtitle')}</p>
+      <div className="hidden px-5 pt-5 pb-6 lg:block">
+        <p className="text-primary-foreground text-sm font-bold">{t('brand')}</p>
+        <p className="text-2xs text-neutral-600">{t('subtitle')}</p>
       </div>
 
-      <ul className="flex scrollbar-none gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-visible lg:p-2">
+      <ul className="flex scrollbar-none gap-1 overflow-x-auto p-2 lg:flex-col lg:overflow-visible lg:px-3 lg:pb-6">
         {ITEMS.map((item) => {
           const active = isActive(item.href, 'exact' in item ? item.exact : false);
           const badge = item.badge ? counts[item.badge] : null;
@@ -77,10 +82,10 @@ export function AdminNav({ counts }: { counts: AdminBadgeCounts }) {
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'rounded-control flex items-center gap-2 px-3 py-2 text-sm transition-colors duration-150',
+                  'rounded-control flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors duration-150',
                   active
-                    ? 'bg-primary-50 text-primary font-medium'
-                    : 'text-foreground hover:bg-neutral-50',
+                    ? 'bg-primary-700 text-primary-foreground font-bold'
+                    : 'hover:text-primary-foreground text-neutral-400 hover:bg-neutral-800',
                 )}
               >
                 <item.icon className="h-4 w-4 shrink-0" aria-hidden />
@@ -88,7 +93,7 @@ export function AdminNav({ counts }: { counts: AdminBadgeCounts }) {
                 {/* Only shown when there is something to act on, so the sidebar is
                     quiet when the queues are clear. */}
                 {badge && (
-                  <Badge variant="warning" className="ms-auto">
+                  <Badge variant="destructive" className="ms-auto">
                     {badge}
                   </Badge>
                 )}

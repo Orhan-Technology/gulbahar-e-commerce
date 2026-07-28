@@ -67,10 +67,26 @@ export async function revenueBySlot() {
       ps.capacity::int as capacity,
       ps.price_per_week::int as price_per_week,
       coalesce(sum(c.price_paid) filter (where ${SOLD}), 0)::int as revenue,
+      coalesce(
+        sum(c.price_paid) filter (where ${SOLD} and c.starts_at >= date_trunc('month', now())),
+        0
+      )::int as month_revenue,
       count(*) filter (where ${SOLD})::int as campaign_count,
       count(*) filter (
         where c.status in ('approved', 'active') and c.starts_at <= now() and c.ends_at >= now()
       )::int as occupied,
+      -- Who is IN the slot right now. Aggregated in a subquery rather than
+      -- against the outer join, which would repeat a shop once per campaign it
+      -- has ever run in this slot.
+      (
+        select coalesce(json_agg(s.name order by running.starts_at), '[]'::json)
+        from campaigns running
+        join shops s on s.id = running.shop_id
+        where running.slot_id = ps.id
+          and running.status in ('approved', 'active')
+          and running.starts_at <= now()
+          and running.ends_at >= now()
+      ) as current_shops,
       coalesce(sum(c.impressions) filter (where ${SOLD}), 0)::int as impressions,
       coalesce(sum(c.clicks) filter (where ${SOLD}), 0)::int as clicks
     from promotion_slots ps
@@ -89,8 +105,10 @@ export async function revenueBySlot() {
       capacity,
       pricePerWeek: Number(row.price_per_week),
       revenue: Number(row.revenue),
+      monthRevenue: Number(row.month_revenue),
       campaignCount: Number(row.campaign_count),
       occupied,
+      currentShops: (row.current_shops ?? []) as LocalizedText[],
       // Clamped: an oversold slot would otherwise render a bar past 100%.
       occupancy: capacity > 0 ? Math.min(occupied / capacity, 1) : 0,
       impressions: Number(row.impressions),

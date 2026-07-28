@@ -41,6 +41,16 @@
   --color-transparent: transparent;
   --color-current: currentColor;
   --color-inherit: inherit;
+  /*
+   * White is a keyword here, not a palette entry: our own surfaces use
+   * --color-background and --color-primary-foreground. It exists because the
+   * `--color-*: initial` reset above also deleted Tailwind's `white`, and
+   * `text-white` on a third-party brand panel (the HesabPay sheet) then
+   * silently generated NOTHING — dark ink on dark navy, with no error
+   * anywhere. A missing colour utility fails invisibly; that is worth one
+   * declaration to prevent.
+   */
+  --color-white: #ffffff;
 
   /* ----------------------------------------------------------------
    * PRIMARY — deep green, taken from the approved mockup (#0F4A2F at

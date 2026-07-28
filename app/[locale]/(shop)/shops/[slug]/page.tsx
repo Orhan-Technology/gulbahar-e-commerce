@@ -13,7 +13,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { publicShopProducts, shopCategories } from '@/lib/db/queries/listing';
 import { shopDetail } from '@/lib/db/queries/shops';
-import { formatNumber, formatOpeningHours } from '@/lib/format';
+import { formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
@@ -102,7 +102,7 @@ export default async function ShopPage({
                 <dd>
                   {t('floorUnit', {
                     floor: formatNumber(shop.floor, locale),
-                    unit: shop.unitNumber ?? '—',
+                    unit: formatUnitNumber(shop.unitNumber, locale) || '—',
                   })}
                 </dd>
               </div>

@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { CreditCard, Store, Truck } from 'lucide-react';
 
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/offers';
 
 /**
@@ -29,7 +29,7 @@ export async function FulfilmentPanel({
   const pickupWhere = [
     brand('mallShort'),
     floor !== null ? common('floorName', { floor }) : null,
-    unitNumber,
+    formatUnitNumber(unitNumber, locale) || null,
   ]
     .filter(Boolean)
     .join(' · ');

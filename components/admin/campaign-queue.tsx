@@ -55,8 +55,20 @@ const BADGE: Record<
  * Requested rows sort to the top and carry the two decision buttons; everything
  * else is read-only with its performance. Rejection needs a written reason for the
  * same reason a shop rejection does — the shop has to know whether to rebook.
+ *
+ * `compact` is the revenue screen's dressing of the same rows: hairline-divided
+ * lines inside a panel rather than free-standing cards, and the booking reduced
+ * to one line of "slot · weeks · price". The ACTIONS are identical — the point
+ * of sharing this component is that the rejection-reason rule cannot drift
+ * between the two screens that offer the decision.
  */
-export function CampaignQueue({ campaigns }: { campaigns: CampaignRow[] }) {
+export function CampaignQueue({
+  campaigns,
+  variant = 'full',
+}: {
+  campaigns: CampaignRow[];
+  variant?: 'full' | 'compact';
+}) {
   const t = useTranslations('adminPromotions.campaigns');
 
   if (campaigns.length === 0) {
@@ -64,6 +76,16 @@ export function CampaignQueue({ campaigns }: { campaigns: CampaignRow[] }) {
       <p className="text-muted-foreground rounded-card border-border border border-dashed p-6 text-center text-sm">
         {t('none')}
       </p>
+    );
+  }
+
+  if (variant === 'compact') {
+    return (
+      <ul className="divide-border -m-5 divide-y">
+        {campaigns.map((campaign) => (
+          <CompactCampaignRow key={campaign.id} campaign={campaign} />
+        ))}
+      </ul>
     );
   }
 
@@ -76,32 +98,38 @@ export function CampaignQueue({ campaigns }: { campaigns: CampaignRow[] }) {
   );
 }
 
+function CompactCampaignRow({ campaign }: { campaign: CampaignRow }) {
+  const t = useTranslations('adminPromotions.campaigns');
+  const locale = useLocale();
+
+  return (
+    <li className="space-y-2.5 p-5">
+      <div>
+        <Link
+          href={`/admin/shops/${campaign.shopId}`}
+          className="hover:text-primary text-sm font-semibold"
+        >
+          {campaign.shopName}
+        </Link>
+        <p className="mt-1 text-xs text-neutral-500">
+          {[
+            campaign.slotName,
+            t('weeks', { n: campaign.weeks, count: formatNumber(campaign.weeks, locale) }),
+            formatCurrency(campaign.pricePaid, locale),
+          ].join(' · ')}
+        </p>
+      </div>
+      <CampaignDecision campaign={campaign} fill />
+    </li>
+  );
+}
+
 function CampaignCard({ campaign }: { campaign: CampaignRow }) {
   const t = useTranslations('adminPromotions.campaigns');
   const locale = useLocale();
-  const router = useRouter();
-
-  const [pending, startTransition] = React.useTransition();
-  const [rejecting, setRejecting] = React.useState(false);
-  const [reason, setReason] = React.useState('');
 
   const ctr = campaign.impressions > 0 ? campaign.clicks / campaign.impressions : 0;
   const decidable = campaign.status === 'requested';
-  const running = campaign.status === 'active' || campaign.status === 'approved';
-
-  function run(label: string, work: () => Promise<{ ok: boolean; error?: string }>) {
-    startTransition(async () => {
-      const result = await work();
-      if (!result.ok) {
-        toast.error(t(`errors.${result.error}` as never));
-        return;
-      }
-      toast.success(t(label as never));
-      setRejecting(false);
-      setReason('');
-      router.refresh();
-    });
-  }
 
   return (
     <li
@@ -126,7 +154,7 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
           )}
           <p className="text-muted-foreground text-xs">
             {formatDate(campaign.startsAt, locale)} — {formatDate(campaign.endsAt, locale)} ·{' '}
-            {t('weeks', { count: formatNumber(campaign.weeks, locale) })}
+            {t('weeks', { n: campaign.weeks, count: formatNumber(campaign.weeks, locale) })}
           </p>
         </div>
 
@@ -156,45 +184,85 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
         </p>
       )}
 
-      {(decidable || running) && (
-        <div className="flex flex-wrap gap-2">
-          {decidable && (
-            <>
-              <Button
-                size="sm"
-                disabled={pending}
-                onClick={() => run('approved', () => approveCampaign(campaign.id))}
-              >
-                <Check />
-                {t('approve')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={pending}
-                onClick={() => setRejecting(true)}
-                className="text-danger hover:bg-danger-bg"
-              >
-                <X />
-                {t('reject')}
-              </Button>
-            </>
-          )}
+      <CampaignDecision campaign={campaign} />
+    </li>
+  );
+}
+/**
+ * The approve / reject / end-early controls and the rejection dialog.
+ *
+ * Extracted so the revenue screen's compact queue and the promotions screen's
+ * full ledger share one implementation. A rejection carries a written reason
+ * because the shop has to know whether to rebook, and the five-character
+ * minimum is enforced here as well as in the action.
+ */
+function CampaignDecision({ campaign, fill = false }: { campaign: CampaignRow; fill?: boolean }) {
+  const t = useTranslations('adminPromotions.campaigns');
+  const router = useRouter();
 
-          {running && (
+  const [pending, startTransition] = React.useTransition();
+  const [rejecting, setRejecting] = React.useState(false);
+  const [reason, setReason] = React.useState('');
+
+  const decidable = campaign.status === 'requested';
+  const running = campaign.status === 'active' || campaign.status === 'approved';
+
+  function run(label: string, work: () => Promise<{ ok: boolean; error?: string }>) {
+    startTransition(async () => {
+      const result = await work();
+      if (!result.ok) {
+        toast.error(t(`errors.${result.error}` as never));
+        return;
+      }
+      toast.success(t(label as never));
+      setRejecting(false);
+      setReason('');
+      router.refresh();
+    });
+  }
+
+  if (!decidable && !running) return null;
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2">
+        {decidable && (
+          <>
             <Button
               size="sm"
-              variant="ghost"
               disabled={pending}
-              onClick={() => run('ended', () => endCampaign(campaign.id))}
-              className="hover:text-danger text-neutral-600"
+              onClick={() => run('approved', () => approveCampaign(campaign.id))}
+              className={fill ? 'flex-1' : undefined}
             >
-              <Square />
-              {t('endEarly')}
+              <Check />
+              {t('approve')}
             </Button>
-          )}
-        </div>
-      )}
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              onClick={() => setRejecting(true)}
+              className={`text-danger hover:bg-danger-bg ${fill ? 'flex-1' : ''}`}
+            >
+              <X />
+              {t('reject')}
+            </Button>
+          </>
+        )}
+
+        {running && (
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={pending}
+            onClick={() => run('ended', () => endCampaign(campaign.id))}
+            className="hover:text-danger text-neutral-600"
+          >
+            <Square />
+            {t('endEarly')}
+          </Button>
+        )}
+      </div>
 
       <Dialog open={rejecting} onOpenChange={setRejecting}>
         <DialogContent>
@@ -231,6 +299,6 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </li>
+    </>
   );
 }
