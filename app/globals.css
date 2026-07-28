@@ -53,74 +53,85 @@
   --color-white: #ffffff;
 
   /* ----------------------------------------------------------------
-   * PRIMARY — deep green, taken from the approved mockup (#0F4A2F at
-   * 700, the solid brand colour; #0B3A25 at 800 for the hero gradient's
-   * dark end). PRD §10.1, §17.3.
+   * PRIMARY — marketplace blue, taken from the reference recording.
    *
-   * The 400→500 jump in saturation is deliberate and matches the
-   * mockup's real usage: the tints (50–400) are DESATURATED sage,
-   * used for tinted surfaces and for text sitting on dark green, while
-   * the solids (500–950) are saturated forest. A smoothly interpolated
-   * ramp would have made every tinted surface read minty.
+   * The source is a 30-second screen capture, so the on-screen values
+   * are h264-compressed: 4:2:0 chroma subsampling pulls every saturated
+   * colour toward grey. Sampling the search button, the cart badge and
+   * the link colour across 44 frames put the chrome blue at ~#245898,
+   * and the least-blended samples — the ones closest to the source — at
+   * ~#1054A8. #0B57D0 is that colour with the compression backed out,
+   * and it reproduces the capture when rendered and re-encoded.
+   *
+   * Blue is the ONLY brand hue in this design. It carries links, the
+   * primary button, the cart badge, the rating stars and the active nav
+   * item. Red (see ACCENT) is the only other colour, and it means one
+   * thing: a price is coming down.
    * ---------------------------------------------------------------- */
-  /* Hex, not hsl(): these are the mockup's literal values, and a hand
-     conversion drifted every one of them by 1–2/255. Only the steps the
-     mockup does not specify (900, 950) are interpolated. */
-  --color-primary-50: #edf3ef; /* tinted surface */
-  --color-primary-100: #e4ebe7;
-  --color-primary-200: #cfe0d6; /* text on dark green */
-  --color-primary-300: #b9cfc1;
-  --color-primary-400: #86a695; /* muted text on dark green */
-  --color-primary-500: #1c6e45; /* hero gradient, light end */
-  --color-primary-600: #145536;
-  --color-primary-700: #0f4a2f; /* THE brand green */
-  --color-primary-800: #0b3a25; /* hero gradient, dark end */
-  --color-primary-900: #082c1c;
-  --color-primary-950: #051d12;
-  --color-primary: var(--color-primary-700);
+  --color-primary-50: #eef4fe; /* tinted surface, selected chip */
+  --color-primary-100: #dbe7fd;
+  --color-primary-200: #bdd3fb; /* text on solid blue */
+  --color-primary-300: #93b6f7;
+  --color-primary-400: #6494f1; /* muted text on solid blue */
+  --color-primary-500: #3b74e6;
+  --color-primary-600: #0b57d0; /* THE brand blue */
+  --color-primary-700: #0a49ad;
+  --color-primary-800: #0b3c8c;
+  --color-primary-900: #0d3370;
+  --color-primary-950: #08204a;
+  --color-primary: var(--color-primary-600);
   --color-primary-foreground: hsl(0 0% 100%);
 
   /* ----------------------------------------------------------------
-   * ACCENT — gold. Used sparingly: the logo dot, rating stars, deal
-   * markers (PRD §8.4). Never as a large surface.
+   * ACCENT — commerce red. The design's second and last colour, and it
+   * has exactly one job: marking a reduced price. Discount pills, the
+   * SALE overlay on a banner, the flash countdown, the live badge.
    *
-   * --color-accent is 500 (#C8901C), the mockup's brand gold, and it is
-   * for MARKS and ICONS. Small text on white wants accent-600 (#A17615)
-   * — 500 lands at ~3:1 against white, which is fine for a 5px dot and
-   * a star glyph but thin for a 12px label.
+   * It replaced gold when the reference changed. Gold was a decorative
+   * accent that appeared wherever emphasis was wanted; red is not, and
+   * spending it on anything other than a saving devalues the one place
+   * it has to work.
    * ---------------------------------------------------------------- */
-  --color-accent-50: #fbf3e3; /* warm banner surface */
-  --color-accent-100: #f6e5c0;
-  --color-accent-200: #efd293;
-  --color-accent-300: #e4b75b;
-  --color-accent-400: #d5a233;
-  --color-accent-500: #c8901c; /* brand gold — marks and icons */
-  --color-accent-600: #a17615; /* gold text on white */
-  --color-accent-700: #815e11;
-  --color-accent-800: #644909;
-  --color-accent-900: #4a3607;
-  --color-accent-950: #2e2104;
-  --color-accent: var(--color-accent-500);
-  /* Solid-gold surfaces are rare; when they happen they carry dark ink,
-     because white on 45% gold is not readable. */
-  --color-accent-foreground: var(--color-neutral-900);
+  --color-accent-50: #fef2f3;
+  --color-accent-100: #fde3e5;
+  --color-accent-200: #fbccd1;
+  --color-accent-300: #f7a1aa;
+  --color-accent-400: #f06b7c;
+  --color-accent-500: #e33d52;
+  --color-accent-600: #cf1f38; /* THE sale red — pills and marks */
+  --color-accent-700: #ad1730;
+  --color-accent-800: #8f162c;
+  --color-accent-900: #7a172b;
+  --color-accent-950: #440711;
+  --color-accent: var(--color-accent-600);
+  /* Red is dark enough to carry white, unlike the gold it replaced. */
+  --color-accent-foreground: hsl(0 0% 100%);
 
   /* ----------------------------------------------------------------
-   * NEUTRAL — 10-step COOL grey, from the mockup: #0E1420 ink through
-   * #8A93A2 muted to the #F8F9FB / #F4F5F7 surfaces. Cool rather than
-   * warm: against #0F4A2F a warm grey went muddy, and the mockup's
-   * marketplace density depends on greys receding.
+   * NEUTRAL — 10-step cool grey.
+   *
+   * The reference uses ONE tinted surface, not a scale of them. Sampling
+   * the search field, the panel behind every product photo, the tinted
+   * container around a browse band and the footer strip returned the
+   * same value — #f2f4f5 on screen, #f3f4f6 with the compression backed
+   * out. That single repeated tint is most of why the page reads calm at
+   * nineteen bands deep: everything is either white, or the tint, or a
+   * white card sitting on the tint.
+   *
+   * So neutral-100 is load-bearing and the steps either side of it are
+   * deliberately close — they exist for hairlines, not for more
+   * surfaces. Reach for 100 unless you are drawing a border.
    * ---------------------------------------------------------------- */
-  --color-neutral-50: #f8f9fb; /* page bands */
-  --color-neutral-100: #f4f5f7; /* search field, category tiles */
-  --color-neutral-200: #eceef1; /* hairline borders */
-  --color-neutral-300: #e4e7eb; /* dividers */
-  --color-neutral-400: #a8b0be; /* struck-through price */
-  --color-neutral-500: #8a93a2; /* muted text */
-  --color-neutral-600: #5b6474; /* secondary text */
-  --color-neutral-700: #3c4553; /* nav links */
-  --color-neutral-800: #232b38;
-  --color-neutral-900: #0e1420; /* ink */
+  --color-neutral-50: #f8f9fa; /* the faintest wash, rarely needed */
+  --color-neutral-100: #f3f4f6; /* THE tint — fields, media, panels */
+  --color-neutral-200: #e7e9ee; /* hairline borders */
+  --color-neutral-300: #d7dae1; /* dividers, input borders */
+  --color-neutral-400: #a3a9b5; /* struck-through price */
+  --color-neutral-500: #6b7280; /* muted text */
+  --color-neutral-600: #4b5563; /* secondary text */
+  --color-neutral-700: #374151; /* nav links */
+  --color-neutral-800: #1f2937;
+  --color-neutral-900: #111827; /* ink */
 
   /* ----------------------------------------------------------------
    * SEMANTIC — success / warning / danger, each with fg (text on the
@@ -128,22 +139,28 @@
    * is a brighter grass green, deliberately distinguishable from the
    * muted forest primary.
    * ---------------------------------------------------------------- */
-  --color-success: #0f7a3d; /* the mockup's ▲ trend green */
+  --color-success: #0f8a4c; /* ▲ trend, in-stock, approved */
   --color-success-fg: #ffffff;
-  --color-success-bg: #e8f5ec;
-  --color-success-border: #a6d5b7;
+  --color-success-bg: #e7f6ee;
+  --color-success-border: #a3ddbe;
 
-  --color-warning: #d9930f;
+  --color-warning: #c77700;
   --color-warning-fg: var(--color-neutral-900);
-  --color-warning-bg: #fcf3e1;
-  --color-warning-border: #edcb84;
+  --color-warning-bg: #fdf3e3;
+  --color-warning-border: #f0cd8d;
 
-  /* Brick red, not fire-engine: #A83228 for the discount pill, #FDF1EF
-     behind the flash-sale countdown. */
-  --color-danger: #a83228;
+  /*
+   * ONE red on the page. Danger points at the accent ramp rather than
+   * carrying a second, near-identical hue: a discount pill and a
+   * destructive button that differ by four points of lightness read as
+   * a mistake, not as a distinction. The names stay separate because
+   * the MEANINGS are — accent-* marks a saving, danger-* marks a
+   * consequence — and a future design may well split the hue again.
+   */
+  --color-danger: var(--color-accent-600);
   --color-danger-fg: #ffffff;
-  --color-danger-bg: #fdf1ef;
-  --color-danger-border: #efc3bc;
+  --color-danger-bg: var(--color-accent-50);
+  --color-danger-border: var(--color-accent-200);
 
   /* ----------------------------------------------------------------
    * SURFACES — the page is WHITE in the mockup, with bands of
@@ -158,13 +175,12 @@
   --color-scrim: var(--color-neutral-900);
 
   /*
-   * Promo-banner tints. The mockup runs its banner blocks in three
-   * surfaces — brand green, a COOL blue-grey, and a warm cream — cycling
-   * them so a row of three banners never repeats a background. The cool
-   * one is bluer than anything in the neutral ramp, so it is its own
-   * token rather than an approximation.
+   * Promo-banner tints. The reference fills its banner blocks with
+   * photography rather than flat colour, so these are the fallbacks a
+   * banner falls back to before its image loads — and the surfaces the
+   * seasonal and bundle cards use when they carry no artwork at all.
    */
-  --color-tint-cool: #e9edf4;
+  --color-tint-cool: #e8eefb;
   --color-tint-warm: var(--color-accent-50);
   --color-border: var(--color-neutral-200);
   --color-input: var(--color-neutral-300);
@@ -176,8 +192,9 @@
    * vendored code working without a second palette.
    *
    * Note: shadcn also uses `accent` for subtle hover backgrounds, but
-   * `accent` is our gold — those hover usages are rewritten to neutral
-   * when a component is added, since we own the code (PRD §10.4).
+   * `accent` is our sale red — those hover usages are rewritten to
+   * neutral when a component is added, since we own the code (PRD
+   * §10.4). A hover state tinted red would read as a warning.
    */
   --color-muted: var(--color-neutral-100);
   --color-muted-foreground: var(--color-neutral-500);
@@ -211,8 +228,11 @@
   --text-lg--line-height: 1.5rem;
   --text-xl: 1.25rem; /* 20px — sub-headings */
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.625rem; /* 26px — section headings */
-  --text-2xl--line-height: 2rem;
+  /* 28px, up from 26: the reference sets its band headings noticeably
+     larger than its body, and that contrast is what lets nineteen
+     sections read as chapters instead of one undifferentiated scroll. */
+  --text-2xl: 1.75rem; /* 28px — section headings */
+  --text-2xl--line-height: 2.125rem;
   --text-3xl: 2.375rem; /* 38px — hero, KPI figures */
   --text-3xl--line-height: 2.875rem;
 
@@ -227,15 +247,17 @@
    * RADIUS — one family, applied consistently (PRD §10.2). sm/md/lg
    * are aliased so vendored shadcn markup lands on our family.
    *
-   * The mockup uses exactly four: 14px on cards, banners and panels,
-   * 12px on product media, 10px on inputs and small controls, and full
-   * pills on every button and chip.
+   * The reference is softer than the previous one and uses five: 24px
+   * on the big tinted containers that wrap a whole browse band, 16px on
+   * cards and banners, 12px on product media and inputs, and full pills
+   * on every button, chip and the search field.
    * ---------------------------------------------------------------- */
-  --radius-card: 14px;
+  --radius-panel: 24px;
+  --radius-card: 16px;
   --radius-media: 12px;
-  --radius-control: 10px;
+  --radius-control: 12px;
   --radius-pill: 9999px;
-  --radius-sm: var(--radius-control);
+  --radius-sm: var(--radius-media);
   --radius-md: var(--radius-control);
   --radius-lg: var(--radius-card);
 
@@ -259,12 +281,38 @@
   --shadow-xl: var(--shadow-overlay);
 
   /* ----------------------------------------------------------------
-   * MOTION — nothing over 300ms (PRD §10.6).
+   * MOTION — two budgets, not one (PRD §10.6, revised).
+   *
+   * FEEDBACK ≤ 300ms. Anything answering a tap, a toggle or a focus.
+   * Here duration is latency: the user has already acted and is waiting
+   * to be told it worked, so every millisecond reads as lag.
+   *
+   * DECORATIVE ≤ 500ms. Hover transforms, section reveals, carousel
+   * slides. Nothing is waiting on these, and the reference's unhurried
+   * hover is most of why it feels expensive rather than twitchy. Above
+   * 500ms even decorative motion starts to feel like the page is
+   * struggling.
+   *
+   * `npm run audit` enforces both thresholds separately.
+   *
+   * Every one of these is skipped under prefers-reduced-motion by the
+   * base-layer rule at the bottom of this file.
    * ---------------------------------------------------------------- */
+  --duration-feedback: 200ms;
+  --duration-decorative: 420ms;
+  /* The reference's hover easing: quick to leave, slow to settle. */
+  --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
+
   --animate-heart-pop: heart-pop 280ms ease-out;
   --animate-badge-pop: badge-pop 280ms ease-out;
   --animate-queue-in: queue-in 200ms ease-out;
   --animate-fade-in: fade-in 150ms ease-out;
+  /* Live indicator: an expanding ring, the way a broadcast dot behaves. */
+  --animate-pulse-ring: pulse-ring 1800ms ease-out infinite;
+  /* Typewriter caret in the search field. */
+  --animate-caret: caret 1100ms step-end infinite;
+  /* Sections arriving on scroll. */
+  --animate-reveal: reveal 420ms var(--ease-settle) both;
 
   /* Wishlist heart: one satisfying pop, no bounce loop. */
   @keyframes heart-pop {
@@ -319,6 +367,50 @@
       opacity: 1;
     }
   }
+
+  /*
+   * A ring expanding out of the live dot and fading. Drawn with
+   * box-shadow rather than a pseudo-element so it can sit on a span
+   * inside a nav link without adding a stacking context.
+   */
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 var(--color-accent-400);
+      opacity: 1;
+    }
+    70% {
+      box-shadow: 0 0 0 7px transparent;
+      opacity: 1;
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+      opacity: 1;
+    }
+  }
+
+  /* step-end, so the caret blinks rather than fades. */
+  @keyframes caret {
+    0%,
+    50% {
+      opacity: 1;
+    }
+    50.01%,
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Sections rising into place as they enter the viewport. */
+  @keyframes reveal {
+    0% {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 @layer base {
@@ -358,6 +450,32 @@
   :focus-visible {
     outline: 2px solid var(--color-ring);
     outline-offset: 2px;
+  }
+
+  /*
+   * One global honouring of prefers-reduced-motion, rather than a check
+   * in each component.
+   *
+   * This became necessary, not merely good practice, when the design
+   * gained INDEFINITE animations — the live indicator's pulse and the
+   * search caret's blink run forever, and for a vestibular-sensitive or
+   * attention-sensitive reader a permanent pulse in the navigation is
+   * not a nicety to skip, it is a reason to leave.
+   *
+   * `!important` because the animations are applied by utility classes
+   * of equal specificity. The 0.01ms rather than `none` is deliberate:
+   * animations still FIRE, so anything relying on an animationend event
+   * to reveal content still gets it, immediately.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 

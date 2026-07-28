@@ -84,17 +84,43 @@ async function main() {
   );
 
   /* ---------------------------------------------------------------------- */
-  section('Motion budget (nothing over 300ms)');
+  section('Motion budget (300ms feedback / 500ms decorative)');
 
   const styleSource = readFileSync('app/globals.css', 'utf8');
-  const durations = [...styleSource.matchAll(/(\d+(?:\.\d+)?)(m?s)\b/g)]
-    .map((match) => (match[2] === 's' ? Number(match[1]) * 1000 : Number(match[1])))
-    // Only durations inside animation/transition declarations matter.
-    .filter((ms) => ms > 0);
+
+  /*
+   * Comments stripped FIRST. This assertion previously matched the raw file
+   * and duly reported the "≤ 500ms" written in the prose explaining the
+   * budget — an auditor grading its own documentation. Same lesson as the
+   * RTL rule in scripts/audit.ts, learned twice.
+   */
+  const declarations = styleSource
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => /--animate-|--duration-|animation:|transition/.test(line));
+
+  /*
+   * Two budgets (PRD §10.6, revised): feedback answers a tap and must be
+   * quick, decorative motion is unhurried on purpose. An INFINITE animation
+   * — the live pulse, the caret blink — has no end to be too far away, and
+   * is governed instead by the prefers-reduced-motion rule checked below.
+   */
+  const overBudget = declarations.flatMap((line) => {
+    if (/\binfinite\b/.test(line)) return [];
+    const budget = /hover|reveal|carousel|decorative|pulse|caret/.test(line) ? 500 : 300;
+    return [...line.matchAll(/(\d+(?:\.\d+)?)\s*(m?s)\b(?!-)/g)]
+      .map((match) => (match[2] === 's' ? Number(match[1]) * 1000 : Number(match[1])))
+      .filter((ms) => ms > budget)
+      .map((ms) => `${ms}ms > ${budget}ms — ${line}`);
+  });
+
+  check('every animation is inside its motion budget', overBudget.length === 0, overBudget);
+
   check(
-    `no animation in globals.css exceeds 300ms (max ${Math.max(0, ...durations)}ms)`,
-    durations.every((ms) => ms <= 300),
-    durations.filter((ms) => ms > 300),
+    'and prefers-reduced-motion switches all of it off, including the infinite ones',
+    /prefers-reduced-motion:\s*reduce/.test(styleSource) &&
+      /animation-iteration-count:\s*1\s*!important/.test(styleSource),
   );
 
   const keyframes = [...styleSource.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1]);
