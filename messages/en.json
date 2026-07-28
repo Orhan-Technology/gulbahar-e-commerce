@@ -560,7 +560,9 @@
     "promoPickupBody": "From the shop, at Gulbahar Center",
     "promoOffersTitle": "This week’s offers",
     "promoOffersBody": "Before they end",
-    "promoAction": "Shop now"
+    "promoAction": "Shop now",
+    "heroSlideNumber": "Slide {number}",
+    "browseHeading": "Shop by department"
   },
   "offers": {
     "title": "Offers",

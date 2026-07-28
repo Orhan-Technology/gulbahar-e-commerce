@@ -299,12 +299,27 @@ function motionBudget(lines: string[], index: number): number {
   return DECORATIVE.test(window) ? DECORATIVE_MS : FEEDBACK_MS;
 }
 
+/*
+ * Durations are matched in the STRIPPED source and the decorative marker in the
+ * RAW source, which looks inconsistent and is deliberate.
+ *
+ * Comments are stripped everywhere else in this file because an auditor that
+ * reads its own explanatory prose reports the words in it — twelve of the first
+ * fourteen findings this script ever produced were comments containing
+ * "right-to-left". But the marker is the one case where a comment is the
+ * SIGNAL: `// motion-decorative: …` above a transition is a developer claiming
+ * the looser budget in the place a reviewer will read it. Strip that and the
+ * opt-in silently cannot work.
+ */
 for (const file of [...sourceFiles, ...walk('app', /\.css$/)]) {
-  const lines = stripComments(readFileSync(file, 'utf8'));
+  const source = readFileSync(file, 'utf8');
+  const lines = stripComments(source);
+  const raw = source.split('\n');
+
   lines.forEach((line, index) => {
     // An infinite animation has no end to be too far away.
     if (/\binfinite\b/.test(line)) return;
-    const budget = motionBudget(lines, index);
+    const budget = Math.max(motionBudget(lines, index), motionBudget(raw, index));
 
     // Tailwind duration utilities.
     for (const match of line.matchAll(/duration-(\d+)/g)) {

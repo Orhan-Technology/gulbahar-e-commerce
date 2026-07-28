@@ -560,7 +560,9 @@
     "promoPickupBody": "از دکان، در مرکز گلبهار",
     "promoOffersTitle": "تخفیف‌های این هفته",
     "promoOffersBody": "پیش از تمام شدن",
-    "promoAction": "خرید کنید"
+    "promoAction": "خرید کنید",
+    "heroSlideNumber": "اسلاید {number}",
+    "browseHeading": "خرید بر اساس بخش"
   },
   "offers": {
     "title": "تخفیف‌ها",

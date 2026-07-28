@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { SectionHeader } from '@/components/custom/section-header';
+import { BrowseBand, BrowseBandSkeleton } from '@/components/shop/home/browse-band';
 import { CategoryRail, CategoryRailSkeleton } from '@/components/shop/home/category-rail';
 import { CategoryTiles, CategoryTilesSkeleton } from '@/components/shop/home/category-tiles';
 import { DealsRail, DealsRailSkeleton } from '@/components/shop/home/deals-rail';
@@ -11,6 +12,7 @@ import { PromoStrip, PromoStripSkeleton } from '@/components/shop/home/promo-str
 import { SellerCta } from '@/components/shop/home/seller-cta';
 import { ShopSpotlight, ShopSpotlightSkeleton } from '@/components/shop/home/shop-spotlight';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
+import { Reveal } from '@/components/shop/reveal';
 import { currentUser } from '@/lib/auth/guards';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { newArrivals } from '@/lib/db/queries/products';
@@ -66,37 +68,57 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <PromoStrip />
       </Suspense>
 
-      {LEAD_RAILS.map((slug) => (
-        <Suspense key={slug} fallback={<CategoryRailSkeleton />}>
-          <CategoryRail slug={slug} />
+      <Reveal>
+        <Suspense fallback={<BrowseBandSkeleton />}>
+          <BrowseBand />
         </Suspense>
+      </Reveal>
+
+      {LEAD_RAILS.map((slug) => (
+        <Reveal key={slug}>
+          <Suspense fallback={<CategoryRailSkeleton />}>
+            <CategoryRail slug={slug} />
+          </Suspense>
+        </Reveal>
       ))}
 
-      <Suspense fallback={<FeaturedShopsSkeleton />}>
-        <FeaturedShops />
-      </Suspense>
+      <Reveal>
+        <Suspense fallback={<FeaturedShopsSkeleton />}>
+          <FeaturedShops />
+        </Suspense>
+      </Reveal>
 
       {MID_RAILS.map((slug) => (
-        <Suspense key={slug} fallback={<CategoryRailSkeleton />}>
-          <CategoryRail slug={slug} />
-        </Suspense>
+        <Reveal key={slug}>
+          <Suspense fallback={<CategoryRailSkeleton />}>
+            <CategoryRail slug={slug} />
+          </Suspense>
+        </Reveal>
       ))}
 
-      <Suspense fallback={<ShopSpotlightSkeleton />}>
-        <ShopSpotlight />
-      </Suspense>
+      <Reveal>
+        <Suspense fallback={<ShopSpotlightSkeleton />}>
+          <ShopSpotlight />
+        </Suspense>
+      </Reveal>
 
       {TAIL_RAILS.map((slug) => (
-        <Suspense key={slug} fallback={<CategoryRailSkeleton />}>
-          <CategoryRail slug={slug} />
-        </Suspense>
+        <Reveal key={slug}>
+          <Suspense fallback={<CategoryRailSkeleton />}>
+            <CategoryRail slug={slug} />
+          </Suspense>
+        </Reveal>
       ))}
 
-      <Suspense fallback={<ProductRowSkeleton title={t('newArrivals')} />}>
-        <NewArrivalsRow />
-      </Suspense>
+      <Reveal>
+        <Suspense fallback={<ProductRowSkeleton title={t('newArrivals')} />}>
+          <NewArrivalsRow />
+        </Suspense>
+      </Reveal>
 
-      <SellerCta />
+      <Reveal>
+        <SellerCta />
+      </Reveal>
     </div>
   );
 }
