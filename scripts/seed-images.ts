@@ -43,15 +43,24 @@ const LATIN_FONT = 'DejaVu Sans';
  * catalogue, which made gold read as a second brand colour rather than a highlight
  * (and carries white text less cleanly). One in eight keeps it as punctuation.
  */
+/*
+ * Monogram gradients for shops with no uploaded logo. Every one is a shade of
+ * the brand blue, plus one of the sale red — a directory of fourteen shops in a
+ * single flat colour reads as unfinished, and these are the only place in the
+ * product where a colour is chosen for variety rather than for meaning.
+ *
+ * All are dark enough to carry white text at 700 weight, which is the only
+ * hard constraint: the monogram IS the logo for these shops.
+ */
 const PALETTES = [
-  { from: '#1f613f', to: '#12351f' }, // primary 700 → 900
-  { from: '#2d6b47', to: '#14532d' },
-  { from: '#3a5c4a', to: '#1c3327' },
-  { from: '#265840', to: '#102e1f' },
-  { from: '#1a5c36', to: '#0f3f24' },
-  { from: '#34664b', to: '#173a28' },
-  { from: '#20553a', to: '#0d2f1e' },
-  { from: '#8a6408', to: '#4d3805' }, // accent gold, darkened for white text
+  { from: '#0b57d0', to: '#0b3c8c' }, // primary 600 → 800
+  { from: '#0a49ad', to: '#0d3370' },
+  { from: '#2f5aa8', to: '#132f66' },
+  { from: '#1d4fb5', to: '#0a2a63' },
+  { from: '#3b74e6', to: '#0b57d0' },
+  { from: '#164a9e', to: '#0d2c5e' },
+  { from: '#27599c', to: '#10305f' },
+  { from: '#a51e3a', to: '#5c1020' }, // sale red, darkened for white text
 ];
 
 type ShopSeed = {

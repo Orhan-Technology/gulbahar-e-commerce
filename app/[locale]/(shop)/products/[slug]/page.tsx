@@ -27,7 +27,7 @@ import {
   reviewableOrderItem,
   userReviewForProduct,
 } from '@/lib/db/queries/reviews';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
@@ -154,7 +154,7 @@ export default async function ProductPage({
                   <MapPin className="h-3 w-3 shrink-0" aria-hidden />
                   {t('shopFloorUnit', {
                     floor: formatNumber(product.shopFloor, locale),
-                    unit: product.shopUnitNumber ?? '—',
+                    unit: formatUnitNumber(product.shopUnitNumber, locale) || '—',
                   })}
                 </span>
               )}
