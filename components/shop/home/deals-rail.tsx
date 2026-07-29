@@ -18,7 +18,7 @@ import { activeOffers, discountedProducts, wishlistedProductIds } from '@/lib/db
  */
 export async function DealsRail() {
   const t = await getTranslations('home');
-  const [items, offers] = await Promise.all([discountedProducts(5), activeOffers(1)]);
+  const [items, offers] = await Promise.all([discountedProducts(12), activeOffers(1)]);
 
   if (items.length === 0) return null;
 
@@ -51,7 +51,7 @@ export async function DealsRail() {
           ) : undefined
         }
       />
-      <ProductGrid items={items} savedIds={saved} layout="row" priority />
+      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('dealsToday')} priority />
     </section>
   );
 }
@@ -60,7 +60,7 @@ export function DealsRailSkeleton() {
   return (
     <section className="space-y-5">
       <SectionHeaderSkeleton />
-      <ProductGridSkeleton count={5} layout="row" />
+      <ProductGridSkeleton count={8} layout="row" />
     </section>
   );
 }

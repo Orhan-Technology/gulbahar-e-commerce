@@ -598,7 +598,9 @@
     "promoOffersBody": "پیش از تمام شدن",
     "promoAction": "خرید کنید",
     "heroSlideNumber": "اسلاید {number}",
-    "browseHeading": "خرید بر اساس بخش"
+    "browseHeading": "خرید بر اساس بخش",
+    "yourShopHere": "فروشگاه شما اینجا",
+    "yourShopHereHint": "جایگاه تبلیغاتی بخرید"
   },
   "offers": {
     "title": "تخفیف‌ها",

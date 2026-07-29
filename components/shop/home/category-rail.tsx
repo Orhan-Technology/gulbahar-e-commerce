@@ -25,7 +25,10 @@ export async function CategoryRail({
 }) {
   const locale = await getLocale();
   const t = await getTranslations('home');
-  const [items, category] = await Promise.all([categoryBestsellers(slug, 5), categoryBySlug(slug)]);
+  const [items, category] = await Promise.all([// Twelve, not five: at desktop a rail shows five and a bit, so a five-item
+    // feed makes the peek, the arrows and the scrollbar all promise something
+    // that is not there.
+    categoryBestsellers(slug, 12), categoryBySlug(slug)]);
 
   // Both must be present: an unknown slug is a coding mistake, not an empty
   // state, and rendering "Bestsellers in undefined" would hide it.
@@ -43,7 +46,13 @@ export async function CategoryRail({
         title={t('bestsellersIn', { category: pickLocale(category.name, locale) })}
         href={`/categories/${slug}`}
       />
-      <ProductGrid items={items} savedIds={saved} layout="row" priority={priority} />
+      <ProductGrid
+        items={items}
+        savedIds={saved}
+        layout="row"
+        railLabel={pickLocale(category.name, locale)}
+        priority={priority}
+      />
     </section>
   );
 }
@@ -52,7 +61,7 @@ export function CategoryRailSkeleton() {
   return (
     <section className="space-y-5">
       <SectionHeaderSkeleton />
-      <ProductGridSkeleton count={5} layout="row" />
+      <ProductGridSkeleton count={8} layout="row" />
     </section>
   );
 }

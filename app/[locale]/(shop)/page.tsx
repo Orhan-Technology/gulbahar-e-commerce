@@ -126,7 +126,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 async function NewArrivalsRow() {
   const t = await getTranslations('home');
   const locale = await getLocale();
-  const [items, user] = await Promise.all([newArrivals(locale, 10), currentUser()]);
+  const [items, user] = await Promise.all([newArrivals(locale, 14), currentUser()]);
   const saved = await wishlistedProductIds(
     user?.id,
     items.map((item) => item.id),
@@ -141,7 +141,7 @@ async function NewArrivalsRow() {
         href="/products?sort=newest"
         description={t('newArrivalsHint')}
       />
-      <ProductGrid items={items} savedIds={saved} layout="row" />
+      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('newArrivals')} />
     </section>
   );
 }
@@ -150,7 +150,7 @@ function ProductRowSkeleton({ title }: { title: string }) {
   return (
     <section className="space-y-5">
       <SectionHeader title={title} />
-      <ProductGridSkeleton count={5} layout="row" />
+      <ProductGridSkeleton count={8} layout="row" />
     </section>
   );
 }

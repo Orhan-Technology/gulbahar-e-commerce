@@ -598,7 +598,9 @@
     "promoOffersBody": "Before they end",
     "promoAction": "Shop now",
     "heroSlideNumber": "Slide {number}",
-    "browseHeading": "Shop by department"
+    "browseHeading": "Shop by department",
+    "yourShopHere": "Your shop here",
+    "yourShopHereHint": "Buy this placement"
   },
   "offers": {
     "title": "Offers",

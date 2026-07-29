@@ -300,7 +300,7 @@ async function RelatedProducts({
   return (
     <section className="mt-10 space-y-5">
       <SectionHeader title={t('relatedHeading')} description={t('relatedHint')} />
-      <ProductGrid items={items} savedIds={saved} layout="row" />
+      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('relatedHeading')} />
     </section>
   );
 }

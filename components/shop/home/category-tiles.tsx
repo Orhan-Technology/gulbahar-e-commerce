@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
 import { categoryTree } from '@/lib/db/queries/shops';
 import { formatNumber } from '@/lib/format';
+import { Rail } from '@/components/shop/rail';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -51,16 +52,16 @@ export async function CategoryTiles() {
     <section className="space-y-5">
       <SectionHeader title={t('shopByCategory')} href="/categories" />
 
-      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:px-0 lg:grid-cols-8">
+      <Rail label={t('shopByCategory')} size="tile">
         {tree.map((category) => {
           const Icon = ICONS[category.slug] ?? Sparkles;
           return (
             <Link
               key={category.id}
               href={`/categories/${category.slug}`}
-              className="pressable group flex w-24 shrink-0 flex-col items-center gap-3 text-center sm:w-auto"
+              className="pressable group flex flex-col items-center gap-3 text-center"
             >
-              <span className="rounded-pill relative flex aspect-square w-full max-w-24 items-center justify-center overflow-hidden bg-neutral-100 transition-transform duration-150 group-hover:scale-105">
+              <span className="rounded-pill relative flex aspect-square w-full items-center justify-center overflow-hidden bg-neutral-100 transition-transform duration-150 group-hover:scale-105">
                 {category.imagePath ? (
                   <Image
                     src={category.imagePath}
@@ -96,7 +97,7 @@ export async function CategoryTiles() {
             </Link>
           );
         })}
-      </div>
+      </Rail>
     </section>
   );
 }
@@ -105,10 +106,10 @@ export function CategoryTilesSkeleton() {
   return (
     <section className="space-y-5">
       <SectionHeaderSkeleton />
-      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-6 sm:px-0 lg:grid-cols-8">
+      <div className="-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [&>*]:w-[22%] [&>*]:shrink-0 sm:[&>*]:w-[14%] lg:[&>*]:w-[11%]">
         {Array.from({ length: 8 }, (_, index) => (
-          <div key={index} className="flex w-24 shrink-0 flex-col items-center gap-3 sm:w-auto">
-            <Skeleton className="rounded-pill aspect-square w-full max-w-24" />
+          <div key={index} className="flex flex-col items-center gap-3">
+            <Skeleton className="rounded-pill aspect-square w-full" />
             <Skeleton className="h-3 w-16" />
             <Skeleton className="h-3 w-10" />
           </div>

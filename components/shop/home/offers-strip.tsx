@@ -7,6 +7,7 @@ import { OfferCountdown } from '@/components/shop/home/offer-countdown';
 import { formatCurrency, formatPercent } from '@/lib/format';
 import { pickLocale } from '@/lib/db/localized';
 import { activeOffers } from '@/lib/db/queries/home';
+import { Rail } from '@/components/shop/rail';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -25,12 +26,12 @@ export async function OffersStrip() {
     <section className="space-y-3">
       <SectionHeader title={t('activeOffers')} href="/offers" />
 
-      <div className="-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+      <Rail label={t('activeOffers')} size="panel">
         {offers.map((offer) => (
           <Link
             key={offer.id}
             href={`/shops/${offer.shopSlug}`}
-            className="rounded-card border-accent-200 bg-accent-50 shadow-card hover:shadow-overlay flex w-56 shrink-0 flex-col gap-2 border p-3 transition-shadow duration-150"
+            className="pressable rounded-card border-accent-200 bg-accent-50 shadow-card hover:shadow-overlay flex flex-col gap-2 border p-3 transition-[box-shadow,scale] duration-150 ease-out"
           >
             <div className="flex items-center justify-between gap-2">
               <span className="rounded-control bg-accent-100 text-accent-800 flex h-8 w-8 items-center justify-center">
@@ -56,7 +57,7 @@ export async function OffersStrip() {
             />
           </Link>
         ))}
-      </div>
+      </Rail>
     </section>
   );
 }
@@ -65,7 +66,7 @@ export function OffersStripSkeleton() {
   return (
     <section className="space-y-3">
       <SectionHeaderSkeleton />
-      <div className="-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+      <div className="-mx-4 flex scrollbar-none gap-3 overflow-x-auto px-4 sm:mx-0 sm:px-0 [&>*]:w-[82%] [&>*]:shrink-0 sm:[&>*]:w-[46%] lg:[&>*]:w-[31%]">
         {Array.from({ length: 4 }, (_, index) => (
           <div
             key={index}
