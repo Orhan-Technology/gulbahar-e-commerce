@@ -1484,27 +1484,63 @@
   },
   "adminOverview": {
     "title": "نمای کل",
-    "waitingSummary": "{count} مورد در انتظار تصمیم شماست.",
+    "waitingSummary": "{n, plural, one {# مورد در انتظار تصمیم شماست} other {{count} مورد در انتظار تصمیم شماست}}",
     "nothingWaiting": "چیزی در انتظار تصمیم نیست.",
-    "queuesHeading": "در انتظار تصمیم",
-    "queues": {
-      "shops": "دکان در انتظار تایید",
-      "campaigns": "درخواست جایگاه",
-      "reviews": "نظر گزارش‌شده",
-      "orders": "سفارش در انتظار تایید دکان"
+    "queue": {
+      "heading": "در انتظار تصمیم شما",
+      "allClearTitle": "هیچ چیز در انتظار نیست",
+      "allClearBody": "هر درخواست تایید، هر جایگاه و هر گزارش رسیدگی شده است.",
+      "showMore": "{n, plural, one {# مورد دیگر} other {{count} مورد دیگر}}",
+      "pendingShop": "درخواست تایید دکان — {shop}",
+      "pendingShopSub": "دسته‌بندی: {category}",
+      "requestedCampaign": "درخواست جایگاه — {shop}",
+      "requestedCampaignSub": "{slot} · {price}",
+      "reportedReview": "نظر گزارش‌شده روی «{product}»",
+      "reportedReviewSub": "امتیاز {rating} از ۵ — نیاز به بررسی دارد",
+      "staleOrder": "سفارش معطل — {reference}",
+      "staleOrderSub": "بیش از ۴۸ ساعت بدون پاسخ دکان {shop}",
+      "approve": "تایید",
+      "reject": "رد",
+      "undo": "لغو",
+      "shopApprovedToast": "دکان تایید شد",
+      "shopRejectedToast": "درخواست دکان رد شد",
+      "campaignApprovedToast": "جایگاه تایید شد",
+      "campaignRejectedToast": "درخواست جایگاه رد شد",
+      "rejectShopTitle": "رد درخواست دکان",
+      "rejectShopBody": "دلیل رد برای صاحب دکان فرستاده می‌شود تا بتواند اصلاح و دوباره ارسال کند.",
+      "rejectCampaignTitle": "رد درخواست جایگاه",
+      "rejectCampaignBody": "دلیل رد برای دکان فرستاده می‌شود.",
+      "reasonLabel": "دلیل",
+      "reasonPlaceholder": "مثلاً: عکس‌های دکان کیفیت کافی ندارند",
+      "reasonNote": "این متن عیناً برای دکان فرستاده می‌شود.",
+      "cancel": "انصراف",
+      "confirmReject": "رد کن",
+      "errors": {
+        "forbidden": "اجازهٔ این کار را ندارید.",
+        "invalid_input": "اطلاعات نامعتبر است.",
+        "not_pending": "این مورد دیگر در انتظار نیست.",
+        "reason_too_short": "دلیل باید کامل‌تر باشد."
+      }
     },
-    "healthHeading": "وضعیت پلتفرم — ۳۰ روز گذشته",
-    "gmv": "ارزش کل فروش",
-    "orders": "سفارش‌های تحویل‌شده",
-    "promotionRevenue": "درآمد از تبلیغات",
-    "activeShops": "دکان فعال",
-    "healthNote": "ارزش فروش از سفارش‌های تحویل‌شده حساب می‌شود؛ درآمد تبلیغات از جایگاه‌های فروخته‌شده.",
-    "shopsHeading": "دکان‌ها بر اساس وضعیت",
-    "shopStatus": {
-      "approved": "تاییدشده",
-      "pending": "در انتظار",
-      "suspended": "معطل",
-      "closed": "بسته"
+    "revenue": {
+      "heading": "درآمد تبلیغات این ماه",
+      "viewAll": "گزارش کامل",
+      "vsLastMonth": "ماه گذشته {amount}",
+      "firstMonth": "اولین ماه فروش جایگاه",
+      "occupancy": "{n, plural, one {# جایگاه از {total} فروخته شده} other {{sold} جایگاه از {total} فروخته شده}}"
+    },
+    "health": {
+      "heading": "وضعیت پلتفرم — ۳۰ روز گذشته",
+      "ordersPerDay": "سفارش در روز",
+      "ordersTotal": "{n, plural, one {# سفارش در این دوره} other {{count} سفارش در این دوره}}",
+      "activeShops": "دکان فعال",
+      "ofTotalShops": "از {total} دکان ثبت‌شده",
+      "newCustomers": "مشتری تازه",
+      "vsPrevious": "نسبت به دورهٔ قبل",
+      "gmvHeading": "ارزش کل فروش",
+      "gmvHint": "از سفارش‌های تحویل‌شده",
+      "leaderboardHeading": "پرفروش‌ترین دکان‌ها",
+      "leaderboardOrders": "{n, plural, one {# سفارش} other {{count} سفارش}}"
     }
   },
   "adminShops": {

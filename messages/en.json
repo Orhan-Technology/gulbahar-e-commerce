@@ -1484,27 +1484,63 @@
   },
   "adminOverview": {
     "title": "Overview",
-    "waitingSummary": "{count} items are waiting on your decision.",
+    "waitingSummary": "{n, plural, one {# item is waiting on you} other {{count} items are waiting on you}}",
     "nothingWaiting": "Nothing is waiting on a decision.",
-    "queuesHeading": "Needs a decision",
-    "queues": {
-      "shops": "shops awaiting approval",
-      "campaigns": "slot requests",
-      "reviews": "reported reviews",
-      "orders": "orders awaiting a shop"
+    "queue": {
+      "heading": "Waiting on you",
+      "allClearTitle": "Nothing is waiting",
+      "allClearBody": "Every approval request, placement and report has been dealt with.",
+      "showMore": "{n, plural, one {# more item} other {{count} more items}}",
+      "pendingShop": "Shop approval — {shop}",
+      "pendingShopSub": "Category: {category}",
+      "requestedCampaign": "Placement request — {shop}",
+      "requestedCampaignSub": "{slot} · {price}",
+      "reportedReview": "Reported review on \"{product}\"",
+      "reportedReviewSub": "Rated {rating} out of 5 — needs a look",
+      "staleOrder": "Stalled order — {reference}",
+      "staleOrderSub": "Over 48 hours with no response from {shop}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "undo": "Undo",
+      "shopApprovedToast": "Shop approved",
+      "shopRejectedToast": "Shop request rejected",
+      "campaignApprovedToast": "Placement approved",
+      "campaignRejectedToast": "Placement request rejected",
+      "rejectShopTitle": "Reject this shop",
+      "rejectShopBody": "The reason is sent to the owner so they can fix it and resubmit.",
+      "rejectCampaignTitle": "Reject this placement",
+      "rejectCampaignBody": "The reason is sent to the shop.",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "e.g. shop photographs are not clear enough",
+      "reasonNote": "This text is sent to the shop verbatim.",
+      "cancel": "Cancel",
+      "confirmReject": "Reject",
+      "errors": {
+        "forbidden": "You are not allowed to do that.",
+        "invalid_input": "That input is not valid.",
+        "not_pending": "This is no longer waiting.",
+        "reason_too_short": "The reason needs to be more complete."
+      }
     },
-    "healthHeading": "Platform health — last 30 days",
-    "gmv": "Gross merchandise value",
-    "orders": "Fulfilled orders",
-    "promotionRevenue": "Promotion revenue",
-    "activeShops": "Active shops",
-    "healthNote": "GMV counts fulfilled orders; promotion revenue counts sold placements.",
-    "shopsHeading": "Shops by status",
-    "shopStatus": {
-      "approved": "Approved",
-      "pending": "Pending",
-      "suspended": "Suspended",
-      "closed": "Closed"
+    "revenue": {
+      "heading": "Promotion income this month",
+      "viewAll": "Full report",
+      "vsLastMonth": "Last month {amount}",
+      "firstMonth": "First month of placement sales",
+      "occupancy": "{n, plural, one {# of {total} places sold} other {{sold} of {total} places sold}}"
+    },
+    "health": {
+      "heading": "Platform health — last 30 days",
+      "ordersPerDay": "Orders per day",
+      "ordersTotal": "{n, plural, one {# order this period} other {{count} orders this period}}",
+      "activeShops": "Active shops",
+      "ofTotalShops": "of {total} registered",
+      "newCustomers": "New customers",
+      "vsPrevious": "vs previous period",
+      "gmvHeading": "Gross merchandise value",
+      "gmvHint": "From fulfilled orders",
+      "leaderboardHeading": "Top shops by revenue",
+      "leaderboardOrders": "{n, plural, one {# order} other {{count} orders}}"
     }
   },
   "adminShops": {

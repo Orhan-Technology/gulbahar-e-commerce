@@ -220,6 +220,16 @@ Notification preferences, staff users, language.
 
 ## 7. Functional requirements — Admin
 
+### 7.0 Overview
+
+Answers two questions, in the order the mall owner asks them: **is anything waiting on me**, and **what is the platform earning**. Everything else is third.
+
+1. **Action centre** — one queue across four tables: shops pending approval, campaigns awaiting approval, reported reviews, and orders stalled at `placed` for over 48 hours. Shop and campaign rows carry **approve and reject on the row**; approval is optimistic with a real undo window (§13.2), rejection is a dialog because it is terminal and its reason reaches the tenant verbatim.
+2. **Revenue block** — promotion income for the calendar month as a headline, with a ▲/▼ against last month, slot occupancy as a fill bar, and the three placements earning most. Links to §7.3.
+3. **Platform health** — orders per day, active shops, new customers, a 30-day GMV chart, and the top five shops by revenue.
+
+Density rule for this surface: **at most three cards to a row, and no tables** — tables live on the section pages.
+
 ### 7.1 Shop management
 
 - Pending queue with review interface; approve, or reject with a visible reason

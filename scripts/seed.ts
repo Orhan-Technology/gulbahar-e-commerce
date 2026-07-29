@@ -1010,6 +1010,36 @@ async function main() {
 
   await db.insert(notifications).values(notificationValues);
 
+  // ---------------------------------------------------------- stalled order
+  /*
+   * Age the OLDEST still-placed order past the admin's 48-hour staleness line
+   * (PRD §7.2), so the admin action centre demonstrates all four of its row
+   * types rather than three plus a branch that never fires.
+   *
+   * A post-update, not a change to how orders are dated: every `placed` order
+   * lands inside the last day by construction, and reaching back into that
+   * generator to make one of them older would move a draw and renumber every
+   * order reference in the runbook. This touches one timestamp on one row that
+   * is already chosen deterministically — the oldest — and drags its `placed`
+   * event along with it so the timeline stays honest.
+   */
+  const STALE_DAYS = 3;
+  const [stalest] = await db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(eq(orders.status, 'placed'))
+    .orderBy(orders.createdAt)
+    .limit(1);
+
+  if (stalest) {
+    const stalledAt = new Date(NOW.getTime() - STALE_DAYS * DAY_MS);
+    await db.update(orders).set({ createdAt: stalledAt }).where(eq(orders.id, stalest.id));
+    await db
+      .update(orderEvents)
+      .set({ createdAt: stalledAt })
+      .where(eq(orderEvents.orderId, stalest.id));
+  }
+
   // --------------------------------------------------------- product views
   /*
    * Daily view counts, spread across the last 35 days so the dashboard's
