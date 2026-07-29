@@ -47,7 +47,18 @@ export default async function OrderDetailPage({
       </div>
 
       <section className="rounded-card border-border bg-card border p-4">
-        <OrderStatusTimeline status={order.status} />
+        {/*
+          Times come from the immutable order_events chain, not from guesses:
+          each transition wrote a row when it happened (lib/actions/shop-orders.ts),
+          so the stepper is a record rather than an illustration.
+        */}
+        <OrderStatusTimeline
+          status={order.status}
+          orientation="vertical"
+          timestamps={Object.fromEntries(
+            order.events.map((event) => [event.toStatus, formatDateTime(event.createdAt, locale)]),
+          )}
+        />
       </section>
 
       {/* The append-only event chain, which is the audit trail (PRD §14) */}

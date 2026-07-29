@@ -822,7 +822,16 @@
     "errors": {
       "requires_auth": "وارد شوید",
       "not_found": "این سفارش پیدا نشد"
-    }
+    },
+    "filters": {
+      "all": "همه",
+      "active": "در جریان",
+      "fulfilled": "تحویل‌شده",
+      "rejected": "رد شده"
+    },
+    "shopCount": "{n, plural, one {# دکان} other {{count} دکان}}",
+    "emptyFilteredTitle": "سفارشی در این حالت نیست",
+    "emptyFilteredBody": "حالت دیگری را ببینید یا همهٔ سفارش‌ها را مرور کنید."
   },
   "wishlist": {
     "title": "علاقه‌مندی‌ها",
@@ -877,7 +886,13 @@
     "myShopTitle": "فروشگاه من",
     "myShopHint": "مدیریت محصولات، سفارش‌ها و تبلیغات فروشگاه",
     "adminTitle": "پنل مدیریت مرکز",
-    "adminHint": "تأیید فروشگاه‌ها، گزارش‌ها و مدیریت پلتفرم"
+    "adminHint": "تأیید فروشگاه‌ها، گزارش‌ها و مدیریت پلتفرم",
+    "memberSince": "عضو از {date}",
+    "stat": {
+      "orders": "سفارش",
+      "wishlist": "علاقه‌مندی",
+      "reviews": "نظر"
+    }
   },
   "dashboardNav": {
     "label": "منوی پنل دکان",

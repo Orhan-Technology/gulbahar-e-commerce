@@ -153,6 +153,21 @@ export function formatMonth(date: Date | string | number, locale: string): strin
   }).format(new Date(date));
 }
 
+/**
+ * Month and year, e.g. «سرطان ۱۴۰۵» / "Jun 2026" — for "member since".
+ *
+ * A full date there is precision nobody asked for: the fact being stated is how
+ * long someone has been a customer, and a day number invites the reader to work
+ * out an anniversary.
+ */
+export function formatMonthYear(date: Date | string | number, locale: string): string {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Kabul',
+  }).format(new Date(date));
+}
+
 export function formatDateTime(date: Date | string | number, locale: string): string {
   return new Intl.DateTimeFormat(intlLocale(locale), {
     dateStyle: 'medium',

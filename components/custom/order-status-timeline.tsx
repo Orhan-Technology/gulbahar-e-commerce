@@ -20,6 +20,15 @@ export interface OrderStatusTimelineProps {
   className?: string;
   /** Vertical layout for narrow order-detail panels. */
   orientation?: 'horizontal' | 'vertical';
+  /**
+   * When each step happened, keyed by status, as pre-formatted strings.
+   *
+   * A stepper without times says the order reached "ready"; with them it says
+   * WHEN, which is the actual question behind "where is my order" — and the
+   * gap between two steps is the only evidence a customer has about how fast
+   * this shop works. Formatted by the caller so this stays locale-free.
+   */
+  timestamps?: Partial<Record<OrderStatus, string>>;
 }
 
 /**
@@ -39,6 +48,7 @@ export function OrderStatusTimeline({
   status,
   className,
   orientation = 'horizontal',
+  timestamps,
 }: OrderStatusTimelineProps) {
   const t = useTranslations('order.status');
 
@@ -86,13 +96,20 @@ export function OrderStatusTimeline({
                   />
                 )}
               </div>
-              <span
-                className={cn(
-                  'pt-1.5 pb-6 text-sm',
-                  done ? 'text-foreground font-medium' : 'text-muted-foreground',
+              <span className="pt-1.5 pb-6">
+                <span
+                  className={cn(
+                    'block text-sm',
+                    done ? 'text-foreground font-medium' : 'text-muted-foreground',
+                  )}
+                >
+                  {t(stepStatus)}
+                </span>
+                {timestamps?.[stepStatus] && (
+                  <span className="text-muted-foreground mt-0.5 block text-xs">
+                    {timestamps[stepStatus]}
+                  </span>
                 )}
-              >
-                {t(stepStatus)}
               </span>
             </li>
           );

@@ -822,7 +822,16 @@
     "errors": {
       "requires_auth": "Please sign in",
       "not_found": "That order was not found"
-    }
+    },
+    "filters": {
+      "all": "All",
+      "active": "In progress",
+      "fulfilled": "Delivered",
+      "rejected": "Rejected"
+    },
+    "shopCount": "{n, plural, one {# shop} other {{count} shops}}",
+    "emptyFilteredTitle": "No orders in this state",
+    "emptyFilteredBody": "Try another state, or look at all your orders."
   },
   "wishlist": {
     "title": "Wishlist",
@@ -877,7 +886,13 @@
     "myShopTitle": "My shop",
     "myShopHint": "Manage your products, orders and promotions",
     "adminTitle": "Mall admin",
-    "adminHint": "Approve shops, view reports and run the platform"
+    "adminHint": "Approve shops, view reports and run the platform",
+    "memberSince": "Member since {date}",
+    "stat": {
+      "orders": "Orders",
+      "wishlist": "Saved",
+      "reviews": "Reviews"
+    }
   },
   "dashboardNav": {
     "label": "Shop panel navigation",

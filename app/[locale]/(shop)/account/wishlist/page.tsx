@@ -1,19 +1,29 @@
-import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Heart } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
-import { PriceDisplay } from '@/components/custom/price-display';
-import { RatingStars } from '@/components/custom/rating-stars';
+import { ProductCard } from '@/components/custom/product-card';
 import { MoveToCartButton } from '@/components/shop/account/move-to-cart-button';
 import { WishlistButton } from '@/components/shop/wishlist-button';
 import { requireUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistForUser } from '@/lib/db/queries/home';
 import { formatNumber } from '@/lib/format';
-import { Link } from '@/lib/i18n/navigation';
 
-/** Wishlist (PRD §5.6): live price and stock, with move-to-cart. */
+/**
+ * Wishlist (PRD §5.6).
+ *
+ * The SAME CARD as the storefront, not a bespoke list. It had its own layout —
+ * its own image box, its own title link, its own price line, its own stock
+ * message — which meant every improvement to the product card stopped at the
+ * account boundary, and the wishlist visibly aged relative to the shop it was
+ * saved from. Anything that is a product should look like one.
+ *
+ * What is genuinely different here is added AROUND the card rather than by
+ * rebuilding it: the heart arrives pre-filled, and each card carries a
+ * move-to-cart action, because a wishlist is a list of intentions and the whole
+ * reason to come back is to act on one.
+ */
 export default async function WishlistPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
@@ -36,74 +46,33 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4 px-4 py-4 sm:py-6">
+    <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
       <h1 className="text-xl font-bold">
         {t('title')} · {formatNumber(items.length, locale)}
       </h1>
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {items.map((item) => {
-          const unavailable = item.status !== 'published' || item.stock <= 0;
-          return (
-            <li
-              key={item.id}
-              className="rounded-card border-border bg-card shadow-card flex flex-col overflow-hidden border"
-            >
-              <div className="relative">
-                <Link
-                  href={`/products/${item.slug}`}
-                  className="relative block aspect-square bg-neutral-100"
-                >
-                  {item.imagePath && (
-                    <Image
-                      src={item.imagePath}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 50vw, 240px"
-                      className="object-cover"
-                    />
-                  )}
-                </Link>
-                <div className="absolute end-2 top-2">
-                  <WishlistButton productId={item.id} initialSaved />
-                </div>
-              </div>
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
+        {items.map((item) => (
+          <li key={item.id} className="flex flex-col gap-3">
+            <ProductCard
+              slug={item.slug}
+              title={pickLocale(item.title, locale)}
+              shopName={pickLocale(item.shopName, locale)}
+              price={item.price}
+              discountPrice={item.discountPrice}
+              rating={item.rating}
+              reviewCount={item.reviewCount}
+              imagePath={item.imagePath}
+              stock={item.stock}
+              // Live stock is why anyone revisits a wishlist, and the card
+              // already says it — out-of-stock desaturates and overlays,
+              // three-or-fewer shows the scarcity chip.
+              wishlistSlot={<WishlistButton productId={item.id} initialSaved />}
+            />
 
-              <div className="flex flex-1 flex-col gap-1.5 p-3">
-                <Link
-                  href={`/products/${item.slug}`}
-                  className="clamp-2 hover:text-primary text-sm font-medium"
-                >
-                  {pickLocale(item.title, locale)}
-                </Link>
-                <p className="text-muted-foreground truncate text-xs">
-                  {pickLocale(item.shopName, locale)}
-                </p>
-
-                {item.rating > 0 && (
-                  <RatingStars value={item.rating} count={item.reviewCount} size="sm" />
-                )}
-
-                <PriceDisplay price={item.price} discountPrice={item.discountPrice} size="md" />
-
-                {/* Live stock, which is the whole point of revisiting a wishlist */}
-                {unavailable ? (
-                  <p className="text-danger text-xs font-medium">{t('outOfStock')}</p>
-                ) : item.stock <= 5 ? (
-                  <p className="text-warning-fg text-xs font-medium">
-                    {t('onlyLeft', { count: formatNumber(item.stock, locale) })}
-                  </p>
-                ) : (
-                  <p className="text-success text-xs">{t('inStock')}</p>
-                )}
-
-                <div className="mt-auto pt-2">
-                  <MoveToCartButton productId={item.id} disabled={unavailable} />
-                </div>
-              </div>
-            </li>
-          );
-        })}
+            <MoveToCartButton productId={item.id} disabled={item.stock <= 0} />
+          </li>
+        ))}
       </ul>
     </div>
   );

@@ -8,7 +8,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireUser } from '@/lib/auth/guards';
 import { db } from '@/lib/db';
 import { addresses, users } from '@/lib/db/schema';
+import { customerStats } from '@/lib/db/queries/orders';
 import { KABUL_DISTRICTS } from '@/lib/districts';
+import { formatMonthYear, formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /** Account home (PRD §5.4): profile, saved addresses, and links onward. */
@@ -38,9 +40,59 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
       .orderBy(asc(addresses.createdAt)),
   ]);
 
+  const stats = await customerStats(session.id);
+  const displayName = profile?.name?.trim() || t('title');
+
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-4 sm:py-6">
-      <h1 className="text-xl font-bold">{t('title')}</h1>
+      {/*
+        A profile HEADER, not a page title.
+        
+        The account area was a heading over a stack of forms — correct, and
+        indistinguishable from a settings screen. The monogram, the name and the
+        three counts are what make it feel owned: they are the customer's own
+        history, which is the one thing on this surface that is about them
+        rather than about the shop.
+      */}
+      <header className="rounded-card border-border bg-card shadow-card flex flex-wrap items-center gap-4 border p-5">
+        <span
+          className="rounded-pill bg-primary-50 text-primary flex h-16 w-16 shrink-0 items-center justify-center text-2xl font-bold"
+          aria-hidden
+        >
+          {displayName.charAt(0)}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-xl font-bold">{displayName}</h1>
+          {/* LTR on the phone number: it is a dialable string, not prose, and it
+              reads backwards if it inherits the paragraph direction. */}
+          {profile?.phone && (
+            <p className="text-muted-foreground text-sm tabular-nums" dir="ltr">
+              {formatUnitNumber(profile.phone, locale)}
+            </p>
+          )}
+          {stats.memberSince && (
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {t('memberSince', { date: formatMonthYear(stats.memberSince, locale) })}
+            </p>
+          )}
+        </div>
+
+        <dl className="flex w-full gap-2 sm:w-auto">
+          {(
+            [
+              ['orders', stats.orders],
+              ['wishlist', stats.wishlist],
+              ['reviews', stats.reviews],
+            ] as const
+          ).map(([key, value]) => (
+            <div key={key} className="rounded-control flex-1 bg-neutral-100 px-3 py-2 text-center">
+              <dd className="text-base font-bold tabular-nums">{formatNumber(value, locale)}</dd>
+              <dt className="text-2xs text-neutral-600">{t(`stat.${key}`)}</dt>
+            </div>
+          ))}
+        </dl>
+      </header>
 
       {/* Role-aware workspace shortcut (QA fix): a shopkeeper or admin landing on
           the customer account page gets a clearly-marked door to their own

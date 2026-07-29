@@ -97,7 +97,7 @@ export async function orderByReference(reference: string) {
 
 /** A customer's order history (PRD §5.4). */
 export async function customerOrders(userId: string) {
-  return db
+  const rows = await db
     .select({
       id: orders.id,
       reference: orders.reference,
@@ -106,10 +106,67 @@ export async function customerOrders(userId: string) {
       total: orders.total,
       createdAt: orders.createdAt,
       itemCount: orderItemQuantity,
+      /*
+       * The first four item photographs, plus how many shops the order spans.
+       *
+       * An order row that is a reference, a status and an amount is a database
+       * record; the photographs are what make it a THING THE CUSTOMER BOUGHT
+       * and recognises at a glance. Aggregated in subqueries rather than through
+       * a join, which would multiply the order row by its items and break both
+       * the count and the total.
+       */
+      thumbnails: sql<string[]>`coalesce((
+        select json_agg(path order by sort)
+        from (
+          select (
+            select pi.path from product_images pi
+            where pi.product_id = oi.product_id order by pi.sort asc limit 1
+          ) as path, oi.id as sort
+          from order_items oi
+          where oi.order_id = orders.id
+          order by oi.id
+          limit 4
+        ) first_items
+        where path is not null
+      ), '[]'::json)`,
+      shopCount: sql<number>`(
+        select count(distinct oi.shop_id)::int from order_items oi where oi.order_id = orders.id
+      )`,
     })
     .from(orders)
     .where(eq(orders.userId, userId))
     .orderBy(desc(orders.createdAt));
+
+  return rows.map((row) => ({
+    ...row,
+    thumbnails: (row.thumbnails ?? []) as string[],
+    shopCount: Number(row.shopCount),
+  }));
+}
+
+/** Counts for the account header's stat chips. */
+export async function customerStats(userId: string) {
+  const rows = await db.execute(sql`
+    select
+      (select count(*)::int from orders where user_id = ${userId}) as orders,
+      (select count(*)::int from wishlist_items where user_id = ${userId}) as wishlist,
+      (select count(*)::int from reviews where user_id = ${userId} and status = 'visible') as reviews,
+      (select min(created_at) from users where id = ${userId}) as member_since
+  `);
+
+  const [row] = rows as unknown as Array<{
+    orders: number;
+    wishlist: number;
+    reviews: number;
+    member_since: string | null;
+  }>;
+
+  return {
+    orders: Number(row?.orders ?? 0),
+    wishlist: Number(row?.wishlist ?? 0),
+    reviews: Number(row?.reviews ?? 0),
+    memberSince: row?.member_since ? new Date(row.member_since) : null,
+  };
 }
 
 /**
