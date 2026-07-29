@@ -529,7 +529,9 @@
     "searchHint2": "Looking for something specific?",
     "searchHint3": "Find what you need",
     "searchHint4": "Discover new products",
-    "liveNow": "Gulbahar Live"
+    "liveNow": "Gulbahar Live",
+    "myShop": "My shop",
+    "adminPanel": "Admin panel"
   },
   "home": {
     "shopByCategory": "Shop by category",
@@ -824,7 +826,11 @@
       "requires_auth": "Please sign in",
       "invalid_input": "Some details are missing",
       "invalid_phone": "That phone number is not valid"
-    }
+    },
+    "myShopTitle": "My shop",
+    "myShopHint": "Manage your products, orders and promotions",
+    "adminTitle": "Mall admin",
+    "adminHint": "Approve shops, view reports and run the platform"
   },
   "dashboardNav": {
     "label": "Shop panel navigation",

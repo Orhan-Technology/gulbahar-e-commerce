@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter, Vazirmatn } from 'next/font/google';
+import localFont from 'next/font/local';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
@@ -11,14 +11,27 @@ import { isDemoMode } from '@/lib/demo';
 import { localeDirection, routing } from '@/lib/i18n/routing';
 import '../globals.css';
 
-const vazirmatn = Vazirmatn({
-  subsets: ['arabic', 'latin'],
+/*
+ * Self-hosted variable fonts (PRD §1.3 — the demo must run with no network at
+ * all). next/font/google downloads at BUILD time, which made the first build
+ * fail on an offline or restricted machine; these files are committed to the
+ * repo, so a fresh clone builds and runs fully offline.
+ *
+ * Vazirmatn covers Dari AND Pashto (its Arabic-script set includes the Pashto
+ * letters ټ ډ ړ ږ ښ ڼ ۍ ې) plus Persian digits, so one face serves both RTL
+ * locales — which is also why numerals and weights stay consistent when a
+ * Pashto string falls back to a Dari one (PRD §11).
+ */
+const vazirmatn = localFont({
+  src: '../../assets/fonts/Vazirmatn[wght].woff2',
+  weight: '100 900',
   variable: '--font-vazirmatn',
   display: 'swap',
 });
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: '../../assets/fonts/InterVariable.woff2',
+  weight: '100 900',
   variable: '--font-inter',
   display: 'swap',
 });

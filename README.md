@@ -35,9 +35,10 @@ Shop logos stay as generated monograms deliberately — a photo makes a poor 40p
 The seed is **deterministic**: every reset produces byte-identical data, so a
 rehearsed walkthrough still matches after resetting mid-demo.
 
-The first `npm run dev` or `npm run build` downloads the Vazirmatn and Inter webfonts from Google
-Fonts and self-hosts them under `.next/static/media`. After that first run everything — including
-the demo — works fully offline, per PRD §1.3.
+Fonts are committed to the repo (`assets/fonts/`) and loaded with `next/font/local`:
+**Vazirmatn** (variable) for Dari and Pashto — its Arabic-script coverage includes the
+Pashto letters — and **InterVariable** for English. Nothing is fetched at build or run
+time, so a fresh clone builds and demos fully offline, per PRD §1.3.
 
 ## Ports
 

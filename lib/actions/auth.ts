@@ -46,7 +46,9 @@ export async function requestOtpAction(formData: FormData): Promise<ActionResult
 }
 
 /** Verifies the code and establishes the session. */
-export async function verifyOtpAction(formData: FormData): Promise<ActionResult> {
+export async function verifyOtpAction(
+  formData: FormData,
+): Promise<ActionResult<{ role: string }>> {
   const parsed = verifySchema.safeParse({
     phone: formData.get('phone'),
     code: formData.get('code'),
@@ -75,6 +77,10 @@ export async function verifyOtpAction(formData: FormData): Promise<ActionResult>
      */
     const signedIn = await findUserByPhone(parsed.data.phone);
     if (signedIn) await mergeGuestCart(signedIn.id);
+
+    // The role travels back so the form can land each role on its own surface:
+    // admin → /admin, shopkeeper → /dashboard, customer → wherever they were.
+    return { ok: true, data: { role: signedIn?.role ?? 'customer' } };
   } catch (error) {
     if (error instanceof AuthError) {
       // verifyOtp already distinguished the reason; the provider can only signal
@@ -83,8 +89,6 @@ export async function verifyOtpAction(formData: FormData): Promise<ActionResult>
     }
     throw error;
   }
-
-  return { ok: true };
 }
 
 export async function signOutAction(): Promise<void> {

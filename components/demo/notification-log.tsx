@@ -49,6 +49,14 @@ export function NotificationLog() {
   // Ids seen on the previous poll; anything outside this set animates in.
   const seenRef = React.useRef<Set<string>>(new Set());
   const [freshIds, setFreshIds] = React.useState<Set<string>>(new Set());
+  /*
+   * QA fix: changing a filter swaps the visible set wholesale, and every entry
+   * the previous filter had hidden looked "new" — the entire list flashed the
+   * arrival highlight, which read as broken. Freshness only means anything
+   * within one unchanged filter, so a filter change resets the baseline the
+   * same way first load does.
+   */
+  const filterRef = React.useRef('all/all');
 
   const load = React.useCallback(async () => {
     const result = await fetchNotificationLog({
@@ -58,12 +66,17 @@ export function NotificationLog() {
     });
     if (!result.ok) return;
 
+    const filterKey = `${channel}/${role}`;
+    const filterChanged = filterRef.current !== filterKey;
+    filterRef.current = filterKey;
+
     const ids = new Set(result.data.entries.map((entry) => entry.id));
     const fresh = new Set(
       result.data.entries.filter((entry) => !seenRef.current.has(entry.id)).map((e) => e.id),
     );
-    // First load is not "fresh" — otherwise sixty seeded rows all slide in at once.
-    setFreshIds(seenRef.current.size === 0 ? new Set() : fresh);
+    // First load and filter changes are not "fresh" — otherwise sixty rows all
+    // slide in highlighted at once.
+    setFreshIds(seenRef.current.size === 0 || filterChanged ? new Set() : fresh);
     seenRef.current = ids;
 
     setEntries(result.data.entries);

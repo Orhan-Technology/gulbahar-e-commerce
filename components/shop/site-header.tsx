@@ -7,6 +7,7 @@ import {
   MapPin,
   Menu,
   Search,
+  ShieldCheck,
   ShoppingCart,
   Sparkles,
   Store,
@@ -170,6 +171,28 @@ export function SiteHeader({ cartCount, user, categories, liveOffer = false }: S
             )}
           </Link>
 
+          {/* Role-aware workspace link: the single most-requested wayfinding fix.
+              A shopkeeper sees their shop, an admin sees the admin panel, and a
+              customer sees nothing extra. Icon-only on mobile, labelled from sm up. */}
+          {user?.role === 'shopkeeper' && (
+            <Link
+              href="/dashboard"
+              className="rounded-control hover:text-primary text-primary-700 flex items-center gap-2 font-semibold transition-colors duration-150"
+            >
+              <Store className="h-5 w-5" aria-hidden />
+              <span className="hidden text-sm sm:inline">{t('nav.myShop')}</span>
+            </Link>
+          )}
+          {user?.role === 'admin' && (
+            <Link
+              href="/admin"
+              className="rounded-control hover:text-primary text-primary-700 flex items-center gap-2 font-semibold transition-colors duration-150"
+            >
+              <ShieldCheck className="h-5 w-5" aria-hidden />
+              <span className="hidden text-sm sm:inline">{t('nav.adminPanel')}</span>
+            </Link>
+          )}
+
           <Link
             href={user ? '/account' : '/account/sign-in'}
             className="rounded-control hover:text-primary flex items-center gap-2 transition-colors duration-150"
@@ -241,12 +264,32 @@ export function SiteHeader({ cartCount, user, categories, liveOffer = false }: S
 
         <span className="h-4 w-px shrink-0 bg-neutral-300" aria-hidden />
 
-        <Link
-          href="/dashboard"
-          className="hover:text-primary shrink-0 text-sm font-medium text-neutral-700 transition-colors duration-150"
-        >
-          {t('nav.registerShop')}
-        </Link>
+        {/* Role-aware trailing link: a signed-out visitor or customer is invited
+            to register a shop; a shopkeeper goes to their dashboard; an admin
+            goes to the admin panel. Previously this was "register shop" for
+            everyone, which dumped the ADMIN into the registration form. */}
+        {user?.role === 'shopkeeper' ? (
+          <Link
+            href="/dashboard"
+            className="hover:text-primary shrink-0 text-sm font-medium text-neutral-700 transition-colors duration-150"
+          >
+            {t('nav.myShop')}
+          </Link>
+        ) : user?.role === 'admin' ? (
+          <Link
+            href="/admin"
+            className="hover:text-primary shrink-0 text-sm font-medium text-neutral-700 transition-colors duration-150"
+          >
+            {t('nav.adminPanel')}
+          </Link>
+        ) : (
+          <Link
+            href="/dashboard"
+            className="hover:text-primary shrink-0 text-sm font-medium text-neutral-700 transition-colors duration-150"
+          >
+            {t('nav.registerShop')}
+          </Link>
+        )}
       </nav>
     </header>
   );

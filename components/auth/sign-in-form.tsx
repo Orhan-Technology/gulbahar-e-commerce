@@ -57,7 +57,19 @@ export function SignInForm({ redirectTo = '/' }: { redirectTo?: string }) {
     }
 
     toast.success(t('signedIn'));
-    router.replace(redirectTo);
+    /*
+     * Land each role on its own surface (QA fix): an admin signing in from the
+     * generic sign-in page goes to /admin, a shopkeeper to /dashboard. An
+     * explicit ?next= destination (e.g. checkout) still wins — someone mid-
+     * purchase should return to their basket, whatever their role.
+     */
+    const home =
+      result.data.role === 'admin'
+        ? '/admin'
+        : result.data.role === 'shopkeeper'
+          ? '/dashboard'
+          : '/';
+    router.replace(redirectTo === '/' ? home : redirectTo);
     // Ensures server components re-read the new session.
     router.refresh();
   }

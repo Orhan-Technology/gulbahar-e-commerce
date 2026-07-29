@@ -1,6 +1,6 @@
 import { asc, eq } from 'drizzle-orm';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Heart, Package } from 'lucide-react';
+import { Heart, Package, ShieldCheck, Store } from 'lucide-react';
 
 import { AddressManager } from '@/components/shop/account/address-manager';
 import { ProfileForm } from '@/components/shop/account/profile-form';
@@ -41,6 +41,38 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   return (
     <div className="mx-auto max-w-2xl space-y-6 px-4 py-4 sm:py-6">
       <h1 className="text-xl font-bold">{t('title')}</h1>
+
+      {/* Role-aware workspace shortcut (QA fix): a shopkeeper or admin landing on
+          the customer account page gets a clearly-marked door to their own
+          surface, instead of having to know the URL. */}
+      {session.role === 'shopkeeper' && (
+        <Link
+          href="/dashboard"
+          className="rounded-card border-primary-200 bg-primary-50 shadow-card hover:shadow-overlay flex items-center gap-3 border p-4 transition-shadow duration-150"
+        >
+          <span className="rounded-control bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center">
+            <Store className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="flex flex-col">
+            <span className="text-primary-800 text-sm font-bold">{t('myShopTitle')}</span>
+            <span className="text-primary-700 text-xs">{t('myShopHint')}</span>
+          </span>
+        </Link>
+      )}
+      {session.role === 'admin' && (
+        <Link
+          href="/admin"
+          className="rounded-card border-primary-200 bg-primary-50 shadow-card hover:shadow-overlay flex items-center gap-3 border p-4 transition-shadow duration-150"
+        >
+          <span className="rounded-control bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center">
+            <ShieldCheck className="h-5 w-5" aria-hidden />
+          </span>
+          <span className="flex flex-col">
+            <span className="text-primary-800 text-sm font-bold">{t('adminTitle')}</span>
+            <span className="text-primary-700 text-xs">{t('adminHint')}</span>
+          </span>
+        </Link>
+      )}
 
       <div className="grid gap-3 sm:grid-cols-2">
         <Link
