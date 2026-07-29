@@ -93,18 +93,30 @@ export function ShopCard({
            * not here — there is no per-shop SLA in the data, and inventing one
            * would be a promise the shop never made.
            */}
-          <span className="truncate text-xs text-neutral-500">
-            {[
-              rating !== undefined && rating > 0
-                ? `★ ${formatRating(rating, locale)}`
-                : null,
-              productCount !== undefined
-                ? t('productCount', { count: formatNumber(productCount, locale) })
-                : null,
-              hasLocation ? common('floorName', { floor }) : null,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
+          {/*
+            The rating is the COMPONENT, not a ★ glyph spliced into a sentence.
+            A star character renders at whatever weight and baseline the active
+            face gives it — and Vazirmatn's is a lumpy asterisk — so the same
+            rating looked like a different mark in Dari and English.
+          */}
+          <span className="flex min-w-0 items-center gap-2 text-xs text-neutral-500">
+            {rating !== undefined && rating > 0 && (
+              <>
+                <RatingStars value={rating} size="sm" />
+                <span className="tabular-nums">{formatRating(rating, locale)}</span>
+                <span aria-hidden>·</span>
+              </>
+            )}
+            <span className="truncate">
+              {[
+                productCount !== undefined
+                  ? t('productCount', { count: formatNumber(productCount, locale) })
+                  : null,
+                hasLocation ? common('floorName', { floor }) : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
           </span>
         </span>
       </Link>

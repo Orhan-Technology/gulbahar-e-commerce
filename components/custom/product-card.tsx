@@ -187,7 +187,10 @@ export function ProductCard({
             // up front rather than letting a 240px image be scaled up.
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 340px"
             priority={priority}
-            className={cn('object-cover', outOfStock && 'opacity-60')}
+            // Desaturate AND dim. Opacity alone made a bright photo look like a
+            // rendering fault rather than like something unavailable; grayscale
+            // is the part that reads as "not for sale".
+            className={cn('object-cover', outOfStock && 'opacity-60 grayscale')}
           />
         ) : (
           <div className="from-primary-50 flex h-full w-full items-center justify-center bg-linear-to-br to-neutral-100 text-neutral-400">

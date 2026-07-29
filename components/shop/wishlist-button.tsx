@@ -90,7 +90,10 @@ export function WishlistButton({
       className={cn(
         'focus-visible:ring-ring flex items-center justify-center transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-offset-2',
         isOverlay
-          ? 'rounded-pill bg-card/90 shadow-card hover:bg-card h-8 w-8 backdrop-blur'
+          ? // 40px, not 32: this is the smallest tappable control on a card and
+            // it sits beside a stretched link, so an undersized target means
+            // opening the product when you meant to save it.
+            'rounded-pill bg-card/90 shadow-card hover:bg-card h-10 w-10 backdrop-blur'
           : 'rounded-control border-input bg-card h-10 w-10 border hover:bg-neutral-100',
         className,
       )}

@@ -1,5 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { Star } from 'lucide-react';
+
 import { RatingStars } from '@/components/custom/rating-stars';
 import { formatNumber, formatRating } from '@/lib/format';
 
@@ -46,12 +48,18 @@ export async function RatingSummary({ average, total, distribution }: RatingSumm
           const percent = total > 0 ? (value / total) * 100 : 0;
           return (
             <li key={star} className="flex items-center gap-2 text-xs">
-              <span className="text-muted-foreground w-8 shrink-0 tabular-nums">
-                {formatNumber(star, locale)}★
+              {/* The digit and a real star SVG, not "5★": a glyph renders at
+                  whatever weight the active face gives it, and the two scripts
+                  gave it two different marks. */}
+              <span className="text-muted-foreground flex w-8 shrink-0 items-center gap-0.5 tabular-nums">
+                {formatNumber(star, locale)}
+                <Star className="fill-accent-warm text-accent-warm h-3 w-3" aria-hidden />
               </span>
               <span className="rounded-pill relative h-2 flex-1 overflow-hidden bg-neutral-200">
                 <span
-                  className="rounded-pill bg-primary-600 absolute inset-y-0 start-0"
+                  // Amber, matching the stars: a blue bar under an amber star row is
+                  // two colours describing one number.
+                  className="bg-accent-warm rounded-pill absolute inset-y-0 start-0"
                   style={{ width: `${percent}%` }}
                 />
               </span>
