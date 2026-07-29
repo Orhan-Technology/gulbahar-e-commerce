@@ -14,6 +14,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot, shopIdsBySlug } from '@/lib/db/queries/listing';
 import { isProductSort, productList, type ProductSort } from '@/lib/db/queries/products';
+import { FILTER_KEYS } from '@/lib/listing';
 import { recordImpressions } from '@/lib/db/queries/promoted';
 import type { PromotionSlotKey } from '@/lib/db/schema';
 
@@ -136,16 +137,32 @@ export async function ProductListing({
   };
 
   if (result.total === 0) {
+    /*
+     * The copy has to match the REASON the list is empty. "Remove one of the
+     * filters" under a search that simply found nothing is advice the reader
+     * cannot follow — there are no filters — and it reads as the page blaming
+     * them for something they did not do.
+     */
+    const narrowed = FILTER_KEYS.some((key) => query[key] !== undefined);
+    const searched = Boolean(scope.search ?? query.q);
+
     return (
       <div className="space-y-4">
         <AppliedFilters labels={labels} />
         <EmptyState
           illustration={<PackageSearch className="h-7 w-7" />}
-          title={t('emptyTitle')}
-          description={t('emptyBody')}
+          title={
+            searched && !narrowed
+              ? t('emptySearchTitle', { term: scope.search ?? query.q ?? '' })
+              : t('emptyTitle')
+          }
+          description={searched && !narrowed ? t('emptySearchBody') : t('emptyBody')}
           // One tap back to everything. An empty listing whose only exit is
           // undoing filters by hand is where a session ends.
-          action={{ label: t('clearFilters'), href: emptyHref }}
+          action={{
+            label: narrowed ? t('clearFilters') : t('browseAll'),
+            href: narrowed ? emptyHref : '/products',
+          }}
         />
       </div>
     );

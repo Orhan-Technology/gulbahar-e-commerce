@@ -2,8 +2,10 @@
 
 import * as React from 'react';
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
+import { useLocale } from 'next-intl';
 import { DayButton, DayPicker, getDefaultClassNames } from 'react-day-picker';
 
+import { formatMonth } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Button, buttonVariants } from '@/components/ui/button';
 
@@ -20,6 +22,7 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>['variant'];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const locale = useLocale();
 
   return (
     <DayPicker
@@ -32,7 +35,13 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString('default', { month: 'short' }),
+        /*
+         * `formatMonth`, not `date.toLocaleString('default', …)`. The stock
+         * shadcn formatter asks for the RUNTIME's locale, which on this server
+         * is en-US — so a Dari date picker offered Gregorian month names in
+         * Latin script while every other date on the page was Afghan solar.
+         */
+        formatMonthDropdown: (date) => formatMonth(date, locale),
         ...formatters,
       }}
       classNames={{

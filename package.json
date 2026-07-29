@@ -31,7 +31,8 @@
     "check:phase7b": "tsx scripts/check-phase7b.ts",
     "check:phase8": "tsx scripts/check-phase8.ts",
     "audit": "tsx scripts/audit.ts",
-    "check:phase9": "tsx scripts/check-phase9.ts"
+    "check:phase9": "tsx scripts/check-phase9.ts",
+    "check:design": "tsx scripts/check-design.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

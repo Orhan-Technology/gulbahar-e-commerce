@@ -52,6 +52,7 @@ Multi-vendor marketplace digitizing Gulbahar Center (Kabul mall). Three surfaces
 - npm run check:phase3 … check:phase9, check:journey, check:signin — acceptance checks per phase; they need the DEV server up (the action ids come from the dev manifest, so `npm run start` cannot drive them)
 - npm run audit — static sweep for physical CSS, hardcoded Dari, motion over 300ms, images without dimensions, missing error boundaries. `// audit-allow <rule> — reason` exempts the next non-comment line
 - npm run check:messages — static audit of t() usage: missing keys, keys shadowed by a namespace, fa/en drift. No dev server needed
+- npm run check:design — the seams BETWEEN surfaces: one listing toolbar everywhere, every KPI drill-down resolving AND arriving filtered, press feedback present on all three panels, Persian numerals in visible fa text, no Suspense falling back to a spinner, no number formatted outside lib/format. Needs the dev server
 - scripts/login.sh &lt;phone&gt; — signs a seeded account in and prints a cookie jar path, so authenticated screens can be curl'd
 - Never run `npm run build` while `npm run dev` is running — they share .next and the dev chunk manifest gets clobbered
 

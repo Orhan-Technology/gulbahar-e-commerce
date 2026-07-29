@@ -2156,6 +2156,9 @@
     "emptyTitle": "Nothing matches these filters",
     "emptyBody": "Remove one of the filters, or clear them all.",
     "clearFilters": "Clear filters",
-    "promotedNote": "These shops paid for placement. Organic results below are not reordered."
+    "promotedNote": "These shops paid for placement. Organic results below are not reordered.",
+    "emptySearchTitle": "Nothing found for \"{term}\"",
+    "emptySearchBody": "Try a different spelling, or browse everything in the mall.",
+    "browseAll": "Browse all products"
   }
 }

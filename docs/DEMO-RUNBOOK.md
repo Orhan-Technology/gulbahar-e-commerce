@@ -211,3 +211,40 @@ next decisions are yours rather than mine.**
 | No orders left awaiting acceptance   | **⌘⇧D → Scenarios → new order**, as many times as needed.                                                                                                                                      |
 | The notification log is empty        | Expected right after a reset of the log only; trigger any action and it repopulates. `npm run db:reset` restores the seeded 23.                                                                |
 | Postgres died                        | `docker compose up -d` and wait for `pg_isready`. The app recovers on its own — the pool closes idle sockets, so it reconnects without restarting `npm run dev`.                               |
+
+---
+
+## What changed in the D-series (dashboard, listing and directory)
+
+**Shop dashboard.** Leads with the action centre instead of four numbers: the
+queue is the hero, and accept / mark-ready happen on the row with a five-second
+undo window that sits *before* the commit, so undo means nothing was ever sent.
+Unanswered reviews joined the queue and deep-link with the reply box open. Below
+it, four KPIs — today's sales, orders this week, product views this week, shop
+rating — each a link that lands pre-filtered, then a 30-day line chart and the
+week's best sellers ranked by units. Bottom tabs are Dashboard / Orders (badged
+with the count awaiting acceptance) / Products / More.
+
+**Admin overview.** Same two-question shape: what needs a decision, then what
+the platform earns. One action centre across four tables — pending shops,
+requested placements, reported reviews and orders stalled past 48 hours — with
+approve and reject on the row for the first two. Promotion income for the
+calendar month is a headline on solid blue with slot occupancy and the top three
+placements; platform health (orders/day, active shops, new customers, GMV chart,
+top-five shops) sits underneath.
+
+**Listing system.** Category pages, search results, offers and a shop's own
+catalogue are now one component: sticky toolbar with the result count and sort
+(popularity by default, relevance once a term narrows it), facets in a desktop
+rail or a mobile bottom sheet, removable applied-filter chips above the grid,
+and load-more that appends while keeping the URL pageable. Every filter state is
+a URL.
+
+**Shop directory.** A listing in its own right — shop count as the subtitle,
+snap-scrolling category chips, and a featured strip of shops holding a live
+directory placement above the organic grid. Shop cards carry a floor/unit badge
+and lift on hover.
+
+Demo notes: the queue on both panels shows all of its row types at seed time,
+and the directory's featured strip has two live placements with one slot still
+unsold — which is the number the admin revenue view is showing.
