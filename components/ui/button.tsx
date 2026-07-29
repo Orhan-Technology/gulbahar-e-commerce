@@ -14,9 +14,26 @@ import { cn } from '@/lib/utils';
  * - rounded-md → rounded-control; shadow → shadow-card (two-level elevation).
  * - Added an `accent` variant for the rare gold call-to-action.
  * - Focus ring is 2px with an offset, so it stays visible on dark fills.
+ * - `pressable` on the base, so every button gives under a press through the
+ *   one shared implementation (components/motion/pressable.tsx). The `link`
+ *   variant opts out below: a run of text shrinking reads as a rendering
+ *   glitch, not as a button being pressed.
+ *
+ *   `scale` is named in the transition list HERE rather than left to the
+ *   .pressable rule, because `transition-colors` is a utility and .pressable is
+ *   in the components layer — the utility wins the transition-property outright
+ *   and the press would land instantly with no return. One list, one duration,
+ *   for the whole control.
+ *
+ *   `duration-[var(--duration-press)]`, not `duration-press`: `--duration-*` is
+ *   NOT one of Tailwind v4's utility-generating namespaces, so the bare form
+ *   generates nothing at all and `transition-*` silently falls back to its own
+ *   150ms default — a wrong duration with no error anywhere. Same for
+ *   --duration-feedback and --duration-decorative: they are reference values
+ *   for stylesheets, not class names.
  */
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
+  'pressable inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-control text-sm font-medium transition-[color,background-color,border-color,scale] duration-[var(--duration-press)] ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -26,7 +43,8 @@ const buttonVariants = cva(
         outline: 'border border-input bg-card text-foreground shadow-card hover:bg-neutral-100',
         secondary: 'bg-secondary text-secondary-foreground hover:bg-neutral-200',
         ghost: 'text-foreground hover:bg-neutral-100',
-        link: 'text-primary underline-offset-4 hover:underline',
+        // A utility, so it outranks the components-layer .pressable rule.
+        link: 'text-primary underline-offset-4 hover:underline data-[pressed]:scale-100',
       },
       size: {
         default: 'h-10 px-4 py-2',

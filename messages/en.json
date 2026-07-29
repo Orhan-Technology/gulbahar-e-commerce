@@ -85,12 +85,13 @@
       "badges": "Badges",
       "inputsCards": "Inputs and cards",
       "interactive": "Interactive",
-      "custom": "Custom components"
+      "custom": "Custom components",
+      "motion": "Motion and touch feedback"
     },
     "palette": {
-      "primary": "Primary — deep green",
-      "accent": "Accent — warm gold",
-      "neutral": "Neutral — warm grey",
+      "primary": "Primary — marketplace blue",
+      "accent": "Accent — sale red",
+      "neutral": "Neutral — cool grey",
       "semantic": "Semantic colours",
       "success": "Success",
       "warning": "Warning",
@@ -252,6 +253,18 @@
       "emptyAction": "Add product",
       "sectionTitle": "Best sellers",
       "sectionDescription": "Most sold in the past week"
+    },
+    "motion": {
+      "stretchTitle": "Edge stretch on scroll",
+      "stretchHint": "Reach the top of the list and keep pulling — the content stretches away from the anchored edge and springs back. Finger on mobile, trackpad on desktop.",
+      "row": "A sample row",
+      "pressTitle": "Press feedback",
+      "pressHint": "Every tappable surface gives slightly under a press and returns in 120ms. If the finger turns into a scroll, the feedback is cancelled at once.",
+      "pressButton": "Primary button",
+      "pressOutline": "Outline button",
+      "pressChip": "Category chip",
+      "pressCard": "Banner card",
+      "reducedNote": "With reduced motion enabled in the operating system, neither of these runs. Edge stretch is also off in Safari and on iOS, where the browser already does the same thing itself."
     }
   },
   "pagination": {

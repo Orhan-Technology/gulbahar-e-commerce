@@ -62,7 +62,9 @@ export async function PromoStrip() {
           key={panel.href}
           href={panel.href}
           className={cn(
-            'rounded-card group flex min-h-[180px] flex-col gap-3 p-6 transition-opacity duration-150 hover:opacity-95',
+            // `scale` is in the list because `transition-*` is a utility and
+            // .pressable is not — see components/ui/button.tsx for the same note.
+            'pressable rounded-card group flex min-h-[180px] flex-col gap-3 p-6 transition-[opacity,scale] duration-150 ease-out hover:opacity-95',
             panel.surface,
           )}
         >

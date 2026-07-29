@@ -6,6 +6,7 @@ import { getMessages, getTranslations, setRequestLocale } from 'next-intl/server
 import { Toaster } from '@/components/ui/sonner';
 import { DemoControlPanel } from '@/components/demo/control-panel';
 import { NotificationLog } from '@/components/demo/notification-log';
+import { PressFeedback } from '@/components/motion/pressable';
 import { currentUser } from '@/lib/auth/guards';
 import { isDemoMode } from '@/lib/demo';
 import { localeDirection, routing } from '@/lib/i18n/routing';
@@ -101,6 +102,11 @@ export default async function LocaleLayout({
       <body suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           {children}
+          {/*
+            One delegated set of press listeners for all three surfaces. Mounted
+            here rather than per-layout so the document never carries two.
+          */}
+          <PressFeedback />
           {/* Toast position follows document direction — see components/ui/sonner.tsx */}
           <Toaster />
           {demo && (

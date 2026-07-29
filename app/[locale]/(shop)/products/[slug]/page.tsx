@@ -85,7 +85,9 @@ export default async function ProductPage({
   const currentReviewPage = Math.max(1, Number(reviewPage ?? 1) || 1);
 
   return (
-    <div className="max-w-page mx-auto px-4 py-4 pb-28 sm:px-7 sm:py-6 md:pb-6">
+    /* The old pb-28 reserved space under the FIXED action bar. It is sticky
+       now, so it occupies its own flow space and the reservation is gone. */
+    <div className="max-w-page mx-auto px-4 py-4 sm:px-7 sm:py-6 md:pb-6">
       {/* Breadcrumb */}
       <nav className="text-muted-foreground flex flex-wrap items-center gap-1 text-xs">
         <Link href="/products" className="hover:text-primary">
@@ -226,8 +228,24 @@ export default async function ProductPage({
         />
       </Suspense>
 
-      {/* Sticky mobile action bar (PRD §5.2) — sits above the tab bar. */}
-      <div className="border-border bg-background/95 fixed inset-x-0 bottom-16 z-30 border-t p-3 backdrop-blur-md md:hidden">
+      {/*
+        Sticky mobile action bar (PRD §5.2) — sits above the tab bar.
+
+        `sticky`, not `fixed`, and that is load-bearing rather than stylistic.
+        The storefront shell wraps its content in StretchScroll, which applies a
+        transform during an overscroll; a transform makes its element the
+        containing block for every FIXED descendant, so a fixed bar would leave
+        the viewport and reappear thousands of pixels down the page for as long
+        as the gesture lasted. A sticky element keeps its scrollport and simply
+        stretches with the content, which is what a native app does with it.
+
+        Pinned identically the whole way down — the containing block is the page
+        root, which spans the document — and it lands in flow at the very end.
+        The negative inline margins cancel the page gutter so it stays
+        full-bleed; the bar is `md:hidden`, so the container is always the
+        viewport width where it renders.
+      */}
+      <div className="border-border bg-background/95 sticky bottom-16 z-30 -mx-4 mt-10 border-t p-3 backdrop-blur-md sm:-mx-7 md:hidden">
         <BuyPanel
           compact
           productId={product.id}

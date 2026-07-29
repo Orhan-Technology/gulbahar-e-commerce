@@ -1,5 +1,6 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
+import { StretchScroll } from '@/components/motion/stretch-scroll';
 import { MobileTabBar } from '@/components/shop/mobile-tab-bar';
 import { SiteFooter } from '@/components/shop/site-footer';
 import { SiteHeader } from '@/components/shop/site-header';
@@ -50,18 +51,33 @@ export default async function ShopLayout({
       />
 
       {/*
-        pb-20 on mobile clears the fixed bottom tab bar.
+        Everything that should stretch when the page is over-pulled, and nothing
+        that must not.
 
-        `overflow-x-clip` contains the product cards' hover pop-out. A card at
-        the end of a row scales past the page gutter, and without this the
-        document grows a horizontal scrollbar that appears and disappears as
-        the pointer moves — the page visibly twitching under the cursor.
-        `clip` rather than `hidden` deliberately: `hidden` would make this a
-        scroll container and break the header's `position: sticky`.
+        The header is a SIBLING on purpose. A transform makes an element the
+        containing block for its fixed descendants and shifts its sticky ones,
+        so a sticky header inside the wrapper would ride the stretch and a fixed
+        tab bar inside it would stop being fixed at all. Both stay outside; the
+        footer is inside, because a bounce at the bottom of the document is a
+        bounce of the footer — that is the part of the page you are looking at
+        when you get there.
       */}
-      <main className="flex-1 overflow-x-clip pb-20 md:pb-0">{children}</main>
+      <StretchScroll root className="flex flex-1 flex-col" contentClassName="flex flex-1 flex-col">
+        {/*
+          pb-20 on mobile clears the fixed bottom tab bar.
 
-      <SiteFooter />
+          `overflow-x-clip` contains the product cards' hover pop-out. A card at
+          the end of a row scales past the page gutter, and without this the
+          document grows a horizontal scrollbar that appears and disappears as
+          the pointer moves — the page visibly twitching under the cursor.
+          `clip` rather than `hidden` deliberately: `hidden` would make this a
+          scroll container and break the header's `position: sticky`.
+        */}
+        <main className="flex-1 overflow-x-clip pb-20 md:pb-0">{children}</main>
+
+        <SiteFooter />
+      </StretchScroll>
+
       <MobileTabBar />
     </div>
   );

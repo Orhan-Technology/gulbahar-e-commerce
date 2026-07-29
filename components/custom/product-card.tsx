@@ -137,7 +137,13 @@ export function ProductCard({
   }
 
   return (
-    <div className={cn('group relative flex flex-col gap-3 hover:z-30', className)}>
+    /*
+     * `pressable` on the ROOT, not on the media panel: the panel already owns a
+     * `scale` for its hover pop-out, and two rules animating one property on one
+     * element means whichever wins the cascade silently cancels the other. The
+     * card gives as a whole, which is also what a native list does.
+     */
+    <div className={cn('pressable group relative flex flex-col gap-3 hover:z-30', className)}>
       {/*
         `duration-[420ms]` is inside the 500ms decorative budget, not the
         300ms feedback one: nothing is waiting on a hover, and the unhurried

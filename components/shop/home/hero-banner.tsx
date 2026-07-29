@@ -91,7 +91,7 @@ export async function HeroBanner() {
       {offer && (
         <Link
           href={`/shops/${offer.shopSlug}`}
-          className="rounded-card group flex min-h-[220px] flex-col overflow-hidden bg-neutral-100 transition-colors duration-150 hover:bg-neutral-200 lg:min-h-[380px]"
+          className="pressable rounded-card group flex min-h-[220px] flex-col overflow-hidden bg-neutral-100 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-200 lg:min-h-[380px]"
         >
           <span className="flex items-start justify-between gap-3 p-6 pb-4">
             <span className="flex min-w-0 flex-col">

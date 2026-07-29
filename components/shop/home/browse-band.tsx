@@ -59,7 +59,7 @@ export async function BrowseBand() {
           <li key={leaf.id}>
             <Link
               href={`/categories/${leaf.slug}`}
-              className="rounded-card bg-card hover:shadow-card group flex h-full flex-col items-center gap-3 p-3 transition-shadow duration-200"
+              className="pressable rounded-card bg-card hover:shadow-card group flex h-full flex-col items-center gap-3 p-3 transition-[box-shadow,scale] duration-200 ease-out"
             >
               <span className="rounded-media relative aspect-square w-full overflow-hidden bg-neutral-100">
                 {leaf.imagePath && (

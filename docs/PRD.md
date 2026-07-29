@@ -383,8 +383,31 @@ Restraint, applied where it signals life:
 - Order status: animated progression on the tracking screen
 - Dashboard: numbers count up on first load; new action-queue items slide in
 - Page transitions: fast fades only, 150–200ms; nothing that delays the presenter
+- Press feedback: every tappable surface gives under contact and returns in 120ms
 
-No parallax, no scroll-triggered theatrics, nothing over 300ms.
+**Two budgets, not one** (revised against the client's reference recording):
+
+| Class | Ceiling | What it covers |
+| --- | --- | --- |
+| Feedback | 300ms | Taps, toggles, focus, badges. Duration here reads as latency — the user has already acted. |
+| Decorative | 500ms | Hover transforms, section reveals, carousel slides. Nothing is waiting on these, and the reference's unhurried hover is most of why it feels considered rather than twitchy. |
+
+`npm run audit` enforces both separately; the looser budget has to be claimed
+deliberately, by a `hover:`/`reveal` on an adjacent line or an explicit
+`// motion-decorative:` marker.
+
+No parallax. Scroll-linked motion is limited to two things, both modelled on
+native list behaviour rather than on web scroll effects:
+
+- **Section reveal** — a band rises into place once, the first time it enters
+  the viewport, and never re-animates on the way back up.
+- **Overscroll stretch** — pulling past either end of a scroller stretches the
+  content away from the anchored edge and springs it back, as Android 12 does.
+  Purely a transform over native scroll: passive listeners only, nothing
+  intercepted or delayed.
+
+Every one of these stops entirely under `prefers-reduced-motion`, guaranteed by
+one base-layer rule rather than a check per component.
 
 ### 10.7 Photography standard
 

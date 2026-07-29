@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ExternalLink, Store } from 'lucide-react';
 
 import { DashboardSidebar, DashboardTabBar } from '@/components/dashboard/dashboard-nav';
+import { StretchScroll } from '@/components/motion/stretch-scroll';
 import { NotificationBell } from '@/components/dashboard/notification-bell';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireShopkeeper } from '@/lib/auth/guards';
@@ -99,11 +100,18 @@ export default async function DashboardLayout({
         </div>
       </header>
 
-      <div className="flex">
-        <DashboardSidebar />
-        {/* pb-20 clears the fixed mobile tab bar. */}
-        <main className="min-w-0 flex-1 pb-20 md:pb-6">{children}</main>
-      </div>
+      {/*
+        Same rule as the storefront: the shop header above and the tab bar below
+        stay outside the stretch, because both are pinned and a transformed
+        ancestor un-pins them. See components/motion/stretch-scroll.tsx.
+      */}
+      <StretchScroll root>
+        <div className="flex">
+          <DashboardSidebar />
+          {/* pb-20 clears the fixed mobile tab bar. */}
+          <main className="min-w-0 flex-1 pb-20 md:pb-6">{children}</main>
+        </div>
+      </StretchScroll>
 
       <DashboardTabBar />
     </div>

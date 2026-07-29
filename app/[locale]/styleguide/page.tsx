@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { CustomShowcase } from '@/components/styleguide/custom-showcase';
+import { MotionShowcase } from '@/components/styleguide/motion-showcase';
 import { StyleguideInteractive } from '@/components/styleguide/interactive';
 import {
   formatCompact,
@@ -184,6 +185,11 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
       {/* ---------------------------------------------------------------- */}
       <Section title={t('sections.custom')}>
         <CustomShowcase />
+      </Section>
+
+      {/* ---------------------------------------------------------------- */}
+      <Section title={t('sections.motion')}>
+        <MotionShowcase />
       </Section>
 
       {/* ---------------------------------------------------------------- */}

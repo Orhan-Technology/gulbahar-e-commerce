@@ -58,7 +58,7 @@ export async function CategoryTiles() {
             <Link
               key={category.id}
               href={`/categories/${category.slug}`}
-              className="group flex w-24 shrink-0 flex-col items-center gap-3 text-center sm:w-auto"
+              className="pressable group flex w-24 shrink-0 flex-col items-center gap-3 text-center sm:w-auto"
             >
               <span className="rounded-pill relative flex aspect-square w-full max-w-24 items-center justify-center overflow-hidden bg-neutral-100 transition-transform duration-150 group-hover:scale-105">
                 {category.imagePath ? (

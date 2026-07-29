@@ -300,6 +300,12 @@
    * ---------------------------------------------------------------- */
   --duration-feedback: 200ms;
   --duration-decorative: 420ms;
+  /*
+   * PRESS is faster than either, deliberately. It is not an animation the user
+   * watches, it is the surface acknowledging contact, and anything slow enough
+   * to notice reads as the tap having missed.
+   */
+  --duration-press: 120ms;
   /* The reference's hover easing: quick to leave, slow to settle. */
   --ease-settle: cubic-bezier(0.22, 1, 0.36, 1);
 
@@ -426,6 +432,21 @@
   }
 
   /*
+   * The viewport answers an over-pull itself — a glow on Android, a bounce on
+   * desktop Chrome, pull-to-refresh at the top — and StretchScroll answers the
+   * same gesture. Two effects on one pull look like a bug, and pull-to-refresh
+   * inside an app shell reloads the page a customer was mid-way through
+   * browsing. This is the viewport half of the pair; a scroll container gets
+   * the same declaration from StretchScroll itself.
+   *
+   * `y` only: horizontal overscroll is the browser's back gesture, which is
+   * navigation and not ours to take.
+   */
+  html {
+    overscroll-behavior-y: none;
+  }
+
+  /*
    * v4's Preflight sets border-color to currentColor rather than a grey, so
    * an explicit default keeps `border` alone meaning "our border token".
    */
@@ -475,6 +496,40 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * Press feedback — see components/motion/pressable.tsx for the listener that
+   * sets the attribute, and why it is an attribute rather than `:active`.
+   *
+   * `scale`, not `transform`: Tailwind v4 compiles its own scale-* utilities to
+   * the standalone property, and a component-layer rule writing `transform`
+   * would be silently overwritten by any utility on the same element (and would
+   * itself wipe a translate). Animating the same property both use keeps the
+   * cascade honest.
+   *
+   * In `components`, not `utilities`, so a call site can still override it with
+   * a utility — which is exactly how the link-variant button opts out.
+   */
+  .pressable {
+    transition: scale var(--duration-press) ease-out;
+  }
+
+  .pressable[data-pressed] {
+    scale: 0.97;
+  }
+
+  /*
+   * The base-layer reduced-motion rule zeroes the TRANSITION, which would leave
+   * the press landing instantly rather than not at all. The scale itself has to
+   * be cancelled here.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    .pressable[data-pressed] {
+      scale: 1;
     }
   }
 }
