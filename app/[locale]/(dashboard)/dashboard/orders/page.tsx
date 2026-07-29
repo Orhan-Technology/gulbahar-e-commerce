@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Package, ShoppingBag, Store, Truck } from 'lucide-react';
+import { Package, ShoppingBag, Store, Truck, X } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { LiveRefresh } from '@/components/dashboard/live-refresh';
@@ -8,12 +8,14 @@ import { OrderActions } from '@/components/dashboard/orders/order-actions';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireShopkeeper } from '@/lib/auth/guards';
-import { shopOrderCounts, shopOrderList } from '@/lib/db/queries/shop-orders';
+import { isOrderRange, shopOrderCounts, shopOrderList, type OrderRange } from '@/lib/db/queries/shop-orders';
 import { formatCurrency, formatNumber, formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { pressable } from '@/components/motion/pressable';
+import { cn } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/db/schema';
 
-type Query = { status?: OrderStatus };
+type Query = { status?: OrderStatus; range?: string };
 
 const STATUS_BADGE: Record<
   OrderStatus,
@@ -42,12 +44,22 @@ export default async function ShopOrdersPage({
 
   const counts = await shopOrderCounts(user.shopId);
 
+  /*
+   * A range arrives from a dashboard KPI tile ("orders this week"). It is shown
+   * as a removable chip above the list rather than silently applied: a filtered
+   * list that does not say it is filtered is how a shopkeeper concludes their
+   * orders have disappeared.
+   */
+  const range: OrderRange | undefined = isOrderRange(query.range) ? query.range : undefined;
+
   const chips = [
     {
       key: 'actionable',
       href: '/dashboard/orders',
       count: counts.actionable,
-      active: !query.status,
+      // A range is a different axis, so it must not leave the default chip
+      // looking selected while the list below is something else entirely.
+      active: !query.status && !range,
     },
     {
       key: 'placed',
@@ -95,6 +107,23 @@ export default async function ShopOrdersPage({
         )}
       </div>
 
+      {range && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-neutral-500">{t('filteredBy')}</span>
+          <Link
+            href="/dashboard/orders"
+            className={cn(
+              pressable,
+              'rounded-pill border-primary bg-primary-50 text-primary inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-primary-100',
+            )}
+          >
+            {t(`ranges.${range}`)}
+            <X className="h-3.5 w-3.5" aria-hidden />
+            <span className="sr-only">{t('clearFilter')}</span>
+          </Link>
+        </div>
+      )}
+
       <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
         {chips.map((chip) => (
           <Link
@@ -115,7 +144,7 @@ export default async function ShopOrdersPage({
       </div>
 
       <Suspense fallback={<OrderListSkeleton />}>
-        <OrderList shopId={user.shopId} locale={locale} query={query} />
+        <OrderList shopId={user.shopId} locale={locale} query={query} range={range} />
       </Suspense>
     </div>
   );
@@ -125,17 +154,23 @@ async function OrderList({
   shopId,
   locale,
   query,
+  range,
 }: {
   shopId: string;
   locale: string;
   query: Query;
+  range?: OrderRange;
 }) {
   const t = await getTranslations('shopOrders');
 
   const orders = await shopOrderList({
     shopId,
     status: query.status,
-    bucket: query.status ? undefined : 'actionable',
+    // A range is a window across every status, so it replaces the actionable
+    // default rather than narrowing it — otherwise "orders this week" would
+    // silently exclude the fulfilled ones, which are most of them.
+    bucket: query.status || range ? undefined : 'actionable',
+    range,
   });
 
   if (orders.length === 0) {

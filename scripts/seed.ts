@@ -14,6 +14,7 @@ import {
   orderItems,
   orders,
   productImages,
+  productViewDays,
   productVariants,
   products,
   reviewResponses,
@@ -1008,6 +1009,67 @@ async function main() {
   });
 
   await db.insert(notifications).values(notificationValues);
+
+  // --------------------------------------------------------- product views
+  /*
+   * Daily view counts, spread across the last 35 days so the dashboard's
+   * "views this week" KPI has a real week-over-week comparison (PRD §6.1).
+   *
+   * Drawn from a SEPARATE generator, and that is the whole reason this block
+   * sits at the very end of main(). Every order reference in the demo runbook
+   * and in the check scripts — GC-24788, GC-24338 — is a function of the
+   * position of a draw in the main `rand()` sequence, so taking even one extra
+   * number from it renumbers the entire order book. A second mulberry32 with
+   * its own seed is just as deterministic and touches nothing.
+   *
+   * Each product's rows sum to EXACTLY its seeded view_count, so the lifetime
+   * counter on the product row and the sum of this table can never disagree —
+   * they are two views of one number, not two numbers.
+   */
+  const viewRand = makeRandom(20260728);
+  const VIEW_DAYS = 35;
+
+  const viewDayValues: Array<{ productId: string; day: string; views: number }> = [];
+
+  for (const product of productSeed) {
+    const productId = productIds.get(product.slug);
+    if (!productId) continue;
+
+    /*
+     * A rising weight curve, so the recent week outperforms the one before it
+     * on most products but not all — a dashboard where every shop's arrow
+     * points up reads as a mock-up, not as data.
+     */
+    const trend = 0.7 + viewRand() * 0.9;
+    const weights = Array.from({ length: VIEW_DAYS }, (_, index) => {
+      const ramp = 1 + (trend - 1) * (index / (VIEW_DAYS - 1));
+      // Weekends are busier in Kabul retail; day 0 of this window is arbitrary
+      // but stable, which is all the shape needs to be.
+      const weekend = index % 7 === 4 || index % 7 === 5 ? 1.35 : 1;
+      return ramp * weekend * (0.55 + viewRand() * 0.9);
+    });
+
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    let allocated = 0;
+
+    for (let index = 0; index < VIEW_DAYS; index += 1) {
+      // Last day takes the remainder, which is what makes the sum exact.
+      const views =
+        index === VIEW_DAYS - 1
+          ? Math.max(0, product.viewCount - allocated)
+          : Math.round((product.viewCount * weights[index]) / totalWeight);
+      allocated += views;
+      if (views === 0) continue;
+
+      const day = new Date(NOW);
+      day.setUTCDate(day.getUTCDate() - (VIEW_DAYS - 1 - index));
+      viewDayValues.push({ productId, day: day.toISOString().slice(0, 10), views });
+    }
+  }
+
+  for (let index = 0; index < viewDayValues.length; index += 500) {
+    await db.insert(productViewDays).values(viewDayValues.slice(index, index + 500));
+  }
 
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();

@@ -164,12 +164,21 @@ The shop dashboard is the shopkeeper's entire experience of the platform. **Mobi
 
 ### 6.1 Dashboard
 
-Answers two questions in three seconds: did I make money, and what needs my attention?
+Answers two questions in three seconds — what needs me, and how is it going — **in that order**. The action centre leads; numbers follow it, because the person opening this is behind a counter with a customer waiting.
 
-- Stat cards: today's sales, this week's sales, orders awaiting action, live products
-- **Action queue**: new orders, orders to mark ready, out-of-stock products, expiring promotions
-- Sales chart, last 30 days
-- Top products with views, orders, revenue
+Reading order, identical on phone and desktop:
+
+1. **Greeting** — name, shop, and an approval-status pill. One line.
+2. **Action queue**, the hero: new orders, orders to mark ready, unanswered reviews, out-of-stock products, expiring promotions. Ordered most-urgent-first and capped at six rows with an in-place expand, so one busy category cannot push the rest of the screen out of reach. Order rows carry their controls: **accept and mark-ready happen on the row**, optimistically, with a real undo window (§13.2). Empty is a designed, positive state.
+3. **Four KPIs** — today's sales, orders this week, product views this week, shop rating. Each carries a ▲/▼ against the previous comparable window, and **each is a link that lands pre-filtered** on the rows behind the figure.
+4. **Sales chart**, last 30 days — 2px line over a soft fill.
+5. **Best sellers this week** — top five by units, with revenue alongside.
+
+Two figures deliberately do not appear as tiles: this week's sales (the chart header carries the 30-day total) and live product count (the queue reports the products that need action). Two revenue numbers side by side look like a fuller dashboard and tell the reader one thing.
+
+Mobile navigation is a bottom tab bar — Dashboard, Orders (badged with the count awaiting acceptance), Products, More — with an active-tab marker. Promotions lives in More on a phone and in the rail on desktop.
+
+**Product views** are backed by `product_view_days`, a per-product daily roll-up. `products.view_count` is a lifetime counter with no time dimension, and a tile reading "this week" over a lifetime total is a number that lies.
 
 ### 6.2 Products
 

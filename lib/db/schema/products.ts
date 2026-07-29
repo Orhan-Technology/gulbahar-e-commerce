@@ -1,4 +1,14 @@
-import { index, integer, jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  date,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { categories } from './categories';
 import { createdAt, productStatusEnum, type LocalizedText } from './shared';
@@ -54,6 +64,42 @@ export const products = pgTable(
     // browsing within a category.
     index('products_shop_status_idx').on(table.shopId, table.status),
     index('products_category_status_idx').on(table.categoryId, table.status),
+  ],
+);
+
+/**
+ * Daily view counts per product (PRD §6.1).
+ *
+ * `products.view_count` is a LIFETIME integer with no time dimension, so a
+ * dashboard KPI reading "views this week" cannot be derived from it — and a
+ * card that says "this week" over a lifetime total is a number that lies on
+ * the client's screen. This is the time series behind it: one row per product
+ * per day it was seen, which also gives the week-over-week delta the card
+ * shows and, later, a views trend on the reports screen.
+ *
+ * A daily ROLL-UP rather than an event log. The demo has no analytics service
+ * and never will (CLAUDE.md), so the only consumer is "sum a date range" —
+ * and per-view rows would be tens of thousands of them to answer a question
+ * that thirty-five rows per product already answers exactly.
+ *
+ * `day` is a DATE, not a timestamp: the boundary a shopkeeper means by "this
+ * week" is a calendar day, and storing it as one makes the primary key do the
+ * de-duplication for free.
+ */
+export const productViewDays = pgTable(
+  'product_view_days',
+  {
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    day: date('day').notNull(),
+    views: integer('views').notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.productId, table.day] }),
+    // The dashboard reads a window across a shop's whole catalogue, so the
+    // date leads: it is the selective column in every query that touches this.
+    index('product_view_days_day_idx').on(table.day),
   ],
 );
 

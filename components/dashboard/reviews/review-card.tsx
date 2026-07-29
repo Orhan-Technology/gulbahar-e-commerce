@@ -42,12 +42,24 @@ export type ShopReviewRow = {
  * review deserves a beat of deliberation, and the dialog says out loud that it
  * cannot be edited afterwards.
  */
-export function ReviewCard({ review }: { review: ShopReviewRow }) {
+export function ReviewCard({
+  review,
+  autoReply = false,
+}: {
+  review: ShopReviewRow;
+  /**
+   * Opens the composer on mount. Set by the page for the review named in
+   * `?reply=`, so the dashboard's "needs a reply" queue row lands with the box
+   * already open — the point of that row is that replying is one tap away, and
+   * a deep link that merely scrolls you to the review is not that.
+   */
+  autoReply?: boolean;
+}) {
   const t = useTranslations('shopReviews');
   const locale = useLocale();
   const router = useRouter();
 
-  const [replying, setReplying] = React.useState(false);
+  const [replying, setReplying] = React.useState(autoReply);
   const [body, setBody] = React.useState('');
   const [pending, startTransition] = React.useTransition();
 

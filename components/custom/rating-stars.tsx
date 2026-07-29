@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Star } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatRating } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 const SIZES = {
@@ -42,7 +42,7 @@ export function RatingStars({ value, size = 'md', count, className }: RatingStar
         className="relative inline-flex"
         role="img"
         aria-label={t('ratingOutOfFive', {
-          rating: formatNumber(Number(clamped.toFixed(1)), locale),
+          rating: formatRating(clamped, locale),
         })}
       >
         {/* Empty track */}

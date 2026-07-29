@@ -51,7 +51,13 @@
       "outOfStock": "تمام شده: {product}",
       "outOfStockSub": "موجودی را به‌روز کنید تا فروش از دست نرود",
       "expiring": "تبلیغ در حال ختم: {slot}",
-      "expiringSub": "تا {date}"
+      "expiringSub": "تا {date}",
+      "needsReply": "نظر بی‌پاسخ روی «{product}»",
+      "needsReplySub": "امتیاز {rating} از ۵ — پاسخ شما عمومی نمایش داده می‌شود",
+      "acceptedToast": "سفارش {reference} تایید شد",
+      "readyToast": "سفارش {reference} آمادهٔ تحویل شد",
+      "undo": "لغو",
+      "showMore": "{n, plural, one {# مورد دیگر} other {{count} مورد دیگر}}"
     },
     "vsYesterday": "نسبت به دیروز، همین ساعت",
     "weekOrders": "{n, plural, other {{count} سفارش}}",
@@ -61,7 +67,16 @@
     "allInStock": "همه موجود",
     "salesChartRange": "از {from} تا {to}",
     "topProductsStats": "{views} بازدید · {no, plural, other {{orders} سفارش}} · {saves} نشان‌شده",
-    "noSalesYet": "هنوز فروشی ثبت نشده"
+    "noSalesYet": "هنوز فروشی ثبت نشده",
+    "greeting": "سلام، {name}",
+    "weekOrdersLabel": "سفارش‌های این هفته",
+    "weekViewsLabel": "بازدید محصولات این هفته",
+    "shopRatingLabel": "امتیاز دکان",
+    "vsLastWeek": "نسبت به هفتهٔ گذشته",
+    "ratingCount": "{n, plural, one {از # نظر} other {از {count} نظر}}",
+    "noReviewsYet": "هنوز نظری ثبت نشده",
+    "topSellersHeading": "پرفروش‌ها این هفته",
+    "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} · {views} بازدید"
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -867,7 +882,8 @@
       "approved": "فعال",
       "suspended": "معلق",
       "closed": "بسته"
-    }
+    },
+    "pendingOrders": "{n, plural, one {# سفارش در انتظار تایید} other {{count} سفارش در انتظار تایید}}"
   },
   "shopOrders": {
     "title": "سفارش‌ها",
@@ -938,6 +954,13 @@
         "reason_required": "برای رد سفارش نوشتن دلیل الزامی است",
         "transition_not_allowed": "وضعیت این سفارش در این میان تغییر کرده است. صفحه را نو کنید."
       }
+    },
+    "filteredBy": "فیلتر شده:",
+    "clearFilter": "برداشتن فیلتر",
+    "ranges": {
+      "1d": "امروز",
+      "7d": "هفت روز گذشته",
+      "30d": "سی روز گذشته"
     }
   },
   "shopProducts": {

@@ -43,6 +43,15 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   const start30 = new Date(startOfToday);
   start30.setUTCDate(start30.getUTCDate() - 29);
 
+  /*
+   * The week before this one, for the KPI deltas. Both windows are seven whole
+   * days ending today, so "this week" and "last week" are the same length —
+   * comparing a partial week against a full one is the same mistake the
+   * today-vs-yesterday window above already avoids.
+   */
+  const startOfPrevWeek = new Date(startOfWeek);
+  startOfPrevWeek.setUTCDate(startOfPrevWeek.getUTCDate() - 7);
+
   const in7Days = new Date(now);
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
 
@@ -68,10 +77,49 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
         ),
       );
 
+  /**
+   * Orders RECEIVED in a window, whatever became of them — the KPI is "how much
+   * business came in", so an order still sitting at placed counts. Rejected
+   * ones do not: the shopkeeper turned those away, and counting them would let
+   * a bad week look like a good one.
+   */
+  const ordersBetween = (since: Date, until?: Date) =>
+    db
+      .select({ total: sql<number>`count(distinct ${orders.id})` })
+      .from(orderItems)
+      .innerJoin(orders, eq(orderItems.orderId, orders.id))
+      .where(
+        and(
+          eq(orderItems.shopId, shopId),
+          gte(orders.createdAt, since),
+          until ? lt(orders.createdAt, until) : undefined,
+          sql`${orders.status} <> 'rejected'`,
+        ),
+      );
+
+  /** Product views over a window, summed across this shop's whole catalogue. */
+  const viewsBetween = (since: Date, until: Date) =>
+    db.execute(sql`
+      select coalesce(sum(v.views), 0)::int as total
+      from product_view_days v
+      join products p on p.id = v.product_id
+      where p.shop_id = ${shopId}
+        and v.day >= ${since.toISOString().slice(0, 10)}::date
+        and v.day < ${until.toISOString().slice(0, 10)}::date
+    `);
+
+  const startOfTomorrow = new Date(startOfToday);
+  startOfTomorrow.setUTCDate(startOfTomorrow.getUTCDate() + 1);
+
   const [
     todayRows,
     yesterdayRows,
     weekRows,
+    weekOrderRows,
+    prevWeekOrderRows,
+    weekViewRows,
+    prevWeekViewRows,
+    ratingRows,
     awaitingRows,
     liveProductRows,
     outOfStockRows,
@@ -83,6 +131,20 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
     revenueBetween(startOfToday),
     revenueBetween(startOfYesterday, yesterdayToNow),
     revenueBetween(startOfWeek),
+    ordersBetween(startOfWeek),
+    ordersBetween(startOfPrevWeek, startOfWeek),
+    viewsBetween(startOfWeek, startOfTomorrow),
+    viewsBetween(startOfPrevWeek, startOfWeek),
+
+    // Shop rating: the average a customer sees, over this shop's own products.
+    db.execute(sql`
+      select
+        coalesce(round(avg(r.rating)::numeric, 2), 0)::float8 as average,
+        count(*)::int as total
+      from reviews r
+      join products p on p.id = r.product_id
+      where p.shop_id = ${shopId} and r.status = 'visible'
+    `),
 
     // Action queue: orders sitting at placed (accept/reject) or accepted (mark ready).
     db
@@ -158,8 +220,15 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
     `),
 
     /*
-     * Top products by revenue, with the views and wishlist saves PRD §6.1 asks
-     * for. Written as one aggregate scan with explicit aliases rather than
+     * Best sellers, ordered by UNITS rather than by revenue.
+     *
+     * They are different lists and the difference matters: by revenue, one
+     * laptop outranks forty phone cases, and a shopkeeper reading "best
+     * sellers" means the cases. Revenue is still shown on the row — it is the
+     * second thing you want once you know what is moving — so nothing is lost
+     * by ranking on the honest column.
+     *
+     * Written as one aggregate scan with explicit aliases rather than
      * correlated subqueries: drizzle renders an interpolated `${products.id}`
      * unqualified inside a sql template, which is ambiguous against the joined
      * order_items.id (see lib/db/queries/fragments.ts for the full explanation).
@@ -183,8 +252,8 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
       left join orders o on o.id = oi.order_id
       where p.shop_id = ${shopId}
       group by p.id
-      order by revenue desc, p.view_count desc
-      limit 8
+      order by order_count desc, revenue desc, p.view_count desc
+      limit 5
     `),
   ]);
 
@@ -192,6 +261,24 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
 
   const todaySales = Number(todayRows[0]?.total ?? 0);
   const yesterdaySales = Number(yesterdayRows[0]?.total ?? 0);
+
+  const weekOrderCount = Number(weekOrderRows[0]?.total ?? 0);
+  const prevWeekOrderCount = Number(prevWeekOrderRows[0]?.total ?? 0);
+
+  const [weekViewRow] = weekViewRows as unknown as Array<{ total: number }>;
+  const [prevWeekViewRow] = prevWeekViewRows as unknown as Array<{ total: number }>;
+  const weekViews = Number(weekViewRow?.total ?? 0);
+  const prevWeekViews = Number(prevWeekViewRow?.total ?? 0);
+
+  const [ratingRow] = ratingRows as unknown as Array<{ average: number; total: number }>;
+
+  /**
+   * Signed fraction against the previous window, or null when there is nothing
+   * to compare against. Never Infinity, and never "+100%" out of a zero — see
+   * `todayDelta` for why an unbaselined comparison is worse than no comparison.
+   */
+  const delta = (current: number, previous: number) =>
+    previous > 0 ? (current - previous) / previous : null;
 
   return {
     todaySales,
@@ -205,7 +292,20 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
     todayDelta: yesterdaySales > 0 ? (todaySales - yesterdaySales) / yesterdaySales : null,
     weekSales: Number(weekRows[0]?.total ?? 0),
     todayOrderCount: Number(todayRows[0]?.orderCount ?? 0),
-    weekOrderCount: Number(weekRows[0]?.orderCount ?? 0),
+    weekOrderCount,
+    prevWeekOrderCount,
+    ordersDelta: delta(weekOrderCount, prevWeekOrderCount),
+    weekViews,
+    prevWeekViews,
+    viewsDelta: delta(weekViews, prevWeekViews),
+    /**
+     * The rating a customer sees on the shop card, so the dashboard and the
+     * storefront cannot disagree about how the shop is doing.
+     */
+    rating: {
+      average: Number(ratingRow?.average ?? 0),
+      count: Number(ratingRow?.total ?? 0),
+    },
     liveProducts: Number(liveProductRows[0]?.total ?? 0),
     lowStockProducts: Number(lowStockRows[0]?.total ?? 0),
     actionQueue: {
@@ -314,7 +414,7 @@ export async function unansweredReviewCount(shopId: string) {
 }
 
 export type ActionQueueEntry = {
-  kind: 'new_order' | 'to_ready' | 'out_of_stock' | 'expiring_promotion';
+  kind: 'new_order' | 'to_ready' | 'needs_reply' | 'out_of_stock' | 'expiring_promotion';
   id: string;
   title: string;
   subtitle: string;
@@ -337,7 +437,7 @@ export async function actionQueueItems(
 ): Promise<ActionQueueEntry[]> {
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [orderRows, stockRows, promoRows] = await Promise.all([
+  const [orderRows, reviewRows, stockRows, promoRows] = await Promise.all([
     // Orders sitting at placed (accept/reject) or accepted (mark ready), scoped
     // to this shop's own lines.
     db.execute(sql`
@@ -350,6 +450,23 @@ export async function actionQueueItems(
       group by o.id
       order by o.created_at asc
       limit 12
+    `),
+    /*
+     * Reviews with no shop response yet (PRD §6.5).
+     *
+     * An unanswered review is work in exactly the way a new order is — it is
+     * public, it is addressed to the shop, and it stays visible until someone
+     * replies — so it belongs in the queue rather than behind a tab. Low
+     * ratings lead: those are the ones a reply actually rescues.
+     */
+    db.execute(sql`
+      select r.id, r.rating, r.created_at, p.title
+      from reviews r
+      join products p on p.id = r.product_id
+      left join review_responses rr on rr.review_id = r.id
+      where p.shop_id = ${shopId} and r.status = 'visible' and rr.id is null
+      order by r.rating asc, r.created_at asc
+      limit 4
     `),
     db.execute(sql`
       select p.id, p.slug, p.title, p.created_at
@@ -376,6 +493,12 @@ export async function actionQueueItems(
     item_count: number;
     shop_total: number;
   }>;
+  const unanswered = reviewRows as unknown as Array<{
+    id: string;
+    rating: number;
+    created_at: string;
+    title: Record<string, string>;
+  }>;
   const stock = stockRows as unknown as Array<{
     id: string;
     slug: string;
@@ -395,6 +518,18 @@ export async function actionQueueItems(
       title: row.reference,
       subtitle: `${row.item_count}|${row.shop_total}`,
       href: `/dashboard/orders/${row.reference}`,
+      at: new Date(row.created_at),
+    })),
+    ...unanswered.map((row): ActionQueueEntry => ({
+      kind: 'needs_reply',
+      id: row.id,
+      title: pickLocale(row.title as never, locale),
+      subtitle: String(row.rating),
+      // Deep-links with the composer already open on this review, so replying
+      // is one tap from the queue rather than a hunt through the list.
+      // Filtered to unanswered as well as targeted: the composer opens on the
+      // named review, and the list behind it is the rest of the same job.
+      href: `/dashboard/reviews?unanswered=1&reply=${row.id}`,
       at: new Date(row.created_at),
     })),
     ...stock.map((row): ActionQueueEntry => ({
@@ -419,8 +554,9 @@ export async function actionQueueItems(
   const rank: Record<ActionQueueEntry['kind'], number> = {
     new_order: 0,
     to_ready: 1,
-    out_of_stock: 2,
-    expiring_promotion: 3,
+    needs_reply: 2,
+    out_of_stock: 3,
+    expiring_promotion: 4,
   };
   return entries.sort((a, b) => rank[a.kind] - rank[b.kind] || a.at.getTime() - b.at.getTime());
 }

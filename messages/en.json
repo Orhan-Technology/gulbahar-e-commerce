@@ -51,7 +51,13 @@
       "outOfStock": "Out of stock: {product}",
       "outOfStockSub": "Update stock so you don't lose sales",
       "expiring": "Promotion ending: {slot}",
-      "expiringSub": "until {date}"
+      "expiringSub": "until {date}",
+      "needsReply": "Unanswered review on \"{product}\"",
+      "needsReplySub": "Rated {rating} out of 5 — your reply is shown publicly",
+      "acceptedToast": "Order {reference} accepted",
+      "readyToast": "Order {reference} marked ready",
+      "undo": "Undo",
+      "showMore": "{n, plural, one {# more item} other {{count} more items}}"
     },
     "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
@@ -61,7 +67,16 @@
     "allInStock": "All in stock",
     "salesChartRange": "{from} to {to}",
     "topProductsStats": "{views} views · {no, plural, one {{orders} order} other {{orders} orders}} · {saves} saved",
-    "noSalesYet": "No sales recorded yet"
+    "noSalesYet": "No sales recorded yet",
+    "greeting": "Hello, {name}",
+    "weekOrdersLabel": "Orders this week",
+    "weekViewsLabel": "Product views this week",
+    "shopRatingLabel": "Shop rating",
+    "vsLastWeek": "vs last week",
+    "ratingCount": "{n, plural, one {from # review} other {from {count} reviews}}",
+    "noReviewsYet": "No reviews yet",
+    "topSellersHeading": "Best sellers this week",
+    "topSellersUnits": "{n, plural, one {# sold} other {{count} sold}} · {views} views"
   },
   "admin": {
     "heading": "Platform Administration",
@@ -867,7 +882,8 @@
       "approved": "Active",
       "suspended": "Suspended",
       "closed": "Closed"
-    }
+    },
+    "pendingOrders": "{n, plural, one {# order awaiting acceptance} other {{count} orders awaiting acceptance}}"
   },
   "shopOrders": {
     "title": "Orders",
@@ -938,6 +954,13 @@
         "reason_required": "A reason is required to reject an order",
         "transition_not_allowed": "This order's status changed in the meantime. Reload the page."
       }
+    },
+    "filteredBy": "Filtered:",
+    "clearFilter": "Clear filter",
+    "ranges": {
+      "1d": "Today",
+      "7d": "Last 7 days",
+      "30d": "Last 30 days"
     }
   },
   "shopProducts": {

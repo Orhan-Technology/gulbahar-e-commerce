@@ -27,6 +27,8 @@ export type ShopProductRow = {
   stock: number;
   status: 'draft' | 'published' | 'unpublished';
   viewCount: number;
+  /** Views over the last seven days — see `viewWindow`. */
+  weekViews: number;
   wishlistCount: number;
   imagePath: string | null;
   /** True when the fa title exists but en does not (PRD §11). */
@@ -45,7 +47,18 @@ const LOW_STOCK = 5;
  * Rows rather than a real table: a six-column table is unusable at 390px, and this
  * panel is phone-first by requirement (PRD §6).
  */
-export function ProductTable({ rows }: { rows: ShopProductRow[] }) {
+export function ProductTable({
+  rows,
+  viewWindow = 'all',
+}: {
+  rows: ShopProductRow[];
+  /**
+   * Which view figure the eye icon shows. `week` when the list is ranked by
+   * demand, so the number beside a row is the one the ordering used — an
+   * all-time count under a seven-day ranking reads as a broken sort.
+   */
+  viewWindow?: 'all' | 'week';
+}) {
   const t = useTranslations('shopProducts');
   const locale = useLocale();
   const router = useRouter();
@@ -168,7 +181,7 @@ export function ProductTable({ rows }: { rows: ShopProductRow[] }) {
               <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
                 <span className="inline-flex items-center gap-1">
                   <Eye className="h-3 w-3" aria-hidden />
-                  {formatNumber(row.viewCount, locale)}
+                  {formatNumber(viewWindow === 'week' ? row.weekViews : row.viewCount, locale)}
                 </span>
                 <span className="inline-flex items-center gap-1">
                   <Heart className="h-3 w-3" aria-hidden />

@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 
 import { RatingStars } from '@/components/custom/rating-stars';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatRating } from '@/lib/format';
 
 export type RatingSummaryProps = {
   average: number;
@@ -32,7 +32,7 @@ export async function RatingSummary({ average, total, distribution }: RatingSumm
     <div className="rounded-card border-border bg-card grid gap-5 border p-4 sm:grid-cols-[auto_1fr] sm:gap-8">
       <div className="text-center">
         <p className="text-foreground text-3xl font-bold tabular-nums">
-          {formatNumber(Number(average.toFixed(1)), locale)}
+          {formatRating(average, locale)}
         </p>
         <RatingStars value={average} size="md" className="mt-1 justify-center" />
         <p className="text-muted-foreground mt-1 text-xs">

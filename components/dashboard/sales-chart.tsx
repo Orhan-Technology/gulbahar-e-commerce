@@ -1,7 +1,8 @@
 'use client';
 
+import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
 import { usePrefersReducedMotion } from '@/components/custom/stat-card';
 import { formatCurrency, formatDate, formatDayMonth, formatNumber } from '@/lib/format';
@@ -12,21 +13,23 @@ export type SalesPoint = { day: string; revenue: number; orderCount: number };
 /**
  * 30-day sales chart (PRD §6.1).
  *
- * Bars rather than an area: daily takings are thirty separate amounts, and the
- * line an area chart draws between them implies a continuous quantity that a
- * shop's till does not have. Bars also survive being 300px wide on a phone,
- * which is where this screen is actually read.
+ * A 2px LINE OVER A SOFT FILL, not the bars this used to draw. The argument for
+ * bars was that daily takings are thirty discrete amounts and a line implies a
+ * continuity a till does not have — true, and beside the point at this size. At
+ * 30 points on a 350px phone the bars are 4px wide with 2px gaps, which reads as
+ * texture rather than as data; the line states the SHAPE of the month, which is
+ * the only thing anyone reads a 30-day chart for. The exact figure for any day
+ * is a tap away in the tooltip, where it was already.
  *
- * There is no Y axis. The 30-day total sits in the panel header and the tooltip
- * carries the exact figure for any day, so an axis of compacted afghanis would
- * spend a fifth of a narrow chart's width restating both. Shading does the
- * ranking instead — the best day is the dark bar.
+ * There is still no Y axis. The 30-day total sits in the panel header and the
+ * tooltip carries the day's figure, so an axis of compacted afghanis would
+ * spend a fifth of a narrow chart's width restating both.
  *
  * RTL correctness is the remaining difficulty (PRD §10.3): `reversed` on the X
  * axis makes time run right-to-left in Dari, so the most recent day sits where a
  * Dari reader's eye starts. Every tick and tooltip value goes through our Intl
- * formatters, so the chart shows Persian digits and afghanis rather than ASCII
- * numerals. Recharts does none of this on its own.
+ * formatters, so the chart shows Persian digits, afghanis and Afghan solar month
+ * names. Recharts does none of this on its own.
  */
 export function SalesChart({ data }: { data: SalesPoint[] }) {
   const locale = useLocale();
@@ -34,14 +37,29 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
   const isRtl = localeDirection(locale) === 'rtl';
   const prefersReduced = usePrefersReducedMotion();
 
-  const peak = Math.max(...data.map((point) => point.revenue), 0);
+  // SVG gradient ids are document-global; two charts on one screen would
+  // otherwise share — and fight over — a single <linearGradient>.
+  const fillId = `sales-fill-${React.useId().replace(/:/g, '')}`;
 
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         {/* Small side margins so the first and last tick labels are not clipped
             by the panel edge — the axis draws them centred on their band. */}
-        <BarChart data={data} margin={{ top: 4, right: 14, bottom: 0, left: 14 }}>
+        <AreaChart data={data} margin={{ top: 6, right: 14, bottom: 0, left: 14 }}>
+          <defs>
+            {/*
+              Vertical, so it needs no direction handling: the fill fades from
+              the line downward in both scripts. It carries no information the
+              line does not — its job is to give the curve weight against a
+              white panel without drawing a second edge.
+            */}
+            <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--color-primary-600)" stopOpacity={0.22} />
+              <stop offset="100%" stopColor="var(--color-primary-600)" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+
           <XAxis
             dataKey="day"
             reversed={isRtl}
@@ -56,7 +74,7 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
           />
 
           <Tooltip
-            cursor={{ fill: 'var(--color-neutral-100)' }}
+            cursor={{ stroke: 'var(--color-neutral-300)', strokeWidth: 1 }}
             contentStyle={{
               borderRadius: 'var(--radius-card)',
               border: '1px solid var(--color-border)',
@@ -64,6 +82,9 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
               fontSize: 12,
               direction: isRtl ? 'rtl' : 'ltr',
             }}
+            // The same medium date the rest of the app prints, which in fa-AF is
+            // the Afghan solar calendar and in en the Gregorian one — one
+            // formatter, so a date cannot read differently here than anywhere else.
             labelFormatter={(value) => formatDate(String(value), locale, 'medium')}
             // Recharts types value as possibly-undefined, so coerce before formatting.
             formatter={(value, name) => {
@@ -82,32 +103,26 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
             the same 280ms the stat counters use, and off entirely under reduced
             motion, which Recharts does not check for itself.
           */}
-          <Bar
+          <Area
+            type="monotone"
             dataKey="revenue"
-            radius={[3, 3, 0, 0]}
-            maxBarSize={14}
+            stroke="var(--color-primary-600)"
+            strokeWidth={2}
+            fill={`url(#${fillId})`}
+            // No resting dots: thirty of them on a phone is a dotted line, not a
+            // set of points. The hovered day gets one, which is when it means
+            // something.
+            dot={false}
+            activeDot={{
+              r: 4,
+              strokeWidth: 2,
+              stroke: 'var(--color-background)',
+              fill: 'var(--color-primary-600)',
+            }}
             isAnimationActive={!prefersReduced}
             animationDuration={280}
-          >
-            {data.map((point) => (
-              <Cell
-                key={point.day}
-                /*
-                 * Three tiers, not a gradient: the best day, the days that came
-                 * close, and everything else. A continuous scale would encode
-                 * the same information the bar height already carries.
-                 */
-                fill={
-                  peak > 0 && point.revenue >= peak * 0.9
-                    ? 'var(--color-primary-700)'
-                    : peak > 0 && point.revenue >= peak * 0.7
-                      ? 'var(--color-primary-400)'
-                      : 'var(--color-primary-200)'
-                }
-              />
-            ))}
-          </Bar>
-        </BarChart>
+          />
+        </AreaChart>
       </ResponsiveContainer>
     </div>
   );

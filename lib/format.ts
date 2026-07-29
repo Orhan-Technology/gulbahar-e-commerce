@@ -41,6 +41,19 @@ export function formatCompact(value: number, locale: string): string {
   return new Intl.NumberFormat(intlLocale(locale), { notation: 'compact' }).format(value);
 }
 
+/**
+ * A star rating, e.g. "۴٫۳" / "4.3".
+ *
+ * One decimal place, always, and rounded before formatting rather than by
+ * `maximumFractionDigits`: the same average has to read identically on the
+ * product page, the shop card and the shopkeeper's own dashboard, and the way
+ * that used to be spelled — `formatNumber(Number(x.toFixed(1)), locale)` —
+ * was open-coded at every call site and one of them would eventually differ.
+ */
+export function formatRating(value: number, locale: string): string {
+  return formatNumber(Number(value.toFixed(1)), locale);
+}
+
 /** Percentage for discount ribbons, e.g. "٪۲۵" / "25%". */
 export function formatPercent(fraction: number, locale: string): string {
   return new Intl.NumberFormat(intlLocale(locale), {

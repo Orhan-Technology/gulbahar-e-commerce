@@ -2,17 +2,30 @@
 
 import * as React from 'react';
 import { useLocale } from 'next-intl';
-import { ArrowDownRight, ArrowUpRight } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ChevronRight } from 'lucide-react';
 
+import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatCompact, formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import {
+  formatCompact,
+  formatCurrency,
+  formatNumber,
+  formatPercent,
+  formatRating,
+} from '@/lib/format';
+import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 export interface StatCardProps {
   label: string;
   value: number;
-  /** Currency renders through formatCurrency; count through formatNumber. */
-  format?: 'currency' | 'count' | 'compact' | 'percent';
+  /**
+   * Currency renders through formatCurrency; count through formatNumber.
+   * `decimal` is the one-place form ratings use, and like `percent` it skips
+   * the count-up: integer steps toward 4.3 render "4" for the whole animation
+   * and then snap, which reads as a glitch rather than as a count.
+   */
+  format?: 'currency' | 'count' | 'compact' | 'percent' | 'decimal';
   /** Signed fraction, e.g. 0.12 for +12%. */
   delta?: number | null;
   /**
@@ -32,6 +45,16 @@ export interface StatCardProps {
    * a stat row.
    */
   variant?: keyof typeof SURFACES;
+  /**
+   * Turns the whole tile into a drill-down.
+   *
+   * A KPI that cannot be opened is a poster, not a dashboard: the number
+   * raises a question ("orders are down 12% — which orders?") and the tile
+   * should be the answer to it. Every linked tile lands PRE-FILTERED on the
+   * rows behind the figure, never on an unfiltered list the reader then has
+   * to narrow by hand.
+   */
+  href?: string;
   className?: string;
 }
 
@@ -76,12 +99,15 @@ export function StatCard({
   tone,
   icon,
   variant = 'tile',
+  href,
   className,
 }: StatCardProps) {
   const locale = useLocale();
-  // A percentage is a fraction between 0 and 1, and counting up to it in
-  // integer steps would render 0% for the whole animation and then snap.
-  const display = useCountUp(value, format !== 'percent');
+  // A percentage is a fraction between 0 and 1, and a rating is a number with a
+  // decimal place; counting up to either in integer steps renders one value for
+  // the whole animation and then snaps.
+  const fractional = format === 'percent' || format === 'decimal';
+  const display = useCountUp(value, !fractional);
 
   const formatted =
     format === 'currency'
@@ -90,19 +116,41 @@ export function StatCard({
         ? formatCompact(display, locale)
         : format === 'percent'
           ? formatPercent(display, locale)
-          : formatNumber(display, locale);
+          : format === 'decimal'
+            ? formatRating(display, locale)
+            : formatNumber(display, locale);
 
   const hasDelta = delta !== null && delta !== undefined && delta !== 0;
   const positive = (delta ?? 0) > 0;
   const feature = variant === 'feature';
 
-  return (
-    <div className={cn(SURFACES[variant], className)}>
+  const surface = cn(
+    SURFACES[variant],
+    href && [
+      pressable,
+      'group block transition-[background-color,box-shadow,scale] duration-150 ease-out',
+      feature ? 'hover:bg-primary-800' : 'hover:shadow-card hover:bg-neutral-200',
+    ],
+    className,
+  );
+
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-2">
         <span className={cn('text-sm', feature ? 'text-primary-300' : 'text-neutral-500')}>
           {label}
         </span>
         {icon && <span className={feature ? 'text-primary-300' : 'text-primary-600'}>{icon}</span>}
+        {href && !icon && (
+          <ChevronRight
+            className={cn(
+              'h-4 w-4 shrink-0 transition-opacity duration-150 rtl:rotate-180',
+              feature ? 'text-primary-300' : 'text-neutral-400',
+              'opacity-0 group-hover:opacity-100',
+            )}
+            aria-hidden
+          />
+        )}
       </div>
 
       <div className="mt-2 flex flex-wrap items-baseline gap-2">
@@ -137,8 +185,27 @@ export function StatCard({
           {hint}
         </p>
       )}
-    </div>
+    </>
   );
+
+  /*
+   * ONE element, rendered as an <a> or a <div> — not a link wrapping a tile.
+   * A wrapper would add a second box to the layout and, worse, would put the
+   * press feedback on the wrapper rather than on the thing being pressed.
+   *
+   * Written as two returns instead of a dynamic `Root` component: `href` is
+   * optional, and a `Link | 'div'` union hands TypeScript a component whose
+   * props may or may not include a required `href`, which it rejects outright.
+   */
+  if (href) {
+    return (
+      <Link href={href} className={surface}>
+        {body}
+      </Link>
+    );
+  }
+
+  return <div className={surface}>{body}</div>;
 }
 
 /**

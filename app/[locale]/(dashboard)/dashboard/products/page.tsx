@@ -18,6 +18,8 @@ type Query = {
   q?: string;
   status?: 'draft' | 'published' | 'unpublished';
   stock?: 'out' | 'low';
+  /** Arrives from the dashboard's "views this week" tile. */
+  sort?: 'title' | 'views';
 };
 
 /** Shopkeeper product list (PRD §6.2). */
@@ -140,6 +142,7 @@ async function ProductList({
     search: query.q,
     status: query.status,
     stock: query.stock,
+    sort: query.sort === 'views' ? 'views' : 'title',
   });
 
   if (items.length === 0) {
@@ -165,10 +168,15 @@ async function ProductList({
         stock: item.stock,
         status: item.status,
         viewCount: item.viewCount,
+        weekViews: item.weekViews,
         wishlistCount: item.wishlistCount,
         imagePath: item.imagePath,
         missingEnglish: !hasTranslation(item.title, 'en'),
       }))}
+      // The eye figure switches to the seven-day count when the shopkeeper
+      // arrived from the dashboard's demand tile, so the ranking they are
+      // reading and the number beside each row are the same measure.
+      viewWindow={query.sort === 'views' ? 'week' : 'all'}
     />
   );
 }

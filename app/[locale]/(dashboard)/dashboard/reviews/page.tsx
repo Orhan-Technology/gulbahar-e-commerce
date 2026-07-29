@@ -13,7 +13,7 @@ import { shopReviewCounts, shopReviews } from '@/lib/db/queries/shop-reviews';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
-type Query = { rating?: string; unanswered?: string };
+type Query = { rating?: string; unanswered?: string; reply?: string };
 
 /** Reviews across the shop's products (PRD §6.5). */
 export default async function ShopReviewsPage({
@@ -125,6 +125,7 @@ async function ReviewList({
       {rows.map((row) => (
         <ReviewCard
           key={row.id}
+          autoReply={row.id === query.reply}
           review={{
             id: row.id,
             rating: row.rating,

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
 import {
@@ -25,19 +25,52 @@ import { orderItemImagePath, orderShopCount } from './fragments';
 /** Statuses that need the shopkeeper to do something, in the order they appear. */
 export const ACTIONABLE_STATUSES: OrderStatus[] = ['placed', 'accepted', 'ready'];
 
+/**
+ * Windows the dashboard's KPI tiles drill into (PRD §6.1).
+ *
+ * The tile says "orders this week"; tapping it must land on THOSE orders and
+ * not on an unfiltered list the shopkeeper then has to narrow by hand — a
+ * drill-down that drops its filter is worse than no link at all, because the
+ * count on the next screen silently disagrees with the number just tapped.
+ *
+ * Day counts, and they match the windows `shopDashboardStats` measures: both
+ * are whole days ending today, so the list length and the tile figure are the
+ * same number by construction.
+ */
+export const ORDER_RANGES = { '1d': 1, '7d': 7, '30d': 30 } as const;
+export type OrderRange = keyof typeof ORDER_RANGES;
+
+export const isOrderRange = (value: unknown): value is OrderRange =>
+  typeof value === 'string' && value in ORDER_RANGES;
+
 export type ShopOrderFilters = {
   shopId: string;
   status?: OrderStatus;
   /** 'actionable' collapses placed+accepted+ready into the working queue. */
   bucket?: 'actionable';
+  range?: OrderRange;
   limit?: number;
 };
+
+/** Start of the window `range` covers, at midnight UTC. */
+export function orderRangeStart(range: OrderRange, now: Date = new Date()): Date {
+  const start = new Date(now);
+  start.setUTCHours(0, 0, 0, 0);
+  start.setUTCDate(start.getUTCDate() - (ORDER_RANGES[range] - 1));
+  return start;
+}
 
 export async function shopOrderList(filters: ShopOrderFilters) {
   const conditions: SQL[] = [eq(orderItems.shopId, filters.shopId)];
   if (filters.status) conditions.push(eq(orders.status, filters.status));
   else if (filters.bucket === 'actionable') {
     conditions.push(inArray(orders.status, ACTIONABLE_STATUSES));
+  }
+  if (filters.range) {
+    conditions.push(gte(orders.createdAt, orderRangeStart(filters.range)));
+    // Matches the KPI tile, which counts business received and so excludes the
+    // orders this shop turned away.
+    conditions.push(sql`${orders.status} <> 'rejected'`);
   }
 
   return db

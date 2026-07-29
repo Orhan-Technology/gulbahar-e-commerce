@@ -1,4 +1,4 @@
-import { and, asc, count, eq, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
 import { localizedColumn, searchKey, searchKeyForInput } from '../localized';
@@ -22,6 +22,13 @@ export type ShopProductFilters = {
   categoryId?: string;
   /** 'out' = zero stock, 'low' = 1..5 — the two states worth acting on. */
   stock?: 'out' | 'low';
+  /**
+   * Default is alphabetical, which is the right order for a list you are
+   * WORKING through. `views` is the order you want when you arrived from the
+   * dashboard's demand tile, and it ranks by the same seven-day window that
+   * tile counts.
+   */
+  sort?: 'title' | 'views';
 };
 
 export const LOW_STOCK_THRESHOLD = 5;
@@ -69,11 +76,32 @@ export async function shopCatalogue(filters: ShopProductFilters) {
         select count(*)::int from product_images pi where pi.product_id = products.id
       )`,
       wishlistCount: productWishlistCount,
+      /*
+       * Views over the same seven days the dashboard's KPI tile measures.
+       *
+       * `products.view_count` is a LIFETIME counter, so sorting this list by it
+       * would answer a different question from the tile that linked here — the
+       * shopkeeper taps "views this week" and lands on an all-time ranking that
+       * silently disagrees with the number they just tapped.
+       */
+      weekViews: sql<number>`(
+        select coalesce(sum(v.views), 0)::int from product_view_days v
+        where v.product_id = products.id
+          and v.day >= (current_date - interval '6 days')
+      )`,
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
     .where(and(...conditions))
-    .orderBy(asc(localizedColumn(products.title, filters.locale)));
+    .orderBy(
+      filters.sort === 'views'
+        ? desc(sql`(
+            select coalesce(sum(v.views), 0)::int from product_view_days v
+            where v.product_id = products.id
+              and v.day >= (current_date - interval '6 days')
+          )`)
+        : asc(localizedColumn(products.title, filters.locale)),
+    );
 
   return rows.map((row) => ({
     ...row,

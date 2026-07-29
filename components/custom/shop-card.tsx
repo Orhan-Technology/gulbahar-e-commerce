@@ -5,7 +5,7 @@ import { Store } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
-import { formatNumber, formatUnitNumber } from '@/lib/format';
+import { formatNumber, formatRating, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -94,7 +94,7 @@ export function ShopCard({
           <span className="truncate text-xs text-neutral-500">
             {[
               rating !== undefined && rating > 0
-                ? `★ ${formatNumber(Number(rating.toFixed(1)), locale)}`
+                ? `★ ${formatRating(rating, locale)}`
                 : null,
               productCount !== undefined
                 ? t('productCount', { count: formatNumber(productCount, locale) })

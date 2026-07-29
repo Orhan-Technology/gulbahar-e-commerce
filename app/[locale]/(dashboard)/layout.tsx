@@ -8,6 +8,7 @@ import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { shopById } from '@/lib/db/queries/shops';
+import { shopOrderCounts } from '@/lib/db/queries/shop-orders';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -36,10 +37,13 @@ export default async function DashboardLayout({
   const t = await getTranslations('dashboardNav');
   const common = await getTranslations('common');
 
-  const [shop, notifications, unread] = await Promise.all([
+  const [shop, notifications, unread, orderCounts] = await Promise.all([
     shopById(user.shopId),
     userNotifications(user.id, user.role, 20),
     unreadNotificationCount(user.id, user.role),
+    // Feeds the Orders tab badge. Fetched here rather than in the client bar so
+    // the count is in the first paint instead of popping in after hydration.
+    shopOrderCounts(user.shopId),
   ]);
 
   const shopName = shop ? pickLocale(shop.name, locale) : t('yourShop');
@@ -113,7 +117,7 @@ export default async function DashboardLayout({
         </div>
       </StretchScroll>
 
-      <DashboardTabBar />
+      <DashboardTabBar pendingOrders={orderCounts.placed} />
     </div>
   );
 }
