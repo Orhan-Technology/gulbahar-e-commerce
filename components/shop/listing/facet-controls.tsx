@@ -257,7 +257,7 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
                 minRating === rating && 'bg-primary-50',
               )}
             >
-              <RatingStars value={rating} size="sm" />
+              <RatingStars value={rating} size="sm" reserveSpace />
               <span className="text-muted-foreground text-xs">{t('andUp')}</span>
             </button>
           ))}

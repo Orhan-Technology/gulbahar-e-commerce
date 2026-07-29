@@ -63,10 +63,14 @@
    * ~#1054A8. #0B57D0 is that colour with the compression backed out,
    * and it reproduces the capture when rendered and re-encoded.
    *
-   * Blue is the ONLY brand hue in this design. It carries links, the
-   * primary button, the cart badge, the rating stars and the active nav
-   * item. Red (see ACCENT) is the only other colour, and it means one
-   * thing: a price is coming down.
+   * Blue is ACTION: links, the primary button, the cart badge, the active
+   * nav item, a selected chip, the focus ring. Never decoration — if a
+   * blue thing cannot be pressed, it is in the wrong colour.
+   *
+   * It used to carry the rating stars too, which is what forced the rule
+   * to be written down: a five-star row was the loudest blue object on a
+   * product card and the one thing on it you could not click. Stars are
+   * ACCENT-WARM now.
    * ---------------------------------------------------------------- */
   --color-primary-50: #eef4fe; /* tinted surface, selected chip */
   --color-primary-100: #dbe7fd;
@@ -106,6 +110,23 @@
   --color-accent: var(--color-accent-600);
   /* Red is dark enough to carry white, unlike the gold it replaced. */
   --color-accent-foreground: hsl(0 0% 100%);
+
+  /* ----------------------------------------------------------------
+   * ACCENT-WARM — OPINION, not action.
+   *
+   * Rating stars, and nothing else without a reason. They were the brand
+   * blue, which put them in direct competition with every button, link
+   * and active chip on the same card: a five-star row is the loudest
+   * blue object in a product grid, and it is not a thing you can press.
+   *
+   * Amber also happens to be what a star IS — the one place in this
+   * palette where the literal reading and the systemic one agree.
+   * ---------------------------------------------------------------- */
+  --color-accent-warm-100: #fef3c7;
+  --color-accent-warm-400: #fbbf24;
+  --color-accent-warm-500: #f59e0b; /* THE star fill */
+  --color-accent-warm-600: #d97706;
+  --color-accent-warm: var(--color-accent-warm-500);
 
   /* ----------------------------------------------------------------
    * NEUTRAL — 10-step cool grey.
@@ -180,6 +201,15 @@
    * banner falls back to before its image loads — and the surfaces the
    * seasonal and bundle cards use when they carry no artwork at all.
    */
+  /*
+   * HesabPay's own navy. A THIRD-PARTY BRAND colour, not ours — the payment
+   * sheet has to look like HesabPay or it looks like a phishing page. It is a
+   * token rather than a hex in the component so the "no hex in components"
+   * rule stays absolute and this exception is visible here, where it can be
+   * argued with.
+   */
+  --color-hesabpay: #0d3b66;
+
   --color-tint-cool: #e8eefb;
   --color-tint-warm: var(--color-accent-50);
   --color-border: var(--color-neutral-200);

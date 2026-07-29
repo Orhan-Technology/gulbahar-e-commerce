@@ -38,6 +38,7 @@ const TYPE_STEPS = [
   { name: '3xl', cls: 'text-3xl' },
 ] as const;
 const SPACING_STEPS = [1, 2, 3, 4, 6, 8, 12, 16];
+const WARM_STEPS = [100, 400, 500, 600];
 
 export default async function StyleguidePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -56,9 +57,35 @@ export default async function StyleguidePage({ params }: { params: Promise<{ loc
 
       {/* ---------------------------------------------------------------- */}
       <Section title={t('sections.palette')}>
-        <Swatches label={t('palette.primary')} name="primary" steps={PRIMARY_STEPS} />
-        <Swatches label={t('palette.accent')} name="accent" steps={PRIMARY_STEPS} />
-        <Swatches label={t('palette.neutral')} name="neutral" steps={NEUTRAL_STEPS} />
+        {/*
+          Roles, not swatches. The label under each ramp says what the colour is
+          FOR, because a palette page that only shows hues teaches nothing about
+          when to use them — which is the whole content of docs/DESIGN-SYSTEM.md §1.
+        */}
+        <Swatches
+          label={t('palette.primary')}
+          hint={t('palette.primaryRole')}
+          name="primary"
+          steps={PRIMARY_STEPS}
+        />
+        <Swatches
+          label={t('palette.accent')}
+          hint={t('palette.accentRole')}
+          name="accent"
+          steps={PRIMARY_STEPS}
+        />
+        <Swatches
+          label={t('palette.accentWarm')}
+          hint={t('palette.accentWarmRole')}
+          name="accent-warm"
+          steps={WARM_STEPS}
+        />
+        <Swatches
+          label={t('palette.neutral')}
+          hint={t('palette.neutralRole')}
+          name="neutral"
+          steps={NEUTRAL_STEPS}
+        />
 
         <div>
           <h3 className="mb-2 text-sm font-semibold">{t('palette.semantic')}</h3>
@@ -226,10 +253,21 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Swatches({ label, name, steps }: { label: string; name: string; steps: number[] }) {
+function Swatches({
+  label,
+  hint,
+  name,
+  steps,
+}: {
+  label: string;
+  hint?: string;
+  name: string;
+  steps: number[];
+}) {
   return (
     <div>
-      <h3 className="mb-2 text-sm font-semibold">{label}</h3>
+      <h3 className="text-sm font-semibold">{label}</h3>
+      {hint && <p className="text-muted-foreground mb-2 text-xs">{hint}</p>}
       <div className="flex flex-wrap gap-1">
         {steps.map((step) => (
           <div key={step} className="w-16">

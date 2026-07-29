@@ -66,7 +66,7 @@ export function HesabPaySheet({
 
         {/* Branded header — HesabPay's own colour, not ours, so it reads as a
             third-party sheet the way the real one would. */}
-        <div className="bg-[#0d3b66] px-5 py-4 text-white">
+        <div className="bg-hesabpay px-5 py-4 text-white">
           <div className="flex items-center gap-2">
             <span className="rounded-control flex h-8 w-8 items-center justify-center bg-white/15">
               <Smartphone className="h-4 w-4" aria-hidden />

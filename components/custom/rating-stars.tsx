@@ -8,10 +8,14 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { formatNumber, formatRating } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
+/**
+ * Three sizes, and only three: 14px on cards and rails, 16px in listings and
+ * shop headers, 20px on the product page and the review composer.
+ */
 const SIZES = {
-  sm: 'h-3 w-3',
+  sm: 'h-3.5 w-3.5',
   md: 'h-4 w-4',
-  lg: 'h-6 w-6',
+  lg: 'h-5 w-5',
 } as const;
 
 export interface RatingStarsProps {
@@ -20,6 +24,15 @@ export interface RatingStarsProps {
   size?: keyof typeof SIZES;
   /** Review count shown beside the stars. Omit to hide. */
   count?: number;
+  /**
+   * Renders an empty row instead of nothing when there are no reviews.
+   *
+   * Off by default, because "(۰)" beside five grey stars is worse than
+   * silence — it reports an absence as if it were a score. The one place it
+   * is wanted is a card GRID, where a missing row shortens that card by a
+   * line and throws the price and shop lines out of alignment across a row.
+   */
+  reserveSpace?: boolean;
   className?: string;
 }
 
@@ -30,11 +43,26 @@ export interface RatingStarsProps {
  * the inline start, so it grows right-to-left in Dari and left-to-right in
  * English without duplicating markup (PRD §10.3).
  */
-export function RatingStars({ value, size = 'md', count, className }: RatingStarsProps) {
+export function RatingStars({
+  value,
+  size = 'md',
+  count,
+  reserveSpace = false,
+  className,
+}: RatingStarsProps) {
   const locale = useLocale();
   const t = useTranslations('product');
   const clamped = Math.max(0, Math.min(5, value));
   const percent = (clamped / 5) * 100;
+
+  /*
+   * NOTHING AT ZERO REVIEWS. An unrated product is not a bad product, and a
+   * row of empty stars followed by "(0)" says it is — it is the single most
+   * common way a young catalogue talks itself down.
+   */
+  const unrated = count !== undefined ? count === 0 : clamped === 0;
+  if (unrated && !reserveSpace) return null;
+  if (unrated) return <span className={cn('inline-flex h-5 items-center', className)} aria-hidden />;
 
   return (
     <span className={cn('inline-flex items-center gap-1.5', className)}>
@@ -60,13 +88,16 @@ export function RatingStars({ value, size = 'md', count, className }: RatingStar
         >
           <span className="inline-flex">
             {Array.from({ length: 5 }, (_, index) => (
-              <Star key={index} className={cn(SIZES[size], 'fill-primary-600 text-primary-600')} />
+              <Star
+                key={index}
+                className={cn(SIZES[size], 'fill-accent-warm text-accent-warm')}
+              />
             ))}
           </span>
         </span>
       </span>
 
-      {count !== undefined && (
+      {count !== undefined && count > 0 && (
         <span className="text-muted-foreground text-xs">({formatNumber(count, locale)})</span>
       )}
     </span>
@@ -121,7 +152,7 @@ export function RatingStarsInput({
               className={cn(
                 SIZES[size],
                 'transition-colors duration-150',
-                active ? 'fill-primary-600 text-primary-600' : 'text-neutral-300',
+                active ? 'fill-accent-warm text-accent-warm' : 'text-neutral-300',
               )}
             />
             <span className="sr-only">{t('starsCount', { count: star })}</span>

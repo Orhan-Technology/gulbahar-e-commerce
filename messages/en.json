@@ -111,7 +111,12 @@
       "success": "Success",
       "warning": "Warning",
       "danger": "Danger",
-      "surfaces": "Surfaces"
+      "surfaces": "Surfaces",
+      "primaryRole": "Action: buttons, links, active states, selected chips, focus rings. Never decoration.",
+      "accentRole": "A saving: discount badges, countdowns, the live dot. Nothing else.",
+      "accentWarm": "Warm — amber",
+      "accentWarmRole": "Opinion: rating stars. Does not compete with action for attention.",
+      "neutralRole": "Surface and ink: page, card, one tint, two text tones, one line."
     },
     "typography": {
       "note": "Vazirmatn for Dari and Pashto, Inter for English. Seven sizes, no more.",

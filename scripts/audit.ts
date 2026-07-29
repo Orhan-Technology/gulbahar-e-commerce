@@ -350,6 +350,27 @@ for (const file of [...sourceFiles, ...walk('app', /\.css$/)]) {
 }
 
 /* -------------------------------------------------------------------------- */
+/* 4b. Raw colour values in components (docs/DESIGN-SYSTEM.md §1)              */
+
+/*
+ * A hex or rgb() in a component is a colour that exists outside the system: it
+ * cannot be re-themed, it will not match its neighbours after the next palette
+ * change, and it is invisible to anyone reading globals.css to find out what
+ * the product's colours are. Third-party brand colours are legitimate and live
+ * in the theme as named tokens (see --color-hesabpay), so the rule can stay
+ * absolute rather than becoming a judgement call at every call site.
+ */
+const RAW_COLOUR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\bhsla?\(/;
+
+for (const file of sourceFiles) {
+  stripComments(readFileSync(file, 'utf8')).forEach((line, index) => {
+    // Recharts takes colours as props, and they are passed as var(--token).
+    if (/var\(--/.test(line)) return;
+    if (RAW_COLOUR.test(line)) report('raw-colour', file, index, line.trim().slice(0, 70));
+  });
+}
+
+/* -------------------------------------------------------------------------- */
 /* 5. Images: dimensions and sizes (PRD §10.7, zero CLS)                       */
 
 for (const file of sourceFiles) {
