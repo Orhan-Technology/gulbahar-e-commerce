@@ -1,10 +1,13 @@
 import { getTranslations } from 'next-intl/server';
 
 import { SectionHeader, SectionHeaderSkeleton } from '@/components/custom/section-header';
-import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
+import {
+  ProductGrid,
+  ProductGridSkeleton,
+  type ProductGridItem,
+} from '@/components/shop/product-grid';
 import { OfferCountdown } from '@/components/shop/home/offer-countdown';
-import { currentUser } from '@/lib/auth/guards';
-import { activeOffers, discountedProducts, wishlistedProductIds } from '@/lib/db/queries/home';
+import { activeOffers } from '@/lib/db/queries/home';
 
 /**
  * "Today's best deals" (PRD §5.1) — the mockup's flash band, the one section on
@@ -16,18 +19,26 @@ import { activeOffers, discountedProducts, wishlistedProductIds } from '@/lib/db
  * heading simply loses its clock and the deals still render, because the
  * discounted prices are on the products themselves.
  */
-export async function DealsRail() {
+export async function DealsRail({
+  items,
+  savedIds,
+}: {
+  /**
+   * Supplied by the page rather than queried here.
+   *
+   * The home page assembles every product-bearing band in one pass so nothing
+   * appears twice down the scroll; a band that fetches for itself cannot know
+   * what the band above it already took (lib/db/queries/home.ts).
+   */
+  items: ProductGridItem[];
+  savedIds: Set<string>;
+}) {
   const t = await getTranslations('home');
-  const [items, offers] = await Promise.all([discountedProducts(12), activeOffers(1)]);
+  const offers = await activeOffers(1);
 
   if (items.length === 0) return null;
 
   const soonest = offers[0] ?? null;
-  const user = await currentUser();
-  const saved = await wishlistedProductIds(
-    user?.id,
-    items.map((item) => item.id),
-  );
 
   return (
     <section className="space-y-5">
@@ -51,7 +62,13 @@ export async function DealsRail() {
           ) : undefined
         }
       />
-      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('dealsToday')} priority />
+      <ProductGrid
+        items={items}
+        savedIds={savedIds}
+        layout="row"
+        railLabel={t('dealsToday')}
+        priority
+      />
     </section>
   );
 }

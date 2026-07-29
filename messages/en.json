@@ -600,7 +600,8 @@
     "heroSlideNumber": "Slide {number}",
     "browseHeading": "Shop by department",
     "yourShopHere": "Your shop here",
-    "yourShopHereHint": "Buy this placement"
+    "yourShopHereHint": "Buy this placement",
+    "offerEndsSoon": "Until the end of the week"
   },
   "offers": {
     "title": "Offers",

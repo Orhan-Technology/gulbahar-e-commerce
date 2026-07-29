@@ -1,8 +1,7 @@
 import { Suspense } from 'react';
-import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { SectionHeader } from '@/components/custom/section-header';
-import { BrowseBand, BrowseBandSkeleton } from '@/components/shop/home/browse-band';
 import { CategoryRail, CategoryRailSkeleton } from '@/components/shop/home/category-rail';
 import { CategoryTiles, CategoryTilesSkeleton } from '@/components/shop/home/category-tiles';
 import { DealsRail, DealsRailSkeleton } from '@/components/shop/home/deals-rail';
@@ -14,41 +13,42 @@ import { ShopSpotlight, ShopSpotlightSkeleton } from '@/components/shop/home/sho
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { Reveal } from '@/components/shop/reveal';
 import { currentUser } from '@/lib/auth/guards';
-import { wishlistedProductIds } from '@/lib/db/queries/home';
-import { newArrivals } from '@/lib/db/queries/products';
+import { homeProductModules, wishlistedProductIds } from '@/lib/db/queries/home';
 
 /**
  * Storefront home — quality-bar screen #1 (PRD §10.8).
  *
- * Composed as the approved mockup lays it out: a split hero, category tiles, the
- * deal band with its live clock, then alternating product rails, shop bands and
- * promises down the page. Density is the point — a marketplace home that ends
- * after three sections reads as an empty marketplace.
+ * MODULE RHYTHM is the organising rule: no two adjacent bands share a shape.
+ * Hero → circles → rail → panels → rail → rail → rich rail → feature → grid →
+ * CTA. The page previously ran six near-identical category rails, which is how
+ * a long page becomes an undifferentiated scroll however good each band is.
  *
- * Each band is its own Suspense boundary so a slower query never blocks the hero
- * from painting, and every fallback matches its final layout exactly so there is
- * no shift on swap (PRD §10.5). The page itself awaits nothing but the locale, so
- * the shell is immediate.
+ * ONE CATEGORY MODULE. The circles rail is the single category entry point
+ * here; departments live in the header nav and on /categories, and
+ * subcategories are the tiles on a category page (D4). "Shop by department" —
+ * sixteen more tiles, a third of the way down — was a second answer to a
+ * question already answered above the fold.
  *
- * There is no global "trending" rail: it ranks by view count, which is exactly
- * what the per-category rails already do, so it rendered the same five products
- * a second time. New arrivals stays — it sorts by date, so it surfaces different
- * stock.
+ * ONE COUNTDOWN. It belongs to the deals band, the only module whose subject is
+ * time running out. The hero's side card carries a discount and a shop, not a
+ * second clock ticking against it.
  *
- * The rails are listed by slug rather than derived from the category tree,
- * because the ORDER is an editorial decision — clothing and electronics lead
- * because they are the deepest catalogues — and because a rail whose category has
- * no visible stock removes itself. That is how the food rail stays absent until
- * the pending shop is approved on stage, with no conditional here.
+ * NO PRODUCT TWICE. The product-bearing bands are filled from one assembly
+ * (`homeProductModules`) top-to-bottom, so each takes what is left after the
+ * ones above it. See that function for why they share a Suspense boundary.
  */
-const LEAD_RAILS = ['clothing', 'electronics'] as const;
-const MID_RAILS = ['beauty', 'home-kitchen'] as const;
-const TAIL_RAILS = ['watches-jewellery', 'kids-hobby', 'sports', 'food'] as const;
+
+/**
+ * The two category rails, chosen for depth: clothing and electronics are the
+ * deepest catalogues, so they are the two that can still fill a scroller after
+ * the deals band has taken its pick. Four more below them was the old page's
+ * real problem — variety cannot come from repetition.
+ */
+const RAIL_SLUGS = ['clothing', 'electronics'] as const;
 
 export default async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const t = await getTranslations('home');
 
   return (
     <div className="max-w-page mx-auto space-y-12 px-4 py-4 sm:px-7 sm:py-6">
@@ -60,61 +60,11 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
         <CategoryTiles />
       </Suspense>
 
-      <Suspense fallback={<DealsRailSkeleton />}>
-        <DealsRail />
+      {/* One boundary around every band that shows products — the price of
+          deterministic dedupe, and on a local database it is a few ms. */}
+      <Suspense fallback={<ProductModulesSkeleton />}>
+        <ProductModules locale={locale} />
       </Suspense>
-
-      <Suspense fallback={<PromoStripSkeleton />}>
-        <PromoStrip />
-      </Suspense>
-
-      <Reveal>
-        <Suspense fallback={<BrowseBandSkeleton />}>
-          <BrowseBand />
-        </Suspense>
-      </Reveal>
-
-      {LEAD_RAILS.map((slug) => (
-        <Reveal key={slug}>
-          <Suspense fallback={<CategoryRailSkeleton />}>
-            <CategoryRail slug={slug} />
-          </Suspense>
-        </Reveal>
-      ))}
-
-      <Reveal>
-        <Suspense fallback={<FeaturedShopsSkeleton />}>
-          <FeaturedShops />
-        </Suspense>
-      </Reveal>
-
-      {MID_RAILS.map((slug) => (
-        <Reveal key={slug}>
-          <Suspense fallback={<CategoryRailSkeleton />}>
-            <CategoryRail slug={slug} />
-          </Suspense>
-        </Reveal>
-      ))}
-
-      <Reveal>
-        <Suspense fallback={<ShopSpotlightSkeleton />}>
-          <ShopSpotlight />
-        </Suspense>
-      </Reveal>
-
-      {TAIL_RAILS.map((slug) => (
-        <Reveal key={slug}>
-          <Suspense fallback={<CategoryRailSkeleton />}>
-            <CategoryRail slug={slug} />
-          </Suspense>
-        </Reveal>
-      ))}
-
-      <Reveal>
-        <Suspense fallback={<ProductRowSkeleton title={t('newArrivals')} />}>
-          <NewArrivalsRow />
-        </Suspense>
-      </Reveal>
 
       <Reveal>
         <SellerCta />
@@ -123,34 +73,77 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
   );
 }
 
-async function NewArrivalsRow() {
+async function ProductModules({ locale }: { locale: string }) {
   const t = await getTranslations('home');
-  const locale = await getLocale();
-  const [items, user] = await Promise.all([newArrivals(locale, 14), currentUser()]);
-  const saved = await wishlistedProductIds(
-    user?.id,
-    items.map((item) => item.id),
-  );
+  const { deals, rails, spotlight, arrivals } = await homeProductModules(locale, RAIL_SLUGS);
 
-  if (items.length === 0) return null;
+  const user = await currentUser();
+  const saved = await wishlistedProductIds(user?.id, [
+    ...deals.map((item) => item.id),
+    ...rails.flatMap((rail) => rail.items.map((item) => item.id)),
+    ...(spotlight?.items ?? []).map((item) => item.id),
+    ...arrivals.map((item) => item.id),
+  ]);
 
   return (
-    <section className="space-y-5">
-      <SectionHeader
-        title={t('newArrivals')}
-        href="/products?sort=newest"
-        description={t('newArrivalsHint')}
-      />
-      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('newArrivals')} />
-    </section>
+    <div className="space-y-12">
+      <DealsRail items={deals} savedIds={saved} />
+
+      {/* Panels between rails — the shape break that stops the page reading as
+          one long scroller. */}
+      <Reveal>
+        <PromoStrip />
+      </Reveal>
+
+      {rails.map((rail, index) => (
+        <Reveal key={rail.slug}>
+          <CategoryRail
+            slug={rail.slug}
+            items={rail.items}
+            savedIds={saved}
+            priority={index === 0}
+          />
+        </Reveal>
+      ))}
+
+      <Reveal>
+        <FeaturedShops />
+      </Reveal>
+
+      {spotlight && (
+        <Reveal>
+          <ShopSpotlight spotlight={spotlight} savedIds={saved} />
+        </Reveal>
+      )}
+
+      {arrivals.length > 0 && (
+        <Reveal>
+          <section className="space-y-5">
+            <SectionHeader
+              title={t('newArrivals')}
+              href="/products?sort=newest"
+              description={t('newArrivalsHint')}
+            />
+            {/* The ONLY grid on the page, and last: two full rows are a good
+                place to stop scrolling, and a rail here would be a fourth one. */}
+            <ProductGrid items={arrivals} savedIds={saved} />
+          </section>
+        </Reveal>
+      )}
+    </div>
   );
 }
 
-function ProductRowSkeleton({ title }: { title: string }) {
+function ProductModulesSkeleton() {
   return (
-    <section className="space-y-5">
-      <SectionHeader title={title} />
-      <ProductGridSkeleton count={8} layout="row" />
-    </section>
+    <div className="space-y-12">
+      <DealsRailSkeleton />
+      <PromoStripSkeleton />
+      <CategoryRailSkeleton />
+      <CategoryRailSkeleton />
+      <FeaturedShopsSkeleton />
+      <ShopSpotlightSkeleton />
+      <ProductGridSkeleton count={8} />
+    </div>
   );
 }

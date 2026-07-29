@@ -6,9 +6,8 @@ import { RatingStars } from '@/components/custom/rating-stars';
 import { SectionHeader, SectionHeaderSkeleton } from '@/components/custom/section-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
-import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
-import { shopSpotlight, wishlistedProductIds } from '@/lib/db/queries/home';
+import type { shopSpotlight } from '@/lib/db/queries/home';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -20,19 +19,19 @@ import { Link } from '@/lib/i18n/navigation';
  * shop is chosen by rating with a review-count floor, so it is never a one-review
  * artifact — see shopSpotlight().
  */
-export async function ShopSpotlight() {
+export async function ShopSpotlight({
+  spotlight,
+  savedIds,
+}: {
+  /** Supplied by the page — see DealsRail for why the band does not query. */
+  spotlight: NonNullable<Awaited<ReturnType<typeof shopSpotlight>>>;
+  savedIds: Set<string>;
+}) {
   const locale = await getLocale();
   const t = await getTranslations('home');
-  const spotlight = await shopSpotlight(4);
-
-  if (!spotlight) return null;
 
   const { shop, items } = spotlight;
-  const user = await currentUser();
-  const saved = await wishlistedProductIds(
-    user?.id,
-    items.map((item) => item.id),
-  );
+  if (items.length === 0) return null;
 
   return (
     <section className="space-y-5">
@@ -78,7 +77,7 @@ export async function ShopSpotlight() {
           </span>
         </Link>
 
-        <ProductGrid items={items} savedIds={saved} />
+        <ProductGrid items={items} savedIds={savedIds} />
       </div>
     </section>
   );

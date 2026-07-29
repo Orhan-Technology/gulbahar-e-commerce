@@ -34,6 +34,12 @@ import {
  * rather than collapsing, because an empty hero is the worst thing the client
  * could see on the first screen (PRD §5.1).
  */
+/** Re-exported so the assembly above has one import for its last module. */
+async function newArrivalsForHome(locale: string, limit: number) {
+  const { newArrivals } = await import('./products');
+  return newArrivals(locale, limit);
+}
+
 export async function homeHeroCampaign(now: Date = new Date()) {
   const [row] = await db
     .select({
@@ -428,5 +434,65 @@ export async function shopSpotlight(productLimit = 4) {
       rating: Number(row.rating),
       reviewCount: Number(row.reviewCount),
     })),
+  };
+}
+
+/**
+ * Every product-bearing home module, assembled IN ORDER with no repeats
+ * (PRD §5.1).
+ *
+ * A product appearing three times down one page is the single loudest signal
+ * that a catalogue is small — and with 75 products it happened constantly,
+ * because "today's deals", "bestsellers in electronics" and "new arrivals" are
+ * three questions with substantially the same answer.
+ *
+ * So the modules are filled top-to-bottom from one function rather than each
+ * running its own query in its own Suspense boundary. That ordering is the
+ * whole mechanism: a module gets what is left after the ones above it, which
+ * makes the page feel like a catalogue rather than a slideshow of the same
+ * fifteen items.
+ *
+ * The cost is that these bands stream as one unit instead of four. On a local
+ * database that is a few milliseconds; the alternative is boundaries resolving
+ * in an order nobody controls, which makes dedupe non-deterministic — and a
+ * page that shows different repeats on every reload is worse than one that
+ * repeats consistently.
+ */
+export async function homeProductModules(locale: string, railSlugs: readonly string[]) {
+  const used = new Set<string>();
+
+  /** Drops anything already placed higher up the page, then claims the rest. */
+  const claim = <T extends { id: string }>(items: T[], limit: number): T[] => {
+    const fresh = items.filter((item) => !used.has(item.id)).slice(0, limit);
+    for (const item of fresh) used.add(item.id);
+    return fresh;
+  };
+
+  // Over-fetch: each module asks for well over what it shows, so the ones lower
+  // down still have something left after the ones above have taken their pick.
+  const deals = claim(await discountedProducts(24), 12);
+
+  const rails: Array<{ slug: string; items: Awaited<ReturnType<typeof categoryBestsellers>> }> = [];
+  for (const slug of railSlugs) {
+    rails.push({ slug, items: claim(await categoryBestsellers(slug, 24), 12) });
+  }
+
+  /*
+   * The spotlight claims BEFORE new arrivals but is rendered after the rails.
+   * Its four products belong to one named shop, so they cannot be swapped for
+   * something else if the arrivals band takes them first — whereas arrivals can
+   * always fall back to the next-newest thing. Claim order follows how
+   * constrained a module is, not where it sits on the page.
+   */
+  const spotlight = await shopSpotlight(4);
+  const spotlightItems = spotlight ? claim(spotlight.items, 4) : [];
+
+  const arrivals = claim(await newArrivalsForHome(locale, 32), 14);
+
+  return {
+    deals,
+    rails,
+    spotlight: spotlight ? { ...spotlight, items: spotlightItems } : null,
+    arrivals,
   };
 }

@@ -3,7 +3,6 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { Tag } from 'lucide-react';
 
 import { HeroCarousel, type HeroSlide } from '@/components/shop/home/hero-carousel';
-import { OfferCountdown } from '@/components/shop/home/offer-countdown';
 import { pickLocale } from '@/lib/db/localized';
 import { activeOffers, homeHeroCampaign } from '@/lib/db/queries/home';
 import { recordImpressions } from '@/lib/db/queries/promoted';
@@ -103,10 +102,15 @@ export async function HeroBanner() {
               <span className="text-primary mt-2 text-base font-bold">
                 {pickLocale(offer.shopName, locale)}
               </span>
-              <OfferCountdown
-                endsAt={offer.endsAt.toISOString()}
-                className="mt-3 text-neutral-600"
-              />
+              {/*
+                No clock here. The deals band below owns the page's ONE
+                countdown, and two tickers racing each other above the fold
+                turned urgency into noise — the eye reads competing timers as
+                decoration. This card's job is the discount and whose it is.
+              */}
+              <span className="mt-3 text-xs font-medium text-neutral-600">
+                {t('offerEndsSoon')}
+              </span>
             </span>
             <span className="rounded-pill bg-card text-accent flex h-10 w-10 shrink-0 items-center justify-center">
               <Tag className="h-4 w-4" aria-hidden />

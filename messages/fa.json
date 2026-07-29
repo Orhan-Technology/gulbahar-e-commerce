@@ -600,7 +600,8 @@
     "heroSlideNumber": "اسلاید {number}",
     "browseHeading": "خرید بر اساس بخش",
     "yourShopHere": "فروشگاه شما اینجا",
-    "yourShopHereHint": "جایگاه تبلیغاتی بخرید"
+    "yourShopHereHint": "جایگاه تبلیغاتی بخرید",
+    "offerEndsSoon": "تا پایان هفته"
   },
   "offers": {
     "title": "تخفیف‌ها",

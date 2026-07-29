@@ -199,7 +199,15 @@ export function SiteHeader({ cartCount, user, categories, liveOffer = false }: S
           >
             <User className="h-5 w-5" aria-hidden />
             <span className="hidden text-sm font-semibold sm:inline">
-              {user ? (user.name ?? t('nav.account')) : t('auth.signIn')}
+              {user
+                ? /*
+                     FIRST NAME only, and never the phone. A full name overflows
+                     the control at 13px and a phone number in the account slot
+                     reads as a debug value someone forgot to replace — which is
+                     what it looked like before a name was seeded.
+                  */
+                  (user.name?.trim().split(' ')[0] ?? t('nav.account'))
+                : t('auth.signIn')}
             </span>
           </Link>
         </div>
