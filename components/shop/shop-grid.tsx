@@ -19,12 +19,31 @@ export type ShopGridItem = {
   sponsored?: boolean;
 };
 
-/** Shared shop card grid for the directory and search results. */
-export async function ShopGrid({ items }: { items: ShopGridItem[] }) {
+/**
+ * Shared shop card grid for the directory, the featured strip and search
+ * results.
+ *
+ * `featured` is three across where the organic grid is four, which is the whole
+ * visual difference between a paid placement and an organic one — beyond the
+ * badge, which says it, the size is what makes it worth buying (PRD §8.2).
+ */
+export async function ShopGrid({
+  items,
+  columns = 'organic',
+}: {
+  items: ShopGridItem[];
+  columns?: 'organic' | 'featured';
+}) {
   const locale = await getLocale();
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div
+      className={
+        columns === 'featured'
+          ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+          : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
+      }
+    >
       {items.map((shop) => (
         <ShopCard
           key={shop.id}
@@ -45,9 +64,9 @@ export async function ShopGrid({ items }: { items: ShopGridItem[] }) {
   );
 }
 
-export function ShopGridSkeleton({ count = 6 }: { count?: number }) {
+export function ShopGridSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {Array.from({ length: count }, (_, index) => (
         <ShopCardSkeleton key={index} />
       ))}

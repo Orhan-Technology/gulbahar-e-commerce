@@ -372,7 +372,8 @@
     "paymentTitle": "Payment",
     "paymentBody": "Cash on delivery or HesabPay",
     "youSave": "You save {amount} AFN",
-    "buyNow": "Buy now"
+    "buyNow": "Buy now",
+    "onlyLeft": "{n, plural, one {Only # left} other {Only {count} left}}"
   },
   "shop": {
     "productCount": "{count} products",
@@ -662,7 +663,13 @@
       "price_asc": "Price: low to high",
       "price_desc": "Price: high to low",
       "rating": "Highest rated"
-    }
+    },
+    "availability": "Availability and offers",
+    "onOfferOnly": "On offer only",
+    "under": "Under {amount}",
+    "over": "Over {amount}",
+    "ratingChip": "{rating} stars and up",
+    "removeFilter": "Remove this filter"
   },
   "categories": {
     "title": "Categories",
@@ -679,7 +686,11 @@
     "clearSearch": "Clear search",
     "emptyTitle": "No shops in this category",
     "emptyBody": "Try another category.",
-    "allShops": "All shops"
+    "allShops": "All shops",
+    "shopCount": "{n, plural, one {# shop in Gulbahar Center} other {{count} shops in Gulbahar Center}}",
+    "featuredHeading": "Featured shops",
+    "emptyCategoryTitle": "No shops in this category",
+    "emptyCategoryBody": "Try another category, or browse every shop in the mall."
   },
   "search": {
     "title": "Search",
@@ -2128,5 +2139,23 @@
       "body": "Nothing you entered was lost. Please try again.",
       "back": "Back to the store"
     }
+  },
+  "listing": {
+    "resultCount": "{n, plural, one {# product} other {{count} products}}",
+    "sortLabel": "Sort",
+    "sort": {
+      "popularity": "Most popular",
+      "newest": "Newest",
+      "price_asc": "Price: low to high",
+      "price_desc": "Price: high to low",
+      "rating": "Best rated"
+    },
+    "showResults": "{n, plural, one {Show # product} other {Show {count} products}}",
+    "loadMore": "{n, plural, one {# more product} other {{count} more products}}",
+    "shownOf": "{shown} of {total}",
+    "emptyTitle": "Nothing matches these filters",
+    "emptyBody": "Remove one of the filters, or clear them all.",
+    "clearFilters": "Clear filters",
+    "promotedNote": "These shops paid for placement. Organic results below are not reordered."
   }
 }

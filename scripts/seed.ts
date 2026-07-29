@@ -915,6 +915,45 @@ async function main() {
     });
   }
 
+  /*
+   * Two LIVE placements in the shop directory (PRD §5.1, §8.2).
+   *
+   * The slot has always existed and had a pending request against it for the
+   * admin approval moment, but nothing active — so the featured strip at the top
+   * of /shops was a branch that could never render, on a revenue surface. Two
+   * running campaigns make it a real one.
+   *
+   * Written as a fixed insert AFTER the loop rather than as two more entries in
+   * `plans`, and that is the whole point: every plan draws from rand() inside
+   * that loop, so two extra iterations would shift every draw made after it —
+   * the notification read-flags among them. Nothing here is random. The shops
+   * and durations are chosen, the prices follow from the slot's own rate, and
+   * the metrics are stated.
+   */
+  const DIRECTORY_FEATURED: Array<{ shopSlug: string; weeks: number; impressions: number }> = [
+    { shopSlug: approvedShopSlugs[1], weeks: 4, impressions: 9400 },
+    { shopSlug: approvedShopSlugs[3], weeks: 6, impressions: 12600 },
+  ];
+
+  const directorySlot = SLOTS.find((entry) => entry.key === 'directory_top')!;
+
+  for (const [index, featured] of DIRECTORY_FEATURED.entries()) {
+    const startsAt = daysAgo(9 + index * 4);
+    await db.insert(campaigns).values({
+      slotId: slotIds.get('directory_top')!,
+      shopId: shopIds.get(featured.shopSlug)!,
+      productId: null,
+      status: 'active',
+      startsAt,
+      endsAt: new Date(NOW.getTime() + (12 + index * 5) * DAY_MS),
+      pricePaid: directorySlot.pricePerWeek * featured.weeks,
+      impressions: featured.impressions,
+      // A shade over 3%, which is where the other seeded placements land.
+      clicks: Math.round(featured.impressions * 0.031),
+      createdAt: startsAt,
+    });
+  }
+
   // ------------------------------------------------------------ notifications
   /*
    * Recent history so the log panel is not empty at demo start (PRD §9.4). Built

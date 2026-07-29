@@ -109,10 +109,25 @@ Floor and shop number appear as metadata on the shop page and order confirmation
 ### 5.1 Discovery
 
 - Home: hero banner, category tiles, active offers, featured shops carousel, trending products
-- Product listing with filters (category, price range, shop, rating, availability) and sort
-- Shop directory with search and category filter; shop rating visible on cards
-- Shop page: banner, logo, rating, floor and unit number, hours, own catalogue with search
 - Unified search: products by default, tab for shops; sponsored results badged (§8.4)
+
+**One listing system**, shared by category pages, search results, offers and a shop's own catalogue. They differ only in what they scope to; everything below the heading is identical:
+
+| Part | Behaviour |
+| --- | --- |
+| Subcategory tiles | On a category page only, **above** the toolbar as image tiles. Scope is a navigation decision, not a filter (NN/g). |
+| Toolbar | Sticky under the header: result count, sort, and on mobile a filter button badged with the active count. Sort defaults to **popularity**; there is no alphabetical option. With a search term, popularity means relevance. |
+| Facets | Desktop rail / mobile bottom sheet, **one implementation rendered twice**. Price (quick bands + inputs), rating, in-stock, on-offer, shop. Changes apply immediately; the sheet's button states the outcome ("Show 34 products"). |
+| Applied chips | Above the grid, each removable, plus clear-all. Clear-all keeps the search term and the sort. |
+| Pagination | **Load more**, which appends — `?page=3` renders 72 products, not the third 24. The URL stays pageable so it works without JavaScript. |
+| Card badges | Discount %, «تبلیغ شده» for paid placement, and «تنها ۲ عدد مانده» at 3 or fewer. |
+| Empty | Friendly, with one-tap clear-filters. |
+
+Every filter state is a URL: shareable, server-rendered, correct under back/forward.
+
+**Shop directory** — a listing in its own right: shop count as the subtitle, search, a snap-scrolling category chip row, then a **featured strip** of shops holding a live `directory_top` placement (larger cards, badged, bounded by slot capacity, hidden while a category filter is on) above the organic grid. Shop cards carry banner, overlapping logo, category, rating, product count and a floor/unit badge.
+
+**Shop page** — the banner header, then the same listing scoped to that shop, with the shop facet hidden.
 
 ### 5.2 Product page
 

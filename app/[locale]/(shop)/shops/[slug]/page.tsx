@@ -2,24 +2,35 @@ import { Suspense } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Clock, MapPin, PackageSearch, Phone, Store } from 'lucide-react';
+import { Clock, MapPin, Phone, Store } from 'lucide-react';
 
-import { EmptyState } from '@/components/custom/empty-state';
 import { RatingStars } from '@/components/custom/rating-stars';
-import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { SearchBox } from '@/components/custom/search-box';
-import { currentUser } from '@/lib/auth/guards';
+import { FacetControls } from '@/components/shop/listing/facet-controls';
+import {
+  ProductListing,
+  ProductListingSkeleton,
+  type ListingSearchParams,
+} from '@/components/shop/listing/product-listing';
 import { pickLocale } from '@/lib/db/localized';
-import { wishlistedProductIds } from '@/lib/db/queries/home';
-import { publicShopProducts, shopCategories } from '@/lib/db/queries/listing';
-import { shopDetail } from '@/lib/db/queries/shops';
+import { filterFacets } from '@/lib/db/queries/listing';
+import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
 import { formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
-import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
 /**
- * Shop page (PRD §5.1): banner, logo, derived rating, floor/unit and hours, about,
- * then the shop's own catalogue with its own search and category chips.
+ * Shop page (PRD §5.1): banner, logo, derived rating, floor/unit and hours,
+ * about — and then A CATEGORY PAGE.
+ *
+ * The catalogue below the header is the same listing component as /categories
+ * and /search, scoped to this shop: same toolbar, same sort, same facets, same
+ * applied-filter chips, same load-more. It used to be a bare grid with an
+ * in-shop search and a chip row of its own, which meant a shopper who had
+ * learned how to narrow a category page had to learn something else the moment
+ * they stepped into a shop.
+ *
+ * The SHOP facet is hidden here — on this page it can only navigate away from
+ * the shop the page is about.
  *
  * A shop that is not approved 404s rather than rendering — a pending shop's
  * catalogue must stay invisible until admin flips the switch (PRD §7.1).
@@ -29,19 +40,24 @@ export default async function ShopPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ q?: string; category?: string }>;
+  searchParams: Promise<ListingSearchParams>;
 }) {
   const { locale, slug: rawSlug } = await params;
   // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
   const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
-  const { q, category } = await searchParams;
+  const query = await searchParams;
   const t = await getTranslations('shop');
 
   const shop = await shopDetail(slug);
   if (!shop || shop.status !== 'approved') notFound();
 
-  const categories = await shopCategories(shop.id);
+  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  const facetOptions = {
+    ...facets,
+    categories: tree,
+    hide: ['shop'] as Array<'category' | 'shop'>,
+  };
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-6">
@@ -127,81 +143,30 @@ export default async function ShopPage({
         </div>
       </div>
 
-      {/* The shop's own catalogue */}
+      {/* The shop's own catalogue — the same listing as everywhere else */}
       <div className="mt-6 space-y-4">
         <h2 className="text-base font-bold">{t('catalogue')}</h2>
 
         <SearchBox placeholder={t('searchInShop')} />
 
-        {categories.length > 1 && (
-          <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
-            <Link
-              href={`/shops/${slug}`}
-              className={`rounded-pill shrink-0 border px-3 py-1.5 text-xs font-medium ${
-                category ? 'border-border bg-card' : 'border-primary bg-primary-50 text-primary'
-              }`}
-            >
-              {t('allProducts')}
-            </Link>
-            {categories.map((entry) => (
-              <Link
-                key={entry.id}
-                href={`/shops/${slug}?category=${entry.slug}`}
-                className={`rounded-pill shrink-0 border px-3 py-1.5 text-xs font-medium ${
-                  category === entry.slug
-                    ? 'border-primary bg-primary-50 text-primary'
-                    : 'border-border bg-card hover:border-primary hover:text-primary'
-                }`}
-              >
-                {pickLocale(entry.name, locale)}
-              </Link>
-            ))}
-          </div>
-        )}
+        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="hidden lg:block">
+            <FacetControls {...facetOptions} />
+          </aside>
 
-        <Suspense fallback={<ProductGridSkeleton count={8} />}>
-          <ShopCatalogue shopId={shop.id} slug={slug} q={q} category={category} />
-        </Suspense>
+          <div className="min-w-0">
+            <Suspense fallback={<ProductListingSkeleton />}>
+              <ProductListing
+                query={query}
+                locale={locale}
+                facets={facetOptions}
+                scope={{ shopIds: [shop.id] }}
+                emptyHref={`/shops/${slug}`}
+              />
+            </Suspense>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
-
-async function ShopCatalogue({
-  shopId,
-  slug,
-  q,
-  category,
-}: {
-  shopId: string;
-  slug: string;
-  q?: string;
-  category?: string;
-}) {
-  const t = await getTranslations('shop');
-  const categories = await shopCategories(shopId);
-  const categoryId = category ? categories.find((entry) => entry.slug === category)?.id : undefined;
-
-  const [items, user] = await Promise.all([
-    publicShopProducts(shopId, { search: q, categoryId }),
-    currentUser(),
-  ]);
-
-  const saved = await wishlistedProductIds(
-    user?.id,
-    items.map((item) => item.id),
-  );
-
-  if (items.length === 0) {
-    return (
-      <EmptyState
-        illustration={<PackageSearch className="h-7 w-7" />}
-        title={q ? t('noMatchTitle', { term: q }) : t('noProductsTitle')}
-        description={q ? t('noMatchBody') : t('noProductsBody')}
-        action={{ label: t('allProducts'), href: `/shops/${slug}` }}
-      />
-    );
-  }
-
-  return <ProductGrid items={items} savedIds={saved} priority />;
 }

@@ -4,17 +4,21 @@ import { SearchX } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { SectionHeader } from '@/components/custom/section-header';
-import { SponsoredBadge } from '@/components/custom/sponsored-badge';
+import { FacetControls } from '@/components/shop/listing/facet-controls';
+import {
+  ProductListing,
+  ProductListingSkeleton,
+  type ListingSearchParams,
+} from '@/components/shop/listing/product-listing';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { ShopGrid, ShopGridSkeleton } from '@/components/shop/shop-grid';
 import { SearchBox } from '@/components/custom/search-box';
 import { currentUser } from '@/lib/auth/guards';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
-import { promotedProductsForSlot } from '@/lib/db/queries/listing';
+import { filterFacets } from '@/lib/db/queries/listing';
 import { trendingProducts } from '@/lib/db/queries/products';
-import { recordImpressions } from '@/lib/db/queries/promoted';
-import { searchProducts, searchShops } from '@/lib/db/queries/search';
-import { formatNumber } from '@/lib/format';
+import { categoryTree } from '@/lib/db/queries/shops';
+import { searchShops } from '@/lib/db/queries/search';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -28,15 +32,18 @@ export default async function SearchPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ q?: string; tab?: string }>;
+  searchParams: Promise<ListingSearchParams & { tab?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { q, tab } = await searchParams;
+  const query = await searchParams;
   const t = await getTranslations('search');
 
-  const term = q?.trim() ?? '';
-  const activeTab = tab === 'shops' ? 'shops' : 'products';
+  const term = query.q?.trim() ?? '';
+  const activeTab = query.tab === 'shops' ? 'shops' : 'products';
+
+  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  const facetOptions = { ...facets, categories: tree };
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
@@ -73,69 +80,30 @@ export default async function SearchPage({
           <ShopResults term={term} />
         </Suspense>
       ) : (
-        <Suspense fallback={<ProductGridSkeleton count={12} />}>
-          <ProductResults term={term} locale={locale} />
-        </Suspense>
-      )}
-    </div>
-  );
-}
-
-async function ProductResults({ term, locale }: { term: string; locale: string }) {
-  const t = await getTranslations('search');
-
-  const [results, promoted, user] = await Promise.all([
-    searchProducts(term, { limit: 48, locale }),
-    promotedProductsForSlot('search_top'),
-    currentUser(),
-  ]);
-
-  const promotedIds = new Set(promoted.map((item) => item.id));
-  const organic = results.filter((item) => !promotedIds.has(item.id));
-
-  const saved = await wishlistedProductIds(user?.id, [
-    ...promoted.map((i) => i.id),
-    ...organic.map((i) => i.id),
-  ]);
-
-  // Zero results still shows something useful (PRD §5.2).
-  if (results.length === 0) {
-    return (
-      <div className="space-y-6">
-        <EmptyState
-          illustration={<SearchX className="h-7 w-7" />}
-          title={t('noResultsTitle', { term })}
-          description={t('noResultsBody')}
-          action={{ label: t('browseAll'), href: '/products' }}
-        />
-        <PopularFallback locale={locale} heading={t('popularTitle')} />
-      </div>
-    );
-  }
-
-  void recordImpressions(promoted.map((item) => item.campaignId));
-
-  return (
-    <div className="space-y-4">
-      <p className="text-muted-foreground text-sm">
-        {t('productCount', { count: formatNumber(results.length, locale) })}
-      </p>
-
-      {promoted.length > 0 && (
-        <section className="rounded-card border-border bg-neutral-100/70 space-y-2 border p-3">
-          <div className="flex items-center gap-2">
-            <SponsoredBadge />
-            <span className="text-xs text-neutral-600">{t('promotedNote')}</span>
+        /*
+          Search results are a LISTING, with the same facets, chips, sort and
+          load-more as every other one. It used to be its own screen with its
+          own query and no filters at all — which meant the one place a shopper
+          most often lands was the one place they could not narrow.
+        */
+        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
+          <aside className="hidden lg:block">
+            <FacetControls {...facetOptions} />
+          </aside>
+          <div className="min-w-0">
+            <Suspense fallback={<ProductListingSkeleton />}>
+              <ProductListing
+                query={query}
+                locale={locale}
+                facets={facetOptions}
+                scope={{ search: term }}
+                promotedSlot="search_top"
+                emptyHref={`/search?q=${encodeURIComponent(term)}`}
+              />
+            </Suspense>
           </div>
-          <ProductGrid
-            items={promoted.map((i) => ({ ...i, sponsored: true }))}
-            savedIds={saved}
-            priority
-          />
-        </section>
+        </div>
       )}
-
-      <ProductGrid items={organic} savedIds={saved} priority={promoted.length === 0} />
     </div>
   );
 }

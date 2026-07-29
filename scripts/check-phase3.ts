@@ -207,7 +207,14 @@ async function main() {
   const shopLink = await shopForUser(shopkeeper.id);
   check('shopForUser resolves the owner link', shopLink?.shopId === shop.id, shopLink?.memberRole);
 
-  const listing = await productList({ locale: 'fa', pageSize: 10 });
+  /*
+   * `sort: 'newest'` explicitly. The listing default is POPULARITY now
+   * (PRD §5.1), and a product this script created a second ago has no views —
+   * so it is nowhere near the first page of a popularity ranking. The check
+   * means "the freshly published product is listed", so it should ask for the
+   * order that answers that.
+   */
+  const listing = await productList({ locale: 'fa', pageSize: 10, sort: 'newest' });
   check(
     'productList returns the published product',
     listing.items.some((i) => i.id === product.id),

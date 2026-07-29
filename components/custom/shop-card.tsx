@@ -1,7 +1,8 @@
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { Store } from 'lucide-react';
+import { MapPin, Store } from 'lucide-react';
 
+import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
@@ -63,7 +64,8 @@ export function ShopCard({
       <Link
         href={`/shops/${slug}`}
         className={cn(
-          'rounded-media group flex items-center gap-4 bg-neutral-50 p-4 transition-colors duration-150 hover:bg-neutral-100',
+          pressable,
+          'rounded-media group flex items-center gap-4 bg-neutral-50 p-4 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-100',
           className,
         )}
       >
@@ -113,7 +115,10 @@ export function ShopCard({
     <Link
       href={`/shops/${slug}`}
       className={cn(
-        'group rounded-card border-border bg-card shadow-card hover:shadow-overlay flex flex-col overflow-hidden border transition-shadow duration-150',
+        pressable,
+        // The lift is `translate`, not a bigger shadow alone: a card that only
+        // brightens reads as a hover state, one that rises reads as pickable.
+        'group rounded-card border-border bg-card shadow-card hover:shadow-overlay flex flex-col overflow-hidden border transition-[box-shadow,translate,scale] duration-150 ease-out hover:-translate-y-0.5',
         className,
       )}
     >
@@ -159,13 +164,20 @@ export function ShopCard({
           )}
         </div>
 
+        {/*
+          Floor and unit as a neutral BADGE, not a line of text. It is metadata
+          for someone planning to walk there (PRD §4) and never a browsing axis,
+          so it should read as a label on the card rather than as one more
+          sentence competing with the rating and the product count.
+        */}
         {hasLocation && (
-          <p className="mt-1.5 text-xs text-neutral-500">
+          <span className="rounded-pill mt-2 inline-flex items-center gap-1 bg-neutral-100 px-2 py-1 text-2xs font-medium text-neutral-600">
+            <MapPin className="h-3 w-3" aria-hidden />
             {t('floorUnit', {
               floor: formatNumber(floor, locale),
               unit: formatUnitNumber(unitNumber, locale) || '—',
             })}
-          </p>
+          </span>
         )}
       </div>
     </Link>

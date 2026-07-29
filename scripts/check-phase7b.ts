@@ -277,9 +277,30 @@ async function main() {
   /* ---------------------------------------------------------------------- */
   section('Manual booking — the offline sales path');
 
+  /*
+   * The SHOP-LEVEL slot with the most free capacity right now, rather than a
+   * hardcoded key.
+   *
+   * Two constraints, both learned by breaking this check. It used to name
+   * `directory_top` because nothing occupied it — which stopped being true the
+   * moment the shop directory got its featured strip (PRD §5.1), and the
+   * booking below then failed with `slot_full` on a check that is about
+   * pricing. And it has to exclude the product-required slots (lib/promotions.ts):
+   * booking `category_top` with only a shop id fails with `product_required`,
+   * which is correct behaviour and equally not what this section is testing.
+   */
   const [openSlot] = await sql<{ id: string; key: string; price: number }[]>`
-    select ps.id, ps.key::text as key, ps.price_per_week as price from promotion_slots ps
-    where ps.key = 'directory_top'
+    select ps.id, ps.key::text as key, ps.price_per_week as price,
+           ps.capacity - count(c.id) filter (
+             where c.status in ('approved','active')
+               and c.starts_at <= now() and c.ends_at >= now()
+           ) as free
+    from promotion_slots ps
+    left join campaigns c on c.slot_id = ps.id
+    where ps.key in ('featured_shops', 'directory_top')
+    group by ps.id, ps.key, ps.price_per_week, ps.capacity
+    order by free desc, ps.price_per_week asc
+    limit 1
   `;
   const [approvedShop] = await sql<{ id: string }[]>`
     select id from shops where status = 'approved' limit 1

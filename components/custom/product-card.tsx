@@ -9,7 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
-import { discountFraction, formatPercent } from '@/lib/format';
+import { LOW_STOCK_BADGE_THRESHOLD } from '@/lib/listing';
+import { discountFraction, formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -126,6 +127,14 @@ export function ProductCard({
 
   const fraction = discountFraction(price, discountPrice ?? null);
   const outOfStock = stock !== undefined && stock <= 0;
+  /*
+   * Scarcity, stated only when it is true. Three, not the dashboard's five: a
+   * shopkeeper wants warning early enough to restock, a shopper only cares once
+   * it is nearly gone, and a badge that fires at five sits on a third of the
+   * catalogue and stops meaning anything.
+   */
+  const lowStock =
+    stock !== undefined && stock > 0 && stock <= LOW_STOCK_BADGE_THRESHOLD;
 
   function toggleWishlist(event: React.MouseEvent) {
     event.preventDefault();
@@ -224,6 +233,16 @@ export function ProductCard({
         {outOfStock && (
           <div className="absolute inset-x-0 bottom-0 z-20 bg-neutral-900/75 py-1 text-center text-xs font-medium text-neutral-50">
             {t('outOfStock')}
+          </div>
+        )}
+
+        {lowStock && (
+          <div className="bg-warning-bg text-warning absolute inset-x-0 bottom-0 z-20 py-1 text-center text-xs font-semibold">
+            {t('onlyLeft', {
+              // `n` pluralises, `count` renders — see lib/db/queries/dashboard.ts.
+              n: stock!,
+              count: formatNumber(stock!, locale),
+            })}
           </div>
         )}
       </div>

@@ -1,7 +1,7 @@
 import { and, asc, avg, count, desc, eq, gte, inArray, lte, ne, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
-import { localizedColumn } from '../localized';
+import { localizedColumn, searchKey, searchKeyForInput } from '../localized';
 import {
   firstProductImagePath,
   productRatingAvg,
@@ -19,7 +19,14 @@ import {
   type LocalizedText,
 } from '../schema';
 
-export type ProductSort = 'newest' | 'price_asc' | 'price_desc' | 'rating';
+/*
+ * Sort names live in lib/listing.ts, which has no database imports — the client
+ * toolbar needs them too, and reading them from here pulled `postgres` into the
+ * browser bundle. Re-exported so query call sites need only one import.
+ */
+import { type ProductSort } from '../../listing';
+
+export { PRODUCT_SORTS, isProductSort, type ProductSort } from '../../listing';
 
 export type ProductListFilters = {
   categoryId?: string;
@@ -30,10 +37,37 @@ export type ProductListFilters = {
   priceMax?: number;
   minRating?: number;
   inStockOnly?: boolean;
+  /**
+   * Only products carrying a live discount.
+   *
+   * Defined as `discount_price < price`, which is exactly what puts the red
+   * percentage ribbon on the card — so the facet and the badge can never
+   * disagree about which products are "on offer".
+   */
+  onOfferOnly?: boolean;
+  /**
+   * Free-text term, matched the same way /search matches it.
+   *
+   * Present so search results are a LISTING like any other: the same facets,
+   * the same chips, the same toolbar, the same pagination. Keeping search on a
+   * separate query is how a product ends up with filters that work everywhere
+   * except the screen people reach for first.
+   */
+  search?: string;
   sort?: ProductSort;
   locale: string;
   page?: number;
   pageSize?: number;
+  /**
+   * Return pages 1..page as one list instead of page `page` alone.
+   *
+   * This is what makes "load more" a real append while leaving the URL
+   * pageable: `?page=3` renders seventy-two products, not the third
+   * twenty-four. Without it the button would replace the grid — which is
+   * numbered pagination wearing a different label, and the one thing the load
+   * more pattern exists to avoid.
+   */
+  accumulate?: boolean;
 };
 
 export type ProductListItem = {
@@ -53,6 +87,9 @@ export type ProductListItem = {
 };
 
 const DEFAULT_PAGE_SIZE = 24;
+
+/** Shared with lib/db/queries/search.ts — the same term must match the same rows. */
+const SIMILARITY_THRESHOLD = 0.12;
 
 /**
  * Public product listing (PRD §5.1).
@@ -74,9 +111,12 @@ export async function productList(filters: ProductListFilters) {
     priceMax,
     minRating,
     inStockOnly,
-    sort = 'newest',
+    onOfferOnly,
+    search,
+    sort = 'popularity',
     page = 1,
     pageSize = DEFAULT_PAGE_SIZE,
+    accumulate = false,
   } = filters;
 
   const conditions: SQL[] = [eq(products.status, 'published'), eq(shops.status, 'approved')];
@@ -99,6 +139,29 @@ export async function productList(filters: ProductListFilters) {
   if (priceMin !== undefined) conditions.push(gte(effectivePrice, priceMin));
   if (priceMax !== undefined) conditions.push(lte(effectivePrice, priceMax));
   if (inStockOnly) conditions.push(sql`${products.stock} > 0`);
+  if (onOfferOnly) {
+    conditions.push(
+      sql`${products.discountPrice} is not null and ${products.discountPrice} < ${products.price}`,
+    );
+  }
+
+  /*
+   * Term matching, identical to lib/db/queries/search.ts: a substring match OR
+   * a fuzzy one. The ILIKE arm matters because trigram similarity is
+   * length-sensitive — "a54" against a long title scores low even though it is
+   * an exact substring.
+   */
+  const term = search?.trim();
+  const needle = term ? searchKeyForInput(term) : null;
+  const similarity = needle
+    ? sql<number>`similarity(${searchKey(products.title)}, ${needle})`
+    : null;
+
+  if (needle && similarity) {
+    conditions.push(
+      sql`(${searchKey(products.title)} like '%' || ${needle} || '%' or ${similarity} > ${SIMILARITY_THRESHOLD})`,
+    );
+  }
 
   const where = and(...conditions);
 
@@ -106,6 +169,23 @@ export async function productList(filters: ProductListFilters) {
   const reviewCountExpr = sql<number>`count(${reviews.id}) filter (where ${reviews.status} = 'visible')`;
 
   const orderBy = {
+    /*
+     * POPULARITY is the default, not newest.
+     *
+     * A marketplace whose default order is "most recently added" shows the
+     * customer whatever a shopkeeper last uploaded, which is a ranking that
+     * serves the shop and not the shopper. View count is the closest honest
+     * proxy for demand we have, with rating breaking its ties.
+     */
+    /*
+     * With a search term, "popularity" means RELEVANCE — a term search ordered
+     * by view count would put the most-viewed near-miss above the exact match.
+     * The control still reads "popularity" because that is what the shopper
+     * asked for; relevance is what popularity means once a query narrows it.
+     */
+    popularity: similarity
+      ? [desc(similarity), desc(ratingExpr)]
+      : [desc(products.viewCount), desc(ratingExpr)],
     newest: [desc(products.createdAt)],
     price_asc: [asc(effectivePrice)],
     price_desc: [desc(effectivePrice)],
@@ -136,8 +216,8 @@ export async function productList(filters: ProductListFilters) {
     .groupBy(products.id, shops.id)
     .having(minRating !== undefined ? gte(ratingExpr, minRating) : undefined)
     .orderBy(...orderBy, desc(products.id))
-    .limit(pageSize)
-    .offset((page - 1) * pageSize);
+    .limit(accumulate ? pageSize * page : pageSize)
+    .offset(accumulate ? 0 : (page - 1) * pageSize);
 
   /*
    * The count must go through the SAME grouped-and-having query as the rows.

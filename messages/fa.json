@@ -372,7 +372,8 @@
     "paymentTitle": "پرداخت",
     "paymentBody": "نقد هنگام تحویل یا حساب‌پی",
     "youSave": "{amount} افغانی صرفه‌جویی",
-    "buyNow": "خرید فوری"
+    "buyNow": "خرید فوری",
+    "onlyLeft": "{n, plural, one {تنها # عدد مانده} other {تنها {count} عدد مانده}}"
   },
   "shop": {
     "productCount": "{count} محصول",
@@ -662,7 +663,13 @@
       "price_asc": "قیمت: کم به زیاد",
       "price_desc": "قیمت: زیاد به کم",
       "rating": "بیشترین امتیاز"
-    }
+    },
+    "availability": "موجودی و تخفیف",
+    "onOfferOnly": "فقط تخفیف‌دار",
+    "under": "تا {amount}",
+    "over": "از {amount}",
+    "ratingChip": "{rating} ستاره و بالاتر",
+    "removeFilter": "برداشتن این فیلتر"
   },
   "categories": {
     "title": "دسته‌بندی‌ها",
@@ -679,7 +686,11 @@
     "clearSearch": "پاک کردن جستجو",
     "emptyTitle": "دکانی در این دسته‌بندی نیست",
     "emptyBody": "دسته‌بندی دیگری را انتخاب کنید.",
-    "allShops": "همه دکان‌ها"
+    "allShops": "همه دکان‌ها",
+    "shopCount": "{n, plural, one {# دکان در مرکز گلبهار} other {{count} دکان در مرکز گلبهار}}",
+    "featuredHeading": "دکان‌های ویژه",
+    "emptyCategoryTitle": "در این دسته‌بندی دکانی نیست",
+    "emptyCategoryBody": "دسته‌بندی دیگری را ببینید یا همهٔ دکان‌ها را مرور کنید."
   },
   "search": {
     "title": "جستجو",
@@ -2128,5 +2139,23 @@
       "body": "چیزی از نوشته‌های شما گم نشده است. دوباره تلاش کنید.",
       "back": "بازگشت به فروشگاه"
     }
+  },
+  "listing": {
+    "resultCount": "{n, plural, one {# محصول} other {{count} محصول}}",
+    "sortLabel": "ترتیب",
+    "sort": {
+      "popularity": "محبوب‌ترین",
+      "newest": "تازه‌ترین",
+      "price_asc": "ارزان‌ترین",
+      "price_desc": "گران‌ترین",
+      "rating": "بهترین امتیاز"
+    },
+    "showResults": "{n, plural, one {نمایش # محصول} other {نمایش {count} محصول}}",
+    "loadMore": "{n, plural, one {# محصول دیگر} other {{count} محصول دیگر}}",
+    "shownOf": "{shown} از {total}",
+    "emptyTitle": "محصولی با این فیلترها پیدا نشد",
+    "emptyBody": "یکی از فیلترها را بردارید یا همه را پاک کنید.",
+    "clearFilters": "پاک کردن فیلترها",
+    "promotedNote": "این محصولات جایگاه تبلیغاتی خریده‌اند و ترتیب نتایج دیگر را تغییر نمی‌دهند."
   }
 }
