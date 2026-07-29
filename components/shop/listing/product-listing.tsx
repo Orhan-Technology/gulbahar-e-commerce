@@ -108,7 +108,11 @@ export async function ProductListing({
     // Paid strip only on page 1 — a shop bought placement above the results,
     // not above every page of them (PRD §8.4).
     promotedSlot && page === 1
-      ? promotedProductsForSlot(promotedSlot, { categoryId: scope.categoryId })
+      ? promotedProductsForSlot(promotedSlot, {
+          categoryId: scope.categoryId,
+          // On a search, a placement only shows if it ANSWERS the query.
+          search: scope.search ?? query.q,
+        })
       : Promise.resolve([]),
     currentUser(),
   ]);

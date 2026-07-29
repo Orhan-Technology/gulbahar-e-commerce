@@ -12,7 +12,6 @@ import {
 } from '@/components/shop/listing/product-listing';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { ShopGrid, ShopGridSkeleton } from '@/components/shop/shop-grid';
-import { SearchBox } from '@/components/custom/search-box';
 import { currentUser } from '@/lib/auth/guards';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { filterFacets } from '@/lib/db/queries/listing';
@@ -48,8 +47,6 @@ export default async function SearchPage({
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
       <h1 className="text-xl font-bold">{term ? t('resultsFor', { term }) : t('title')}</h1>
-
-      <SearchBox placeholder={t('placeholder')} />
 
       {term && (
         <div role="tablist" className="border-border flex gap-2 border-b">

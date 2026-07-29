@@ -73,9 +73,27 @@ export type PromotedProduct = {
  */
 export async function promotedProductsForSlot(
   slotKey: PromotionSlotKey,
-  options: { categoryId?: string; excludeProductId?: string; now?: Date } = {},
+  options: {
+    categoryId?: string;
+    excludeProductId?: string;
+    /**
+     * The search term the results answer, when there is one.
+     *
+     * A PAID SLOT BUYS POSITION AMONG MATCHING RESULTS — never an appearance on
+     * unrelated searches. Without this a campaign on a phone case surfaced,
+     * badged and boxed, above the results for "refrigerator", which reads as
+     * spam and spends the credibility of the Sponsored badge everywhere else
+     * (PRD §5.6, §8.4). Matched with the same predicate the organic search
+     * uses, so a promoted product cannot appear on a query its own listing
+     * would not.
+     */
+    search?: string;
+    now?: Date;
+  } = {},
 ): Promise<PromotedProduct[]> {
   const now = options.now ?? new Date();
+  const term = options.search?.trim();
+  const needle = term ? searchKeyForInput(term) : null;
 
   const rows = await db
     .select({
@@ -109,6 +127,10 @@ export async function promotedProductsForSlot(
         eq(shops.status, 'approved'),
         options.categoryId ? eq(products.categoryId, options.categoryId) : sql`true`,
         options.excludeProductId ? sql`${products.id} <> ${options.excludeProductId}` : sql`true`,
+        needle
+          ? sql`(${searchKey(products.title)} like '%' || ${needle} || '%'
+                 or similarity(${searchKey(products.title)}, ${needle}) > 0.12)`
+          : sql`true`,
       ),
     )
     .orderBy(asc(campaigns.startsAt));

@@ -130,7 +130,15 @@ export function HeaderSearch({
         }}
         className={cn(
           variant === 'pill' &&
-            'rounded-pill focus-within:ring-primary-200 flex items-center gap-2 bg-neutral-100 p-1.5 ps-4 transition-shadow duration-150 focus-within:ring-2',
+            /*
+             * ONE flat surface: white, a 1px border, and focus tints that
+             * border. It was a tinted capsule with a 2px ring layered on top,
+             * which at rest read as a disabled field and on focus produced a
+             * stacked glass edge — two rounded outlines a pixel apart. A search
+             * field is the most-used control on the header; it should look like
+             * somewhere to type, not like a decorated pill.
+             */
+            'rounded-pill border-border focus-within:border-primary-400 bg-card flex items-center gap-2 border p-1.5 ps-4 transition-colors duration-150 hover:border-neutral-300',
         )}
       >
         {variant === 'pill' ? (
