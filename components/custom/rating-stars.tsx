@@ -42,6 +42,22 @@ export interface RatingStarsProps {
  * The fill is an absolutely-positioned overlay clipped by width and anchored to
  * the inline start, so it grows right-to-left in Dari and left-to-right in
  * English without duplicating markup (PRD §10.3).
+ *
+ * BOTH LAYERS ARE SOLID FILLS WITH `stroke-0`, and that is not a style
+ * preference — do not "fix" it back to outlines (Prompt C1).
+ *
+ * lucide's <Star> is a STROKED OUTLINE by default. Drawing the empty track as
+ * an outline and the filled part as a solid meant the silhouette CHANGED
+ * halfway across the row: at 14px on a product card a 4.3 read as three solid
+ * amber stars beside two thin scratchy wireframes, which looks like a rendering
+ * fault rather than an unearned portion. With both layers solid the shape is
+ * constant and the rating is one silhouette in two tones — which is what every
+ * catalogue that does this well draws, and what makes the clip-by-width overlay
+ * legible at small sizes.
+ *
+ * `stroke-0` matters as much as the fill: a leftover stroke adds a rim that
+ * thins the form and reintroduces the outline at exactly the sizes where it
+ * hurts most.
  */
 export function RatingStars({
   value,
@@ -76,7 +92,7 @@ export function RatingStars({
         {/* Empty track */}
         <span className="inline-flex" aria-hidden>
           {Array.from({ length: 5 }, (_, index) => (
-            <Star key={index} className={cn(SIZES[size], 'text-neutral-300')} />
+            <Star key={index} className={cn(SIZES[size], 'fill-neutral-200 stroke-0')} />
           ))}
         </span>
 
@@ -88,10 +104,7 @@ export function RatingStars({
         >
           <span className="inline-flex">
             {Array.from({ length: 5 }, (_, index) => (
-              <Star
-                key={index}
-                className={cn(SIZES[size], 'fill-accent-warm text-accent-warm')}
-              />
+              <Star key={index} className={cn(SIZES[size], 'fill-accent-warm stroke-0')} />
             ))}
           </span>
         </span>
@@ -152,7 +165,7 @@ export function RatingStarsInput({
               className={cn(
                 SIZES[size],
                 'transition-colors duration-150',
-                active ? 'fill-accent-warm text-accent-warm' : 'text-neutral-300',
+                active ? 'fill-accent-warm stroke-0' : 'fill-neutral-200 stroke-0',
               )}
             />
             <span className="sr-only">{t('starsCount', { count: star })}</span>
