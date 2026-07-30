@@ -60,15 +60,43 @@ const SECONDARY: NavItem[] = [
   { href: '/dashboard/settings', icon: Settings, key: 'settings' },
 ];
 
+/**
+ * Which count belongs on which row. Only three rows are queues; everything else
+ * returns zero and renders no badge — a "0" beside Settings would be a number
+ * that means nothing.
+ */
+function badgeFor(counts: DashboardBadgeCounts | undefined, key: string): number {
+  if (!counts) return 0;
+  if (key === 'orders') return counts.orders;
+  if (key === 'questions') return counts.questions;
+  if (key === 'reviews') return counts.reviews;
+  return 0;
+}
+
 function useActive() {
   const pathname = usePathname();
   return (href: string, exact = false) =>
     exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-/** Desktop sidebar, hidden below md. */
-export function DashboardSidebar() {
+export type DashboardBadgeCounts = {
+  orders: number;
+  questions: number;
+  reviews: number;
+};
+
+/**
+ * Desktop sidebar, hidden below md.
+ *
+ * BADGES ON BOTH CONSOLES (Prompt C3). The admin rail has carried counts since
+ * D2 and the shopkeeper's did not, which meant the person with actual work
+ * waiting was the one who had to go looking for it. Counts are passed down
+ * pre-computed by the layout — the rail is a client component for its pathname,
+ * and a number fetched on the client arrives after first paint.
+ */
+export function DashboardSidebar({ counts }: { counts?: DashboardBadgeCounts }) {
   const t = useTranslations('dashboardNav');
+  const locale = useLocale();
   const isActive = useActive();
 
   return (
@@ -94,7 +122,17 @@ export function DashboardSidebar() {
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" aria-hidden />
-                {t(item.key)}
+                <span className="min-w-0 flex-1 truncate">{t(item.key)}</span>
+                {badgeFor(counts, item.key) > 0 && (
+                  <span
+                    className={cn(
+                      'rounded-pill text-2xs min-w-5 px-1.5 py-0.5 text-center font-bold tabular-nums',
+                      active ? 'bg-primary-foreground text-primary-700' : 'bg-danger text-primary-foreground',
+                    )}
+                  >
+                    {formatNumber(badgeFor(counts, item.key), locale)}
+                  </span>
+                )}
               </Link>
             </li>
           );

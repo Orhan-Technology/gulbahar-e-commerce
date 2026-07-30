@@ -79,7 +79,10 @@
     "topSellersHeading": "پرفروش‌ها این هفته",
     "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} · {views} بازدید",
     "topSellersHeadingRanged": "پرفروش‌ترین‌ها — {days} روز اخیر",
-    "noBaseline": "دوره قبلی برای مقایسه وجود ندارد"
+    "noBaseline": "دوره قبلی برای مقایسه وجود ندارد",
+    "rangeOrdersLabel": "سفارش‌ها — {days} روز",
+    "rangeViewsLabel": "بازدید محصولات — {days} روز",
+    "vsPreviousRange": "نسبت به دوره قبل"
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -2534,6 +2537,14 @@
       "forbidden": "اجازه این کار را ندارید",
       "not_found": "پرسش پیدا نشد",
       "invalid_input": "درخواست معتبر نیست"
+    }
+  },
+  "console": {
+    "range": {
+      "label": "بازه زمانی",
+      "7d": "۷ روز",
+      "30d": "۳۰ روز",
+      "90d": "۹۰ روز"
     }
   }
 }

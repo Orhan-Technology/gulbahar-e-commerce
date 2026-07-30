@@ -101,7 +101,7 @@ async function main() {
     .limit(1);
 
   const stats = await shopDashboardStats(topShop.id);
-  check('week sales non-zero', stats.weekSales > 0, formatCurrency(stats.weekSales, 'fa'));
+  check('week sales non-zero', stats.rangeSales > 0, formatCurrency(stats.rangeSales, 'fa'));
   check('live products counted', stats.liveProducts === 5, stats.liveProducts);
   check('30-day series is gapless', stats.salesSeries.length === 30, stats.salesSeries.length);
   check(

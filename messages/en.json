@@ -79,7 +79,10 @@
     "topSellersHeading": "Best sellers this week",
     "topSellersUnits": "{n, plural, one {# sold} other {{count} sold}} · {views} views",
     "topSellersHeadingRanged": "Best sellers — last {days} days",
-    "noBaseline": "No earlier period to compare"
+    "noBaseline": "No earlier period to compare",
+    "rangeOrdersLabel": "Orders — {days} days",
+    "rangeViewsLabel": "Product views — {days} days",
+    "vsPreviousRange": "vs the previous period"
   },
   "admin": {
     "heading": "Platform Administration",
@@ -2534,6 +2537,14 @@
       "forbidden": "You are not allowed to do that",
       "not_found": "That question was not found",
       "invalid_input": "That request is not valid"
+    }
+  },
+  "console": {
+    "range": {
+      "label": "Date range",
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days"
     }
   }
 }

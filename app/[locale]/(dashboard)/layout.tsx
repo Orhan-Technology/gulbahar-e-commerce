@@ -10,6 +10,8 @@ import { pickLocale } from '@/lib/db/localized';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { shopById } from '@/lib/db/queries/shops';
 import { shopOrderCounts } from '@/lib/db/queries/shop-orders';
+import { shopQuestionCounts } from '@/lib/db/queries/questions';
+import { shopReviewCounts } from '@/lib/db/queries/shop-reviews';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -38,15 +40,27 @@ export default async function DashboardLayout({
   const t = await getTranslations('dashboardNav');
   const common = await getTranslations('common');
 
-  const [shop, notifications, unread, orderCounts, settings] = await Promise.all([
-    shopById(user.shopId),
-    userNotifications(user.id, user.role, 20),
-    unreadNotificationCount(user.id, user.role),
-    // Feeds the Orders tab badge. Fetched here rather than in the client bar so
-    // the count is in the first paint instead of popping in after hydration.
-    shopOrderCounts(user.shopId),
-    siteSettings(),
-  ]);
+  const [shop, notifications, unread, orderCounts, settings, questionCounts, reviewCounts] =
+    await Promise.all([
+      shopById(user.shopId),
+      userNotifications(user.id, user.role, 20),
+      unreadNotificationCount(user.id, user.role),
+      // Feeds the Orders tab badge. Fetched here rather than in the client bar
+      // so the count is in the first paint instead of popping in after
+      // hydration — the same reason the two counts below it are here.
+      shopOrderCounts(user.shopId),
+      siteSettings(),
+      shopQuestionCounts(user.shopId),
+      shopReviewCounts(user.shopId),
+    ]);
+
+  // What is actually waiting: orders to accept, questions with no answer,
+  // reviews with no reply. Everything else in the rail is a place, not a queue.
+  const navCounts = {
+    orders: orderCounts.placed,
+    questions: questionCounts.pending,
+    reviews: reviewCounts.unanswered,
+  };
 
   const shopName = shop ? pickLocale(shop.name, locale) : t('yourShop');
 
@@ -116,7 +130,7 @@ export default async function DashboardLayout({
       */}
       <StretchScroll root>
         <div className="flex">
-          <DashboardSidebar />
+          <DashboardSidebar counts={navCounts} />
           {/* pb-20 clears the fixed mobile tab bar. */}
           <main className="min-w-0 flex-1 pb-20 md:pb-6">{children}</main>
         </div>

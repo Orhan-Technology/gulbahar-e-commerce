@@ -20,9 +20,11 @@ import {
   type ReportPeriod,
 } from '@/lib/db/queries/shop-reports';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { parseConsoleRange } from '@/lib/console-range';
+import { ConsolePageHeader } from '@/components/console/page-header';
+import { RangeControl } from '@/components/console/range-control';
 import { Link } from '@/lib/i18n/navigation';
 
-const PERIODS: ReportPeriod[] = [7, 30, 90];
 
 /** Shop reporting (PRD §6.7). */
 export default async function ShopReportsPage({
@@ -30,39 +32,25 @@ export default async function ShopReportsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ range?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { period: rawPeriod } = await searchParams;
+  const { range: rangeKey } = await searchParams;
   const user = await requireShopkeeper(locale);
   const t = await getTranslations('shopReports');
 
-  const period: ReportPeriod = PERIODS.includes(Number(rawPeriod) as ReportPeriod)
-    ? (Number(rawPeriod) as ReportPeriod)
-    : 30;
+  /*
+   * ONE range control across the console (Prompt C3). This page had its own
+   * `?period=30` chips with their own markup — a second idiom for the same
+   * decision, which is how two consoles end up looking like two products.
+   */
+  const range = parseConsoleRange(rangeKey);
+  const period: ReportPeriod = range.days;
 
   return (
     <div className="space-y-4 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-base font-bold">{t('title')}</h1>
-
-        <div className="flex gap-2">
-          {PERIODS.map((option) => (
-            <Link
-              key={option}
-              href={`/dashboard/reports?period=${option}`}
-              className={`rounded-pill border px-3 py-1.5 text-xs font-medium ${
-                option === period
-                  ? 'border-primary bg-primary-50 text-primary'
-                  : 'border-border bg-card hover:border-primary'
-              }`}
-            >
-              {t('days', { count: formatNumber(option, locale) })}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <ConsolePageHeader title={t('title')} actions={<RangeControl current={range.key} />} />
 
       {/* Suspense per section, so a slow aggregate never blocks the headline
           numbers (PRD §10.5). */}

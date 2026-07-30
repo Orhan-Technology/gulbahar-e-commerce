@@ -1,6 +1,7 @@
 import { and, count, desc, eq, gte, lt, sql } from 'drizzle-orm';
 
 import { db } from '..';
+import { parseConsoleRange, type ConsoleRange } from '../../console-range';
 import { pickLocale } from '../localized';
 import { campaigns, orderItems, orders, products, wishlistItems } from '../schema';
 
@@ -27,7 +28,25 @@ const LOW_STOCK_THRESHOLD = 5;
  */
 export const TREND_DAYS = 30;
 
-export async function shopDashboardStats(shopId: string, now: Date = new Date()) {
+/**
+ * Everything the dashboard home shows, for ONE window (Prompts C2, C3).
+ *
+ * `range` comes from the URL (`?range=30d`) and every figure below obeys it —
+ * the KPI values, their deltas, the chart and the best-seller list. The
+ * comparison period is the equally-long stretch immediately before it, derived
+ * rather than configured, so a value and its delta can never be computed over
+ * different spans.
+ *
+ * `today` is the one figure that does NOT scale with the range, and that is
+ * deliberate: "today's takings" answers a question about right now, and a
+ * shopkeeper who widens the window to ninety days has not stopped caring what
+ * came in this morning.
+ */
+export async function shopDashboardStats(
+  shopId: string,
+  range: ConsoleRange = parseConsoleRange(undefined),
+  now: Date = new Date(),
+) {
   const startOfToday = new Date(now);
   startOfToday.setUTCHours(0, 0, 0, 0);
 
@@ -45,26 +64,16 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
    */
   const yesterdayToNow = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-  const startOfWeek = new Date(startOfToday);
-  startOfWeek.setUTCDate(startOfWeek.getUTCDate() - 6);
-
   /*
-   * The trailing-30-day window, shared by the sales chart and the best-seller
-   * list beside it. Named rather than open-coded twice, because the whole point
-   * of C2 is that two figures on one screen answer the same question over the
-   * same period.
+   * THE window and its comparison, both from lib/console-range.ts. Named
+   * `startOfWeek`/`startOfPrevWeek` no longer — they are whatever the reader
+   * asked for, and the labels above them say so.
    */
-  const start30 = new Date(startOfToday);
-  start30.setUTCDate(start30.getUTCDate() - (TREND_DAYS - 1));
+  const windowStart = range.start;
+  const previousStart = range.previousStart;
 
-  /*
-   * The week before this one, for the KPI deltas. Both windows are seven whole
-   * days ending today, so "this week" and "last week" are the same length —
-   * comparing a partial week against a full one is the same mistake the
-   * today-vs-yesterday window above already avoids.
-   */
-  const startOfPrevWeek = new Date(startOfWeek);
-  startOfPrevWeek.setUTCDate(startOfPrevWeek.getUTCDate() - 7);
+  // The chart and the best-seller list share the selected window (Prompt C2).
+  const start30 = windowStart;
 
   const in7Days = new Date(now);
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
@@ -109,7 +118,7 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
    *
    * The orders tile's displayed count, its current-week delta input and its
    * previous-week delta input are three separate calls to this ONE function
-   * (see `weekOrderCount` / `prevWeekOrderCount` below) — never let one of the
+   * (see `rangeOrderCount` / `previousOrderCount` below) — never let one of the
    * three read a different predicate or window than the others. A tile whose
    * number and whose delta pill disagree about what counts as "an order" is
    * how a dashboard shows 0 orders with a +400% delta at the same time.
@@ -161,11 +170,11 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   ] = await Promise.all([
     revenueBetween(startOfToday),
     revenueBetween(startOfYesterday, yesterdayToNow),
-    revenueBetween(startOfWeek),
-    ordersBetween(startOfWeek),
-    ordersBetween(startOfPrevWeek, startOfWeek),
-    viewsBetween(startOfWeek, startOfTomorrow),
-    viewsBetween(startOfPrevWeek, startOfWeek),
+    revenueBetween(windowStart),
+    ordersBetween(windowStart),
+    ordersBetween(previousStart, windowStart),
+    viewsBetween(windowStart, startOfTomorrow),
+    viewsBetween(previousStart, windowStart),
 
     // Shop rating: the average a customer sees, over this shop's own products.
     db.execute(sql`
@@ -306,13 +315,13 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
 
   // Both from `ordersBetween` (see above) — the value the tile shows and the
   // two inputs to its delta, sharing one predicate and one window shape.
-  const weekOrderCount = Number(weekOrderRows[0]?.total ?? 0);
-  const prevWeekOrderCount = Number(prevWeekOrderRows[0]?.total ?? 0);
+  const rangeOrderCount = Number(weekOrderRows[0]?.total ?? 0);
+  const previousOrderCount = Number(prevWeekOrderRows[0]?.total ?? 0);
 
   const [weekViewRow] = weekViewRows as unknown as Array<{ total: number }>;
   const [prevWeekViewRow] = prevWeekViewRows as unknown as Array<{ total: number }>;
-  const weekViews = Number(weekViewRow?.total ?? 0);
-  const prevWeekViews = Number(prevWeekViewRow?.total ?? 0);
+  const rangeViews = Number(weekViewRow?.total ?? 0);
+  const previousViews = Number(prevWeekViewRow?.total ?? 0);
 
   const [ratingRow] = ratingRows as unknown as Array<{ average: number; total: number }>;
 
@@ -334,14 +343,16 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
      * infinity.
      */
     todayDelta: yesterdaySales > 0 ? (todaySales - yesterdaySales) / yesterdaySales : null,
-    weekSales: Number(weekRows[0]?.total ?? 0),
+    rangeSales: Number(weekRows[0]?.total ?? 0),
+    /** The window every figure above obeys, so the UI can label it. */
+    rangeDays: range.days,
     todayOrderCount: Number(todayRows[0]?.orderCount ?? 0),
-    weekOrderCount,
-    prevWeekOrderCount,
-    ordersDelta: delta(weekOrderCount, prevWeekOrderCount),
-    weekViews,
-    prevWeekViews,
-    viewsDelta: delta(weekViews, prevWeekViews),
+    rangeOrderCount,
+    previousOrderCount,
+    ordersDelta: delta(rangeOrderCount, previousOrderCount),
+    rangeViews,
+    previousViews,
+    viewsDelta: delta(rangeViews, previousViews),
     /**
      * The rating a customer sees on the shop card, so the dashboard and the
      * storefront cannot disagree about how the shop is doing.

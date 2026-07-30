@@ -1,16 +1,15 @@
 import { Suspense } from 'react';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
-import { ChevronRight } from 'lucide-react';
 
 import { AdminActionQueue } from '@/components/admin/admin-action-queue';
 import { PlatformHealth, PlatformHealthSkeleton } from '@/components/admin/platform-health';
 import { RevenueBlock, RevenueBlockSkeleton } from '@/components/admin/revenue-block';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ADMIN_SECTIONS } from '@/lib/admin-sections';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminActionQueue } from '@/lib/db/queries/admin-overview';
-import { formatNumber } from '@/lib/format';
-import { Link } from '@/lib/i18n/navigation';
+import { parseConsoleRange } from '@/lib/console-range';
+import { ConsolePageHeader } from '@/components/console/page-header';
+import { RangeControl } from '@/components/console/range-control';
 
 /**
  * Admin overview — quality-bar screen #4 (PRD §7, §10.8).
@@ -31,101 +30,57 @@ import { Link } from '@/lib/i18n/navigation';
  */
 export default async function AdminOverviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ range?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const { range: rangeKey } = await searchParams;
   await requireAdmin(locale);
-
-  return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
-      <Suspense fallback={<HeaderSkeleton />}>
-        <OverviewHeader />
-      </Suspense>
-
-      <Suspense fallback={<QueueSkeleton />}>
-        <QueueSection />
-      </Suspense>
-
-      {/*
-        Revenue sits directly under the queue and above platform health. It is
-        the client's slide, and burying it under order counts is how a
-        marketplace demo turns into a logistics demo.
-      */}
-      <Suspense fallback={<RevenueBlockSkeleton />}>
-        <RevenueBlock />
-      </Suspense>
-
-      <Suspense fallback={<PlatformHealthSkeleton />}>
-        <PlatformHealth />
-      </Suspense>
-
-      {/*
-        The console's own index, the same pattern as the account hub (A4): the
-        rail is the navigation on a desktop, but the overview is where someone
-        arrives, and a section they have never opened is invisible in a dark
-        sidebar they have stopped reading. Rendered from ADMIN_SECTIONS, so this
-        and the rail cannot disagree about what the console contains.
-      */}
-      <ConsoleSections />
-    </div>
-  );
-}
-
-async function ConsoleSections() {
-  const t = await getTranslations('adminNav');
-
-  return (
-    <section aria-labelledby="console-sections-heading" className="space-y-3">
-      <h2 id="console-sections-heading" className="text-sm font-bold">
-        {t('sectionsHeading')}
-      </h2>
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {ADMIN_SECTIONS.filter((section) => section.href !== '/admin').map((section) => {
-          const Icon = section.icon;
-          return (
-            <li key={section.href}>
-              <Link
-                href={section.href}
-                className="rounded-card border-border bg-card hover:border-primary flex h-full items-center gap-3 border p-3 transition-colors duration-150"
-              >
-                <span className="rounded-control bg-primary-50 text-primary flex h-9 w-9 shrink-0 items-center justify-center">
-                  <Icon className="h-4 w-4" aria-hidden />
-                </span>
-                <span className="min-w-0 flex-1 text-sm font-medium">
-                  {t(section.key as never)}
-                </span>
-                <ChevronRight
-                  className="h-4 w-4 shrink-0 text-neutral-400 rtl:rotate-180"
-                  aria-hidden
-                />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
-
-async function OverviewHeader() {
-  const locale = await getLocale();
   const t = await getTranslations('adminOverview');
-  const entries = await adminActionQueue(locale);
+  const range = parseConsoleRange(rangeKey);
 
   return (
-    <div>
-      <h1 className="text-xl font-bold">{t('title')}</h1>
-      <p className="text-muted-foreground text-sm">
-        {entries.length > 0
-          ? t('waitingSummary', {
-              // `n` pluralises, `count` renders — see lib/db/queries/dashboard.ts.
-              n: entries.length,
-              count: formatNumber(entries.length, locale),
-            })
-          : t('nothingWaiting')}
-      </p>
+    <div className="mx-auto max-w-[100rem] space-y-6 p-4 sm:p-6">
+      {/*
+        THE HEADING IS THE HEADING (Prompt C3). It used to be followed by
+        "۵ مورد منتظر شماست" — directly above a card titled «کارهای منتظر ۵».
+        The same count twice in eighty pixels is what makes a console read as a
+        template; the card owns that number, so the page just says where you
+        are.
+      */}
+      <ConsolePageHeader title={t('title')} actions={<RangeControl current={range.key} />} />
+
+      {/*
+        Two regions from `xl`, the same shape as the shopkeeper's (Prompt C3):
+        decisions and money down the main column, platform health in the rail.
+        The old page centred a 1152px column and ended with a grid of links to
+        the sections already listed in the sidebar beside it — that grid is gone
+        rather than moved, because nothing replaces navigation that is already
+        on screen.
+      */}
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_23rem] xl:items-start">
+        <div className="space-y-6">
+          <Suspense fallback={<QueueSkeleton />}>
+            <QueueSection />
+          </Suspense>
+
+          {/*
+            Revenue sits directly under the queue. It is the client's slide, and
+            burying it under order counts is how a marketplace demo turns into a
+            logistics demo.
+          */}
+          <Suspense fallback={<RevenueBlockSkeleton />}>
+            <RevenueBlock />
+          </Suspense>
+        </div>
+
+        <Suspense fallback={<PlatformHealthSkeleton />}>
+          <PlatformHealth range={range} />
+        </Suspense>
+      </div>
     </div>
   );
 }
@@ -134,15 +89,6 @@ async function QueueSection() {
   const locale = await getLocale();
   const entries = await adminActionQueue(locale);
   return <AdminActionQueue entries={entries} />;
-}
-
-function HeaderSkeleton() {
-  return (
-    <div className="space-y-2">
-      <Skeleton className="h-6 w-40" />
-      <Skeleton className="h-4 w-64" />
-    </div>
-  );
 }
 
 function QueueSkeleton() {

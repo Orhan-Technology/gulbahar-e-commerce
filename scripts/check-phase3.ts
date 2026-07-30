@@ -240,7 +240,7 @@ async function main() {
 
   const stats = await shopDashboardStats(shop.id);
   check('dashboard: live products', stats.liveProducts === 1, stats.liveProducts);
-  check('dashboard: week sales counted', stats.weekSales === 21000, stats.weekSales);
+  check('dashboard: week sales counted', stats.rangeSales === 21000, stats.rangeSales);
   check(
     'dashboard: 30-day series has no gaps',
     stats.salesSeries.length === 30,

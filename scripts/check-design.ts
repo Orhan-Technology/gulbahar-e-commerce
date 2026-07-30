@@ -100,9 +100,15 @@ async function main() {
   }
   check('every link on the shop dashboard resolves', dashboardBroken.length === 0, dashboardBroken);
 
+  /*
+   * The KPI's drill-down carries WHATEVER window the tile is showing, not a
+   * fixed seven days (Prompt C3). The console's range lives in the URL and
+   * defaults to thirty; a tile labelled "۳۰ روز" that lands on a seven-day list
+   * is the drift this check exists to catch, one level up.
+   */
   check(
     'the orders KPI carries its window',
-    dashboard.includes('/dashboard/orders?range=7d'),
+    dashboard.includes('/dashboard/orders?range=30d'),
   );
   check('the views KPI carries its ordering', dashboard.includes('/dashboard/products?sort=views'));
 
@@ -120,6 +126,27 @@ async function main() {
     if ((await status(href, admin)) >= 400) overviewBroken.push(href);
   }
   check('every link on the admin overview resolves', overviewBroken.length === 0, overviewBroken);
+
+  /* ---------------------------------------------------------------------- */
+  section('The consoles state each fact once (C3)');
+
+  /*
+   * The shop's identity belongs to the chrome. It used to be printed three
+   * times above the fold — top bar, greeting line, status pill — which is what
+   * made the panel read as a template rather than a tool.
+   */
+  const shopNameCount = countOccurrences(visibleText(dashboard), 'الکترونیک کابل');
+  check('the shop name appears once on the dashboard', shopNameCount === 1, shopNameCount);
+
+  check(
+    'the admin overview has no grid of links to its own sidebar',
+    !overview.includes('console-sections-heading'),
+  );
+
+  check(
+    'both consoles carry the same range control',
+    dashboard.includes('data-range-control') && overview.includes('data-range-control'),
+  );
 
   /* ---------------------------------------------------------------------- */
   section('The action centres carry their actions');
@@ -306,7 +333,12 @@ async function main() {
    * HTML rendered "۰" next to the pill anyway, because the pill's guard was
    * keyed on the real value instead of the figure actually on screen.
    */
-  function zeroValueWithDeltaPill(document: string): string[] {
+  /** Occurrences of a phrase in already-stripped visible text. */
+function countOccurrences(text: string, needle: string): number {
+  return text.split(needle).length - 1;
+}
+
+function zeroValueWithDeltaPill(document: string): string[] {
     const hits: string[] = [];
     for (const match of document.matchAll(
       /class="[^"]*font-bold tabular-nums[^"]*">([^<]*)<\/span><span class="rounded-pill[^"]*(?:bg-success-bg|bg-danger-bg)/g,

@@ -7,6 +7,7 @@ import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
 import { newCustomers } from '@/lib/db/queries/admin-overview';
+import type { ConsoleRange } from '@/lib/console-range';
 import { platformSeries, platformTotals, topShops } from '@/lib/db/queries/admin-reports';
 import { shopCountsByStatus } from '@/lib/db/queries/shops';
 import { formatCurrency, formatNumber } from '@/lib/format';
@@ -26,16 +27,24 @@ import { cn } from '@/lib/utils';
  */
 const WINDOW_DAYS = 30 as const;
 
-export async function PlatformHealth() {
+/**
+ * Platform health for the selected window (Prompt C3).
+ *
+ * Every figure here obeys the console's date range, including the deltas — the
+ * comparison period is the equally-long stretch before it, derived in
+ * lib/console-range.ts rather than configured separately.
+ */
+export async function PlatformHealth({ range }: { range?: ConsoleRange }) {
   const locale = await getLocale();
   const t = await getTranslations('adminOverview.health');
+  const days = range?.days ?? WINDOW_DAYS;
 
   const [totals, series, customers, shopCounts, leaders] = await Promise.all([
-    platformTotals(WINDOW_DAYS),
-    platformSeries(WINDOW_DAYS),
-    newCustomers(WINDOW_DAYS),
+    platformTotals(days),
+    platformSeries(days),
+    newCustomers(days),
     shopCountsByStatus(),
-    topShops(WINDOW_DAYS, 5),
+    topShops(days, 5),
   ]);
 
   const totalShops = Object.values(shopCounts).reduce((sum, value) => sum + value, 0);
@@ -43,14 +52,15 @@ export async function PlatformHealth() {
 
   // Orders per day, not orders total: the total is already the chart's own
   // subject, and a rate is what tells a manager whether the mall is busy.
-  const perDay = totals.orderCount / WINDOW_DAYS;
+  const perDay = totals.orderCount / days;
 
   return (
     <section className="space-y-4">
       <h2 className="text-sm font-bold">{t('heading')}</h2>
 
-      {/* Three per row, never four — the density rule for this surface. */}
-      <div className="grid gap-3 sm:grid-cols-3">
+      {/* Three per row below `xl`; stacked in the rail above it, where the
+          column is 23rem wide and three tiles across would truncate. */}
+      <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
         <StatCard
           label={t('ordersPerDay')}
           value={Math.round(perDay * 10) / 10}

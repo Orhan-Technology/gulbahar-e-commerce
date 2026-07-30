@@ -5,16 +5,16 @@ import { Eye, ShoppingBag, Star, Wallet } from 'lucide-react';
 
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { ActionQueue } from '@/components/dashboard/action-queue';
-import {
-  DashboardGreeting,
-  DashboardGreetingSkeleton,
-} from '@/components/dashboard/dashboard-greeting';
+import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
 import { SalesChart } from '@/components/dashboard/sales-chart';
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
-import { actionQueueItems, shopDashboardStats, TREND_DAYS } from '@/lib/db/queries/dashboard';
+import { actionQueueItems, shopDashboardStats } from '@/lib/db/queries/dashboard';
+import { parseConsoleRange, type ConsoleRange } from '@/lib/console-range';
+import { ConsolePageHeader } from '@/components/console/page-header';
+import { RangeControl } from '@/components/console/range-control';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -41,32 +41,57 @@ import { cn } from '@/lib/utils';
  * Every band is its own Suspense boundary so a slower query never delays the
  * queue, and each fallback matches its final layout exactly (PRD §10.5).
  */
-export default async function DashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function DashboardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<{ range?: string }>;
+}) {
   const { locale } = await params;
   setRequestLocale(locale);
+  const { range: rangeKey } = await searchParams;
   const user = await requireShopkeeper(locale);
+  const range = parseConsoleRange(rangeKey);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-4 md:p-6">
-      <Suspense fallback={<DashboardGreetingSkeleton />}>
-        <DashboardGreeting name={user.name ?? ''} shopId={user.shopId} />
-      </Suspense>
+    /*
+     * TWO REGIONS FROM `xl` (Prompt C3): the work down the main column, the
+     * numbers in a rail beside it. The page used to centre a 1024px column on a
+     * 1440px screen, which left 40% of a shopkeeper's monitor empty while the
+     * best-seller list was three items long and scrolled off the bottom.
+     *
+     * Below `xl` it is one column in the same reading order — queue, numbers,
+     * chart, sellers — because on a phone the queue must not be pushed down by
+     * four tiles.
+     */
+    <div className="mx-auto max-w-[100rem] space-y-5 p-4 md:p-6">
+      <ConsolePageHeader
+        title={<DashboardGreeting name={user.name ?? ''} />}
+        actions={<RangeControl current={range.key} />}
+      />
 
-      <Suspense fallback={<QueueSkeleton />}>
-        <QueueSection shopId={user.shopId} locale={locale} />
-      </Suspense>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
+        <div className="space-y-5">
+          <Suspense fallback={<QueueSkeleton />}>
+            <QueueSection shopId={user.shopId} locale={locale} />
+          </Suspense>
 
-      <Suspense fallback={<KpiRowSkeleton />}>
-        <KpiRow shopId={user.shopId} locale={locale} />
-      </Suspense>
+          <Suspense fallback={<ChartSkeleton />}>
+            <ChartSection shopId={user.shopId} locale={locale} range={range} />
+          </Suspense>
+        </div>
 
-      <Suspense fallback={<ChartSkeleton />}>
-        <ChartSection shopId={user.shopId} locale={locale} />
-      </Suspense>
+        <div className="space-y-5">
+          <Suspense fallback={<KpiRowSkeleton />}>
+            <KpiRow shopId={user.shopId} locale={locale} range={range} />
+          </Suspense>
 
-      <Suspense fallback={<TopSellersSkeleton />}>
-        <TopSellers shopId={user.shopId} locale={locale} />
-      </Suspense>
+          <Suspense fallback={<TopSellersSkeleton />}>
+            <TopSellers shopId={user.shopId} locale={locale} range={range} />
+          </Suspense>
+        </div>
+      </div>
     </div>
   );
 }
@@ -84,12 +109,23 @@ async function QueueSection({ shopId, locale }: { shopId: string; locale: string
  * Two revenue figures side by side look like a fuller dashboard and tell the
  * reader one thing.
  */
-async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
+async function KpiRow({
+  shopId,
+  locale,
+  range,
+}: {
+  shopId: string;
+  locale: string;
+  range: ConsoleRange;
+}) {
   const t = await getTranslations('dashboard');
-  const stats = await shopDashboardStats(shopId);
+  const stats = await shopDashboardStats(shopId, range);
+  const days = formatNumber(range.days, locale);
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    /* Two across on a phone, four on a tablet, ONE in the desktop rail — the
+       rail is 21rem wide and a tile has to stay readable in it. */
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-1">
       <StatCard
         label={t('todaySales')}
         value={stats.todaySales}
@@ -122,18 +158,18 @@ async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
       />
 
       <StatCard
-        label={t('weekOrdersLabel')}
-        value={stats.weekOrderCount}
+        label={t('rangeOrdersLabel', { days })}
+        value={stats.rangeOrderCount}
         icon={<ShoppingBag className="h-4 w-4" aria-hidden />}
-        href="/dashboard/orders?range=7d"
+        href={`/dashboard/orders?range=${range.key}`}
         delta={stats.ordersDelta}
-        hint={stats.ordersDelta !== null ? t('vsLastWeek') : t('noBaseline')}
+        hint={stats.ordersDelta !== null ? t('vsPreviousRange') : t('noBaseline')}
         hintTone={(stats.ordersDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
       <StatCard
-        label={t('weekViewsLabel')}
-        value={stats.weekViews}
+        label={t('rangeViewsLabel', { days })}
+        value={stats.rangeViews}
         /*
          * FULL GROUPED NUMBER, never "1.2K" (Prompt C2). Compact notation does
          * not localise to Dari digits the way the grouped form does, and it
@@ -146,7 +182,7 @@ async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
         // product list ordered by exactly the number the tile is showing.
         href="/dashboard/products?sort=views"
         delta={stats.viewsDelta}
-        hint={stats.viewsDelta !== null ? t('vsLastWeek') : t('noBaseline')}
+        hint={stats.viewsDelta !== null ? t('vsPreviousRange') : t('noBaseline')}
         hintTone={(stats.viewsDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
@@ -170,9 +206,17 @@ async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
   );
 }
 
-async function ChartSection({ shopId, locale }: { shopId: string; locale: string }) {
+async function ChartSection({
+  shopId,
+  locale,
+  range,
+}: {
+  shopId: string;
+  locale: string;
+  range: ConsoleRange;
+}) {
   const t = await getTranslations('dashboard');
-  const stats = await shopDashboardStats(shopId);
+  const stats = await shopDashboardStats(shopId, range);
 
   const total = stats.salesSeries.reduce((sum, point) => sum + point.revenue, 0);
   const first = stats.salesSeries.at(0);
@@ -212,9 +256,17 @@ async function ChartSection({ shopId, locale }: { shopId: string; locale: string
  * "what is selling" means the cases. Revenue still rides on the row, because it
  * is the second question and it costs nothing to answer it here.
  */
-async function TopSellers({ shopId, locale }: { shopId: string; locale: string }) {
+async function TopSellers({
+  shopId,
+  locale,
+  range,
+}: {
+  shopId: string;
+  locale: string;
+  range: ConsoleRange;
+}) {
   const t = await getTranslations('dashboard');
-  const stats = await shopDashboardStats(shopId);
+  const stats = await shopDashboardStats(shopId, range);
 
   if (stats.topProducts.length === 0) return null;
 
@@ -224,7 +276,7 @@ async function TopSellers({ shopId, locale }: { shopId: string; locale: string }
           the same thirty days, and saying so is what makes them comparable
           (Prompt C2). */}
       <h2 className="mb-2 text-sm font-bold">
-        {t('topSellersHeadingRanged', { days: formatNumber(TREND_DAYS, locale) })}
+        {t('topSellersHeadingRanged', { days: formatNumber(range.days, locale) })}
       </h2>
 
       {/* Rows rather than a table: four columns at 390px are unreadable however

@@ -19,9 +19,11 @@ import {
   type PlatformPeriod,
 } from '@/lib/db/queries/admin-reports';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { parseConsoleRange } from '@/lib/console-range';
+import { ConsolePageHeader } from '@/components/console/page-header';
+import { RangeControl } from '@/components/console/range-control';
 import { Link } from '@/lib/i18n/navigation';
 
-const PERIODS: PlatformPeriod[] = [7, 30, 90];
 
 /** Platform reporting (PRD §7.4). */
 export default async function AdminReportsPage({
@@ -29,41 +31,21 @@ export default async function AdminReportsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ period?: string }>;
+  searchParams: Promise<{ range?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { period: rawPeriod } = await searchParams;
+  const { range: rangeKey } = await searchParams;
   await requireAdmin(locale);
   const t = await getTranslations('adminReports');
 
-  const period: PlatformPeriod = PERIODS.includes(Number(rawPeriod) as PlatformPeriod)
-    ? (Number(rawPeriod) as PlatformPeriod)
-    : 30;
+  // The console's one range control, not a second set of chips (Prompt C3).
+  const range = parseConsoleRange(rangeKey);
+  const period: PlatformPeriod = range.days;
 
   return (
-    <div className="space-y-5 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-lg font-bold">{t('title')}</h1>
-          <p className="text-muted-foreground max-w-prose text-sm">{t('intro')}</p>
-        </div>
-        <div className="flex gap-2">
-          {PERIODS.map((option) => (
-            <Link
-              key={option}
-              href={`/admin/reports?period=${option}`}
-              className={`rounded-pill border px-3 py-1.5 text-xs font-medium ${
-                option === period
-                  ? 'border-primary bg-primary-50 text-primary'
-                  : 'border-border bg-card hover:border-primary'
-              }`}
-            >
-              {t('days', { count: formatNumber(option, locale) })}
-            </Link>
-          ))}
-        </div>
-      </div>
+    <div className="space-y-4 p-6">
+      <ConsolePageHeader title={t('title')} actions={<RangeControl current={range.key} />} />
 
       <Suspense key={`totals-${period}`} fallback={<TotalsSkeleton />}>
         <Totals period={period} locale={locale} />
