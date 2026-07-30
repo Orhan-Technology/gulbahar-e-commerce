@@ -143,6 +143,15 @@ export const productImages = pgTable(
       .references(() => products.id, { onDelete: 'cascade' }),
     /** Path under /public, written by lib/images.ts storeImage(). */
     path: text('path').notNull(),
+    /**
+     * A 16px WebP data URI for `<Image placeholder="blur">` (Prompt P2).
+     *
+     * Stored rather than derived: it is a property of the file and never
+     * changes, and computing it per request would put sharp on the render path.
+     * Nullable because an image uploaded before this column existed has none,
+     * and a missing placeholder degrades to the tinted box it already had.
+     */
+    blurDataUrl: text('blur_data_url'),
     sort: integer('sort').notNull().default(0),
     alt: jsonb('alt').$type<LocalizedText>(),
   },

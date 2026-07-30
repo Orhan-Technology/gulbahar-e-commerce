@@ -369,7 +369,8 @@
     "specsShowAll": "دیدن همه مشخصات",
     "specsShowLess": "بستن",
     "specsAllGroups": "همه",
-    "brandModel": "{brand} · مدل {model}"
+    "brandModel": "{brand} · مدل {model}",
+    "helpLine": "سوالی درباره سفارش یا برگشت دارید؟ <link>با پشتیبانی در تماس شوید</link>."
   },
   "shop": {
     "productCount": "{count} محصول",

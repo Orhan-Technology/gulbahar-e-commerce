@@ -369,7 +369,8 @@
     "specsShowAll": "See all specifications",
     "specsShowLess": "Show less",
     "specsAllGroups": "All",
-    "brandModel": "{brand} · model {model}"
+    "brandModel": "{brand} · model {model}",
+    "helpLine": "A question about your order or a return? <link>Talk to support</link>."
   },
   "shop": {
     "productCount": "{count} products",

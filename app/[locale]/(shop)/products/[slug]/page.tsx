@@ -7,6 +7,7 @@ import { MapPin, Store } from 'lucide-react';
 import { ImageGallery, ImageGallerySkeleton } from '@/components/custom/image-gallery';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SectionHeader } from '@/components/custom/section-header';
+import { BuyColumn } from '@/components/shop/product/buy-column';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
 import { FeatureList } from '@/components/shop/product/feature-list';
@@ -75,6 +76,7 @@ export default async function ProductPage({
   const galleryImages = product.images.map((image) => ({
     path: image.path,
     alt: image.alt ? pickLocale(image.alt, locale) : undefined,
+    blurDataUrl: image.blurDataUrl,
   }));
 
   const variants = product.variants.map((variant) => ({
@@ -135,63 +137,132 @@ export default async function ProductPage({
       </nav>
 
       {/*
-       * Thumbnail rail, main image, then a 380px buy column that STICKS: the
-       * mockup's 88px | 1fr | 380px. The rail lives inside ImageGallery, which
-       * owns the active-image state, so the page only has to split two ways.
+       * ONE grid for the whole page body: gallery, description, features,
+       * specifications and reviews down the main column, and a 380px buy column
+       * beside it that sticks (Prompt P2).
+       *
+       * It used to be three stacked grids, which meant the sticky buy box only
+       * stuck for as long as the gallery row lasted — it vanished the moment
+       * the reader reached the specifications, which is exactly when they are
+       * deciding. A sticky element cannot outlive its containing block, so the
+       * containing block had to become the page.
+       *
+       * The rails below stay OUTSIDE it, full width: they are discovery, not
+       * part of this product, and a 380px gutter beside them would waste the
+       * width four cards need.
        */}
       <div className="mt-4 grid items-start gap-6 lg:grid-cols-[1fr_380px] lg:gap-8">
-        <Suspense fallback={<ImageGallerySkeleton />}>
-          <ImageGallery images={galleryImages} title={title} aspect="square" rail="side" />
-        </Suspense>
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+          {/*
+            The line the buy box watches: once this has scrolled past the
+            header, the box condenses.
 
-        <div className="space-y-5 lg:sticky lg:top-28">
-          <div className="space-y-2">
-            <h1 className="text-xl leading-snug font-bold sm:text-2xl">{title}</h1>
+            INSIDE the gallery wrapper, not a grid item of its own. As its own
+            item it was auto-placed into a third row — after everything with an
+            explicit row — and sat at the BOTTOM of the page, so the observer
+            fired only when the reader had already reached the end.
+          */}
+          <div id="pdp-top" aria-hidden className="h-0" />
 
-            {product.rating.total > 0 && (
-              <div className="flex items-center gap-2">
-                <RatingStars value={product.rating.average} size="sm" />
-                <span className="text-muted-foreground text-sm">
-                  {t('reviewCount', { count: formatNumber(product.rating.total, locale) })}
-                </span>
-              </div>
-            )}
-          </div>
+          <Suspense fallback={<ImageGallerySkeleton />}>
+            <ImageGallery images={galleryImages} title={title} aspect="square" rail="side" />
+          </Suspense>
+        </div>
 
-          {/* Shop attribution — links to the shop page (PRD §5.2) */}
-          <Link
-            href={`/shops/${product.shopSlug}`}
-            className="rounded-card border-border bg-card hover:shadow-card flex items-center gap-3 border p-3 transition-shadow duration-150"
-          >
-            <span className="rounded-control bg-primary-100 relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
-              {product.shopLogoPath ? (
-                <Image
-                  src={product.shopLogoPath}
-                  alt=""
-                  fill
-                  sizes="40px"
-                  className="object-cover"
-                />
-              ) : (
-                <Store className="text-primary-700 h-4 w-4" aria-hidden />
+        {/*
+          DOM ORDER IS THE MOBILE ORDER: gallery, then the buy box, then
+          everything else. On a phone the single column follows the source, so
+          the price and the add-to-cart button sit where they always did —
+          directly under the photograph — and the explicit row placement below
+          only applies from `lg`, where the buy box moves into its own column
+          and spans both rows so it can stick for the whole page.
+        */}
+        <BuyColumn
+          className="lg:col-start-2 lg:row-span-2 lg:row-start-1"
+          anchorId="pdp-top"
+          thumbnail={product.images[0]?.path ?? null}
+          title={title}
+          header={
+            <div className="space-y-2">
+              <h1 className="text-xl leading-snug font-bold sm:text-2xl">{title}</h1>
+
+              {/* Brand and model, when the shop filled them (P1). One line, muted
+                  — it is identification, not a claim. */}
+              {product.brand && (
+                <p className="text-muted-foreground text-sm">
+                  {product.model
+                    ? t('brandModel', { brand: product.brand, model: product.model })
+                    : product.brand}
+                </p>
               )}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="text-foreground block truncate text-sm font-semibold">
-                {pickLocale(product.shopName, locale)}
+
+              {product.rating.total > 0 && (
+                /* The rating LINKS to the reviews it summarises. It was a static
+                   line, which made the one number on the page most likely to be
+                   questioned the one thing you could not click. */
+                <a href="#reviews" className="group flex w-fit items-center gap-2">
+                  <RatingStars value={product.rating.average} size="sm" />
+                  <span className="text-muted-foreground group-hover:text-primary text-sm underline-offset-2 group-hover:underline">
+                    {t('reviewCount', { count: formatNumber(product.rating.total, locale) })}
+                  </span>
+                </a>
+              )}
+            </div>
+          }
+          shop={
+            /* Shop attribution — our version of "sold by", and better, because it
+               carries the floor and unit you would walk to (PRD §5.2). */
+            <Link
+              href={`/shops/${product.shopSlug}`}
+              className="rounded-card border-border bg-card hover:shadow-card flex items-center gap-3 border p-3 transition-shadow duration-150"
+            >
+              <span className="rounded-control bg-primary-100 relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
+                {product.shopLogoPath ? (
+                  <Image
+                    src={product.shopLogoPath}
+                    alt=""
+                    fill
+                    sizes="40px"
+                    className="object-cover"
+                  />
+                ) : (
+                  <Store className="text-primary-700 h-4 w-4" aria-hidden />
+                )}
               </span>
-              {product.shopFloor !== null && (
-                <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                  <MapPin className="h-3 w-3 shrink-0" aria-hidden />
-                  {t('shopFloorUnit', {
-                    floor: formatNumber(product.shopFloor, locale),
-                    unit: formatUnitNumber(product.shopUnitNumber, locale) || '—',
-                  })}
+              <span className="min-w-0 flex-1">
+                <span className="text-foreground block truncate text-sm font-semibold">
+                  {pickLocale(product.shopName, locale)}
                 </span>
-              )}
-            </span>
-          </Link>
+                {product.shopFloor !== null && (
+                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                    <MapPin className="h-3 w-3 shrink-0" aria-hidden />
+                    {t('shopFloorUnit', {
+                      floor: formatNumber(product.shopFloor, locale),
+                      unit: formatUnitNumber(product.shopUnitNumber, locale) || '—',
+                    })}
+                  </span>
+                )}
+              </span>
+            </Link>
+          }
+          extras={
+            <>
+              <FulfilmentPanel floor={product.shopFloor} unitNumber={product.shopUnitNumber} />
 
+              {/* Where to go when something is wrong — the one question the buy
+                  box could not answer before. A real destination, not a modal. */}
+              <p className="text-muted-foreground text-xs">
+                {t.rich('helpLine', {
+                  link: (chunks) => (
+                    <Link href="/account/support" className="text-primary hover:underline">
+                      {chunks}
+                    </Link>
+                  ),
+                })}
+              </p>
+            </>
+          }
+        >
           <BuyPanel
             productId={product.id}
             price={product.price}
@@ -200,14 +271,9 @@ export default async function ProductPage({
             variants={variants}
             initialSaved={saved.has(product.id)}
           />
+        </BuyColumn>
 
-          <FulfilmentPanel floor={product.shopFloor} unitNumber={product.shopUnitNumber} />
-        </div>
-      </div>
-
-      {/* Description and specs run under the gallery, clear of the buy column. */}
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_380px] lg:gap-8">
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-10 lg:col-start-1 lg:row-start-2">
           {product.description && (
             <section className="space-y-3">
               <h2 className="text-foreground text-xl font-bold">{t('description')}</h2>
@@ -220,35 +286,39 @@ export default async function ProductPage({
           <FeatureList features={features} />
 
           <SpecTable rows={specRows} groups={specGroups} />
-        </div>
-      </div>
 
-      {/* Reviews */}
-      <section className="mt-10 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-bold">{t('reviewsHeading')}</h2>
-          {/*
-            The form appears ONLY for a signed-in customer with a fulfilled order
-            item for this product, or one editing their own review (PRD §5.5).
-          */}
-          {(entitlement || ownReview) && (
-            <WriteReviewDialog
-              productSlug={slug}
-              existing={ownReview ? { rating: ownReview.rating, body: ownReview.body } : null}
+          {/* Reviews */}
+          <section id="reviews" className="scroll-mt-24 space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-base font-bold">{t('reviewsHeading')}</h2>
+              {/*
+                The form appears ONLY for a signed-in customer with a fulfilled
+                order item for this product, or one editing their own review
+                (PRD §5.5).
+              */}
+              {(entitlement || ownReview) && (
+                <WriteReviewDialog
+                  productSlug={slug}
+                  existing={
+                    ownReview ? { rating: ownReview.rating, body: ownReview.body } : null
+                  }
+                />
+              )}
+            </div>
+
+            <RatingSummary
+              average={product.rating.average}
+              total={product.rating.total}
+              distribution={product.rating.distribution}
             />
-          )}
+
+            <Suspense fallback={<ReviewsSkeleton />}>
+              <ReviewList productId={product.id} slug={slug} page={currentReviewPage} />
+            </Suspense>
+          </section>
         </div>
 
-        <RatingSummary
-          average={product.rating.average}
-          total={product.rating.total}
-          distribution={product.rating.distribution}
-        />
-
-        <Suspense fallback={<ReviewsSkeleton />}>
-          <ReviewList productId={product.id} slug={slug} page={currentReviewPage} />
-        </Suspense>
-      </section>
+      </div>
 
       {/* Related */}
       <Suspense fallback={<ProductGridSkeleton count={8} />}>

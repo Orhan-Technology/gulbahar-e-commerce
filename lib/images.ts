@@ -88,6 +88,28 @@ export async function storeImage(
   };
 }
 
+/**
+ * A 16-pixel-wide WebP as a data URI, for `<Image placeholder="blur">`.
+ *
+ * Sixteen pixels is about 300 bytes after base64 — small enough to inline in
+ * the HTML of a page carrying twenty product cards, and blurred by the browser
+ * into exactly the smear a blur-up wants. Bigger placeholders start to cost
+ * more than the low-resolution variant they are covering for.
+ *
+ * Generated at SEED time and stored, not computed per request: it is a property
+ * of the file, and re-deriving it on every render would put sharp on the
+ * request path for something that never changes.
+ */
+export async function blurPlaceholder(input: Buffer): Promise<string> {
+  const buffer = await sharp(input)
+    .rotate()
+    .resize({ width: 16, height: 16, fit: 'cover' })
+    .webp({ quality: 40 })
+    .toBuffer();
+
+  return `data:image/webp;base64,${buffer.toString('base64')}`;
+}
+
 function publicPath(folder: string, name: string): string {
   return `/uploads/${folder}/${name}`.replace(/\/+/g, '/');
 }

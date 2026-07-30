@@ -149,7 +149,10 @@ type ProductSeed = {
 
 type ImageManifest = {
   shops: Record<string, { logoPath: string; bannerPath: string }>;
-  products: Record<string, { path: string; variants: Record<string, string>; images?: string[] }>;
+  products: Record<
+    string,
+    { path: string; variants: Record<string, string>; images?: string[]; blur?: string[] }
+  >;
 };
 
 /** Slot inventory and flat weekly pricing (PRD §8.2, §8.3). */
@@ -424,6 +427,9 @@ async function main() {
         paths.map((path, sort) => ({
           productId: row.id,
           path,
+          // Generated alongside the file by db:seed:images; absent on an older
+          // manifest, which simply means no blur-up for that image.
+          blurDataUrl: image?.blur?.[sort] ?? null,
           sort,
           alt: product.title,
         })),

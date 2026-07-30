@@ -2,16 +2,19 @@
 
 import * as React from 'react';
 import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { ImageOff, ZoomIn } from 'lucide-react';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatNumber } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 export interface GalleryImage {
   path: string;
   alt?: string;
+  /** 16px WebP data URI generated at seed time — see lib/images.ts. */
+  blurDataUrl?: string | null;
 }
 
 export interface ImageGalleryProps {
@@ -45,8 +48,10 @@ export function ImageGallery({
   rail = 'below',
 }: ImageGalleryProps) {
   const t = useTranslations('product');
+  const locale = useLocale();
   const [active, setActive] = React.useState(0);
   const [zoomed, setZoomed] = React.useState(false);
+  const strip = React.useRef<HTMLDivElement>(null);
 
   const aspectClass = aspect === 'square' ? 'aspect-square' : 'aspect-[4/5]';
   const current = images[active];
@@ -73,13 +78,76 @@ export function ImageGallery({
         className,
       )}
     >
+      {/*
+        Two presentations of the same images.
+
+        On a phone the main image is a SWIPEABLE strip with dots: the gesture is
+        what people already do with a photograph, and a thumbnail rail on a
+        390px screen spends a fifth of the width the picture needs. From `sm`
+        the strip gives way to one large image with the rail beside it, where
+        clicking a thumbnail is faster than swiping four times.
+      */}
+      <div className={cn('relative sm:hidden', side && 'sm:flex-1')}>
+        <div
+          ref={strip}
+          onScroll={(event) => {
+            const element = event.currentTarget;
+            // Math.abs because RTL scroll offsets are negative in most engines.
+            const index = Math.round(Math.abs(element.scrollLeft) / element.clientWidth);
+            if (index !== active) setActive(Math.min(index, images.length - 1));
+          }}
+          className="flex scrollbar-none snap-x snap-mandatory overflow-x-auto"
+        >
+          {images.map((image, index) => (
+            <button
+              key={image.path}
+              type="button"
+              onClick={() => setZoomed(true)}
+              aria-label={t('zoomImage')}
+              className={cn(
+                aspectClass,
+                'rounded-card border-border relative w-full shrink-0 snap-center overflow-hidden border bg-neutral-100',
+              )}
+            >
+              <Image
+                src={image.path}
+                alt={image.alt ?? title}
+                fill
+                sizes="100vw"
+                priority={index === 0}
+                placeholder={image.blurDataUrl ? 'blur' : 'empty'}
+                blurDataURL={image.blurDataUrl ?? undefined}
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
+
+        {images.length > 1 && (
+          <>
+            <CountChip current={active + 1} total={images.length} locale={locale} />
+            <div className="mt-2 flex justify-center gap-1.5">
+              {images.map((image, index) => (
+                <span
+                  key={image.path}
+                  className={cn(
+                    'rounded-pill h-1.5 transition-[width,background-color] duration-200',
+                    index === active ? 'bg-primary w-4' : 'w-1.5 bg-neutral-300',
+                  )}
+                />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       <button
         type="button"
         onClick={() => setZoomed(true)}
         aria-label={t('zoomImage')}
         className={cn(
           aspectClass,
-          'group rounded-card border-border relative w-full overflow-hidden border bg-neutral-100',
+          'group rounded-card border-border relative hidden w-full overflow-hidden border bg-neutral-100 sm:block',
           side && 'sm:flex-1',
         )}
       >
@@ -89,8 +157,13 @@ export function ImageGallery({
           fill
           sizes="(max-width: 768px) 100vw, 520px"
           priority
+          placeholder={current.blurDataUrl ? 'blur' : 'empty'}
+          blurDataURL={current.blurDataUrl ?? undefined}
           className="object-cover"
         />
+        {images.length > 1 && (
+          <CountChip current={active + 1} total={images.length} locale={locale} />
+        )}
         <span className="rounded-pill bg-card/90 text-foreground shadow-card absolute end-3 bottom-3 flex h-9 w-9 items-center justify-center backdrop-blur transition-opacity duration-150">
           <ZoomIn className="h-4 w-4" aria-hidden />
         </span>
@@ -99,8 +172,9 @@ export function ImageGallery({
       {images.length > 1 && (
         <div
           className={cn(
-            'flex scrollbar-none gap-2 overflow-x-auto',
-            // Vertical rail from sm up; still a horizontal scroller on phones.
+            // Hidden on phones: the swipe strip above IS the navigation there,
+            // and two ways to change the same picture is one too many.
+            'hidden scrollbar-none gap-2 overflow-x-auto sm:flex',
             side && 'sm:w-18 sm:flex-col sm:overflow-x-visible',
           )}
         >
@@ -117,7 +191,15 @@ export function ImageGallery({
                 index === active ? 'border-primary-600' : 'hover:border-border border-transparent',
               )}
             >
-              <Image src={image.path} alt="" fill sizes="72px" className="object-cover" />
+              <Image
+                src={image.path}
+                alt=""
+                fill
+                sizes="72px"
+                placeholder={image.blurDataUrl ? 'blur' : 'empty'}
+                blurDataURL={image.blurDataUrl ?? undefined}
+                className="object-cover"
+              />
             </button>
           ))}
         </div>
@@ -138,6 +220,26 @@ export function ImageGallery({
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/** "۱ / ۴" over the image — position within the set, in the reader's digits. */
+function CountChip({
+  current,
+  total,
+  locale,
+}: {
+  current: number;
+  total: number;
+  locale: string;
+}) {
+  return (
+    <span
+      className="rounded-pill bg-foreground/70 text-2xs text-background absolute start-3 bottom-3 px-2.5 py-1 font-medium tabular-nums backdrop-blur"
+      dir="ltr"
+    >
+      {formatNumber(current, locale)} / {formatNumber(total, locale)}
+    </span>
   );
 }
 

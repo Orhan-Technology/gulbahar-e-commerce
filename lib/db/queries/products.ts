@@ -294,7 +294,12 @@ export async function productDetail(slug: string, locale: string) {
 
   const [images, variants, ratingSummary, saveCount] = await Promise.all([
     db
-      .select({ id: productImages.id, path: productImages.path, alt: productImages.alt })
+      .select({
+        id: productImages.id,
+        path: productImages.path,
+        alt: productImages.alt,
+        blurDataUrl: productImages.blurDataUrl,
+      })
       .from(productImages)
       .where(eq(productImages.productId, row.id))
       .orderBy(asc(productImages.sort)),

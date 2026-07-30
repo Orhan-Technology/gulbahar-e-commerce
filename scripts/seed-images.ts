@@ -3,7 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 
-import { seedBasename, storeImage } from '../lib/images';
+import { blurPlaceholder, seedBasename, storeImage } from '../lib/images';
 
 /**
  * Generates the seeded catalogue imagery (Prompt 4.1, PRD §10.7).
@@ -378,20 +378,21 @@ async function main() {
           ),
         );
 
-    const stored: Array<{ path: string; variants: Record<number, string> }> = [];
+    const stored: Array<{ path: string; variants: Record<number, string>; blur: string }> = [];
     for (const [angleIndex, buffer] of angleBuffers.entries()) {
       const image = await storeImage(buffer, {
         folder: 'seed',
         basename: seedBasename(product.slug, angleIndex),
         maxWidth: 1200,
       });
-      stored.push({ path: image.path, variants: image.variants });
+      stored.push({ ...image, blur: await blurPlaceholder(buffer) });
     }
 
     (manifest.products as Record<string, unknown>)[product.slug] = {
       path: stored[0].path,
       variants: stored[0].variants,
       images: stored.map((entry) => entry.path),
+      blur: stored.map((entry) => entry.blur),
     };
     count += 1;
     if (count % 25 === 0) console.log(`  … ${count}/${products.length} products`);
