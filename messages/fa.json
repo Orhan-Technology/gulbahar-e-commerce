@@ -351,22 +351,6 @@
       }
     },
     "specsHeading": "مشخصات",
-    "specs": {
-      "screen": "صفحه",
-      "storage": "حافظه",
-      "ram": "رم",
-      "battery": "بتری",
-      "camera": "کمره",
-      "processor": "پروسیسر",
-      "capacity": "ظرفیت",
-      "power": "توان",
-      "material": "جنس",
-      "movement": "میکانیزم",
-      "size": "اندازه",
-      "weight": "وزن",
-      "origin": "ساخت",
-      "warranty": "گرانتی"
-    },
     "fulfilmentHeading": "تحویل و تسلیمی",
     "deliveryTitle": "تحویل در کابل",
     "deliveryBody": "۱ تا ۲ روز کاری",
@@ -378,7 +362,14 @@
     "paymentBody": "نقد هنگام تحویل یا حساب‌پی",
     "youSave": "{amount} افغانی صرفه‌جویی",
     "buyNow": "خرید فوری",
-    "onlyLeft": "{n, plural, one {تنها # عدد مانده} other {تنها {count} عدد مانده}}"
+    "onlyLeft": "{n, plural, one {تنها # عدد مانده} other {تنها {count} عدد مانده}}",
+    "featuresHeading": "ویژگی‌های اصلی",
+    "featuresShowAll": "دیدن همه ویژگی‌ها",
+    "featuresShowLess": "بستن",
+    "specsShowAll": "دیدن همه مشخصات",
+    "specsShowLess": "بستن",
+    "specsAllGroups": "همه",
+    "brandModel": "{brand} · مدل {model}"
   },
   "shop": {
     "productCount": "{count} محصول",
@@ -1258,8 +1249,32 @@
         "no_files": "هیچ تصویری گزیده نشد",
         "too_many": "در هر بار بیشتر از ۸ تصویر نمی‌شود",
         "too_large": "اندازه‌ی تصویر بیشتر از ۸ مگابایت است",
-        "unsupported_format": "این گونه‌ی تصویر پشتیبانی نمی‌شود"
-      }
+        "unsupported_format": "این گونه‌ی تصویر پشتیبانی نمی‌شود",
+        "invalid_spec_key": "کلید مشخصه فقط می‌تواند حروف و عدد انگلیسی باشد"
+      },
+      "brand": "برند",
+      "model": "مدل",
+      "specsHeading": "مشخصات",
+      "specsHint": "مشخصاتی که در جدول صفحه محصول نشان داده می‌شود. کلیدها را از قالب دسته‌بندی بگیرید تا محصول شما با محصولات مشابه قابل مقایسه باشد.",
+      "specsUseTemplate": "استفاده از قالب دسته‌بندی",
+      "specsEmpty": "هنوز مشخصاتی ثبت نشده.",
+      "specsEmptyWithTemplate": "برای این دسته‌بندی قالب آماده داریم — با یک کلیک ردیف‌ها را پر کنید.",
+      "specKey": "کلید",
+      "specLabelFa": "عنوان (دری)",
+      "specLabelEn": "عنوان (انگلیسی)",
+      "specValueFa": "مقدار (دری)",
+      "specValueEn": "مقدار (انگلیسی)",
+      "addSpecRow": "افزودن ردیف",
+      "featuresHeading": "ویژگی‌های اصلی",
+      "featuresHint": "سه تا پنج ویژگی کوتاه — همان چیزهایی که مشتری برای تصمیم گرفتن می‌خواند.",
+      "featureTitleFa": "عنوان (دری)",
+      "featureTitleEn": "عنوان (انگلیسی)",
+      "featureBodyFa": "توضیح (دری)",
+      "featureBodyEn": "توضیح (انگلیسی)",
+      "addFeature": "افزودن ویژگی",
+      "moveUp": "بالا بردن",
+      "moveDown": "پایین بردن",
+      "removeRow": "حذف ردیف"
     },
     "importWizard": {
       "step1": "۱ — پرونده",
@@ -1295,7 +1310,8 @@
         "discount_not_below_price": "بهای تخفیفی کمتر از بهای اصلی نیست",
         "bad_stock": "موجودی شماره‌ی درست نیست",
         "unknown_category": "این دسته وجود ندارد",
-        "duplicate_slug": "این شناسه در پرونده تکرار شده است"
+        "duplicate_slug": "این شناسه در پرونده تکرار شده است",
+        "unknown_spec_key": "کلید مشخصه با قالب این دسته‌بندی جور نمی‌آید"
       },
       "errors": {
         "forbidden": "شما اجازه‌ی این کار را ندارید",
@@ -1305,7 +1321,8 @@
         "missing_columns": "ستون‌های title_fa و price باید در پرونده باشند",
         "too_many_rows": "در هر بار بیشتر از ۲۰۰ سطر نمی‌شود",
         "nothing_to_import": "سطر درستی برای ورود نمانده است"
-      }
+      },
+      "ruleSpecs": "ستون‌های مشخصات اختیاری‌اند: spec_<کلید>_fa و spec_<کلید>_en، مثل spec_storage_fa."
     }
   },
   "shopPromotions": {

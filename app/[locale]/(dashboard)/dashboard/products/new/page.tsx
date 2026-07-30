@@ -32,6 +32,7 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
         images={[]}
         categories={categories.map((category) => ({
           id: category.id,
+          slug: category.slug,
           label: pickLocale(category.name, locale) ?? category.slug,
           parentLabel: category.parentName ? pickLocale(category.parentName, locale) : null,
         }))}
@@ -47,6 +48,10 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
           discountPrice: '',
           stock: '0',
           status: 'draft',
+          brand: '',
+          model: '',
+          specs: [],
+          features: [],
           variants: [],
         }}
       />

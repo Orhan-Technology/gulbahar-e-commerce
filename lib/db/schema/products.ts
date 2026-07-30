@@ -14,11 +14,35 @@ import { categories } from './categories';
 import { createdAt, productStatusEnum, type LocalizedText } from './shared';
 import { shops } from './shops';
 
-/** One row of the product page's spec table. */
-export type ProductSpec = {
-  /** Label key under the `product.specs` message namespace. */
+/**
+ * One row of the product page's specification table (Prompt P1).
+ *
+ * An ORDERED array rather than a keyed object, because "screen, storage,
+ * memory, battery" is an editorial reading order that a map would lose on the
+ * first round-trip through JSON.
+ *
+ * `key` is the COMPARISON AXIS — it is what lets the compare-similar-products
+ * table line four products up row by row — and it is stable across locales and
+ * shops because the category templates in lib/product-templates.ts define it.
+ * `label` travels WITH the row rather than being looked up from a message key,
+ * which the earlier `specs` column did: a shopkeeper adding a custom row of
+ * their own has no way to add a message key, and a spec table where custom rows
+ * render as `product.specs.myThing` is worse than no custom rows at all.
+ *
+ * `group` is optional and only earns its place once a product has enough rows
+ * to need sub-headings (General / Design / Size).
+ */
+export type ProductAttribute = {
   key: string;
+  label: LocalizedText;
   value: LocalizedText;
+  group?: string;
+};
+
+/** A bulleted selling point: a bold title and one sentence under it. */
+export type ProductFeature = {
+  title: LocalizedText;
+  body: LocalizedText;
 };
 
 /**
@@ -43,16 +67,22 @@ export const products = pgTable(
     discountPrice: integer('discount_price'),
     stock: integer('stock').notNull().default(0),
     /**
-     * Spec table on the product page (PRD §5.2): an ORDERED list, because
-     * "screen, storage, memory, battery" is a reading order a keyed object
-     * would lose. `key` names a translated label in product.specs.*, so the
-     * label is localised once and only the value is per-product.
-     *
-     * Null for the many products that have nothing to tabulate — a bag has a
-     * description, not specifications — and the section is then absent rather
-     * than an empty table.
+     * Specification rows (PRD §5.2, Prompt P1). Null only for a product whose
+     * owner has not filled the template yet; the section is then absent rather
+     * than an empty table, and a product missing ONE key simply omits that row
+     * — never a rendered "N/A", which reads as a broken import.
      */
-    specs: jsonb('specs').$type<ProductSpec[]>(),
+    attributes: jsonb('attributes').$type<ProductAttribute[]>(),
+    /** The bulleted selling points above the spec table (Prompt P1). */
+    features: jsonb('features').$type<ProductFeature[]>(),
+    /**
+     * Brand and model are their own columns rather than two more attribute
+     * rows: the brand drives a listing facet and both appear in the buy box
+     * under the title, so they are queried and rendered independently of
+     * whether the owner filled in the rest of the template.
+     */
+    brand: text('brand'),
+    model: text('model'),
     status: productStatusEnum('status').notNull().default('draft'),
     /** Seeded view counter backing the dashboard's top-products table (PRD §6.1). */
     viewCount: integer('view_count').notNull().default(0),
@@ -64,6 +94,7 @@ export const products = pgTable(
     // browsing within a category.
     index('products_shop_status_idx').on(table.shopId, table.status),
     index('products_category_status_idx').on(table.categoryId, table.status),
+    index('products_brand_idx').on(table.brand),
   ],
 );
 

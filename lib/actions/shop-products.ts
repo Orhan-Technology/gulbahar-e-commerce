@@ -51,6 +51,33 @@ const variantSchema = z.object({
   options: z.array(localizedField).min(1),
 });
 
+/*
+ * Specification rows (Prompt P1).
+ *
+ * `key` is validated as a slug because it is the COMPARISON AXIS — the compare
+ * table in P3 lines four products up by matching keys, and a key with a space
+ * or a capital in it silently fails to match the same spec from another shop.
+ * A row with no value is DROPPED rather than rejected: the editor pre-fills the
+ * whole category template, and a shopkeeper who fills six of eight rows should
+ * not be told off for the two they left blank.
+ */
+const attributeSchema = z.object({
+  key: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .regex(/^[a-zA-Z][a-zA-Z0-9]*$/, { message: 'invalid_spec_key' }),
+  label: localizedField,
+  value: optionalLocalizedField,
+  group: z.string().trim().max(40).optional().nullable(),
+});
+
+const featureSchema = z.object({
+  title: localizedField,
+  body: optionalLocalizedField,
+});
+
 const productSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -62,6 +89,10 @@ const productSchema = z
     stock: z.coerce.number().int().min(0).max(100000),
     status: z.enum(['draft', 'published', 'unpublished']),
     variants: z.array(variantSchema).max(4).optional(),
+    brand: z.string().trim().max(60).nullable().optional(),
+    model: z.string().trim().max(60).nullable().optional(),
+    attributes: z.array(attributeSchema).max(40).optional(),
+    features: z.array(featureSchema).max(12).optional(),
   })
   .refine(
     (value) =>
@@ -79,7 +110,12 @@ export type ProductInput = z.input<typeof productSchema>;
  * small: expected …") would otherwise reach t() as a key and render raw, so
  * anything unrecognised collapses to the generic code.
  */
-const KNOWN_CODES = new Set(['fa_required', 'price_positive', 'discount_below_price']);
+const KNOWN_CODES = new Set([
+  'fa_required',
+  'price_positive',
+  'discount_below_price',
+  'invalid_spec_key',
+]);
 
 function errorCode(error: z.ZodError): string {
   const message = error.issues[0]?.message;
@@ -126,6 +162,29 @@ export async function saveProduct(
     discountPrice,
     stock: data.stock,
     status: data.status,
+    brand: data.brand?.trim() || null,
+    model: data.model?.trim() || null,
+    /*
+     * Empty rows are dropped HERE rather than in the form. The editor hands
+     * back the whole category template so the shopkeeper can see which specs
+     * their category expects, and the ones they never filled must not reach the
+     * product page as blank cells — a spec table with an empty value column
+     * reads as a broken import, which is exactly what "never render N/A" means.
+     */
+    attributes: (data.attributes ?? [])
+      .filter((row) => row.value.fa?.trim())
+      .map((row) => ({
+        key: row.key,
+        label: { fa: row.label.fa, en: row.label.en ?? null, ps: row.label.ps ?? null },
+        value: { fa: row.value.fa!.trim(), en: row.value.en?.trim() || null, ps: row.value.ps?.trim() || null },
+        ...(row.group ? { group: row.group } : {}),
+      })),
+    features: (data.features ?? [])
+      .filter((feature) => feature.title.fa.trim() && feature.body.fa?.trim())
+      .map((feature) => ({
+        title: { fa: feature.title.fa, en: feature.title.en ?? null, ps: feature.title.ps ?? null },
+        body: { fa: feature.body.fa!.trim(), en: feature.body.en?.trim() || null, ps: feature.body.ps?.trim() || null },
+      })),
   };
 
   let productId = data.id;

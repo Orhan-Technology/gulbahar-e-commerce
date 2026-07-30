@@ -1,0 +1,6210 @@
+{
+  "lg-tv-43-smart": {
+    "brand": "LG",
+    "model": "43LM5500",
+    "description": {
+      "fa": "تلویزیون ۴۳ اینچ ال‌جی با صفحه فول اچ‌دی و سیستم عامل هوشمند، برای دیدن فلم و سریال بدون نیاز به دستگاه جداگانه. اتصال وای‌فای و دو ورودی HDMI دارد و می‌توانید یوتیوب و برنامه‌های پخش را مستقیم روی خود تلویزیون باز کنید. دکان دو سال گرانتی می‌دهد و نصب روی دیوار در شهر کابل رایگان است.",
+      "en": "A 43-inch LG television with a full HD panel and a smart operating system, so films and series play without a separate box. It carries Wi-Fi and two HDMI inputs, and YouTube and streaming apps open on the set itself. The shop gives a two-year warranty, and wall mounting inside Kabul is free."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "ال‌جی",
+          "en": "LG"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "43LM5500",
+          "en": "43LM5500"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۴۳ اینچ، فول اچ‌دی ۱۹۲۰×۱۰۸۰",
+          "en": "43\", full HD 1920×1080"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۷۵ وات",
+          "en": "75 W"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۹۷ × ۵۷ × ۸ سانتی‌متر",
+          "en": "97 × 57 × 8 cm"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۲۴ ماه گرانتی دکان",
+          "en": "24 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "سیستم هوشمند",
+          "en": "Smart system"
+        },
+        "body": {
+          "fa": "یوتیوب و برنامه‌های پخش روی خود تلویزیون باز می‌شوند.",
+          "en": "YouTube and streaming apps run on the set itself."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو ورودی HDMI",
+          "en": "Two HDMI inputs"
+        },
+        "body": {
+          "fa": "برای رسیور، کنسول بازی یا لپ‌تاپ، بدون تعویض کیبل.",
+          "en": "For a receiver, a console or a laptop, with no swapping of cables."
+        }
+      },
+      {
+        "title": {
+          "fa": "نصب رایگان",
+          "en": "Free mounting"
+        },
+        "body": {
+          "fa": "نصب روی دیوار در داخل شهر کابل رایگان است.",
+          "en": "Wall mounting anywhere inside Kabul is included."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو سال گرانتی",
+          "en": "Two-year warranty"
+        },
+        "body": {
+          "fa": "گرانتی دکان، با سرویس در همان مرکز گلبهار.",
+          "en": "Shop warranty, serviced here in Gulbahar Center."
+        }
+      }
+    ]
+  },
+  "midea-fridge-260l": {
+    "brand": "Midea",
+    "model": "HD-333FWEN",
+    "description": {
+      "fa": "یخچال ۲۶۰ لیتری میدیا با فریزر بالا، مناسب یک فامیل چهار تا شش نفره. سیستم بدون برفک دارد، پس هر چند ماه یک‌بار دیفراست کردن لازم نیست. کم‌مصرف است و در نوسان برق کابل با استبلایزر بدون مشکل کار می‌کند.",
+      "en": "A 260-litre Midea fridge with a top freezer, sized for a family of four to six. It is frost-free, so there is no defrosting every few months. Consumption is low, and with a stabiliser it copes with Kabul's mains fluctuations."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "میدیا",
+          "en": "Midea"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "HD-333FWEN",
+          "en": "HD-333FWEN"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۲۶۰ لیتر — یخچال ۱۹۰، فریزر ۷۰",
+          "en": "260 L — 190 fridge, 70 freezer"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۱۳۰ وات",
+          "en": "130 W"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۱۵۵ × ۵۵ × ۶۰ سانتی‌متر",
+          "en": "155 × 55 × 60 cm"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۲۴ ماه گرانتی دکان",
+          "en": "24 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون برفک",
+          "en": "Frost-free"
+        },
+        "body": {
+          "fa": "فریزر خودش برفک را آب می‌کند؛ دیفراست دستی لازم نیست.",
+          "en": "The freezer clears its own ice; no manual defrosting."
+        }
+      },
+      {
+        "title": {
+          "fa": "کم‌مصرف",
+          "en": "Low consumption"
+        },
+        "body": {
+          "fa": "۱۳۰ وات — با جنراتور خانگی هم کار می‌کند.",
+          "en": "At 130 W it runs from a household generator too."
+        }
+      },
+      {
+        "title": {
+          "fa": "قفسه‌های شیشه‌ای",
+          "en": "Glass shelves"
+        },
+        "body": {
+          "fa": "قفسه‌ها قابل تنظیم و شستشو هستند.",
+          "en": "Shelves are adjustable and wipe clean."
+        }
+      }
+    ]
+  },
+  "jbl-flip-speaker": {
+    "brand": "JBL",
+    "model": "Flip 6",
+    "description": {
+      "fa": "سپیکر بلوتوث جی‌بی‌ال با صدای بلند و باس قوی، در اندازه‌ای که در کیف جا می‌شود. باتری تا ۱۲ ساعت پخش می‌دهد و بدنه ضد آب است، پس برای سفر و پیک‌نیک مناسب است. با یک شارژ کامل یک روز کامل مهمانی را می‌گذراند.",
+      "en": "A JBL Bluetooth speaker with real volume and a strong low end, in a size that fits a bag. The battery runs up to 12 hours and the body is waterproof, which makes it a travel and picnic speaker. One full charge covers a whole day."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "جی‌بی‌ال",
+          "en": "JBL"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Flip 6",
+          "en": "Flip 6"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۴۸۰۰ میلی‌آمپر — تا ۱۲ ساعت",
+          "en": "4800 mAh — up to 12 hours"
+        }
+      },
+      {
+        "key": "connectivity",
+        "value": {
+          "fa": "بلوتوث ۵.۱ و کیبل AUX",
+          "en": "Bluetooth 5.1 and AUX"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۲۰ وات",
+          "en": "20 W"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ضد آب",
+          "en": "Waterproof"
+        },
+        "body": {
+          "fa": "بدنه IPX7 — باران و آب‌پاشی مشکلی ندارد.",
+          "en": "An IPX7 body shrugs off rain and splashes."
+        }
+      },
+      {
+        "title": {
+          "fa": "۱۲ ساعت پخش",
+          "en": "12 hours of play"
+        },
+        "body": {
+          "fa": "یک شارژ برای یک روز کامل بس است.",
+          "en": "One charge lasts a full day out."
+        }
+      },
+      {
+        "title": {
+          "fa": "جفت‌شدن دوتایی",
+          "en": "Pair two together"
+        },
+        "body": {
+          "fa": "دو سپیکر را می‌توانید با هم جفت کنید.",
+          "en": "Two units pair for stereo."
+        }
+      }
+    ]
+  },
+  "anker-powerbank-20000": {
+    "brand": "Anker",
+    "model": "PowerCore 20000",
+    "description": {
+      "fa": "پاوربانک ۲۰۰۰۰ میلی‌آمپری انکر که موبایل معمولی را چهار تا پنج بار شارژ می‌کند. دو خروجی USB دارد، پس دو گوشی هم‌زمان شارژ می‌شوند. برای روزهای قطع برق و سفرهای بین‌شهری ساخته شده است.",
+      "en": "A 20000mAh Anker power bank that refills an ordinary phone four to five times. Two USB outputs mean two phones charge at once. Built for power cuts and long road trips."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "انکر",
+          "en": "Anker"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "PowerCore 20000",
+          "en": "PowerCore 20000"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۲۰۰۰۰ میلی‌آمپر",
+          "en": "20000 mAh"
+        }
+      },
+      {
+        "key": "connectivity",
+        "value": {
+          "fa": "دو خروجی USB-A و ورودی USB-C",
+          "en": "Two USB-A outputs, USB-C input"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۱۸ وات شارژ سریع",
+          "en": "18 W fast charge"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "چهار بار شارژ",
+          "en": "Four full charges"
+        },
+        "body": {
+          "fa": "یک موبایل معمولی را چهار تا پنج بار پر می‌کند.",
+          "en": "Refills an ordinary phone four to five times."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو خروجی",
+          "en": "Two outputs"
+        },
+        "body": {
+          "fa": "دو گوشی هم‌زمان و بدون افت سرعت.",
+          "en": "Two phones at once with no drop in speed."
+        }
+      },
+      {
+        "title": {
+          "fa": "شارژ سریع",
+          "en": "Fast charge"
+        },
+        "body": {
+          "fa": "۱۸ وات — نیم ساعت برای نصف باتری.",
+          "en": "18 W puts half a battery back in thirty minutes."
+        }
+      }
+    ]
+  },
+  "solar-panel-150w": {
+    "brand": "Jinko",
+    "model": "JKM150M",
+    "description": {
+      "fa": "پنل آفتابی ۱۵۰ واتی مونوکریستال برای خانه‌هایی که برق شهری‌شان قطع و وصل می‌شود. با یک باتری و انورتر، چراغ‌ها، تلویزیون و شارژ موبایل یک خانه را می‌گرداند. قاب آلومینیمی و شیشه سکوریت دارد و برای زمستان کابل ساخته شده است.",
+      "en": "A 150-watt monocrystalline solar panel for homes where the mains comes and goes. With one battery and an inverter it runs a household's lights, television and phone charging. The aluminium frame and tempered glass are built for a Kabul winter."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "جینکو",
+          "en": "Jinko"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "JKM150M",
+          "en": "JKM150M"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۱۵۰ وات",
+          "en": "150 W"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۱۸ ولت — خروجی DC",
+          "en": "18 V DC output"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۱۴۸ × ۶۷ × ۳.۵ سانتی‌متر",
+          "en": "148 × 67 × 3.5 cm"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "مونوکریستال",
+          "en": "Monocrystalline"
+        },
+        "body": {
+          "fa": "بازدهی بیشتر در همان اندازه نسبت به پنل پلی.",
+          "en": "More output than a poly panel of the same size."
+        }
+      },
+      {
+        "title": {
+          "fa": "قاب آلومینیمی",
+          "en": "Aluminium frame"
+        },
+        "body": {
+          "fa": "زنگ نمی‌زند و وزن آن روی بام کم است.",
+          "en": "It does not rust and sits light on a roof."
+        }
+      },
+      {
+        "title": {
+          "fa": "مقاوم در برابر ژاله",
+          "en": "Hail rated"
+        },
+        "body": {
+          "fa": "شیشه سکوریت، آزمایش‌شده برای ژاله.",
+          "en": "Tempered glass, tested against hail."
+        }
+      }
+    ]
+  },
+  "samsung-galaxy-a54-128": {
+    "brand": "Samsung",
+    "model": "Galaxy A54 5G",
+    "description": {
+      "fa": "گلکسی A54 با صفحه سوپر آمولد ۶.۴ اینچ و کمره ۵۰ مگاپیکسلی، انتخاب میانه‌رده سامسونگ برای کسی که عکس خوب و باتری یک‌روزه می‌خواهد. ۱۲۸ گیگابایت حافظه و ۸ گیگابایت رم دارد و جای کارت حافظه هم باز است. دستگاه اصل با گرانتی دکان و رهنمایی رایگان برای انتقال اطلاعات از گوشی قبلی.",
+      "en": "The Galaxy A54 pairs a 6.4-inch Super AMOLED screen with a 50 MP camera — Samsung's mid-range answer for someone who wants good photographs and a battery that lasts the day. It has 128 GB of storage, 8 GB of memory and a free memory-card slot. Genuine stock with shop warranty, and we move your data across from the old phone at no charge."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سامسونگ",
+          "en": "Samsung"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Galaxy A54 5G",
+          "en": "Galaxy A54 5G"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "۱۲۸ گیگابایت",
+          "en": "128 GB"
+        }
+      },
+      {
+        "key": "ram",
+        "value": {
+          "fa": "۸ گیگابایت",
+          "en": "8 GB"
+        }
+      },
+      {
+        "key": "screen",
+        "value": {
+          "fa": "۶.۴ اینچ Super AMOLED، ۱۲۰ هرتز",
+          "en": "6.4-inch Super AMOLED, 120 Hz"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۵۰۰۰ میلی‌آمپر",
+          "en": "5000 mAh"
+        }
+      },
+      {
+        "key": "camera",
+        "value": {
+          "fa": "۵۰ + ۱۲ + ۵ مگاپیکسل",
+          "en": "50 + 12 + 5 MP"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "باتری یک‌روزه",
+          "en": "A full day of battery"
+        },
+        "body": {
+          "fa": "۵۰۰۰ میلی‌آمپر — با استفاده معمولی تا شب می‌رسد.",
+          "en": "5000 mAh gets through the evening on ordinary use."
+        }
+      },
+      {
+        "title": {
+          "fa": "کمره ۵۰ مگاپیکسل",
+          "en": "50 MP camera"
+        },
+        "body": {
+          "fa": "عکس‌های شب با نویز کم و رنگ طبیعی.",
+          "en": "Night shots with low noise and natural colour."
+        }
+      },
+      {
+        "title": {
+          "fa": "جای کارت حافظه",
+          "en": "Memory-card slot"
+        },
+        "body": {
+          "fa": "تا ۱ ترابایت حافظه اضافه می‌شود.",
+          "en": "Up to 1 TB of extra storage."
+        }
+      },
+      {
+        "title": {
+          "fa": "انتقال رایگان اطلاعات",
+          "en": "Free data transfer"
+        },
+        "body": {
+          "fa": "شماره‌ها و عکس‌های گوشی قبلی را ما منتقل می‌کنیم.",
+          "en": "We move your contacts and photos from the old phone."
+        }
+      }
+    ]
+  },
+  "iphone-13-128": {
+    "brand": "Apple",
+    "model": "iPhone 13",
+    "description": {
+      "fa": "آیفون ۱۳ با چیپ A15 و صفحه Super Retina XDR، هنوز یکی از روان‌ترین گوشی‌های بازار. کمره دوگانه ۱۲ مگاپیکسلی با حالت سینمایی، و باتری‌ای که یک روز کاری کامل دوام می‌آورد. دستگاه اصل، کارکرد صفر، با گرانتی دکان و بررسی سلامت باتری در حضور خودتان.",
+      "en": "The iPhone 13 pairs the A15 chip with a Super Retina XDR display and is still one of the smoothest phones on the shelf. The dual 12 MP camera shoots cinematic mode, and the battery covers a full working day. Genuine, unused stock with shop warranty, and we check battery health in front of you."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "اپل",
+          "en": "Apple"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "iPhone 13",
+          "en": "iPhone 13"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "۱۲۸ گیگابایت",
+          "en": "128 GB"
+        }
+      },
+      {
+        "key": "ram",
+        "value": {
+          "fa": "۴ گیگابایت",
+          "en": "4 GB"
+        }
+      },
+      {
+        "key": "screen",
+        "value": {
+          "fa": "۶.۱ اینچ Super Retina XDR",
+          "en": "6.1-inch Super Retina XDR"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۳۲۴۰ میلی‌آمپر",
+          "en": "3240 mAh"
+        }
+      },
+      {
+        "key": "camera",
+        "value": {
+          "fa": "۱۲ + ۱۲ مگاپیکسل",
+          "en": "12 + 12 MP"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "چیپ A15",
+          "en": "A15 chip"
+        },
+        "body": {
+          "fa": "بازی و ویرایش ویدیو بدون کندی.",
+          "en": "Games and video editing without a stutter."
+        }
+      },
+      {
+        "title": {
+          "fa": "حالت سینمایی",
+          "en": "Cinematic mode"
+        },
+        "body": {
+          "fa": "ویدیو با فوکوس نرم، مثل کمره‌های حرفه‌ای.",
+          "en": "Video with a soft focus pull, like a proper camera."
+        }
+      },
+      {
+        "title": {
+          "fa": "بررسی باتری",
+          "en": "Battery check"
+        },
+        "body": {
+          "fa": "سلامت باتری را پیش روی خودتان نشان می‌دهیم.",
+          "en": "We show you the battery health before you pay."
+        }
+      }
+    ]
+  },
+  "xiaomi-redmi-note-13": {
+    "brand": "Xiaomi",
+    "model": "Redmi Note 13",
+    "description": {
+      "fa": "ردمی نوت ۱۳ بهترین نسبت قیمت به کارایی در این قفسه است: صفحه آمولد ۶.۶۷ اینچ، کمره ۱۰۸ مگاپیکسلی و باتری ۵۰۰۰ که با شارژ سریع ۳۳ واتی در یک ساعت پر می‌شود. ۱۲۸ گیگابایت حافظه و ۶ گیگابایت رم برای استفاده روزمره کاملاً کافی است.",
+      "en": "The Redmi Note 13 is the best value on this shelf: a 6.67-inch AMOLED screen, a 108 MP camera and a 5000 mAh battery that refills in about an hour on 33 W charging. With 128 GB of storage and 6 GB of memory it is more than enough for everyday use."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "شیائومی",
+          "en": "Xiaomi"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Redmi Note 13",
+          "en": "Redmi Note 13"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "۱۲۸ گیگابایت",
+          "en": "128 GB"
+        }
+      },
+      {
+        "key": "ram",
+        "value": {
+          "fa": "۶ گیگابایت",
+          "en": "6 GB"
+        }
+      },
+      {
+        "key": "screen",
+        "value": {
+          "fa": "۶.۶۷ اینچ AMOLED، ۱۲۰ هرتز",
+          "en": "6.67-inch AMOLED, 120 Hz"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۵۰۰۰ میلی‌آمپر، شارژ ۳۳ وات",
+          "en": "5000 mAh, 33 W charging"
+        }
+      },
+      {
+        "key": "camera",
+        "value": {
+          "fa": "۱۰۸ + ۸ + ۲ مگاپیکسل",
+          "en": "108 + 8 + 2 MP"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "شارژ سریع ۳۳ وات",
+          "en": "33 W fast charge"
+        },
+        "body": {
+          "fa": "از صفر تا صد در حدود یک ساعت.",
+          "en": "Empty to full in around an hour."
+        }
+      },
+      {
+        "title": {
+          "fa": "کمره ۱۰۸ مگاپیکسل",
+          "en": "108 MP camera"
+        },
+        "body": {
+          "fa": "جزئیات زیاد، حتی وقتی عکس را بزرگ می‌کنید.",
+          "en": "Detail that survives cropping."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو سیم‌کارت",
+          "en": "Dual SIM"
+        },
+        "body": {
+          "fa": "دو شماره فعال، بدون تعویض سیم‌کارت.",
+          "en": "Two active numbers with no swapping."
+        }
+      }
+    ]
+  },
+  "samsung-tab-a9": {
+    "brand": "Samsung",
+    "model": "Galaxy Tab A9",
+    "description": {
+      "fa": "تابلت گلکسی A9 با صفحه ۸.۷ اینچ، اندازه‌ای که در یک دست جا می‌شود. برای درس آنلاین، خواندن و تماشای ویدیو ساخته شده و باتری ۵۱۰۰ چند ساعت پخش می‌دهد. جای سیم‌کارت هم دارد، پس بدون وای‌فای هم به انترنت وصل می‌شود.",
+      "en": "The Galaxy Tab A9 has an 8.7-inch screen — a size that sits in one hand. It is made for online classes, reading and video, and the 5100 mAh battery gives several hours of playback. A SIM slot means it reaches the internet without Wi-Fi too."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سامسونگ",
+          "en": "Samsung"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Galaxy Tab A9",
+          "en": "Galaxy Tab A9"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "۶۴ گیگابایت",
+          "en": "64 GB"
+        }
+      },
+      {
+        "key": "ram",
+        "value": {
+          "fa": "۴ گیگابایت",
+          "en": "4 GB"
+        }
+      },
+      {
+        "key": "screen",
+        "value": {
+          "fa": "۸.۷ اینچ TFT",
+          "en": "8.7-inch TFT"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۵۱۰۰ میلی‌آمپر",
+          "en": "5100 mAh"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "جای سیم‌کارت",
+          "en": "SIM slot"
+        },
+        "body": {
+          "fa": "بدون وای‌فای هم انترنت دارد.",
+          "en": "Data without a Wi-Fi network."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه یک‌دستی",
+          "en": "One-hand size"
+        },
+        "body": {
+          "fa": "۸.۷ اینچ — برای صنف آنلاین و خواندن.",
+          "en": "8.7 inches, for online class and reading."
+        }
+      },
+      {
+        "title": {
+          "fa": "حالت اطفال",
+          "en": "Kids mode"
+        },
+        "body": {
+          "fa": "محدودسازی وقت و برنامه‌ها برای اطفال.",
+          "en": "Time and app limits for children."
+        }
+      }
+    ]
+  },
+  "airpods-pro-2": {
+    "brand": "Apple",
+    "model": "AirPods Pro 2",
+    "description": {
+      "fa": "ایرپاد پرو ۲ با حذف نویز فعال، که سر و صدای موتر و بازار را واقعاً کم می‌کند. حالت شفاف هم دارد تا وقتی لازم است صدای اطراف را بشنوید. با کیس، تا ۳۰ ساعت پخش می‌دهد و دستگاه اصل با گرانتی دکان است.",
+      "en": "AirPods Pro 2 with active noise cancellation that genuinely takes the traffic and the bazaar down. Transparency mode lets the street back in when you need it. With the case they run up to 30 hours, and this is genuine stock with shop warranty."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "اپل",
+          "en": "Apple"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "AirPods Pro 2",
+          "en": "AirPods Pro 2"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۶ ساعت — با کیس تا ۳۰ ساعت",
+          "en": "6 hours — 30 with the case"
+        }
+      },
+      {
+        "key": "connectivity",
+        "value": {
+          "fa": "بلوتوث ۵.۳",
+          "en": "Bluetooth 5.3"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "حذف نویز فعال",
+          "en": "Active noise cancellation"
+        },
+        "body": {
+          "fa": "صدای موتر و جنراتور را تا حد زیادی می‌برد.",
+          "en": "Takes out most of the traffic and generator noise."
+        }
+      },
+      {
+        "title": {
+          "fa": "حالت شفاف",
+          "en": "Transparency mode"
+        },
+        "body": {
+          "fa": "بدون درآوردن ایرپاد، صدای اطراف را می‌شنوید.",
+          "en": "Hear the street without taking them out."
+        }
+      },
+      {
+        "title": {
+          "fa": "کیس شارژ",
+          "en": "Charging case"
+        },
+        "body": {
+          "fa": "تا ۳۰ ساعت پخش با کیس.",
+          "en": "Up to 30 hours of listening with the case."
+        }
+      }
+    ]
+  },
+  "nokia-105-classic": {
+    "brand": "Nokia",
+    "model": "105 Classic",
+    "description": {
+      "fa": "نوکیا ۱۰۵، همان گوشی ساده و محکمی که باتری‌اش هفته‌ها دوام می‌آورد. دو سیم‌کارت، رادیو FM و چراغ قوه دارد و برای تماس و پیام کاملاً کافی است. به‌عنوان گوشی دوم، گوشی کار یا گوشی سفر انتخاب مطمئنی است.",
+      "en": "The Nokia 105 — the plain, tough handset whose battery lasts weeks. Dual SIM, FM radio and a torch, and it does calls and messages perfectly well. A sound choice as a second phone, a work phone or a travel phone."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "نوکیا",
+          "en": "Nokia"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "105 Classic",
+          "en": "105 Classic"
+        }
+      },
+      {
+        "key": "screen",
+        "value": {
+          "fa": "۱.۸ اینچ رنگی",
+          "en": "1.8-inch colour"
+        }
+      },
+      {
+        "key": "battery",
+        "value": {
+          "fa": "۸۰۰ میلی‌آمپر — تا ۲ هفته آماده‌باش",
+          "en": "800 mAh — up to two weeks standby"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۶ ماه گرانتی دکان",
+          "en": "6 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "باتری هفتگی",
+          "en": "Weeks of standby"
+        },
+        "body": {
+          "fa": "با یک شارژ تا دو هفته در حالت آماده‌باش.",
+          "en": "Up to two weeks of standby on one charge."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو سیم‌کارت",
+          "en": "Dual SIM"
+        },
+        "body": {
+          "fa": "دو شماره در یک گوشی.",
+          "en": "Two numbers in one handset."
+        }
+      },
+      {
+        "title": {
+          "fa": "چراغ قوه",
+          "en": "Torch"
+        },
+        "body": {
+          "fa": "برای شب‌های بدون برق.",
+          "en": "For nights without power."
+        }
+      }
+    ]
+  },
+  "maybelline-fit-me-foundation": {
+    "brand": "Maybelline",
+    "model": null,
+    "description": {
+      "fa": "فوندیشن فیت می میبلین با پوشش متوسط و ماتی طبیعی، بدون اینکه صورت را نقاب‌مانند کند. برای پوست چرب و مختلط ساخته شده و تا آخر روز روی پوست می‌ماند. رنگ‌های موجود با پوست‌های روشن تا گندمی سازگار است؛ در دکان تست رنگ می‌کنیم.",
+      "en": "Maybelline Fit Me foundation gives medium coverage with a natural matte finish, without turning the face into a mask. It is made for oily and combination skin and holds through the day. The shades on the shelf suit light to olive skin — we match the shade in the shop."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "میبلین",
+          "en": "Maybelline"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۳۰ میلی‌لیتر",
+          "en": "30 ml"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "فوندیشن مایع، پوشش متوسط",
+          "en": "Liquid foundation, medium coverage"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "چرب و مختلط",
+          "en": "Oily and combination"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "امارات",
+          "en": "UAE"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ماتی طبیعی",
+          "en": "Natural matte"
+        },
+        "body": {
+          "fa": "براقی را می‌گیرد بدون اینکه خشک نشان دهد.",
+          "en": "Takes the shine down without looking dry."
+        }
+      },
+      {
+        "title": {
+          "fa": "تست رنگ در دکان",
+          "en": "Shade matched in store"
+        },
+        "body": {
+          "fa": "پیش از خرید روی پوست خودتان امتحان می‌شود.",
+          "en": "Tried on your own skin before you buy."
+        }
+      },
+      {
+        "title": {
+          "fa": "ماندگاری روزانه",
+          "en": "All-day wear"
+        },
+        "body": {
+          "fa": "تا آخر وقت اداری روی پوست می‌ماند.",
+          "en": "Holds to the end of an office day."
+        }
+      }
+    ]
+  },
+  "loreal-mascara-volume": {
+    "brand": "L'Oréal",
+    "model": null,
+    "description": {
+      "fa": "ریمل حجم‌دهنده لورآل با برس مخروطی که مژه‌های کنار چشم را هم می‌گیرد. فرمول آن پخش نمی‌شود و در گرمای تابستان زیر چشم نمی‌ریزد. با آب گرم و شوینده معمولی پاک می‌شود و نیازی به پاک‌کننده مخصوص ندارد.",
+      "en": "L'Oréal volumising mascara with a tapered brush that reaches the lashes at the corner of the eye. The formula does not run and will not smudge under the eye in summer heat. It comes off with warm water and ordinary cleanser — no special remover needed."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "لورآل",
+          "en": "L'Oréal"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۹.۵ میلی‌لیتر",
+          "en": "9.5 ml"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "ریمل حجم‌دهنده",
+          "en": "Volumising mascara"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "همه، مناسب چشم حساس",
+          "en": "All, safe for sensitive eyes"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "فرانسه",
+          "en": "France"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "برس مخروطی",
+          "en": "Tapered brush"
+        },
+        "body": {
+          "fa": "مژه‌های کوتاه گوشه چشم را هم می‌گیرد.",
+          "en": "Catches the short lashes in the corner."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون ریزش",
+          "en": "No smudging"
+        },
+        "body": {
+          "fa": "در گرما هم زیر چشم پخش نمی‌شود.",
+          "en": "Stays put under the eye in the heat."
+        }
+      },
+      {
+        "title": {
+          "fa": "پاک‌شدن آسان",
+          "en": "Easy to remove"
+        },
+        "body": {
+          "fa": "با آب گرم پاک می‌شود.",
+          "en": "Warm water is enough."
+        }
+      }
+    ]
+  },
+  "nivea-cream-blue-tin": {
+    "brand": "Nivea",
+    "model": null,
+    "description": {
+      "fa": "کریم نیوآ در همان قوطی آبی همیشگی — برای دست، صورت و پاشنه پا در زمستان کابل. غلیظ است و کم مصرف می‌شود؛ یک قوطی یک زمستان کامل دوام می‌آورد. بدون رنگ و مواد نگهدارنده تند، مناسب پوست اطفال هم هست.",
+      "en": "Nivea creme in the same blue tin — for hands, face and cracked heels through a Kabul winter. It is thick and goes a long way; one tin lasts the season. No dyes and no harsh preservatives, so it suits children's skin as well."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "نیوآ",
+          "en": "Nivea"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۱۵۰ میلی‌لیتر",
+          "en": "150 ml"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "کریم مرطوب‌کننده غلیظ",
+          "en": "Rich moisturising creme"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "خشک و بسیار خشک",
+          "en": "Dry and very dry"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "آلمان",
+          "en": "Germany"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "برای زمستان",
+          "en": "Made for winter"
+        },
+        "body": {
+          "fa": "ترک دست و پاشنه پا را ترمیم می‌کند.",
+          "en": "Repairs cracked hands and heels."
+        }
+      },
+      {
+        "title": {
+          "fa": "کم‌مصرف",
+          "en": "A little goes far"
+        },
+        "body": {
+          "fa": "یک قوطی یک زمستان کامل بس است.",
+          "en": "One tin lasts a whole season."
+        }
+      },
+      {
+        "title": {
+          "fa": "مناسب اطفال",
+          "en": "Safe for children"
+        },
+        "body": {
+          "fa": "بدون رنگ و بوی تند.",
+          "en": "No dyes, no strong perfume."
+        }
+      }
+    ]
+  },
+  "essence-lipstick-matte": {
+    "brand": "Essence",
+    "model": null,
+    "description": {
+      "fa": "لپ‌ستیک مات اسنس با بافت نرم که لب را خشک نمی‌کند. رنگ‌دهی در یک بار کشیدن کامل است و تا چند ساعت می‌ماند. قیمت آن پایین است، پس می‌توانید چند رنگ داشته باشید بدون اینکه گران تمام شود.",
+      "en": "An Essence matte lipstick with a soft texture that does not dry the lip. One pass gives full colour and it holds for several hours. The price is low enough to keep a few shades without it adding up."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "اسنس",
+          "en": "Essence"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۳.۵ گرام",
+          "en": "3.5 g"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "لپ‌ستیک مات",
+          "en": "Matte lipstick"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "همه",
+          "en": "All"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "آلمان",
+          "en": "Germany"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "مات بدون خشکی",
+          "en": "Matte, not drying"
+        },
+        "body": {
+          "fa": "بافت نرم با روغن‌های مرطوب‌کننده.",
+          "en": "A soft texture with conditioning oils."
+        }
+      },
+      {
+        "title": {
+          "fa": "یک لایه کافی است",
+          "en": "One pass is enough"
+        },
+        "body": {
+          "fa": "رنگ‌دهی کامل بدون تکرار.",
+          "en": "Full colour without going over it."
+        }
+      },
+      {
+        "title": {
+          "fa": "چند رنگ موجود",
+          "en": "Several shades"
+        },
+        "body": {
+          "fa": "از نود روزمره تا سرخ مجلسی.",
+          "en": "From everyday nude to an evening red."
+        }
+      }
+    ]
+  },
+  "garnier-micellar-water": {
+    "brand": "Garnier",
+    "model": null,
+    "description": {
+      "fa": "میسلار واتر گارنیه که آرایش را بدون مالیدن و کشیدن پوست پاک می‌کند. برای پاک کردن ریمل و خط چشم هم کافی است و نیازی به آب کشیدن ندارد. بدون الکل است، پس پوست حساس را نمی‌سوزاند.",
+      "en": "Garnier micellar water lifts make-up off without rubbing or dragging at the skin. It takes mascara and eyeliner off too, and needs no rinsing. Alcohol free, so it does not sting sensitive skin."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "گارنیه",
+          "en": "Garnier"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۴۰۰ میلی‌لیتر",
+          "en": "400 ml"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "پاک‌کننده آرایش",
+          "en": "Make-up remover"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "حساس و همه پوست‌ها",
+          "en": "Sensitive and all types"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "فرانسه",
+          "en": "France"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون الکل",
+          "en": "Alcohol free"
+        },
+        "body": {
+          "fa": "پوست حساس را نمی‌سوزاند.",
+          "en": "Does not sting sensitive skin."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون آب‌کشی",
+          "en": "No rinsing"
+        },
+        "body": {
+          "fa": "بعد از پاک کردن نیازی به شستن نیست.",
+          "en": "No need to wash it off afterwards."
+        }
+      },
+      {
+        "title": {
+          "fa": "حجم بزرگ",
+          "en": "Large bottle"
+        },
+        "body": {
+          "fa": "۴۰۰ میلی‌لیتر — چند ماه استفاده.",
+          "en": "400 ml — several months of use."
+        }
+      }
+    ]
+  },
+  "hair-oil-argan-100": {
+    "brand": "Argan",
+    "model": null,
+    "description": {
+      "fa": "روغن آرگان خالص برای موهای خشک و آسیب‌دیده، مخصوصاً بعد از رنگ یا صافی. چند قطره روی نوک موها کافی است؛ چرب نمی‌کند و بوی سنگین ندارد. در خشکی هوای کابل، موخوره و وز شدن مو را به مرور کم می‌کند.",
+      "en": "Pure argan oil for dry and damaged hair, especially after colouring or straightening. A few drops on the ends is enough; it does not leave hair greasy and has no heavy scent. In Kabul's dry air it takes down split ends and frizz over a few weeks."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آرگان",
+          "en": "Argan"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۱۰۰ میلی‌لیتر",
+          "en": "100 ml"
+        }
+      },
+      {
+        "key": "type",
+        "value": {
+          "fa": "روغن مو",
+          "en": "Hair oil"
+        }
+      },
+      {
+        "key": "skinType",
+        "value": {
+          "fa": "موی خشک و آسیب‌دیده",
+          "en": "Dry and damaged hair"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "مراکش",
+          "en": "Morocco"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "چند قطره کافی است",
+          "en": "A few drops"
+        },
+        "body": {
+          "fa": "یک شیشه چند ماه دوام می‌آورد.",
+          "en": "One bottle lasts months."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون چربی",
+          "en": "Not greasy"
+        },
+        "body": {
+          "fa": "روی مو سنگینی نمی‌کند.",
+          "en": "It does not weigh hair down."
+        }
+      },
+      {
+        "title": {
+          "fa": "ضد وز",
+          "en": "Anti-frizz"
+        },
+        "body": {
+          "fa": "در هوای خشک مو را رام می‌کند.",
+          "en": "Tames hair in dry air."
+        }
+      }
+    ]
+  },
+  "oud-royal-100ml": {
+    "brand": "Golden",
+    "model": null,
+    "description": {
+      "fa": "عود رویال، عطری گرم و چوبی با پایه عود و کهربا که برای شب و مجلس ساخته شده. ماندگاری آن روی لباس تا یک روز کامل است و پخش بوی آن قوی اما نه سنگین است. در همین دکان تست کنید — بوی عود روی هر پوست کمی متفاوت می‌نشیند.",
+      "en": "Oud Royal is a warm, woody scent built on oud and amber, made for the evening and for gatherings. On clothing it holds a full day, and the projection is strong without being heavy. Try it here — oud settles a little differently on every skin."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "طلایی",
+          "en": "Golden"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۱۰۰ میلی‌لیتر",
+          "en": "100 ml"
+        }
+      },
+      {
+        "key": "concentration",
+        "value": {
+          "fa": "ادو پرفیوم",
+          "en": "Eau de parfum"
+        }
+      },
+      {
+        "key": "family",
+        "value": {
+          "fa": "چوبی و شرقی",
+          "en": "Woody oriental"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Unisex"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "امارات",
+          "en": "UAE"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ماندگاری بلند",
+          "en": "Long wear"
+        },
+        "body": {
+          "fa": "روی لباس تا یک روز کامل می‌ماند.",
+          "en": "A full day on clothing."
+        }
+      },
+      {
+        "title": {
+          "fa": "پایه عود",
+          "en": "Oud base"
+        },
+        "body": {
+          "fa": "عود و کهربا، گرم و شرقی.",
+          "en": "Oud and amber — warm and oriental."
+        }
+      },
+      {
+        "title": {
+          "fa": "تست در دکان",
+          "en": "Try before you buy"
+        },
+        "body": {
+          "fa": "روی پوست خودتان امتحان کنید.",
+          "en": "Sample it on your own skin."
+        }
+      }
+    ]
+  },
+  "amber-musk-50ml": {
+    "brand": "Golden",
+    "model": null,
+    "description": {
+      "fa": "عنبر و مشک، ترکیبی نرم و پودری که برای روز و محیط کار مناسب است. برخلاف عودهای سنگین، این عطر فضا را پر نمی‌کند و کسی را اذیت نمی‌کند. شیشه ۵۰ میلی‌لیتری آن در کیف جا می‌شود.",
+      "en": "Amber and musk, a soft powdery blend that suits daytime and the office. Unlike the heavier ouds it does not fill a room or bother anyone nearby. The 50 ml bottle fits in a bag."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "طلایی",
+          "en": "Golden"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۵۰ میلی‌لیتر",
+          "en": "50 ml"
+        }
+      },
+      {
+        "key": "concentration",
+        "value": {
+          "fa": "ادو تویلت",
+          "en": "Eau de toilette"
+        }
+      },
+      {
+        "key": "family",
+        "value": {
+          "fa": "عنبر و مشک",
+          "en": "Amber and musk"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Unisex"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "امارات",
+          "en": "UAE"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "مناسب روز",
+          "en": "For daytime"
+        },
+        "body": {
+          "fa": "ملایم و مناسب محیط کار.",
+          "en": "Soft enough for the office."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه کیفی",
+          "en": "Bag size"
+        },
+        "body": {
+          "fa": "۵۰ میلی‌لیتر، قابل حمل.",
+          "en": "50 ml, easy to carry."
+        }
+      },
+      {
+        "title": {
+          "fa": "پخش ملایم",
+          "en": "Gentle projection"
+        },
+        "body": {
+          "fa": "فضا را پر نمی‌کند.",
+          "en": "It does not fill the room."
+        }
+      }
+    ]
+  },
+  "rose-taif-attar-12ml": {
+    "brand": "Golden",
+    "model": null,
+    "description": {
+      "fa": "عطر گل سرخ طایف، عطر روغنی بدون الکل در شیشه ۱۲ میلی‌لیتری با درپوش چوبی. چون روغنی است، یک قطره روی مچ دست ساعت‌ها بو می‌دهد. برای کسانی که پوست‌شان با عطرهای الکلی حساسیت پیدا می‌کند، انتخاب درست است.",
+      "en": "Taif rose attar, an alcohol-free oil perfume in a 12 ml bottle with a wooden cap. Because it is an oil, one drop on the wrist carries for hours. The right choice for anyone whose skin reacts to alcohol-based sprays."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "طلایی",
+          "en": "Golden"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۱۲ میلی‌لیتر",
+          "en": "12 ml"
+        }
+      },
+      {
+        "key": "concentration",
+        "value": {
+          "fa": "عطر روغنی، بدون الکل",
+          "en": "Oil attar, alcohol free"
+        }
+      },
+      {
+        "key": "family",
+        "value": {
+          "fa": "گلی — گل سرخ طایف",
+          "en": "Floral — Taif rose"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Unisex"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "عربستان",
+          "en": "Saudi Arabia"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون الکل",
+          "en": "Alcohol free"
+        },
+        "body": {
+          "fa": "برای پوست حساس بی‌خطر است.",
+          "en": "Safe for skin that reacts to sprays."
+        }
+      },
+      {
+        "title": {
+          "fa": "یک قطره کافی است",
+          "en": "One drop is enough"
+        },
+        "body": {
+          "fa": "شیشه کوچک، مصرف بسیار کم.",
+          "en": "A small bottle that lasts."
+        }
+      },
+      {
+        "title": {
+          "fa": "درپوش چوبی",
+          "en": "Wooden cap"
+        },
+        "body": {
+          "fa": "شیشه دست‌ساز با اپلیکاتور شیشه‌ای.",
+          "en": "A hand-finished bottle with a glass wand."
+        }
+      }
+    ]
+  },
+  "bakhoor-incense-set": {
+    "brand": "Golden",
+    "model": null,
+    "description": {
+      "fa": "ست بخور با سوزاننده سفالی و سه بسته بخور معطر — همان بویی که خانه را برای مهمان آماده می‌کند. سوزاننده روی برق کار می‌کند، پس زغال و دود اضافی لازم نیست. برای هدیه هم مناسب است و در جعبه بسته‌بندی می‌شود.",
+      "en": "A bakhoor set with a ceramic burner and three packs of scented bakhoor — the smell that gets a house ready for guests. The burner runs on mains power, so there is no charcoal and no extra smoke. It gift-boxes well."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "طلایی",
+          "en": "Golden"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "سوزاننده + ۳ بسته ۴۰ گرامی",
+          "en": "Burner + 3 × 40 g packs"
+        }
+      },
+      {
+        "key": "concentration",
+        "value": {
+          "fa": "بخور چوبی",
+          "en": "Wood bakhoor"
+        }
+      },
+      {
+        "key": "family",
+        "value": {
+          "fa": "عود و صندل",
+          "en": "Oud and sandalwood"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "برای خانه",
+          "en": "For the home"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "امارات",
+          "en": "UAE"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "سوزاننده برقی",
+          "en": "Electric burner"
+        },
+        "body": {
+          "fa": "بدون زغال و بدون دود اضافی.",
+          "en": "No charcoal and no extra smoke."
+        }
+      },
+      {
+        "title": {
+          "fa": "سه بوی متفاوت",
+          "en": "Three scents"
+        },
+        "body": {
+          "fa": "عود، صندل و گل.",
+          "en": "Oud, sandalwood and floral."
+        }
+      },
+      {
+        "title": {
+          "fa": "جعبه هدیه",
+          "en": "Gift boxed"
+        },
+        "body": {
+          "fa": "آماده برای هدیه دادن.",
+          "en": "Ready to give as it is."
+        }
+      }
+    ]
+  },
+  "citrus-fresh-men-100": {
+    "brand": "Golden",
+    "model": null,
+    "description": {
+      "fa": "سیتروس فرش، عطری خنک با نت‌های لیمو و برگاموت برای روزهای گرم. سبک و تازه است و برای صبح و محیط کار مناسب‌تر از عطرهای شیرین است. ماندگاری آن حدود شش ساعت روی پوست است.",
+      "en": "Citrus Fresh is a cool scent of lemon and bergamot for warm days. It is light and clean, and better suited to the morning and the office than the sweeter blends. On skin it holds around six hours."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "طلایی",
+          "en": "Golden"
+        }
+      },
+      {
+        "key": "volume",
+        "value": {
+          "fa": "۱۰۰ میلی‌لیتر",
+          "en": "100 ml"
+        }
+      },
+      {
+        "key": "concentration",
+        "value": {
+          "fa": "ادو تویلت",
+          "en": "Eau de toilette"
+        }
+      },
+      {
+        "key": "family",
+        "value": {
+          "fa": "مرکبات",
+          "en": "Citrus"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "For men"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "امارات",
+          "en": "UAE"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "خنک و تازه",
+          "en": "Cool and fresh"
+        },
+        "body": {
+          "fa": "برای تابستان و ساعات روز.",
+          "en": "For summer and daytime."
+        }
+      },
+      {
+        "title": {
+          "fa": "مناسب کار",
+          "en": "Office friendly"
+        },
+        "body": {
+          "fa": "سبک، بدون شیرینی سنگین.",
+          "en": "Light, with no heavy sweetness."
+        }
+      },
+      {
+        "title": {
+          "fa": "شش ساعت ماندگاری",
+          "en": "About six hours"
+        },
+        "body": {
+          "fa": "روی پوست، بیشتر روی لباس.",
+          "en": "On skin; longer on clothing."
+        }
+      }
+    ]
+  },
+  "casio-edifice-steel": {
+    "brand": "Casio",
+    "model": "Edifice EFV-100",
+    "description": {
+      "fa": "کاسیو ادیفایس با قاب و بند استیل ضد زنگ، ساعتی رسمی که برای هر روز هم دوام می‌آورد. کرونوگراف و تاریخ دارد و تا ۱۰۰ متر ضد آب است. باتری آن حدود سه سال کار می‌کند و تعویض آن در همین دکان انجام می‌شود.",
+      "en": "A Casio Edifice in a stainless steel case and bracelet — a formal watch that survives daily wear. It has a chronograph and a date, and is water resistant to 100 metres. The battery runs about three years and we change it here."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کاسیو",
+          "en": "Casio"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Edifice EFV-100",
+          "en": "Edifice EFV-100"
+        }
+      },
+      {
+        "key": "movement",
+        "value": {
+          "fa": "کوارتز",
+          "en": "Quartz"
+        }
+      },
+      {
+        "key": "caseMaterial",
+        "value": {
+          "fa": "استیل ضد زنگ، ۴۳ میلی‌متر",
+          "en": "Stainless steel, 43 mm"
+        }
+      },
+      {
+        "key": "strap",
+        "value": {
+          "fa": "بند استیل",
+          "en": "Steel bracelet"
+        }
+      },
+      {
+        "key": "waterResistance",
+        "value": {
+          "fa": "۱۰۰ متر",
+          "en": "100 m"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کرونوگراف",
+          "en": "Chronograph"
+        },
+        "body": {
+          "fa": "سه شمارنده فعال، نه تزئینی.",
+          "en": "Three working counters, not decoration."
+        }
+      },
+      {
+        "title": {
+          "fa": "۱۰۰ متر ضد آب",
+          "en": "100 m water resistant"
+        },
+        "body": {
+          "fa": "شنا و وضو بدون نگرانی.",
+          "en": "Swimming and washing without worry."
+        }
+      },
+      {
+        "title": {
+          "fa": "تعویض باتری در دکان",
+          "en": "Battery changed here"
+        },
+        "body": {
+          "fa": "بعد از سه سال، در همین غرفه.",
+          "en": "After about three years, at this counter."
+        }
+      }
+    ]
+  },
+  "casio-classic-leather": {
+    "brand": "Casio",
+    "model": "MTP-1183",
+    "description": {
+      "fa": "کاسیو کلاسیک با بند چرمی و صفحه ساده — ساعتی که با کت و با پیراهن ساده هر دو می‌خورد. سبک است و روی مچ سنگینی نمی‌کند، و تاریخ‌نما دارد. انتخاب خوبی برای هدیه فراغت یا اولین ساعت رسمی.",
+      "en": "A classic Casio on a leather strap with a plain dial — a watch that works with a jacket and with a shirt alike. It is light on the wrist and carries a date window. A good graduation gift, or a first formal watch."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کاسیو",
+          "en": "Casio"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "MTP-1183",
+          "en": "MTP-1183"
+        }
+      },
+      {
+        "key": "movement",
+        "value": {
+          "fa": "کوارتز",
+          "en": "Quartz"
+        }
+      },
+      {
+        "key": "caseMaterial",
+        "value": {
+          "fa": "استیل، ۳۸ میلی‌متر",
+          "en": "Steel, 38 mm"
+        }
+      },
+      {
+        "key": "strap",
+        "value": {
+          "fa": "چرم طبیعی",
+          "en": "Genuine leather"
+        }
+      },
+      {
+        "key": "waterResistance",
+        "value": {
+          "fa": "۳۰ متر",
+          "en": "30 m"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بند چرم طبیعی",
+          "en": "Real leather strap"
+        },
+        "body": {
+          "fa": "با گذشت وقت نرم‌تر می‌شود.",
+          "en": "It softens with wear."
+        }
+      },
+      {
+        "title": {
+          "fa": "صفحه ساده",
+          "en": "A plain dial"
+        },
+        "body": {
+          "fa": "بدون شلوغی، خوانا در یک نگاه.",
+          "en": "Uncluttered and readable at a glance."
+        }
+      },
+      {
+        "title": {
+          "fa": "مناسب هدیه",
+          "en": "Gift ready"
+        },
+        "body": {
+          "fa": "در جعبه اصلی تحویل می‌شود.",
+          "en": "Delivered in its own box."
+        }
+      }
+    ]
+  },
+  "seiko-automatic-5": {
+    "brand": "Seiko",
+    "model": "Seiko 5 SNK",
+    "description": {
+      "fa": "سیکو ۵ اتوماتیک، ساعتی مکانیکی که با حرکت دست کوک می‌شود و باتری نمی‌خواهد. پشت آن شیشه‌ای است و مکانیزم را می‌بینید — همان چیزی که این ساعت را برای دوستداران ساعت خاص می‌کند. اگر چند روز آن را نپوشید، دوباره کوک دستی لازم دارد.",
+      "en": "A Seiko 5 automatic — a mechanical watch wound by the movement of your arm, with no battery at all. The exhibition caseback shows the movement working, which is what makes this watch special to collectors. Leave it off for a few days and it needs a hand wind to restart."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سیکو",
+          "en": "Seiko"
+        }
+      },
+      {
+        "key": "model",
+        "value": {
+          "fa": "Seiko 5 SNK",
+          "en": "Seiko 5 SNK"
+        }
+      },
+      {
+        "key": "movement",
+        "value": {
+          "fa": "اتوماتیک، ۲۱ سنگ",
+          "en": "Automatic, 21 jewels"
+        }
+      },
+      {
+        "key": "caseMaterial",
+        "value": {
+          "fa": "استیل، ۳۷ میلی‌متر",
+          "en": "Steel, 37 mm"
+        }
+      },
+      {
+        "key": "strap",
+        "value": {
+          "fa": "بند استیل",
+          "en": "Steel bracelet"
+        }
+      },
+      {
+        "key": "waterResistance",
+        "value": {
+          "fa": "۳۰ متر",
+          "en": "30 m"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون باتری",
+          "en": "No battery"
+        },
+        "body": {
+          "fa": "با حرکت دست کوک می‌شود.",
+          "en": "Wound by the movement of your arm."
+        }
+      },
+      {
+        "title": {
+          "fa": "پشت شیشه‌ای",
+          "en": "Exhibition caseback"
+        },
+        "body": {
+          "fa": "مکانیزم در حال کار دیده می‌شود.",
+          "en": "You can watch the movement working."
+        }
+      },
+      {
+        "title": {
+          "fa": "۴۰ ساعت ذخیره",
+          "en": "40-hour reserve"
+        },
+        "body": {
+          "fa": "یک شب و یک روز بدون پوشیدن.",
+          "en": "It keeps running overnight and through a day off."
+        }
+      }
+    ]
+  },
+  "womens-gold-tone-watch": {
+    "brand": "Noor",
+    "model": null,
+    "description": {
+      "fa": "ساعت زنانه با روکش طلایی و بند باریک، ظریف و سبک برای مچ باریک. صفحه کوچک و ساده است و بیشتر نقش زیورآلات دارد تا ابزار. برای مهمانی و مراسم انتخاب مناسبی است و در جعبه هدیه تحویل می‌شود.",
+      "en": "A women's watch in a gold-tone finish on a slim bracelet, delicate and light for a narrow wrist. The dial is small and plain — this is closer to jewellery than to a tool. It suits gatherings and ceremonies, and comes gift boxed."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "نور",
+          "en": "Noor"
+        }
+      },
+      {
+        "key": "movement",
+        "value": {
+          "fa": "کوارتز",
+          "en": "Quartz"
+        }
+      },
+      {
+        "key": "caseMaterial",
+        "value": {
+          "fa": "روکش طلایی، ۲۸ میلی‌متر",
+          "en": "Gold-tone plating, 28 mm"
+        }
+      },
+      {
+        "key": "strap",
+        "value": {
+          "fa": "بند فلزی باریک",
+          "en": "Slim metal bracelet"
+        }
+      },
+      {
+        "key": "waterResistance",
+        "value": {
+          "fa": "مقاوم در برابر پاشش",
+          "en": "Splash resistant"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۶ ماه گرانتی دکان",
+          "en": "6 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "قاب ظریف",
+          "en": "A delicate case"
+        },
+        "body": {
+          "fa": "۲۸ میلی‌متر، مناسب مچ باریک.",
+          "en": "28 mm, sized for a narrow wrist."
+        }
+      },
+      {
+        "title": {
+          "fa": "جعبه هدیه",
+          "en": "Gift boxed"
+        },
+        "body": {
+          "fa": "آماده برای هدیه.",
+          "en": "Ready to give."
+        }
+      },
+      {
+        "title": {
+          "fa": "تنظیم بند رایگان",
+          "en": "Free sizing"
+        },
+        "body": {
+          "fa": "بند را همین‌جا اندازه می‌کنیم.",
+          "en": "We size the bracelet at the counter."
+        }
+      }
+    ]
+  },
+  "digital-sport-watch": {
+    "brand": "Noor",
+    "model": null,
+    "description": {
+      "fa": "ساعت دیجیتال ورزشی با کرنومتر، آلارم و چراغ صفحه، ساخته‌شده برای استفاده روزمره و ورزش. بند سیلیکونی آن با عرق خراب نمی‌شود و تا ۵۰ متر ضد آب است. قیمت آن پایین است و برای متعلم و ورزشکار انتخاب عملی است.",
+      "en": "A digital sports watch with a stopwatch, alarm and backlight, built for daily wear and training. The silicone strap survives sweat and it is water resistant to 50 metres. The price makes it a practical choice for a student or an athlete."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "نور",
+          "en": "Noor"
+        }
+      },
+      {
+        "key": "movement",
+        "value": {
+          "fa": "دیجیتال کوارتز",
+          "en": "Digital quartz"
+        }
+      },
+      {
+        "key": "caseMaterial",
+        "value": {
+          "fa": "رزین، ۴۲ میلی‌متر",
+          "en": "Resin, 42 mm"
+        }
+      },
+      {
+        "key": "strap",
+        "value": {
+          "fa": "سیلیکون",
+          "en": "Silicone"
+        }
+      },
+      {
+        "key": "waterResistance",
+        "value": {
+          "fa": "۵۰ متر",
+          "en": "50 m"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۶ ماه گرانتی دکان",
+          "en": "6 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کرنومتر و آلارم",
+          "en": "Stopwatch and alarm"
+        },
+        "body": {
+          "fa": "برای تمرین و وقت‌سنجی.",
+          "en": "For training and timing."
+        }
+      },
+      {
+        "title": {
+          "fa": "چراغ صفحه",
+          "en": "Backlight"
+        },
+        "body": {
+          "fa": "خوانا در شب.",
+          "en": "Readable at night."
+        }
+      },
+      {
+        "title": {
+          "fa": "بند سیلیکونی",
+          "en": "Silicone strap"
+        },
+        "body": {
+          "fa": "با عرق خراب نمی‌شود.",
+          "en": "Sweat does not ruin it."
+        }
+      }
+    ]
+  },
+  "mens-perahan-tunban-cotton": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "پیراهن تنبان مردانه از تکه نخی صد در صد، دوخت‌شده در همین کابل. پارچه نخی در گرمای تابستان نفس می‌کشد و بعد از چند بار شستن نرم‌تر می‌شود. سایزها از مدیم تا دبل ایکس‌ال موجود است و تنگ‌کردن آن در دکان رایگان انجام می‌شود.",
+      "en": "A men's perahan tunban in 100% cotton, cut and sewn here in Kabul. Cotton breathes through the summer heat and softens after a few washes. Sizes run from medium to XXL, and we take it in at the shop free of charge."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۱۰۰٪ نخ",
+          "en": "100% cotton"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "M، L، XL، XXL",
+          "en": "M, L, XL, XXL"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سفید، کریمی، خاکستری",
+          "en": "White, cream, grey"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی ماشینی با آب سرد",
+          "en": "Machine wash cold"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "نخ خالص",
+          "en": "Pure cotton"
+        },
+        "body": {
+          "fa": "در گرما نفس می‌کشد.",
+          "en": "It breathes in the heat."
+        }
+      },
+      {
+        "title": {
+          "fa": "دوخت کابل",
+          "en": "Sewn in Kabul"
+        },
+        "body": {
+          "fa": "خیاطی محلی، نه واردات انبوه.",
+          "en": "Local tailoring, not bulk import."
+        }
+      },
+      {
+        "title": {
+          "fa": "تنگ‌کردن رایگان",
+          "en": "Free alterations"
+        },
+        "body": {
+          "fa": "اندازه را همین‌جا درست می‌کنیم.",
+          "en": "We fit it at the shop."
+        }
+      }
+    ]
+  },
+  "mens-wool-blazer": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "کت مردانه از پشم مخلوط، با آستر کامل و دو دکمه — مناسب دفتر، مراسم و نکاح. پشم مخلوط چروک کمتری می‌گیرد و در زمستان کابل به‌اندازه گرم است. اندازه‌کردن شانه و آستین در دکان انجام می‌شود.",
+      "en": "A men's blazer in a wool blend, fully lined with two buttons — for the office, for ceremonies and for a nikah. The blend creases less than pure wool and is warm enough for a Kabul winter. Shoulders and sleeves are fitted in store."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۷۰٪ پشم، ۳۰٪ پلی‌استر",
+          "en": "70% wool, 30% polyester"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۴۸ تا ۵۶",
+          "en": "48 to 56"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سرمه‌ای، خاکستری، مشکی",
+          "en": "Navy, grey, black"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "خشک‌شویی",
+          "en": "Dry clean"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "آستر کامل",
+          "en": "Fully lined"
+        },
+        "body": {
+          "fa": "روی پیراهن روان می‌نشیند.",
+          "en": "It sits smoothly over a shirt."
+        }
+      },
+      {
+        "title": {
+          "fa": "پشم مخلوط",
+          "en": "Wool blend"
+        },
+        "body": {
+          "fa": "گرم، با چروک کمتر.",
+          "en": "Warm, and it creases less."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه‌کردن در دکان",
+          "en": "Fitted in store"
+        },
+        "body": {
+          "fa": "شانه و آستین، رایگان.",
+          "en": "Shoulders and sleeves, at no charge."
+        }
+      }
+    ]
+  },
+  "womens-embroidered-dress": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "پیراهن زنانه با گلدوزی دستی روی سینه و آستین، کاری که برای هر پیراهن چند روز وقت می‌برد. پارچه آن مخلوط نخ و ویسکوز است؛ سنگین نیست و خوب می‌ایستد. برای مراسم و مهمانی دوخته شده و رنگ‌های موجود در دکان قابل دیدن است.",
+      "en": "A women's dress with hand embroidery across the bodice and sleeves — work that takes a few days for each piece. The cloth is a cotton and viscose blend: not heavy, and it holds its shape. Made for ceremonies and gatherings; the shades in stock are on the rail in the shop."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "نخ و ویسکوز، گلدوزی دستی",
+          "en": "Cotton and viscose, hand embroidered"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "S، M، L، XL",
+          "en": "S, M, L, XL"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سرخ، سبز، سرمه‌ای",
+          "en": "Red, green, navy"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "زنانه",
+          "en": "Women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی دستی",
+          "en": "Hand wash"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "گلدوزی دستی",
+          "en": "Hand embroidery"
+        },
+        "body": {
+          "fa": "چند روز کار برای هر پیراهن.",
+          "en": "Days of work in every piece."
+        }
+      },
+      {
+        "title": {
+          "fa": "پارچه سبک",
+          "en": "A light cloth"
+        },
+        "body": {
+          "fa": "برای مجلس‌های طولانی راحت است.",
+          "en": "Comfortable through a long evening."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه‌کردن رایگان",
+          "en": "Free alterations"
+        },
+        "body": {
+          "fa": "قد و آستین را درست می‌کنیم.",
+          "en": "We adjust length and sleeves."
+        }
+      }
+    ]
+  },
+  "womens-wool-shawl": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "شال پشمی زنانه با بافت نرم و ریشه‌های دست‌باف، به اندازه‌ای که هم روی سر و هم روی شانه بنشیند. پشم گرم است اما خارش ندارد، چون با نخ نرم مخلوط شده. در زمستان کابل یک شال خوب جای یک کت را می‌گیرد.",
+      "en": "A women's wool shawl with a soft weave and hand-knotted fringe, cut large enough to sit over the head or across the shoulders. The wool is warm without itching, because it is blended with a softer yarn. In a Kabul winter a good shawl does the work of a coat."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۶۰٪ پشم، ۴۰٪ اکریلیک",
+          "en": "60% wool, 40% acrylic"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۲۰۰ × ۷۰ سانتی‌متر",
+          "en": "200 × 70 cm"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "کریمی، خاکستری، زرشکی",
+          "en": "Cream, grey, maroon"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "زنانه",
+          "en": "Women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی دستی با آب سرد",
+          "en": "Hand wash cold"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون خارش",
+          "en": "No itch"
+        },
+        "body": {
+          "fa": "پشم مخلوط با نخ نرم.",
+          "en": "Wool blended with a softer yarn."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه بزرگ",
+          "en": "Generous size"
+        },
+        "body": {
+          "fa": "۲۰۰ سانتی‌متر — روی سر و شانه.",
+          "en": "200 cm — over the head or the shoulders."
+        }
+      },
+      {
+        "title": {
+          "fa": "ریشه دست‌باف",
+          "en": "Hand-knotted fringe"
+        },
+        "body": {
+          "fa": "کار دست، نه دوخت ماشینی.",
+          "en": "Handwork, not a machine hem."
+        }
+      }
+    ]
+  },
+  "mens-cotton-shirt-formal": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "پیراهن رسمی مردانه از نخ ضد چروک، مناسب دفتر و جلسه. یقه آن سفت است و بعد از شستن هم فرم خود را نگه می‌دارد. سایزهای یقه ۳۹ تا ۴۵ موجود است.",
+      "en": "A men's formal shirt in wrinkle-resistant cotton, made for the office and for meetings. The collar is stiffened and keeps its shape after washing. Collar sizes run 39 to 45."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۹۵٪ نخ، ۵٪ الاستان",
+          "en": "95% cotton, 5% elastane"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "یقه ۳۹ تا ۴۵",
+          "en": "Collar 39 to 45"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سفید، آبی روشن، خاکستری",
+          "en": "White, light blue, grey"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی ماشینی، اتو با حرارت متوسط",
+          "en": "Machine wash, warm iron"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ضد چروک",
+          "en": "Wrinkle resistant"
+        },
+        "body": {
+          "fa": "بعد از شستن اتوی کمتری می‌خواهد.",
+          "en": "Less ironing after a wash."
+        }
+      },
+      {
+        "title": {
+          "fa": "یقه فرم‌دار",
+          "en": "Structured collar"
+        },
+        "body": {
+          "fa": "زیر کروات صاف می‌ایستد.",
+          "en": "It stands up under a tie."
+        }
+      },
+      {
+        "title": {
+          "fa": "کمی کشسان",
+          "en": "A little stretch"
+        },
+        "body": {
+          "fa": "برای نشستن طولانی راحت‌تر.",
+          "en": "Easier through a long day at a desk."
+        }
+      }
+    ]
+  },
+  "womens-winter-coat": {
+    "brand": "Ariana",
+    "model": null,
+    "description": {
+      "fa": "کت زمستانی زنانه با آستر کرکی و کلاه قابل جداشدن، برای سردترین روزهای کابل. پارچه بیرونی ضد باد است و برف را نگه نمی‌دارد. جیب‌های داخلی و بیرونی دارد و تا زیر زانو می‌رسد.",
+      "en": "A women's winter coat with a fleece lining and a detachable hood, for Kabul's coldest days. The outer shell is windproof and sheds snow. It has inside and outside pockets and falls below the knee."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "آریانا",
+          "en": "Ariana"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلی‌استر ضد باد با آستر کرکی",
+          "en": "Windproof polyester, fleece lined"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "S، M، L، XL",
+          "en": "S, M, L, XL"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، زیتونی، شرابی",
+          "en": "Black, olive, wine"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "زنانه",
+          "en": "Women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی ماشینی با آب سرد",
+          "en": "Machine wash cold"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "آستر کرکی",
+          "en": "Fleece lined"
+        },
+        "body": {
+          "fa": "برای سردترین روزهای زمستان.",
+          "en": "For the coldest days of the season."
+        }
+      },
+      {
+        "title": {
+          "fa": "کلاه جداشدنی",
+          "en": "Detachable hood"
+        },
+        "body": {
+          "fa": "در بهار بدون کلاه پوشیده می‌شود.",
+          "en": "Wear it without the hood in spring."
+        }
+      },
+      {
+        "title": {
+          "fa": "ضد باد",
+          "en": "Windproof"
+        },
+        "body": {
+          "fa": "باد سرد را رد نمی‌کند.",
+          "en": "The wind does not get through."
+        }
+      }
+    ]
+  },
+  "mens-leather-oxford": {
+    "brand": "Pamir",
+    "model": null,
+    "description": {
+      "fa": "کفش رسمی مردانه از چرم طبیعی گاوی با دوخت گودیر، همان دوختی که کفش را قابل تعمیر می‌کند. کف چرمی و پاشنه لاستیکی دارد، پس روی سنگفرش نمی‌لغزد. برای دفتر و مراسم، و با نگهداری درست چند سال دوام می‌آورد.",
+      "en": "A men's formal shoe in genuine cowhide with a Goodyear welt — the construction that makes a shoe repairable rather than disposable. A leather sole with a rubber heel keeps its grip on paving. For the office and for ceremonies, and with care it lasts years."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "پامیر",
+          "en": "Pamir"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم طبیعی گاوی",
+          "en": "Genuine cowhide"
+        }
+      },
+      {
+        "key": "sole",
+        "value": {
+          "fa": "چرم با پاشنه لاستیکی",
+          "en": "Leather with a rubber heel"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۴۰ تا ۴۵",
+          "en": "40 to 45"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، قهوه‌ای",
+          "en": "Black, brown"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "واکس چرم هر چند هفته",
+          "en": "Polish every few weeks"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "دوخت گودیر",
+          "en": "Goodyear welt"
+        },
+        "body": {
+          "fa": "کف قابل تعویض است، کفش دور انداختنی نیست.",
+          "en": "The sole can be replaced instead of the shoe."
+        }
+      },
+      {
+        "title": {
+          "fa": "چرم طبیعی",
+          "en": "Real leather"
+        },
+        "body": {
+          "fa": "با پا فرم می‌گیرد.",
+          "en": "It takes the shape of your foot."
+        }
+      },
+      {
+        "title": {
+          "fa": "پاشنه لاستیکی",
+          "en": "Rubber heel"
+        },
+        "body": {
+          "fa": "روی سنگفرش نمی‌لغزد.",
+          "en": "Grip on paving and tile."
+        }
+      }
+    ]
+  },
+  "nike-air-running": {
+    "brand": "Nike",
+    "model": "Air Zoom",
+    "description": {
+      "fa": "کتانی دویدن نایک با کف بادی و رویه توری، سبک و مناسب دویدن روزانه. توری بودن رویه یعنی پا در تابستان عرق کمتری می‌کند. برای دویدن، جیم و پیاده‌روی طولانی مناسب است.",
+      "en": "A Nike running shoe with an air-cushioned sole and a mesh upper — light, and made for regular running. The mesh means less sweat in summer. Good for running, the gym and long walks."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "نایک",
+          "en": "Nike"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "رویه توری با روکش مصنوعی",
+          "en": "Mesh upper with synthetic overlays"
+        }
+      },
+      {
+        "key": "sole",
+        "value": {
+          "fa": "فوم با کف بادی",
+          "en": "Foam with air cushioning"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۴۰ تا ۴۵",
+          "en": "40 to 45"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی/سفید، خاکستری",
+          "en": "Black/white, grey"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی دستی، دور از آفتاب خشک شود",
+          "en": "Hand wash, dry out of the sun"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کف بادی",
+          "en": "Air cushioning"
+        },
+        "body": {
+          "fa": "ضربه دویدن روی سرک را کم می‌کند.",
+          "en": "Takes the impact out of road running."
+        }
+      },
+      {
+        "title": {
+          "fa": "رویه توری",
+          "en": "Mesh upper"
+        },
+        "body": {
+          "fa": "پا در تابستان خنک می‌ماند.",
+          "en": "The foot stays cooler in summer."
+        }
+      },
+      {
+        "title": {
+          "fa": "سبک",
+          "en": "Light"
+        },
+        "body": {
+          "fa": "کمتر از ۳۰۰ گرام در سایز ۴۲.",
+          "en": "Under 300 grams in size 42."
+        }
+      }
+    ]
+  },
+  "school-shoes-black": {
+    "brand": "Pamir",
+    "model": null,
+    "description": {
+      "fa": "کفش مکتب مشکی با رویه چرم مصنوعی و کف لاستیکی دوخته‌شده، ساخته‌شده برای یک سال کامل مکتب. بند چسبی دارد تا اطفال کوچک خودشان بپوشند. قیمت آن پایین نگه داشته شده چون هر سال باید عوض شود.",
+      "en": "A black school shoe with a synthetic leather upper and a stitched rubber sole, built to survive a full school year. The hook-and-loop strap means small children can put them on themselves. We keep the price low because these get replaced every year."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "پامیر",
+          "en": "Pamir"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم مصنوعی",
+          "en": "Synthetic leather"
+        }
+      },
+      {
+        "key": "sole",
+        "value": {
+          "fa": "لاستیک دوخته‌شده",
+          "en": "Stitched rubber"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۳۰ تا ۳۸",
+          "en": "30 to 38"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی",
+          "en": "Black"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "اطفال",
+          "en": "Children"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کف دوخته‌شده",
+          "en": "Stitched sole"
+        },
+        "body": {
+          "fa": "با چسب نیست، پس جدا نمی‌شود.",
+          "en": "Not glued, so it does not come apart."
+        }
+      },
+      {
+        "title": {
+          "fa": "بند چسبی",
+          "en": "Hook-and-loop strap"
+        },
+        "body": {
+          "fa": "اطفال خودشان می‌پوشند.",
+          "en": "Children manage them alone."
+        }
+      },
+      {
+        "title": {
+          "fa": "قیمت مکتب",
+          "en": "School price"
+        },
+        "body": {
+          "fa": "هر سال قابل تعویض، بدون فشار.",
+          "en": "Replaceable each year without pain."
+        }
+      }
+    ]
+  },
+  "womens-flat-sandals": {
+    "brand": "Pamir",
+    "model": null,
+    "description": {
+      "fa": "صندل تخت زنانه با کف نرم و بند قابل تنظیم، برای پوشیدن روزانه در گرما. کف آن ضد لغزش است و روی کاشی و سنگ خیس هم می‌گیرد. سبک است و در کیف جا می‌شود.",
+      "en": "Women's flat sandals with a soft footbed and an adjustable strap, for everyday wear in the heat. The sole grips on tile and wet stone. They are light and fold into a bag."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "پامیر",
+          "en": "Pamir"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم مصنوعی نرم",
+          "en": "Soft synthetic leather"
+        }
+      },
+      {
+        "key": "sole",
+        "value": {
+          "fa": "لاستیک ضد لغزش",
+          "en": "Non-slip rubber"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۳۶ تا ۴۱",
+          "en": "36 to 41"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، قهوه‌ای، کریمی",
+          "en": "Black, brown, cream"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "زنانه",
+          "en": "Women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بند قابل تنظیم",
+          "en": "Adjustable strap"
+        },
+        "body": {
+          "fa": "برای پای پهن و باریک هر دو.",
+          "en": "Fits a wide foot and a narrow one."
+        }
+      },
+      {
+        "title": {
+          "fa": "ضد لغزش",
+          "en": "Non-slip"
+        },
+        "body": {
+          "fa": "روی کاشی خیس هم می‌گیرد.",
+          "en": "Grips on wet tile."
+        }
+      },
+      {
+        "title": {
+          "fa": "سبک",
+          "en": "Light"
+        },
+        "body": {
+          "fa": "در کیف جا می‌شود.",
+          "en": "They fit in a bag."
+        }
+      }
+    ]
+  },
+  "winter-boots-lined": {
+    "brand": "Pamir",
+    "model": null,
+    "description": {
+      "fa": "بوت زمستانی با آستر خزدار و کف عاج‌دار، برای برف و یخبندان کابل. رویه ضد آب است و تا مچ را می‌پوشاند، پس برف داخل نمی‌شود. کف عمیق آن روی یخ و برف کوبیده‌شده می‌گیرد.",
+      "en": "A lined winter boot with a fur lining and a deep-lugged sole, for Kabul snow and ice. The upper is water resistant and covers the ankle, so snow stays out. The deep tread holds on ice and packed snow."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "پامیر",
+          "en": "Pamir"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم مصنوعی ضد آب با آستر خزدار",
+          "en": "Water-resistant synthetic, fur lined"
+        }
+      },
+      {
+        "key": "sole",
+        "value": {
+          "fa": "لاستیک عاج‌دار",
+          "en": "Deep-lugged rubber"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۳۹ تا ۴۵",
+          "en": "39 to 45"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، قهوه‌ای",
+          "en": "Black, brown"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Men and women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "خشک کردن دور از بخاری",
+          "en": "Dry away from a heater"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "آستر خزدار",
+          "en": "Fur lined"
+        },
+        "body": {
+          "fa": "برای زیر صفر ساخته شده.",
+          "en": "Made for below zero."
+        }
+      },
+      {
+        "title": {
+          "fa": "کف عاج‌دار",
+          "en": "Deep tread"
+        },
+        "body": {
+          "fa": "روی یخ و برف کوبیده می‌گیرد.",
+          "en": "Grip on ice and packed snow."
+        }
+      },
+      {
+        "title": {
+          "fa": "ضد آب",
+          "en": "Water resistant"
+        },
+        "body": {
+          "fa": "برف را رد نمی‌کند.",
+          "en": "Snow does not get through."
+        }
+      }
+    ]
+  },
+  "moulinex-blender": {
+    "brand": "Moulinex",
+    "model": "LM242",
+    "description": {
+      "fa": "بلندر مولینکس با موتور ۶۰۰ واتی و کاسه شیشه‌ای ۱.۵ لیتری. شیشه بر خلاف پلاستیک بو نمی‌گیرد و رنگ زردچوبه روی آن نمی‌ماند. تیغه استیل آن یخ را هم خرد می‌کند و دو سرعت به‌علاوه دکمه پالس دارد.",
+      "en": "A Moulinex blender with a 600-watt motor and a 1.5-litre glass jar. Glass, unlike plastic, does not hold smells or stain from turmeric. The steel blade crushes ice, and there are two speeds plus a pulse button."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "مولینکس",
+          "en": "Moulinex"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۱.۵ لیتر",
+          "en": "1.5 L"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۶۰۰ وات",
+          "en": "600 W"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "کاسه شیشه‌ای، تیغه استیل",
+          "en": "Glass jar, steel blade"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "بلندر، کاسه، درپوش اندازه‌گیری",
+          "en": "Blender, jar, measuring cap"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کاسه شیشه‌ای",
+          "en": "Glass jar"
+        },
+        "body": {
+          "fa": "بو نمی‌گیرد و لکه‌دار نمی‌شود.",
+          "en": "It does not hold smells or stain."
+        }
+      },
+      {
+        "title": {
+          "fa": "خردکن یخ",
+          "en": "Crushes ice"
+        },
+        "body": {
+          "fa": "تیغه استیل، دکمه پالس.",
+          "en": "A steel blade and a pulse button."
+        }
+      },
+      {
+        "title": {
+          "fa": "قابل شستشو",
+          "en": "Dishwasher safe"
+        },
+        "body": {
+          "fa": "کاسه و تیغه جدا می‌شوند.",
+          "en": "The jar and blade come apart."
+        }
+      }
+    ]
+  },
+  "pressure-cooker-7l": {
+    "brand": "Salam",
+    "model": null,
+    "description": {
+      "fa": "دیگ بخار ۷ لیتری آلومینیمی با سه سیستم ایمنی، اندازه‌ای که برای یک فامیل بزرگ کافی است. گوشت و لوبیا را در یک‌سوم وقت معمولی می‌پزد و گاز کمتری مصرف می‌کند. درپوش آن قفل ایمنی دارد و تا فشار داخل خالی نشود باز نمی‌شود.",
+      "en": "A 7-litre aluminium pressure cooker with three safety systems, sized for a large family. Meat and beans cook in a third of the usual time and use less gas. The lid locks and will not open until the pressure inside has dropped."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سلام",
+          "en": "Salam"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۷ لیتر",
+          "en": "7 L"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "گاز و برق",
+          "en": "Gas and electric hobs"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "آلومینیم ضخیم",
+          "en": "Heavy-gauge aluminium"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "دیگ، درپوش، واشر یدکی",
+          "en": "Cooker, lid, spare gasket"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "سه سیستم ایمنی",
+          "en": "Three safety systems"
+        },
+        "body": {
+          "fa": "قفل درپوش، سوپاپ و واشر اطمینان.",
+          "en": "Lid lock, release valve and safety gasket."
+        }
+      },
+      {
+        "title": {
+          "fa": "صرفه‌جویی در گاز",
+          "en": "Less gas"
+        },
+        "body": {
+          "fa": "یک‌سوم وقت پخت معمولی.",
+          "en": "A third of the usual cooking time."
+        }
+      },
+      {
+        "title": {
+          "fa": "واشر یدکی",
+          "en": "Spare gasket"
+        },
+        "body": {
+          "fa": "یک واشر اضافی در جعبه است.",
+          "en": "A spare comes in the box."
+        }
+      }
+    ]
+  },
+  "electric-kettle-1-7": {
+    "brand": "Salam",
+    "model": null,
+    "description": {
+      "fa": "کتری برقی ۱.۷ لیتری با بدنه استیل و خاموشی خودکار. آب را در حدود چهار دقیقه به جوش می‌آورد و بعد از جوش خودش خاموش می‌شود. برای دفتر، صنف و خانه‌ای که چای زیاد دم می‌کند مناسب است.",
+      "en": "A 1.7-litre electric kettle with a steel body and automatic shut-off. It boils in about four minutes and switches itself off. Suited to an office, a classroom, or a household that makes a lot of tea."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سلام",
+          "en": "Salam"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۱.۷ لیتر",
+          "en": "1.7 L"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "۲۰۰۰ وات",
+          "en": "2000 W"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "استیل ضد زنگ",
+          "en": "Stainless steel"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "کتری و پایه برقی",
+          "en": "Kettle and power base"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "خاموشی خودکار",
+          "en": "Automatic shut-off"
+        },
+        "body": {
+          "fa": "بعد از جوش خودش خاموش می‌شود.",
+          "en": "It switches off after the boil."
+        }
+      },
+      {
+        "title": {
+          "fa": "چهار دقیقه",
+          "en": "Four minutes"
+        },
+        "body": {
+          "fa": "۲۰۰۰ وات برای جوش سریع.",
+          "en": "2000 W for a fast boil."
+        }
+      },
+      {
+        "title": {
+          "fa": "محافظ خشک‌کاری",
+          "en": "Boil-dry protection"
+        },
+        "body": {
+          "fa": "بدون آب روشن نمی‌ماند.",
+          "en": "It will not run empty."
+        }
+      }
+    ]
+  },
+  "tea-set-porcelain-12": {
+    "brand": "Salam",
+    "model": null,
+    "description": {
+      "fa": "ست چای‌خوری چینی ۱۲ پارچه — شش پیاله و شش نلبکی، با لبه طلایی. چینی نازک است اما محکم، و در ماشین ظرف‌شویی هم می‌شود شست. برای مهمانی و برای هدیه عروسی مناسب است و در جعبه بسته‌بندی می‌شود.",
+      "en": "A 12-piece porcelain tea set — six cups and six saucers, with a gold rim. The porcelain is fine but sturdy, and it is dishwasher safe. Right for guests and as a wedding gift; it comes boxed."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سلام",
+          "en": "Salam"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۱۲ پارچه — ۶ پیاله، ۶ نلبکی",
+          "en": "12 pieces — 6 cups, 6 saucers"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چینی با لبه طلایی",
+          "en": "Porcelain with a gold rim"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "جعبه هدیه",
+          "en": "Gift box"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "قابل شستشو در ماشین ظرف‌شویی",
+          "en": "Dishwasher safe"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "لبه طلایی",
+          "en": "Gold rim"
+        },
+        "body": {
+          "fa": "کار دست، روی هر پارچه.",
+          "en": "Applied by hand on every piece."
+        }
+      },
+      {
+        "title": {
+          "fa": "قابل شستشو در ماشین",
+          "en": "Dishwasher safe"
+        },
+        "body": {
+          "fa": "چینی محکم، نه تزئینی صرف.",
+          "en": "Sturdy porcelain, not for display only."
+        }
+      },
+      {
+        "title": {
+          "fa": "جعبه هدیه",
+          "en": "Gift boxed"
+        },
+        "body": {
+          "fa": "آماده برای عروسی و مهمانی.",
+          "en": "Ready for a wedding or a gathering."
+        }
+      }
+    ]
+  },
+  "non-stick-pan-28": {
+    "brand": "Salam",
+    "model": null,
+    "description": {
+      "fa": "تابه ۲۸ سانتی‌متری با روکش نچسب دو لایه و کف ضخیم که حرارت را یکنواخت پخش می‌کند. با روغن کم هم غذا نمی‌چسبد و شستن آن ساده است. دسته آن ضد حرارت است و روی گاز و برق هر دو کار می‌کند.",
+      "en": "A 28 cm pan with a two-layer non-stick coating and a thick base that spreads heat evenly. Food will not stick even with little oil, and it washes easily. The handle stays cool and it works on gas and electric hobs."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سلام",
+          "en": "Salam"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "قطر ۲۸ سانتی‌متر",
+          "en": "28 cm diameter"
+        }
+      },
+      {
+        "key": "power",
+        "value": {
+          "fa": "گاز و برق",
+          "en": "Gas and electric"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "آلومینیم با روکش نچسب",
+          "en": "Aluminium, non-stick coated"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "تابه با دسته ضد حرارت",
+          "en": "Pan with a heat-resistant handle"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "نچسب دو لایه",
+          "en": "Two-layer non-stick"
+        },
+        "body": {
+          "fa": "با روغن کم هم نمی‌چسبد.",
+          "en": "Nothing sticks, even with little oil."
+        }
+      },
+      {
+        "title": {
+          "fa": "کف ضخیم",
+          "en": "Thick base"
+        },
+        "body": {
+          "fa": "حرارت یکنواخت، بدون سوختن نقطه‌ای.",
+          "en": "Even heat with no hot spots."
+        }
+      },
+      {
+        "title": {
+          "fa": "دسته ضد حرارت",
+          "en": "Cool handle"
+        },
+        "body": {
+          "fa": "بدون دستکش هم برداشته می‌شود.",
+          "en": "You can lift it without a cloth."
+        }
+      }
+    ]
+  },
+  "thermos-flask-2l": {
+    "brand": "Salam",
+    "model": null,
+    "description": {
+      "fa": "ترموس ۲ لیتری با جدار استیل دوجداره که چای را تا ۱۲ ساعت گرم نگه می‌دارد. برای سفر، دفتر و مهمانی‌های طولانی که چای باید همیشه آماده باشد. درپوش آن پمپی است، پس با یک دست هم می‌شود ریخت.",
+      "en": "A 2-litre flask with a double-walled steel body that keeps tea hot for up to 12 hours. For travel, the office, and long gatherings where tea has to stay ready. The pump top pours one-handed."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "سلام",
+          "en": "Salam"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "۲ لیتر",
+          "en": "2 L"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "استیل دوجداره",
+          "en": "Double-walled steel"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "ترموس با درپوش پمپی",
+          "en": "Flask with a pump top"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "۱۲ ماه گرانتی دکان",
+          "en": "12 months, shop warranty"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "۱۲ ساعت گرم",
+          "en": "Hot for 12 hours"
+        },
+        "body": {
+          "fa": "جدار دوجداره خلأ.",
+          "en": "A vacuum-insulated wall."
+        }
+      },
+      {
+        "title": {
+          "fa": "درپوش پمپی",
+          "en": "Pump top"
+        },
+        "body": {
+          "fa": "با یک دست ریخته می‌شود.",
+          "en": "Pours with one hand."
+        }
+      },
+      {
+        "title": {
+          "fa": "استیل ضد زنگ",
+          "en": "Stainless steel"
+        },
+        "body": {
+          "fa": "بو نمی‌گیرد و نمی‌شکند.",
+          "en": "It does not hold smells or shatter."
+        }
+      }
+    ]
+  },
+  "lego-classic-bricks": {
+    "brand": "Classic",
+    "model": null,
+    "description": {
+      "fa": "جعبه ۳۰۰ قطعه‌ای بلوک‌های ساختنی در رنگ‌های مختلف، با کتابچه چند طرح ساده. قطعات با برندهای معروف سازگارند، پس با بلوک‌های قبلی طفل ترکیب می‌شود. پلاستیک آن بدون BPA است و لبه‌های تیز ندارد.",
+      "en": "A 300-piece box of building bricks in assorted colours, with a booklet of a few simple builds. The pieces fit the well-known brands, so they mix with bricks a child already has. The plastic is BPA-free with no sharp edges."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کلاسیک",
+          "en": "Classic"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۴ سال به بالا",
+          "en": "4 years and up"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلاستیک ABS بدون BPA",
+          "en": "BPA-free ABS plastic"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "۳۰۰ قطعه و کتابچه طرح",
+          "en": "300 pieces and a build booklet"
+        }
+      },
+      {
+        "key": "safety",
+        "value": {
+          "fa": "بدون لبه تیز — نه برای زیر ۳ سال",
+          "en": "No sharp edges — not for under 3s"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "سازگار با برندهای معروف",
+          "en": "Fits the big brands"
+        },
+        "body": {
+          "fa": "با بلوک‌های قبلی ترکیب می‌شود.",
+          "en": "Mixes with bricks you already own."
+        }
+      },
+      {
+        "title": {
+          "fa": "۳۰۰ قطعه",
+          "en": "300 pieces"
+        },
+        "body": {
+          "fa": "برای چند طرح هم‌زمان کافی است.",
+          "en": "Enough for several builds at once."
+        }
+      },
+      {
+        "title": {
+          "fa": "جعبه نگهداری",
+          "en": "Storage box"
+        },
+        "body": {
+          "fa": "جعبه محکم برای جمع کردن.",
+          "en": "A sturdy box to put them away in."
+        }
+      }
+    ]
+  },
+  "remote-control-car": {
+    "brand": "Kudak",
+    "model": null,
+    "description": {
+      "fa": "موتر کنترلی با برد ۳۰ متر و باتری قابل شارژ، سرعت خوبی روی سنگفرش و قالین دارد. لاستیک‌های آن لاستیکی است نه پلاستیکی، پس روی سرامیک نمی‌لغزد. باتری و شارژر داخل جعبه است.",
+      "en": "A remote-control car with a 30-metre range and a rechargeable battery, quick enough on paving and on carpet. The tyres are rubber rather than plastic, so it does not slide on tiles. Battery and charger are in the box."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کودک",
+          "en": "Kudak"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۶ سال به بالا",
+          "en": "6 years and up"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلاستیک با لاستیک طبیعی",
+          "en": "Plastic with rubber tyres"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "موتر، کنترل، باتری، شارژر",
+          "en": "Car, controller, battery, charger"
+        }
+      },
+      {
+        "key": "safety",
+        "value": {
+          "fa": "مناسب بالای ۶ سال",
+          "en": "Suited to ages 6 and over"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "برد ۳۰ متر",
+          "en": "30-metre range"
+        },
+        "body": {
+          "fa": "در حویلی و پارک هم کار می‌کند.",
+          "en": "Works across a yard or a park."
+        }
+      },
+      {
+        "title": {
+          "fa": "باتری قابل شارژ",
+          "en": "Rechargeable"
+        },
+        "body": {
+          "fa": "شارژر در جعبه است.",
+          "en": "The charger is in the box."
+        }
+      },
+      {
+        "title": {
+          "fa": "لاستیک واقعی",
+          "en": "Rubber tyres"
+        },
+        "body": {
+          "fa": "روی سرامیک نمی‌لغزد.",
+          "en": "It grips on tiled floors."
+        }
+      }
+    ]
+  },
+  "wooden-puzzle-alphabet": {
+    "brand": "Kudak",
+    "model": null,
+    "description": {
+      "fa": "پزل چوبی الفبای دری با حروف رنگی و دستگیره‌های کوچک برای انگشتان کودک. چوب آن صیقلی و رنگ آن بدون سرب است، پس گاز گرفتن هم خطری ندارد. برای آماده‌کردن اطفال پیش از مکتب ساخته شده است.",
+      "en": "A wooden Dari alphabet puzzle with coloured letters and small pegs sized for a child's fingers. The wood is sanded smooth and the paint is lead-free, so chewing it does no harm. Made to get children ready before school."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کودک",
+          "en": "Kudak"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۳ تا ۶ سال",
+          "en": "3 to 6 years"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چوب صیقلی با رنگ بدون سرب",
+          "en": "Sanded wood, lead-free paint"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "تخته و ۳۲ حرف",
+          "en": "Board and 32 letters"
+        }
+      },
+      {
+        "key": "safety",
+        "value": {
+          "fa": "رنگ بدون سرب، بدون لبه تیز",
+          "en": "Lead-free paint, no sharp edges"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "الفبای دری",
+          "en": "The Dari alphabet"
+        },
+        "body": {
+          "fa": "۳۲ حرف با تصویر.",
+          "en": "All 32 letters, each with a picture."
+        }
+      },
+      {
+        "title": {
+          "fa": "دستگیره کوچک",
+          "en": "Peg handles"
+        },
+        "body": {
+          "fa": "برای انگشتان کوچک ساخته شده.",
+          "en": "Sized for small fingers."
+        }
+      },
+      {
+        "title": {
+          "fa": "رنگ بی‌خطر",
+          "en": "Safe paint"
+        },
+        "body": {
+          "fa": "بدون سرب، قابل شستشو.",
+          "en": "Lead-free and washable."
+        }
+      }
+    ]
+  },
+  "doll-with-clothes": {
+    "brand": "Kudak",
+    "model": null,
+    "description": {
+      "fa": "عروسک ۳۰ سانتی‌متری با سه دست لباس قابل تعویض و موهای قابل شانه کردن. بدنه آن نرم و قابل شستشو است و لباس‌ها دکمه و چسب دارند تا کودک خودش عوض کند. در جعبه با یک شانه کوچک عرضه می‌شود.",
+      "en": "A 30 cm doll with three changes of clothes and hair that can be brushed. The body is soft and washable, and the outfits fasten with buttons and hook-and-loop so a child can change them alone. It comes boxed with a small brush."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کودک",
+          "en": "Kudak"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۳ سال به بالا",
+          "en": "3 years and up"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پارچه نرم با موی مصنوعی",
+          "en": "Soft fabric with synthetic hair"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "عروسک، ۳ دست لباس، شانه",
+          "en": "Doll, 3 outfits, brush"
+        }
+      },
+      {
+        "key": "safety",
+        "value": {
+          "fa": "قابل شستشو، بدون قطعه کوچک",
+          "en": "Washable, no small parts"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "سه دست لباس",
+          "en": "Three outfits"
+        },
+        "body": {
+          "fa": "کودک خودش عوض می‌کند.",
+          "en": "A child can change them alone."
+        }
+      },
+      {
+        "title": {
+          "fa": "قابل شستشو",
+          "en": "Washable"
+        },
+        "body": {
+          "fa": "بدنه پارچه‌ای، شستنی.",
+          "en": "The fabric body washes clean."
+        }
+      },
+      {
+        "title": {
+          "fa": "موی قابل شانه",
+          "en": "Brushable hair"
+        },
+        "body": {
+          "fa": "با شانه‌ای که در جعبه است.",
+          "en": "With the brush in the box."
+        }
+      }
+    ]
+  },
+  "football-size-5": {
+    "brand": "Kudak",
+    "model": null,
+    "description": {
+      "fa": "توپ فوتبال سایز ۵ با رویه دوخته‌شده — نه چسبی — که روی زمین خاکی هم دوام می‌آورد. سایز ۵ اندازه رسمی بزرگسالان است و برای مکتب و زمین‌های محله مناسب است. پمپ کوچک همراه آن است.",
+      "en": "A size 5 football with a stitched cover — not glued — which survives a dirt pitch. Size 5 is the full adult size, right for school and neighbourhood grounds. A small pump comes with it."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کودک",
+          "en": "Kudak"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۱۰ سال به بالا",
+          "en": "10 years and up"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "PVC دوخته‌شده با مثانه لاستیکی",
+          "en": "Stitched PVC with a rubber bladder"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "توپ و پمپ کوچک",
+          "en": "Ball and a small pump"
+        }
+      },
+      {
+        "key": "safety",
+        "value": {
+          "fa": "بدون لبه تیز",
+          "en": "No sharp edges"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "رویه دوخته‌شده",
+          "en": "Stitched cover"
+        },
+        "body": {
+          "fa": "روی زمین خاکی باز نمی‌شود.",
+          "en": "It does not split on a dirt pitch."
+        }
+      },
+      {
+        "title": {
+          "fa": "سایز رسمی",
+          "en": "Full size"
+        },
+        "body": {
+          "fa": "سایز ۵، اندازه بزرگسالان.",
+          "en": "Size 5, the adult standard."
+        }
+      },
+      {
+        "title": {
+          "fa": "پمپ همراه",
+          "en": "Pump included"
+        },
+        "body": {
+          "fa": "بدون خرید جداگانه.",
+          "en": "No separate purchase needed."
+        }
+      }
+    ]
+  },
+  "notebook-a4-200": {
+    "brand": "Danesh",
+    "model": null,
+    "description": {
+      "fa": "کتابچه A4 با ۲۰۰ ورق کاغذ ۷۰ گرامی و صحافی فنری که صفحه را کامل باز نگه می‌دارد. کاغذ ۷۰ گرامی یعنی خودکار از پشت صفحه رد نمی‌شود. جلد آن مقوایی و محکم است و در کیف تا نمی‌شود.",
+      "en": "An A4 notebook with 200 sheets of 70 gsm paper and a spiral binding that lets it lie flat. At 70 gsm ink does not show through the page. The cover is stiff card and will not fold in a bag."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "دانش",
+          "en": "Danesh"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "A4 — ۲۱ × ۲۹.۷ سانتی‌متر",
+          "en": "A4 — 21 × 29.7 cm"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "کاغذ ۷۰ گرامی، جلد مقوایی",
+          "en": "70 gsm paper, card cover"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "۲۰۰ ورق، خط‌دار",
+          "en": "200 ruled sheets"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "متعلم و محصل",
+          "en": "School and university"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "کاغذ ۷۰ گرامی",
+          "en": "70 gsm paper"
+        },
+        "body": {
+          "fa": "خودکار از پشت رد نمی‌شود.",
+          "en": "Ink does not bleed through."
+        }
+      },
+      {
+        "title": {
+          "fa": "صحافی فنری",
+          "en": "Spiral bound"
+        },
+        "body": {
+          "fa": "صفحه کامل باز می‌ماند.",
+          "en": "It lies completely flat."
+        }
+      },
+      {
+        "title": {
+          "fa": "جلد محکم",
+          "en": "Stiff cover"
+        },
+        "body": {
+          "fa": "در کیف تا نمی‌شود.",
+          "en": "It will not bend in a bag."
+        }
+      }
+    ]
+  },
+  "pen-set-blue-10": {
+    "brand": "Danesh",
+    "model": null,
+    "description": {
+      "fa": "بسته ۱۰ عددی خودکار آبی با نوک ۰.۷ میلی‌متر و جوهر روان. برای صنف، دفتر و امتحان — یک بسته یک ترم کامل دوام می‌آورد. بدنه شفاف است، پس می‌بینید چقدر جوهر مانده.",
+      "en": "A pack of ten blue pens with a 0.7 mm tip and smooth ink. For the classroom, the office and exams — one pack covers a full term. The barrel is clear, so you can see how much ink is left."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "دانش",
+          "en": "Danesh"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "نوک ۰.۷ میلی‌متر",
+          "en": "0.7 mm tip"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "بدنه پلاستیک شفاف",
+          "en": "Clear plastic barrel"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "۱۰ خودکار آبی",
+          "en": "10 blue pens"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "متعلم و اداری",
+          "en": "School and office"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "جوهر روان",
+          "en": "Smooth ink"
+        },
+        "body": {
+          "fa": "روی کاغذ گیر نمی‌کند.",
+          "en": "It does not drag on the page."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدنه شفاف",
+          "en": "Clear barrel"
+        },
+        "body": {
+          "fa": "مقدار جوهر پیداست.",
+          "en": "You can see the ink level."
+        }
+      },
+      {
+        "title": {
+          "fa": "بسته ده‌تایی",
+          "en": "Pack of ten"
+        },
+        "body": {
+          "fa": "یک ترم کامل.",
+          "en": "A full term of writing."
+        }
+      }
+    ]
+  },
+  "backpack-school-navy": {
+    "brand": "Danesh",
+    "model": null,
+    "description": {
+      "fa": "بکس مکتب سرمه‌ای با سه جیب، جای کتابچه A4 و بند شانه لایه‌دار. پارچه آن ضد آب است، پس برف و باران به کتاب‌ها نمی‌رسد. برای متعلمان صنف چهار تا دوازده اندازه مناسبی دارد.",
+      "en": "A navy school backpack with three compartments, room for A4 notebooks and padded shoulder straps. The fabric is water resistant, so snow and rain do not reach the books. Sized for pupils from grade four to twelve."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "دانش",
+          "en": "Danesh"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۴۵ × ۳۰ × ۱۵ سانتی‌متر",
+          "en": "45 × 30 × 15 cm"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلی‌استر ضد آب",
+          "en": "Water-resistant polyester"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "سه جیب و جای بوتل آب",
+          "en": "Three compartments and a bottle pocket"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "صنف ۴ تا ۱۲",
+          "en": "Grades 4 to 12"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ضد آب",
+          "en": "Water resistant"
+        },
+        "body": {
+          "fa": "برف و باران به کتاب نمی‌رسد.",
+          "en": "Snow and rain stay off the books."
+        }
+      },
+      {
+        "title": {
+          "fa": "بند لایه‌دار",
+          "en": "Padded straps"
+        },
+        "body": {
+          "fa": "برای کتاب‌های سنگین.",
+          "en": "For a heavy load of books."
+        }
+      },
+      {
+        "title": {
+          "fa": "جای بوتل",
+          "en": "Bottle pocket"
+        },
+        "body": {
+          "fa": "در کنار، قابل دسترس.",
+          "en": "On the side, within reach."
+        }
+      }
+    ]
+  },
+  "colour-pencils-24": {
+    "brand": "Danesh",
+    "model": null,
+    "description": {
+      "fa": "بسته ۲۴ رنگ پنسل با مغز نرم که به‌راحتی نمی‌شکند و رنگ‌دهی یکدست دارد. چوب آن نرم است، پس با تراش معمولی هم خوب تراشیده می‌شود. در جعبه فلزی عرضه می‌شود که تا آخر سال دوام می‌آورد.",
+      "en": "A set of 24 colour pencils with soft cores that resist snapping and lay down colour evenly. The casing is soft wood, so an ordinary sharpener handles it. The metal tin lasts the school year."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "دانش",
+          "en": "Danesh"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۱۷.۵ سانتی‌متر",
+          "en": "17.5 cm"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چوب نرم با مغز رنگی",
+          "en": "Soft wood with pigment core"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "۲۴ پنسل رنگی در جعبه فلزی",
+          "en": "24 pencils in a metal tin"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "۵ سال به بالا",
+          "en": "5 years and up"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "مغز نرم",
+          "en": "Soft core"
+        },
+        "body": {
+          "fa": "به‌راحتی نمی‌شکند.",
+          "en": "It resists snapping."
+        }
+      },
+      {
+        "title": {
+          "fa": "جعبه فلزی",
+          "en": "Metal tin"
+        },
+        "body": {
+          "fa": "تا آخر سال دوام می‌آورد.",
+          "en": "It survives the school year."
+        }
+      },
+      {
+        "title": {
+          "fa": "۲۴ رنگ",
+          "en": "24 colours"
+        },
+        "body": {
+          "fa": "برای نقاشی صنفی کافی است.",
+          "en": "Enough for classroom art."
+        }
+      }
+    ]
+  },
+  "calculator-scientific": {
+    "brand": "Casio",
+    "model": "fx-991",
+    "description": {
+      "fa": "ماشین حساب علمی با ۲۴۰ تابع، مناسب صنف ریاضی، فزیک و کانکور. صفحه دو خطی دارد و فرمول واردشده را هم‌زمان با جواب نشان می‌دهد. با باتری و آفتاب هر دو کار می‌کند، پس در امتحان خاموش نمی‌شود.",
+      "en": "A scientific calculator with 240 functions, right for maths, physics and the kankor. The two-line display shows the expression alongside the answer. It runs on battery and solar together, so it does not die during an exam."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "کاسیو",
+          "en": "Casio"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۱۶ × ۸ سانتی‌متر",
+          "en": "16 × 8 cm"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلاستیک با قاب محافظ",
+          "en": "Plastic with a slide cover"
+        }
+      },
+      {
+        "key": "contents",
+        "value": {
+          "fa": "ماشین حساب و قاب",
+          "en": "Calculator and cover"
+        }
+      },
+      {
+        "key": "ageRange",
+        "value": {
+          "fa": "صنف ۱۰ به بالا",
+          "en": "Grade 10 and up"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "۲۴۰ تابع",
+          "en": "240 functions"
+        },
+        "body": {
+          "fa": "برای ریاضی، فزیک و کانکور.",
+          "en": "For maths, physics and the kankor."
+        }
+      },
+      {
+        "title": {
+          "fa": "صفحه دو خطی",
+          "en": "Two-line display"
+        },
+        "body": {
+          "fa": "فرمول و جواب با هم دیده می‌شوند.",
+          "en": "Expression and answer together."
+        }
+      },
+      {
+        "title": {
+          "fa": "باتری و آفتاب",
+          "en": "Battery and solar"
+        },
+        "body": {
+          "fa": "در امتحان خاموش نمی‌شود.",
+          "en": "It will not die mid-exam."
+        }
+      }
+    ]
+  },
+  "gold-ring-21k-simple": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "انگشتر طلای ۲۱ عیار با طرح ساده و پرداخت براق، وزن حدود ۴ گرام. طلای ۲۱ عیار همان عیاری است که در بازار کابل خرید و فروش می‌شود و ارزش خود را نگه می‌دارد. با فاکتور رسمی و مهر عیار تحویل می‌شود و سایز آن رایگان تنظیم می‌گردد.",
+      "en": "A 21-karat gold ring in a plain design with a polished finish, weighing about 4 grams. Twenty-one karat is the standard traded in the Kabul market and it holds its value. It comes with a receipt and a hallmark, and we size it free of charge."
+    },
+    "attributes": [
+      {
+        "key": "material",
+        "value": {
+          "fa": "طلای زرد",
+          "en": "Yellow gold"
+        }
+      },
+      {
+        "key": "purity",
+        "value": {
+          "fa": "۲۱ عیار",
+          "en": "21 karat"
+        }
+      },
+      {
+        "key": "weight",
+        "value": {
+          "fa": "حدود ۴ گرام",
+          "en": "About 4 g"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "ساخت هرات",
+          "en": "Made in Herat"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "فاکتور رسمی و مهر عیار",
+          "en": "Receipt and hallmark"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "۲۱ عیار",
+          "en": "21 karat"
+        },
+        "body": {
+          "fa": "عیار رایج بازار کابل.",
+          "en": "The standard traded in Kabul."
+        }
+      },
+      {
+        "title": {
+          "fa": "مهر و فاکتور",
+          "en": "Hallmarked"
+        },
+        "body": {
+          "fa": "با فاکتور رسمی تحویل می‌شود.",
+          "en": "Sold with a receipt."
+        }
+      },
+      {
+        "title": {
+          "fa": "تنظیم سایز رایگان",
+          "en": "Free sizing"
+        },
+        "body": {
+          "fa": "همین‌جا اندازه می‌شود.",
+          "en": "Sized at the counter."
+        }
+      }
+    ]
+  },
+  "silver-necklace-lapis": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "گردنبند نقره ۹۲۵ با سنگ لاجورد بدخشان، همان لاجوردی که هزار سال است از این خاک می‌آید. قاب نقره دست‌ساز است و هر سنگ رگه‌های خودش را دارد، پس دو قطعه کاملاً یکسان نیست. زنجیر ۴۵ سانتی‌متری و قفل محکم دارد.",
+      "en": "A 925 silver necklace set with Badakhshan lapis — the same lapis that has come out of this ground for a thousand years. The silver setting is handmade and every stone carries its own veining, so no two pieces are identical. The chain is 45 cm with a secure clasp."
+    },
+    "attributes": [
+      {
+        "key": "material",
+        "value": {
+          "fa": "نقره ۹۲۵",
+          "en": "925 silver"
+        }
+      },
+      {
+        "key": "purity",
+        "value": {
+          "fa": "۹۲۵",
+          "en": "Sterling 925"
+        }
+      },
+      {
+        "key": "stone",
+        "value": {
+          "fa": "لاجورد بدخشان",
+          "en": "Badakhshan lapis lazuli"
+        }
+      },
+      {
+        "key": "weight",
+        "value": {
+          "fa": "حدود ۱۲ گرام",
+          "en": "About 12 g"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "ساخت هرات",
+          "en": "Made in Herat"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "لاجورد بدخشان",
+          "en": "Badakhshan lapis"
+        },
+        "body": {
+          "fa": "سنگ محلی، نه شیشه رنگی.",
+          "en": "Local stone, not coloured glass."
+        }
+      },
+      {
+        "title": {
+          "fa": "قاب دست‌ساز",
+          "en": "Handmade setting"
+        },
+        "body": {
+          "fa": "هر قطعه کمی متفاوت است.",
+          "en": "Every piece is slightly different."
+        }
+      },
+      {
+        "title": {
+          "fa": "زنجیر ۴۵ سانتی",
+          "en": "45 cm chain"
+        },
+        "body": {
+          "fa": "با قفل محکم.",
+          "en": "With a secure clasp."
+        }
+      }
+    ]
+  },
+  "gold-earrings-pair": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "گوشواره طلای ۲۱ عیار، یک جفت با طرح حلقه‌ای و قفل پشتی محکم. وزن مجموع حدود ۳.۵ گرام است و برای استفاده روزمره سبک است. با فاکتور رسمی و مهر عیار تحویل می‌شود.",
+      "en": "A pair of 21-karat gold earrings in a hoop design with a secure backing. The pair weighs about 3.5 grams, light enough for daily wear. Sold with a receipt and a hallmark."
+    },
+    "attributes": [
+      {
+        "key": "material",
+        "value": {
+          "fa": "طلای زرد",
+          "en": "Yellow gold"
+        }
+      },
+      {
+        "key": "purity",
+        "value": {
+          "fa": "۲۱ عیار",
+          "en": "21 karat"
+        }
+      },
+      {
+        "key": "weight",
+        "value": {
+          "fa": "حدود ۳.۵ گرام برای یک جفت",
+          "en": "About 3.5 g the pair"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "ساخت هرات",
+          "en": "Made in Herat"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "فاکتور رسمی و مهر عیار",
+          "en": "Receipt and hallmark"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "قفل محکم",
+          "en": "Secure backing"
+        },
+        "body": {
+          "fa": "برای استفاده روزمره.",
+          "en": "Safe for everyday wear."
+        }
+      },
+      {
+        "title": {
+          "fa": "سبک",
+          "en": "Light"
+        },
+        "body": {
+          "fa": "۳.۵ گرام برای یک جفت.",
+          "en": "3.5 grams for the pair."
+        }
+      },
+      {
+        "title": {
+          "fa": "۲۱ عیار",
+          "en": "21 karat"
+        },
+        "body": {
+          "fa": "با مهر عیار.",
+          "en": "Hallmarked."
+        }
+      }
+    ]
+  },
+  "silver-bracelet-engraved": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "دستبند نقره ۹۲۵ با حکاکی دستی نقش اسلیمی دور تا دور. حکاکی با قلم انجام شده، نه با قالب، پس خطوط عمق دارند. قفل فنری محکم دارد و اندازه آن قابل تنظیم است.",
+      "en": "A 925 silver bracelet engraved by hand with an islimi pattern all the way round. The engraving is cut with a chisel rather than pressed from a mould, so the lines have depth. A spring clasp holds it, and the size can be adjusted."
+    },
+    "attributes": [
+      {
+        "key": "material",
+        "value": {
+          "fa": "نقره ۹۲۵",
+          "en": "925 silver"
+        }
+      },
+      {
+        "key": "purity",
+        "value": {
+          "fa": "۹۲۵",
+          "en": "Sterling 925"
+        }
+      },
+      {
+        "key": "weight",
+        "value": {
+          "fa": "حدود ۲۰ گرام",
+          "en": "About 20 g"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "ساخت هرات",
+          "en": "Made in Herat"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "تنظیم اندازه رایگان",
+          "en": "Free adjustment"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "حکاکی دستی",
+          "en": "Hand engraved"
+        },
+        "body": {
+          "fa": "با قلم، نه با قالب.",
+          "en": "Cut by hand, not pressed."
+        }
+      },
+      {
+        "title": {
+          "fa": "نقره ۹۲۵",
+          "en": "925 silver"
+        },
+        "body": {
+          "fa": "با مهر عیار.",
+          "en": "Hallmarked sterling."
+        }
+      },
+      {
+        "title": {
+          "fa": "اندازه قابل تنظیم",
+          "en": "Adjustable"
+        },
+        "body": {
+          "fa": "برای مچ باریک و پهن.",
+          "en": "For a narrow wrist or a wide one."
+        }
+      }
+    ]
+  },
+  "emerald-ring-silver": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "انگشتر نقره با سنگ زمرد پنجشیر، تراش‌خورده و نصب‌شده در همین هرات. زمرد پنجشیر رنگ سبز عمیقی دارد که در نور روز بهتر دیده می‌شود. با گواهی سنگ و فاکتور رسمی تحویل داده می‌شود.",
+      "en": "A silver ring set with a Panjshir emerald, cut and mounted here in Herat. Panjshir emerald carries a deep green that shows best in daylight. It comes with a stone certificate and a receipt."
+    },
+    "attributes": [
+      {
+        "key": "material",
+        "value": {
+          "fa": "نقره ۹۲۵",
+          "en": "925 silver"
+        }
+      },
+      {
+        "key": "purity",
+        "value": {
+          "fa": "۹۲۵",
+          "en": "Sterling 925"
+        }
+      },
+      {
+        "key": "stone",
+        "value": {
+          "fa": "زمرد پنجشیر",
+          "en": "Panjshir emerald"
+        }
+      },
+      {
+        "key": "weight",
+        "value": {
+          "fa": "حدود ۸ گرام",
+          "en": "About 8 g"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "ساخت هرات",
+          "en": "Made in Herat"
+        }
+      },
+      {
+        "key": "warranty",
+        "value": {
+          "fa": "گواهی سنگ",
+          "en": "Stone certificate"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "زمرد پنجشیر",
+          "en": "Panjshir emerald"
+        },
+        "body": {
+          "fa": "سنگ محلی با گواهی.",
+          "en": "Local stone, certified."
+        }
+      },
+      {
+        "title": {
+          "fa": "تراش دستی",
+          "en": "Hand cut"
+        },
+        "body": {
+          "fa": "تراش و نصب در هرات.",
+          "en": "Cut and mounted in Herat."
+        }
+      },
+      {
+        "title": {
+          "fa": "تنظیم سایز رایگان",
+          "en": "Free sizing"
+        },
+        "body": {
+          "fa": "همین‌جا اندازه می‌شود.",
+          "en": "Sized at the counter."
+        }
+      }
+    ]
+  },
+  "womens-handbag-leather": {
+    "brand": "Zarin",
+    "model": null,
+    "description": {
+      "fa": "کیف دستی زنانه از چرم مصنوعی درجه یک با آستر پارچه‌ای و سه جیب داخلی. بند شانه‌ای آن قابل جداشدن است، پس هم دستی و هم دوشی استفاده می‌شود. اندازه آن برای کتابچه A5، بوتل آب و لوازم روزمره کافی است.",
+      "en": "A women's handbag in good-quality synthetic leather with a fabric lining and three inner pockets. The shoulder strap detaches, so it works as a hand or shoulder bag. It fits an A5 notebook, a water bottle and the day's things."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "زرین",
+          "en": "Zarin"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم مصنوعی با آستر پارچه‌ای",
+          "en": "Synthetic leather, fabric lined"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۳۰ × ۲۲ × ۱۲ سانتی‌متر",
+          "en": "30 × 22 × 12 cm"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "حدود ۸ لیتر",
+          "en": "About 8 L"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، قهوه‌ای، شرابی",
+          "en": "Black, brown, wine"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بند جداشدنی",
+          "en": "Detachable strap"
+        },
+        "body": {
+          "fa": "دستی یا دوشی، هر دو.",
+          "en": "Carry it by hand or on the shoulder."
+        }
+      },
+      {
+        "title": {
+          "fa": "سه جیب داخلی",
+          "en": "Three inner pockets"
+        },
+        "body": {
+          "fa": "برای موبایل، کیف پول و کلید.",
+          "en": "For a phone, a purse and keys."
+        }
+      },
+      {
+        "title": {
+          "fa": "آستر پارچه‌ای",
+          "en": "Fabric lining"
+        },
+        "body": {
+          "fa": "دوخت تمیز، بدون درز باز.",
+          "en": "Clean seams, nothing left raw."
+        }
+      }
+    ]
+  },
+  "travel-suitcase-24": {
+    "brand": "Zarin",
+    "model": null,
+    "description": {
+      "fa": "چمدان ۲۴ اینچ با بدنه سخت ABS و چهار چرخ ۳۶۰ درجه که در فرودگاه به‌راحتی می‌چرخد. قفل رمزی سه‌رقمی دارد و بدنه سخت وسایل شکستنی را در بار هوایی محافظت می‌کند. اندازه آن برای سفر یک تا دو هفته مناسب است.",
+      "en": "A 24-inch suitcase with a hard ABS shell and four spinner wheels that turn easily in an airport. It has a three-digit combination lock, and the hard shell protects fragile things in the hold. Sized for a one to two week trip."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "زرین",
+          "en": "Zarin"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "بدنه سخت ABS",
+          "en": "Hard ABS shell"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۲۴ اینچ — ۶۵ × ۴۴ × ۲۶ سانتی‌متر",
+          "en": "24\" — 65 × 44 × 26 cm"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "حدود ۶۵ لیتر",
+          "en": "About 65 L"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سرمه‌ای، نقره‌ای، مشکی",
+          "en": "Navy, silver, black"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "چهار چرخ ۳۶۰ درجه",
+          "en": "Four spinner wheels"
+        },
+        "body": {
+          "fa": "در فرودگاه با یک دست می‌چرخد.",
+          "en": "It turns one-handed in an airport."
+        }
+      },
+      {
+        "title": {
+          "fa": "قفل رمزی",
+          "en": "Combination lock"
+        },
+        "body": {
+          "fa": "سه رقمی، قابل تنظیم.",
+          "en": "Three digits, resettable."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدنه سخت",
+          "en": "Hard shell"
+        },
+        "body": {
+          "fa": "برای بار هوایی.",
+          "en": "Made for the hold."
+        }
+      }
+    ]
+  },
+  "laptop-bag-15": {
+    "brand": "Zarin",
+    "model": null,
+    "description": {
+      "fa": "کیف لپ‌تاپ ۱۵ اینچ با لایه ضربه‌گیر و جیب جداگانه برای شارژر و کاغذ. پارچه بیرونی ضد آب است و درز‌های آن دوخت دوبل دارد. بند شانه لایه‌دار دارد و دسته آن برای حمل کوتاه هم راحت است.",
+      "en": "A 15-inch laptop bag with a padded sleeve and a separate compartment for the charger and papers. The outer fabric is water resistant and the seams are double stitched. A padded shoulder strap plus a grab handle for short carries."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "زرین",
+          "en": "Zarin"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلی‌استر ضد آب با لایه ضربه‌گیر",
+          "en": "Water-resistant polyester, padded"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۴۰ × ۳۰ × ۸ سانتی‌متر",
+          "en": "40 × 30 × 8 cm"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "لپ‌تاپ تا ۱۵.۶ اینچ",
+          "en": "Laptops up to 15.6\""
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، خاکستری",
+          "en": "Black, grey"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "لایه ضربه‌گیر",
+          "en": "Padded sleeve"
+        },
+        "body": {
+          "fa": "لپ‌تاپ در برابر ضربه محافظت می‌شود.",
+          "en": "It protects the laptop from knocks."
+        }
+      },
+      {
+        "title": {
+          "fa": "جیب شارژر",
+          "en": "Charger pocket"
+        },
+        "body": {
+          "fa": "جدا از لپ‌تاپ، بدون خط انداختن.",
+          "en": "Separate, so nothing scratches."
+        }
+      },
+      {
+        "title": {
+          "fa": "دوخت دوبل",
+          "en": "Double stitched"
+        },
+        "body": {
+          "fa": "درز‌ها زیر بار باز نمی‌شوند.",
+          "en": "Seams hold under load."
+        }
+      }
+    ]
+  },
+  "crossbody-small-bag": {
+    "brand": "Zarin",
+    "model": null,
+    "description": {
+      "fa": "کیف دوشی کوچک برای موبایل، کیف پول و کلید — همان مقداری که برای بیرون رفتن لازم است. بند بلند و قابل تنظیم دارد و روی سینه یا پهلو بسته می‌شود. زیپ اصلی آن دو طرفه است و جیب پشتی پنهان دارد.",
+      "en": "A small crossbody bag for a phone, a purse and keys — the amount you actually need to leave the house. The long strap adjusts and sits across the chest or at the hip. The main zip runs both ways and there is a hidden back pocket."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "زرین",
+          "en": "Zarin"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چرم مصنوعی",
+          "en": "Synthetic leather"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۱۹ × ۱۴ × ۶ سانتی‌متر",
+          "en": "19 × 14 × 6 cm"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "حدود ۱.۵ لیتر",
+          "en": "About 1.5 L"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، کریمی، سرخ",
+          "en": "Black, cream, red"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "جیب پنهان",
+          "en": "Hidden pocket"
+        },
+        "body": {
+          "fa": "پشت کیف، برای پول.",
+          "en": "At the back, for cash."
+        }
+      },
+      {
+        "title": {
+          "fa": "بند قابل تنظیم",
+          "en": "Adjustable strap"
+        },
+        "body": {
+          "fa": "روی سینه یا پهلو.",
+          "en": "Across the chest or at the hip."
+        }
+      },
+      {
+        "title": {
+          "fa": "سبک",
+          "en": "Light"
+        },
+        "body": {
+          "fa": "برای بیرون رفتن کوتاه.",
+          "en": "For a short trip out."
+        }
+      }
+    ]
+  },
+  "duffel-gym-bag": {
+    "brand": "Zarin",
+    "model": null,
+    "description": {
+      "fa": "بکس ورزشی با جیب جداگانه برای بوت و جیب توری برای لباس نمدار. پارچه آن ضد آب است و کف آن تقویت شده تا روی زمین جیم خراب نشود. بند دوشی و دو دسته دارد و برای سفر کوتاه هم استفاده می‌شود.",
+      "en": "A gym duffel with a separate shoe compartment and a mesh pocket for wet kit. The fabric is water resistant and the base is reinforced against a gym floor. It has a shoulder strap and two handles, and doubles as a weekend bag."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "زرین",
+          "en": "Zarin"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "پلی‌استر ضد آب",
+          "en": "Water-resistant polyester"
+        }
+      },
+      {
+        "key": "size",
+        "value": {
+          "fa": "۵۰ × ۲۸ × ۲۸ سانتی‌متر",
+          "en": "50 × 28 × 28 cm"
+        }
+      },
+      {
+        "key": "capacity",
+        "value": {
+          "fa": "حدود ۳۵ لیتر",
+          "en": "About 35 L"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی، سرمه‌ای",
+          "en": "Black, navy"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی دستی",
+          "en": "Hand wash"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "جیب بوت",
+          "en": "Shoe compartment"
+        },
+        "body": {
+          "fa": "جدا از لباس تمیز.",
+          "en": "Kept away from clean kit."
+        }
+      },
+      {
+        "title": {
+          "fa": "جیب توری",
+          "en": "Mesh pocket"
+        },
+        "body": {
+          "fa": "برای لباس نمدار بعد از تمرین.",
+          "en": "For wet kit after training."
+        }
+      },
+      {
+        "title": {
+          "fa": "کف تقویت‌شده",
+          "en": "Reinforced base"
+        },
+        "body": {
+          "fa": "روی زمین جیم خراب نمی‌شود.",
+          "en": "It survives a gym floor."
+        }
+      }
+    ]
+  },
+  "tracksuit-mens-navy": {
+    "brand": "Alborz",
+    "model": null,
+    "description": {
+      "fa": "دریس ورزشی مردانه دو تکه از پارچه پنبه‌پلی‌استر، برای تمرین و پوشیدن روزمره. کش کمر و بند تنظیم دارد و جیب‌های زیپ‌دار برای موبایل و کلید. بعد از شستن جمع نمی‌شود و رنگ نمی‌دهد.",
+      "en": "A men's two-piece tracksuit in a cotton-polyester blend, for training and for everyday wear. The waist has elastic and a drawcord, and the pockets zip for a phone and keys. It does not shrink or bleed in the wash."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "البرز",
+          "en": "Alborz"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۶۰٪ نخ، ۴۰٪ پلی‌استر",
+          "en": "60% cotton, 40% polyester"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "M، L، XL، XXL",
+          "en": "M, L, XL, XXL"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سرمه‌ای، مشکی، خاکستری",
+          "en": "Navy, black, grey"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه",
+          "en": "Men"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی ماشینی با آب سرد",
+          "en": "Machine wash cold"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "جیب زیپ‌دار",
+          "en": "Zip pockets"
+        },
+        "body": {
+          "fa": "موبایل هنگام دویدن نمی‌افتد.",
+          "en": "A phone stays put while running."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون آبرفت",
+          "en": "No shrinkage"
+        },
+        "body": {
+          "fa": "بعد از شستن اندازه می‌ماند.",
+          "en": "It keeps its size in the wash."
+        }
+      },
+      {
+        "title": {
+          "fa": "دو تکه",
+          "en": "Two pieces"
+        },
+        "body": {
+          "fa": "بالا و پایین، با هم.",
+          "en": "Top and bottom together."
+        }
+      }
+    ]
+  },
+  "cricket-bat-kashmir": {
+    "brand": "Alborz",
+    "model": null,
+    "description": {
+      "fa": "بت کرکت از چوب بید کشمیر با دسته چوب‌پنبه‌ای و روکش لاستیکی. وزن آن حدود ۱.۲ کیلوگرام است — تعادل خوبی برای بازیکن نوجوان و بزرگسال. پیش از بازی جدی، چند ساعت روغن‌کاری و نرم‌کردن لبه لازم دارد.",
+      "en": "A cricket bat in Kashmir willow with a cane handle and a rubber grip. It weighs about 1.2 kg, a balance that suits a teenager and an adult alike. Before serious play it needs a few hours of oiling and knocking in."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "البرز",
+          "en": "Alborz"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "چوب بید کشمیر",
+          "en": "Kashmir willow"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "سایز کامل — ۸۵ سانتی‌متر",
+          "en": "Full size — 85 cm"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "چوب طبیعی",
+          "en": "Natural wood"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "نوجوان و بزرگسال",
+          "en": "Teenagers and adults"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "روغن‌کاری پیش از فصل",
+          "en": "Oil before the season"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بید کشمیر",
+          "en": "Kashmir willow"
+        },
+        "body": {
+          "fa": "سبک‌تر از بید انگلیسی، ارزان‌تر هم.",
+          "en": "Lighter than English willow, and cheaper."
+        }
+      },
+      {
+        "title": {
+          "fa": "دسته چوب‌پنبه",
+          "en": "Cane handle"
+        },
+        "body": {
+          "fa": "ضربه را کمتر به دست منتقل می‌کند.",
+          "en": "It takes the shock out of a shot."
+        }
+      },
+      {
+        "title": {
+          "fa": "روکش لاستیکی",
+          "en": "Rubber grip"
+        },
+        "body": {
+          "fa": "در دست عرق‌کرده هم نمی‌لغزد.",
+          "en": "It holds in a sweaty hand."
+        }
+      }
+    ]
+  },
+  "football-jersey-team": {
+    "brand": "Alborz",
+    "model": null,
+    "description": {
+      "fa": "جرسی فوتبال از پارچه مش تنفسی که عرق را زود خشک می‌کند. برای تیم‌های محلی مناسب است و چاپ نام و شماره در همین دکان انجام می‌شود. سبک است و بعد از شستن سریع خشک می‌شود.",
+      "en": "A football jersey in breathable mesh that dries sweat quickly. It suits local teams, and we print names and numbers here in the shop. It is light and dries fast after a wash."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "البرز",
+          "en": "Alborz"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "۱۰۰٪ پلی‌استر مش",
+          "en": "100% polyester mesh"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "S، M، L، XL",
+          "en": "S, M, L, XL"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "سرخ، آبی، سبز",
+          "en": "Red, blue, green"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و نوجوان",
+          "en": "Men and teenagers"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "شستشوی ماشینی با آب سرد",
+          "en": "Machine wash cold"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "پارچه تنفسی",
+          "en": "Breathable mesh"
+        },
+        "body": {
+          "fa": "عرق را زود خشک می‌کند.",
+          "en": "It dries sweat fast."
+        }
+      },
+      {
+        "title": {
+          "fa": "چاپ نام و شماره",
+          "en": "Name and number printing"
+        },
+        "body": {
+          "fa": "در همین دکان انجام می‌شود.",
+          "en": "Done here at the counter."
+        }
+      },
+      {
+        "title": {
+          "fa": "خشک‌شدن سریع",
+          "en": "Quick drying"
+        },
+        "body": {
+          "fa": "بعد از شستن، همان روز آماده.",
+          "en": "Ready the same day after a wash."
+        }
+      }
+    ]
+  },
+  "dumbbell-set-10kg": {
+    "brand": "Alborz",
+    "model": null,
+    "description": {
+      "fa": "ست دمبل ۱۰ کیلوگرامی با وزنه‌های قابل تعویض و روکش پلاستیکی. روکش از خط افتادن فرش و کاشی جلوگیری می‌کند و صدای برخورد را کم می‌کند. برای تمرین خانگی و مبتدی مناسب است و در جعبه با پیچ‌های محکم عرضه می‌شود.",
+      "en": "A 10 kg dumbbell set with removable plates and a plastic coating. The coating protects carpet and tile and keeps the noise down. Right for home training and for beginners; it comes boxed with secure collars."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "البرز",
+          "en": "Alborz"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "سمنت با روکش پلاستیکی",
+          "en": "Cement core, plastic coated"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "مجموع ۱۰ کیلوگرام",
+          "en": "10 kg total"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "مشکی",
+          "en": "Black"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Men and women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "خشک نگه داشتن",
+          "en": "Keep dry"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "وزنه قابل تعویض",
+          "en": "Removable plates"
+        },
+        "body": {
+          "fa": "از ۲ تا ۱۰ کیلو قابل تنظیم.",
+          "en": "Adjustable from 2 to 10 kg."
+        }
+      },
+      {
+        "title": {
+          "fa": "روکش پلاستیکی",
+          "en": "Plastic coating"
+        },
+        "body": {
+          "fa": "فرش و کاشی خط نمی‌افتد.",
+          "en": "It will not mark carpet or tile."
+        }
+      },
+      {
+        "title": {
+          "fa": "مناسب خانه",
+          "en": "Home friendly"
+        },
+        "body": {
+          "fa": "صدای برخورد کم.",
+          "en": "Quiet when it lands."
+        }
+      }
+    ]
+  },
+  "yoga-mat-6mm": {
+    "brand": "Alborz",
+    "model": null,
+    "description": {
+      "fa": "تشک یوگا ۶ میلی‌متری با سطح ضد لغزش در هر دو رو. ضخامت ۶ میلی‌متر برای زانو روی کاشی سرد کافی است. با بند حمل عرضه می‌شود و جمع‌شده در کمد جا می‌گیرد.",
+      "en": "A 6 mm yoga mat with a non-slip surface on both faces. Six millimetres is enough padding for knees on a cold tile floor. It comes with a carry strap and rolls small enough for a cupboard."
+    },
+    "attributes": [
+      {
+        "key": "brand",
+        "value": {
+          "fa": "البرز",
+          "en": "Alborz"
+        }
+      },
+      {
+        "key": "material",
+        "value": {
+          "fa": "فوم NBR بدون بو",
+          "en": "Odour-free NBR foam"
+        }
+      },
+      {
+        "key": "sizes",
+        "value": {
+          "fa": "۱۸۳ × ۶۱ سانتی‌متر، ۶ میلی‌متر",
+          "en": "183 × 61 cm, 6 mm"
+        }
+      },
+      {
+        "key": "colour",
+        "value": {
+          "fa": "بنفش، آبی، خاکستری",
+          "en": "Purple, blue, grey"
+        }
+      },
+      {
+        "key": "gender",
+        "value": {
+          "fa": "مردانه و زنانه",
+          "en": "Men and women"
+        }
+      },
+      {
+        "key": "care",
+        "value": {
+          "fa": "پاک کردن با تکه نمدار",
+          "en": "Wipe with a damp cloth"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "ضد لغزش دو رو",
+          "en": "Non-slip both sides"
+        },
+        "body": {
+          "fa": "روی کاشی و قالین.",
+          "en": "On tile and on carpet."
+        }
+      },
+      {
+        "title": {
+          "fa": "۶ میلی‌متر",
+          "en": "6 mm thick"
+        },
+        "body": {
+          "fa": "برای زانو روی زمین سرد.",
+          "en": "Enough for knees on a cold floor."
+        }
+      },
+      {
+        "title": {
+          "fa": "بند حمل",
+          "en": "Carry strap"
+        },
+        "body": {
+          "fa": "جمع‌شده قابل حمل است.",
+          "en": "Rolls up and carries easily."
+        }
+      }
+    ]
+  },
+  "pistachio-roasted-1kg": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "پسته بریان‌شده و نمک‌زده یک کیلویی، از باغ‌های سمنگان. هر روز صبح بریان می‌شود، پس آنچه می‌خرید تازه است نه انبارشده. در بسته زیپ‌دار عرضه می‌شود تا بعد از باز کردن هم تازه بماند.",
+      "en": "A kilo of roasted, salted pistachios from the Samangan orchards. They are roasted each morning, so what you buy is fresh rather than stored. Sold in a resealable bag so they stay crisp after opening."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱ کیلوگرام",
+          "en": "1 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "سمنگان",
+          "en": "Samangan"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "پسته، نمک",
+          "en": "Pistachios, salt"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۶ ماه",
+          "en": "6 months"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "جای خشک و خنک",
+          "en": "Cool and dry"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بریان روزانه",
+          "en": "Roasted daily"
+        },
+        "body": {
+          "fa": "هر صبح تازه بریان می‌شود.",
+          "en": "Roasted fresh every morning."
+        }
+      },
+      {
+        "title": {
+          "fa": "پسته سمنگان",
+          "en": "Samangan pistachios"
+        },
+        "body": {
+          "fa": "از باغ‌های خود کشور.",
+          "en": "From orchards in the country."
+        }
+      },
+      {
+        "title": {
+          "fa": "بسته زیپ‌دار",
+          "en": "Resealable bag"
+        },
+        "body": {
+          "fa": "بعد از باز کردن هم تازه می‌ماند.",
+          "en": "It stays crisp after opening."
+        }
+      }
+    ]
+  },
+  "almond-qahqaha-1kg": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "بادام قهقهه یک کیلویی، همان بادام کاغذی که پوستش با دست شکسته می‌شود. مغز آن شیرین و پرچرب است و برای مهمانی و نوروز مناسب. امسال از باغ‌های اورزگان و در بسته زیپ‌دار.",
+      "en": "A kilo of qahqaha almonds — the paper-shell almond you can crack with your fingers. The kernel is sweet and rich, right for guests and for Nowruz. This year's crop from Uruzgan, in a resealable bag."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱ کیلوگرام",
+          "en": "1 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "اورزگان",
+          "en": "Uruzgan"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "بادام با پوست",
+          "en": "Almonds, in shell"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۱۲ ماه",
+          "en": "12 months"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "جای خشک و خنک",
+          "en": "Cool and dry"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "پوست کاغذی",
+          "en": "Paper shell"
+        },
+        "body": {
+          "fa": "با دست شکسته می‌شود.",
+          "en": "It cracks with your fingers."
+        }
+      },
+      {
+        "title": {
+          "fa": "محصول امسال",
+          "en": "This year's crop"
+        },
+        "body": {
+          "fa": "نه انبار سال گذشته.",
+          "en": "Not last season's store."
+        }
+      },
+      {
+        "title": {
+          "fa": "مناسب نوروز",
+          "en": "For Nowruz"
+        },
+        "body": {
+          "fa": "برای میز مهمانی.",
+          "en": "For the guest table."
+        }
+      }
+    ]
+  },
+  "raisin-green-1kg": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "کشمش سبز یک کیلویی از تاکستان‌های شمالی، بدون هسته و بدون شکر افزوده. در سایه خشک شده، به همین دلیل رنگ سبزش را نگه داشته است. برای چای، شیرینی‌پزی و صبحانه.",
+      "en": "A kilo of green raisins from the northern vineyards, seedless and with no added sugar. They are shade-dried, which is why they keep their green colour. For tea, for baking and for breakfast."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱ کیلوگرام",
+          "en": "1 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "شمالی",
+          "en": "Shomali plain"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "انگور خشک‌شده",
+          "en": "Dried grapes"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۱۲ ماه",
+          "en": "12 months"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "جای خشک و خنک",
+          "en": "Cool and dry"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "خشک‌شده در سایه",
+          "en": "Shade dried"
+        },
+        "body": {
+          "fa": "رنگ سبز طبیعی را نگه می‌دارد.",
+          "en": "It keeps the natural green."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون شکر",
+          "en": "No added sugar"
+        },
+        "body": {
+          "fa": "شیرینی طبیعی انگور.",
+          "en": "Only the sweetness of the grape."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون هسته",
+          "en": "Seedless"
+        },
+        "body": {
+          "fa": "برای شیرینی‌پزی آماده.",
+          "en": "Ready for baking."
+        }
+      }
+    ]
+  },
+  "walnut-shelled-1kg": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "چهارمغز پوست‌کنده یک کیلویی از باغ‌های پروان، مغزهای درشت و کامل. پوست‌کندن با دست انجام شده، پس مغزها شکسته و خرد نیستند. در جای خنک نگه دارید تا روغن آن تلخ نشود.",
+      "en": "A kilo of shelled walnuts from the Parwan orchards, large and mostly whole. They are shelled by hand, so the halves are not crushed. Keep them cool so the oil does not turn."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱ کیلوگرام",
+          "en": "1 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "پروان",
+          "en": "Parwan"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "مغز چهارمغز",
+          "en": "Walnut kernels"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۶ ماه",
+          "en": "6 months"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "یخچال یا جای خنک",
+          "en": "Refrigerate or keep cool"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "پوست‌کندن دستی",
+          "en": "Hand shelled"
+        },
+        "body": {
+          "fa": "مغزها کامل و نشکسته.",
+          "en": "The halves stay whole."
+        }
+      },
+      {
+        "title": {
+          "fa": "باغ‌های پروان",
+          "en": "Parwan orchards"
+        },
+        "body": {
+          "fa": "محصول محلی همین فصل.",
+          "en": "Local, this season."
+        }
+      },
+      {
+        "title": {
+          "fa": "مغز درشت",
+          "en": "Large kernels"
+        },
+        "body": {
+          "fa": "برای شیرینی و آش.",
+          "en": "For sweets and for aash."
+        }
+      }
+    ]
+  },
+  "sweets-gift-box": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "جعبه شیرینی مخلوط با نقل، شکرپاره، نان خطایی و کلچه بادامی. برای عید، مهمانی و خواستگاری آماده می‌شود و بسته‌بندی آن هدیه‌ای است. شیرینی‌ها هفته‌ای دو بار تازه پخته می‌شوند.",
+      "en": "A mixed sweets box with noql, shakarpara, nan-e khatai and almond kulcha. Assembled for Eid, for guests and for an engagement visit, and the box is made to be given. The sweets are baked fresh twice a week."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱.۲ کیلوگرام",
+          "en": "1.2 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "پخت کابل",
+          "en": "Baked in Kabul"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "آرد، شکر، بادام، روغن، هیل",
+          "en": "Flour, sugar, almond, oil, cardamom"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۳ هفته",
+          "en": "3 weeks"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "جای خشک، دور از آفتاب",
+          "en": "Dry, out of the sun"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "چهار نوع شیرینی",
+          "en": "Four kinds"
+        },
+        "body": {
+          "fa": "نقل، شکرپاره، نان خطایی، کلچه بادامی.",
+          "en": "Noql, shakarpara, nan-e khatai and almond kulcha."
+        }
+      },
+      {
+        "title": {
+          "fa": "پخت هفتگی",
+          "en": "Baked weekly"
+        },
+        "body": {
+          "fa": "هفته‌ای دو بار تازه.",
+          "en": "Fresh twice a week."
+        }
+      },
+      {
+        "title": {
+          "fa": "بسته‌بندی هدیه",
+          "en": "Gift packed"
+        },
+        "body": {
+          "fa": "آماده برای عید و مهمانی.",
+          "en": "Ready for Eid and for guests."
+        }
+      }
+    ]
+  },
+  "dried-apricot-1kg": {
+    "brand": null,
+    "model": null,
+    "description": {
+      "fa": "زردآلوی خشک یک کیلویی از باغ‌های وردک، بدون گوگرد و بدون رنگ افزوده. چون گوگرد نخورده، رنگش تیره‌تر از نمونه‌های وارداتی است — و طعمش شیرین‌تر. برای کمپوت، آش و خوردن مستقیم.",
+      "en": "A kilo of dried apricots from the Wardak orchards, unsulphured and with no added colour. Because they are not sulphured they look darker than imported fruit — and taste sweeter. For compote, for aash and for eating as they are."
+    },
+    "attributes": [
+      {
+        "key": "weight",
+        "value": {
+          "fa": "۱ کیلوگرام",
+          "en": "1 kg"
+        }
+      },
+      {
+        "key": "origin",
+        "value": {
+          "fa": "وردک",
+          "en": "Wardak"
+        }
+      },
+      {
+        "key": "ingredients",
+        "value": {
+          "fa": "زردآلوی خشک‌شده",
+          "en": "Dried apricots"
+        }
+      },
+      {
+        "key": "shelfLife",
+        "value": {
+          "fa": "۹ ماه",
+          "en": "9 months"
+        }
+      },
+      {
+        "key": "storage",
+        "value": {
+          "fa": "جای خشک و خنک",
+          "en": "Cool and dry"
+        }
+      }
+    ],
+    "features": [
+      {
+        "title": {
+          "fa": "بدون گوگرد",
+          "en": "Unsulphured"
+        },
+        "body": {
+          "fa": "رنگ تیره‌تر، طعم شیرین‌تر.",
+          "en": "Darker in colour, sweeter in taste."
+        }
+      },
+      {
+        "title": {
+          "fa": "باغ‌های وردک",
+          "en": "Wardak orchards"
+        },
+        "body": {
+          "fa": "محصول محلی.",
+          "en": "A local crop."
+        }
+      },
+      {
+        "title": {
+          "fa": "بدون رنگ افزوده",
+          "en": "No added colour"
+        },
+        "body": {
+          "fa": "همان رنگ طبیعی میوه.",
+          "en": "The fruit's own colour."
+        }
+      }
+    ]
+  }
+}

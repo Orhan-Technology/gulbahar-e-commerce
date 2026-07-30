@@ -28,8 +28,20 @@ import {
   uploadProductImages,
 } from '@/lib/actions/shop-products';
 import { useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
+import {
+  FeatureEditor,
+  SpecEditor,
+  type FeatureValue,
+  type SpecRowValue,
+} from '@/components/dashboard/products/spec-editor';
 
-export type ProductFormCategory = { id: string; label: string; parentLabel: string | null };
+export type ProductFormCategory = {
+  id: string;
+  /** The slug picks the spec template — see lib/product-templates.ts. */
+  slug: string;
+  label: string;
+  parentLabel: string | null;
+};
 
 export type ProductFormImage = { id: string; path: string };
 
@@ -47,6 +59,10 @@ export type ProductFormValues = {
   stock: string;
   status: 'draft' | 'published' | 'unpublished';
   variants: Array<{ nameFa: string; nameEn: string; options: Array<{ fa: string; en: string }> }>;
+  brand: string;
+  model: string;
+  specs: SpecRowValue[];
+  features: FeatureValue[];
 };
 
 /**
@@ -101,6 +117,22 @@ export function ProductForm({
         discountPrice: discountNumber || null,
         stock: Number(values.stock.replace(/\D/g, '')) || 0,
         status: nextStatus,
+        brand: values.brand.trim() || null,
+        model: values.model.trim() || null,
+        attributes: values.specs
+          .filter((row) => row.key.trim() && row.labelFa.trim())
+          .map((row) => ({
+            key: row.key.trim(),
+            label: { fa: row.labelFa, en: row.labelEn || null },
+            value: { fa: row.valueFa, en: row.valueEn || null },
+            group: row.group ?? null,
+          })),
+        features: values.features
+          .filter((feature) => feature.titleFa.trim() && feature.bodyFa.trim())
+          .map((feature) => ({
+            title: { fa: feature.titleFa, en: feature.titleEn || null },
+            body: { fa: feature.bodyFa, en: feature.bodyEn || null },
+          })),
         variants: values.variants
           .filter((variant) => variant.nameFa.trim() && variant.options.some((o) => o.fa.trim()))
           .map((variant) => ({
@@ -224,6 +256,29 @@ export function ProductForm({
           <p className="text-muted-foreground text-xs">{t('categoryOwnedByAdmin')}</p>
         </div>
 
+        {/* Brand and model are their own fields rather than two spec rows: the
+            brand drives a listing facet and both print under the title in the
+            buy box, so they exist whether or not the spec table is filled. */}
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label htmlFor="brand">{t('brand')}</Label>
+            <Input
+              id="brand"
+              value={values.brand}
+              onChange={(event) => set('brand', event.target.value)}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="model">{t('model')}</Label>
+            <Input
+              id="model"
+              value={values.model}
+              dir="ltr"
+              onChange={(event) => set('model', event.target.value)}
+            />
+          </div>
+        </div>
+
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="price">{t('price')}</Label>
@@ -272,7 +327,15 @@ export function ProductForm({
         )}
       </section>
 
-      {/* Variants */}
+      {/* Specifications, features, then variants */}
+      <SpecEditor
+        categorySlug={categories.find((category) => category.id === values.categoryId)?.slug ?? null}
+        rows={values.specs}
+        onChange={(specs) => set('specs', specs)}
+      />
+
+      <FeatureEditor features={values.features} onChange={(features) => set('features', features)} />
+
       <VariantEditor
         variants={values.variants}
         onChange={(variants) => set('variants', variants)}

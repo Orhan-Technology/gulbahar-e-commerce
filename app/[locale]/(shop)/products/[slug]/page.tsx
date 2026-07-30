@@ -9,6 +9,7 @@ import { RatingStars } from '@/components/custom/rating-stars';
 import { SectionHeader } from '@/components/custom/section-header';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
+import { FeatureList } from '@/components/shop/product/feature-list';
 import { SpecTable } from '@/components/shop/product/spec-table';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
 import { ReviewList } from '@/components/shop/product/review-list';
@@ -28,6 +29,7 @@ import {
   userReviewForProduct,
 } from '@/lib/db/queries/reviews';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
+import { SPEC_GROUPS, specTemplateFor } from '@/lib/product-templates';
 import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
@@ -82,6 +84,33 @@ export default async function ProductPage({
   }));
 
   const title = pickLocale(product.title, locale);
+
+  /*
+   * Localised HERE, on the server. The spec table and the feature list are
+   * client components (they collapse and filter), and handing them the raw
+   * LocalizedText would mean shipping every locale's copy of every row to the
+   * browser and picking one there.
+   */
+  const specRows = (product.attributes ?? []).map((row) => ({
+    key: row.key,
+    label: pickLocale(row.label, locale),
+    value: pickLocale(row.value, locale),
+    group: row.group,
+  }));
+
+  // Only the groups this product actually uses, in template order — a chip that
+  // filters to nothing is worse than no chip.
+  const usedGroups = new Set(specRows.map((row) => row.group).filter(Boolean));
+  const specGroups = specTemplateFor(product.categorySlug)
+    .map((entry) => entry.group)
+    .filter((group, index, all): group is string => Boolean(group) && all.indexOf(group) === index)
+    .filter((group) => usedGroups.has(group))
+    .map((group) => ({ key: group, label: pickLocale(SPEC_GROUPS[group] ?? { fa: group }, locale) }));
+
+  const features = (product.features ?? []).map((feature) => ({
+    title: pickLocale(feature.title, locale),
+    body: pickLocale(feature.body, locale),
+  }));
   const currentReviewPage = Math.max(1, Number(reviewPage ?? 1) || 1);
 
   return (
@@ -188,7 +217,9 @@ export default async function ProductPage({
             </section>
           )}
 
-          {product.specs && product.specs.length > 0 && <SpecTable specs={product.specs} />}
+          <FeatureList features={features} />
+
+          <SpecTable rows={specRows} groups={specGroups} />
         </div>
       </div>
 

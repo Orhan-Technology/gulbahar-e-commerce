@@ -351,22 +351,6 @@
       }
     },
     "specsHeading": "Specifications",
-    "specs": {
-      "screen": "Screen",
-      "storage": "Storage",
-      "ram": "Memory",
-      "battery": "Battery",
-      "camera": "Camera",
-      "processor": "Processor",
-      "capacity": "Capacity",
-      "power": "Power",
-      "material": "Material",
-      "movement": "Movement",
-      "size": "Size",
-      "weight": "Weight",
-      "origin": "Origin",
-      "warranty": "Warranty"
-    },
     "fulfilmentHeading": "Delivery & pickup",
     "deliveryTitle": "Delivery in Kabul",
     "deliveryBody": "1–2 working days",
@@ -378,7 +362,14 @@
     "paymentBody": "Cash on delivery or HesabPay",
     "youSave": "You save {amount} AFN",
     "buyNow": "Buy now",
-    "onlyLeft": "{n, plural, one {Only # left} other {Only {count} left}}"
+    "onlyLeft": "{n, plural, one {Only # left} other {Only {count} left}}",
+    "featuresHeading": "Key features",
+    "featuresShowAll": "See all features",
+    "featuresShowLess": "Show less",
+    "specsShowAll": "See all specifications",
+    "specsShowLess": "Show less",
+    "specsAllGroups": "All",
+    "brandModel": "{brand} · model {model}"
   },
   "shop": {
     "productCount": "{count} products",
@@ -1258,8 +1249,32 @@
         "no_files": "No image selected",
         "too_many": "Up to 8 images at a time",
         "too_large": "That image is over 8MB",
-        "unsupported_format": "That image format is not supported"
-      }
+        "unsupported_format": "That image format is not supported",
+        "invalid_spec_key": "A spec key may only contain Latin letters and digits"
+      },
+      "brand": "Brand",
+      "model": "Model",
+      "specsHeading": "Specifications",
+      "specsHint": "The rows shown in the table on the product page. Take the keys from the category template so your product can be compared with similar ones.",
+      "specsUseTemplate": "Use the category template",
+      "specsEmpty": "No specifications yet.",
+      "specsEmptyWithTemplate": "There is a ready template for this category — fill the rows with one click.",
+      "specKey": "Key",
+      "specLabelFa": "Label (Dari)",
+      "specLabelEn": "Label (English)",
+      "specValueFa": "Value (Dari)",
+      "specValueEn": "Value (English)",
+      "addSpecRow": "Add a row",
+      "featuresHeading": "Key features",
+      "featuresHint": "Three to five short points — the things a customer reads to decide.",
+      "featureTitleFa": "Title (Dari)",
+      "featureTitleEn": "Title (English)",
+      "featureBodyFa": "Detail (Dari)",
+      "featureBodyEn": "Detail (English)",
+      "addFeature": "Add a feature",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "removeRow": "Remove row"
     },
     "importWizard": {
       "step1": "1 — File",
@@ -1295,7 +1310,8 @@
         "discount_not_below_price": "Sale price is not lower than the price",
         "bad_stock": "Stock is not a valid number",
         "unknown_category": "That category does not exist",
-        "duplicate_slug": "This slug appears twice in the file"
+        "duplicate_slug": "This slug appears twice in the file",
+        "unknown_spec_key": "A spec key does not match this category's template"
       },
       "errors": {
         "forbidden": "You are not allowed to do that",
@@ -1305,7 +1321,8 @@
         "missing_columns": "The file must have title_fa and price columns",
         "too_many_rows": "Up to 200 rows at a time",
         "nothing_to_import": "No valid rows left to import"
-      }
+      },
+      "ruleSpecs": "Spec columns are optional: spec_<key>_fa and spec_<key>_en, for example spec_storage_fa."
     }
   },
   "shopPromotions": {

@@ -24,12 +24,14 @@ import {
   users,
   wishlistItems,
   type LocalizedText,
-  type ProductSpec,
+  type ProductAttribute,
+  type ProductFeature,
   type OrderStatus,
   type PromotionSlotKey,
 } from '../lib/db/schema';
 import { platformSettings, promotionSlots } from '../lib/db/schema';
 import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
+import { specTemplateFor } from '../lib/product-templates';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
 import { formatCurrency } from '../lib/format';
 import { pickLocale } from '../lib/db/localized';
@@ -199,18 +201,19 @@ async function main() {
   const started = Date.now();
   const contentDir = path.join(process.cwd(), 'content', 'seed');
 
-  const [categorySeed, shopSeed, productSeed, manifest, specSeed] = await Promise.all([
+  const [categorySeed, shopSeed, productSeed, manifest, detailSeed] = await Promise.all([
     readJson<CategorySeed[]>(path.join(contentDir, 'categories.json')),
     readJson<ShopSeed[]>(path.join(contentDir, 'shops.json')),
     readJson<ProductSeed[]>(path.join(contentDir, 'products.json')),
     readJson<ImageManifest>(path.join(contentDir, 'image-manifest.json')).catch(() => null),
     /*
-     * Spec tables live in their own file rather than in products.json: only
-     * about a third of the catalogue has anything to tabulate, and threading
-     * empty arrays through the other fifty entries made the product content
-     * harder to read for no gain.
+     * Specifications, features, brand and the long description live in their
+     * own file rather than in products.json (Prompt P1): products.json is the
+     * commercial record — price, stock, category — and this is the editorial
+     * one. It is authored by scripts/author-product-details.py and covers every
+     * product, which specs.json never did.
      */
-    readJson<Record<string, ProductSpec[]>>(path.join(contentDir, 'specs.json')),
+    readJson<Record<string, ProductDetail>>(path.join(contentDir, 'product-details.json')),
   ]);
 
   if (!manifest) {
@@ -387,7 +390,6 @@ async function main() {
         shopId,
         slug: product.slug,
         title: product.title,
-        description: product.description,
         categoryId: categoryIds.get(product.categorySlug) ?? null,
         price: product.price,
         discountPrice: product.discountPrice,
@@ -401,7 +403,7 @@ async function main() {
          * real example of every row type it can show.
          */
         stock: soldOutSlugs.has(product.slug) ? 0 : product.stock,
-        specs: specSeed[product.slug] ?? null,
+        ...productDetail(product, detailSeed[product.slug]),
         // The pending shop has its whole catalogue ready but unpublished, so
         // approval genuinely flips one switch (PRD §7.1).
         status: isPendingShop ? 'draft' : 'published',
@@ -1176,6 +1178,58 @@ async function main() {
   console.log('  customer     0700000003');
 
   console.log(`\n✓ seeded in ${((Date.now() - started) / 1000).toFixed(1)}s\n`);
+}
+
+/**
+ * The editorial half of a product (Prompt P1), authored by
+ * scripts/author-product-details.py.
+ *
+ * Rows carry only `key` and `value`; the LABEL is resolved here from the
+ * category template in lib/product-templates.ts, so the spec vocabulary has one
+ * definition rather than two files that drift. A row whose key is not in its
+ * category's template must carry its own label — and if it does neither, the
+ * seed THROWS rather than writing a spec table with a blank label column, which
+ * would reach the product page as an empty cell nobody could explain.
+ */
+type ProductDetail = {
+  brand: string | null;
+  model: string | null;
+  description: LocalizedText;
+  attributes: Array<{ key: string; label?: LocalizedText; value: LocalizedText }>;
+  features: ProductFeature[];
+};
+
+function productDetail(product: ProductSeed, detail: ProductDetail | undefined) {
+  if (!detail) {
+    throw new Error(
+      `content/seed/product-details.json has no entry for "${product.slug}". ` +
+        'Run python3 scripts/author-product-details.py.',
+    );
+  }
+
+  const template = specTemplateFor(product.categorySlug);
+
+  const attributes: ProductAttribute[] = detail.attributes.map((row) => {
+    const label = row.label ?? template.find((entry) => entry.key === row.key)?.label;
+    if (!label) {
+      throw new Error(
+        `spec "${row.key}" on ${product.slug} is not in the ${product.categorySlug} ` +
+          'template and carries no label of its own',
+      );
+    }
+    const group = template.find((entry) => entry.key === row.key)?.group;
+    return group ? { key: row.key, label, value: row.value, group } : { key: row.key, label, value: row.value };
+  });
+
+  return {
+    // The long description REPLACES the one-liner in products.json: the product
+    // page had nothing to say, which is the whole reason for this prompt.
+    description: detail.description,
+    brand: detail.brand,
+    model: detail.model,
+    attributes,
+    features: detail.features,
+  };
 }
 
 async function readJson<T>(file: string): Promise<T> {

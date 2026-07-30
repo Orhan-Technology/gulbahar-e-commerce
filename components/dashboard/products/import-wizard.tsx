@@ -137,6 +137,7 @@ export function ImportWizard({ template }: { template: { header: string; sample:
         <ul className="text-muted-foreground space-y-1 text-xs">
           <li>{t('ruleRequired')}</li>
           <li>{t('ruleDigits')}</li>
+          <li>{t('ruleSpecs')}</li>
           {/* Stated up front, because it is the surprising part. */}
           <li className="text-foreground font-medium">{t('ruleDraft')}</li>
         </ul>

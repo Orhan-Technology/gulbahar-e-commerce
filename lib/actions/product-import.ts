@@ -8,7 +8,9 @@ import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { products } from '../db/schema';
 import { categoryIdsBySlug, shopProductSlugs } from '../db/queries/shop-products';
-import { IMPORT_REQUIRED_COLUMNS } from '../import-template';
+import { IMPORT_REQUIRED_COLUMNS, SPEC_COLUMN_PATTERN } from '../import-template';
+import { specTemplateFor } from '../product-templates';
+import type { ProductAttribute } from '../db/schema';
 
 /**
  * Bulk product import (PRD §6.2, staged as happy-path only in PRD §15).
@@ -46,6 +48,10 @@ export type ImportRow = {
     price: number;
     discountPrice: number | null;
     stock: number;
+    brand: string | null;
+    model: string | null;
+    /** Only rows the file actually filled; labels resolved from the template. */
+    attributes: ProductAttribute[];
     existingId?: string;
   };
 };
@@ -128,6 +134,8 @@ const rowSchema = z.object({
   description_fa: z.string().trim().optional(),
   description_en: z.string().trim().optional(),
   category_slug: z.string().trim().optional(),
+  brand: z.string().trim().max(60).optional(),
+  model: z.string().trim().max(60).optional(),
   price: z.string().trim().min(1),
   discount_price: z.string().trim().optional(),
   stock: z.string().trim().optional(),
@@ -229,6 +237,50 @@ export async function parseImport(formData: FormData): Promise<ParseResult> {
 
     const existingId = slug ? existingSlugs.get(slug) : undefined;
 
+    /*
+     * Specification columns (Prompt P1). An unknown key makes the ROW an error
+     * rather than being dropped quietly: this module's whole reason for having
+     * a preview step is that a silent partial import of a 60-row file is what
+     * erodes a merchant's trust in the tool. A typo in `spec_storge_fa` is
+     * exactly that, and it is invisible unless the preview says so.
+     */
+    const template = specTemplateFor(parsed.data.category_slug ?? null);
+    const specValues = new Map<string, { fa?: string; en?: string }>();
+    let unknownSpecKey: string | null = null;
+
+    for (const [column, raw] of Object.entries(record)) {
+      const match = SPEC_COLUMN_PATTERN.exec(column);
+      if (!match) continue;
+      const value = String(raw ?? '').trim();
+      if (!value) continue;
+
+      const [, key, lang] = match;
+      if (!template.some((entry) => entry.key === key)) {
+        unknownSpecKey = key;
+        break;
+      }
+      specValues.set(key, { ...specValues.get(key), [lang]: value });
+    }
+
+    if (unknownSpecKey) {
+      rows.push({ ...base, status: 'error', reason: 'unknown_spec_key', price, stock: stockRaw });
+      continue;
+    }
+
+    // Template order, not file order — the spec table is read top to bottom and
+    // column order in a spreadsheet is an accident of whoever typed it.
+    const attributes: ProductAttribute[] = template
+      .filter((entry) => specValues.get(entry.key)?.fa)
+      .map((entry) => {
+        const value = specValues.get(entry.key)!;
+        return {
+          key: entry.key,
+          label: entry.label,
+          value: { fa: value.fa!, en: value.en ?? null },
+          ...(entry.group ? { group: entry.group } : {}),
+        };
+      });
+
     rows.push({
       ...base,
       price,
@@ -247,6 +299,9 @@ export async function parseImport(formData: FormData): Promise<ParseResult> {
         price,
         discountPrice: discountRaw && discountRaw > 0 ? discountRaw : null,
         stock: stockRaw,
+        brand: parsed.data.brand?.trim() || null,
+        model: parsed.data.model?.trim() || null,
+        attributes,
         existingId,
       },
     });
@@ -308,6 +363,15 @@ export async function confirmImport(rows: ImportRow[]): Promise<ConfirmResult> {
           price: payload.price,
           discountPrice: payload.discountPrice,
           stock: payload.stock,
+          brand: payload.brand,
+          model: payload.model,
+          /*
+           * Specs are only overwritten when the file BROUGHT some. An update
+           * row with no spec columns is a price or stock refresh, and wiping a
+           * carefully filled spec table because a stock spreadsheet did not
+           * mention it would be the worst kind of silent data loss.
+           */
+          ...(payload.attributes.length > 0 ? { attributes: payload.attributes } : {}),
         })
         // Ownership: the shop id is part of the predicate.
         .where(and(eq(products.id, payload.existingId), eq(products.shopId, context.shopId)))
@@ -325,6 +389,9 @@ export async function confirmImport(rows: ImportRow[]): Promise<ConfirmResult> {
         price: payload.price,
         discountPrice: payload.discountPrice,
         stock: payload.stock,
+        brand: payload.brand,
+        model: payload.model,
+        attributes: payload.attributes.length > 0 ? payload.attributes : null,
         // Always a draft, whatever the file said.
         status: 'draft',
       });

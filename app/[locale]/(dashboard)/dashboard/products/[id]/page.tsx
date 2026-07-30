@@ -55,6 +55,7 @@ export default async function EditProductPage({
         images={product.images.map((image) => ({ id: image.id, path: image.path }))}
         categories={categories.map((category) => ({
           id: category.id,
+          slug: category.slug,
           label: pickLocale(category.name, locale) ?? category.slug,
           parentLabel: category.parentName ? pickLocale(category.parentName, locale) : null,
         }))}
@@ -71,6 +72,25 @@ export default async function EditProductPage({
           discountPrice: product.discountPrice ? String(product.discountPrice) : '',
           stock: String(product.stock),
           status: product.status,
+          brand: product.brand ?? '',
+          model: product.model ?? '',
+          specs: (product.attributes ?? []).map((row) => ({
+            key: row.key,
+            labelFa: row.label.fa ?? '',
+            labelEn: row.label.en ?? '',
+            valueFa: row.value.fa ?? '',
+            valueEn: row.value.en ?? '',
+            group: row.group,
+            // A row whose key is in the category template keeps its label
+            // locked; anything else was written by the shop and stays editable.
+            fromTemplate: true,
+          })),
+          features: (product.features ?? []).map((feature) => ({
+            titleFa: feature.title.fa ?? '',
+            titleEn: feature.title.en ?? '',
+            bodyFa: feature.body.fa ?? '',
+            bodyEn: feature.body.en ?? '',
+          })),
           variants: product.variants.map((variant) => ({
             nameFa: variant.name.fa ?? '',
             nameEn: variant.name.en ?? '',
