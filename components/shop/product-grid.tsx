@@ -1,6 +1,7 @@
 import { getLocale } from 'next-intl/server';
 
 import { ProductCard, ProductCardSkeleton } from '@/components/custom/product-card';
+import { QuickAddButton } from '@/components/shop/quick-add-button';
 import { Rail } from '@/components/shop/rail';
 import { WishlistButton } from '@/components/shop/wishlist-button';
 import { pickLocale } from '@/lib/db/localized';
@@ -40,6 +41,14 @@ export type ProductGridProps = {
   railLabel?: string;
   /** True for the first row on a page, so its images are not lazy-loaded. */
   priority?: boolean;
+  /**
+   * Adds a one-tap add-to-cart to each card (Prompt P5).
+   *
+   * On the RAILS, where the product is already decided and the shopper is
+   * browsing rather than researching. Off in the listing grid, where the job is
+   * comparing and an extra control on every one of twenty-four cards is noise.
+   */
+  quickAdd?: boolean;
   className?: string;
 };
 
@@ -56,6 +65,7 @@ export async function ProductGrid({
   layout = 'grid',
   railLabel,
   priority = false,
+  quickAdd = false,
   className,
 }: ProductGridProps) {
   const locale = await getLocale();
@@ -85,6 +95,9 @@ export async function ProductGrid({
          */
         wishlistSlot={
           <WishlistButton productId={item.id} initialSaved={savedIds?.has(item.id) ?? false} />
+        }
+        quickAddSlot={
+          quickAdd ? <QuickAddButton productId={item.id} disabled={item.stock <= 0} /> : undefined
         }
       />
     </div>

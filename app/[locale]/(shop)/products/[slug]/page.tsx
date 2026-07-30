@@ -6,7 +6,6 @@ import { MapPin, Store } from 'lucide-react';
 
 import { ImageGallery, ImageGallerySkeleton } from '@/components/custom/image-gallery';
 import { RatingStars } from '@/components/custom/rating-stars';
-import { SectionHeader } from '@/components/custom/section-header';
 import { BuyColumn } from '@/components/shop/product/buy-column';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
@@ -17,19 +16,17 @@ import { SpecTable } from '@/components/shop/product/spec-table';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
 import { ReviewList } from '@/components/shop/product/review-list';
 import { WriteReviewDialog } from '@/components/shop/product/write-review-dialog';
-import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
+import { ProductRails } from '@/components/shop/product/product-rails';
+import { ProductGridSkeleton } from '@/components/shop/product-grid';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
-import { promotedProductsForSlot } from '@/lib/db/queries/listing';
 import { comparableProducts } from '@/lib/db/queries/comparison';
 import { productDetail } from '@/lib/db/queries/products';
 import { productQuestionThreads } from '@/lib/db/queries/questions';
-import { recordImpressions } from '@/lib/db/queries/promoted';
 import {
   recordProductView,
-  relatedProductsFor,
   reviewableOrderItem,
   userReviewForProduct,
 } from '@/lib/db/queries/reviews';
@@ -360,12 +357,13 @@ export default async function ProductPage({
 
       </div>
 
-      {/* Related */}
-      <Suspense fallback={<ProductGridSkeleton count={8} />}>
-        <RelatedProducts
+      {/* Three discovery rails (Prompt P5) — full width, outside the buy grid. */}
+      <Suspense fallback={<ProductGridSkeleton count={5} layout="row" />}>
+        <ProductRails
           productId={product.id}
           shopId={product.shopId}
           categoryId={product.categoryId}
+          price={product.discountPrice ?? product.price}
         />
       </Suspense>
 
@@ -511,50 +509,6 @@ function ComparisonSkeleton() {
   );
 }
 
-async function RelatedProducts({
-  productId,
-  shopId,
-  categoryId,
-}: {
-  productId: string;
-  shopId: string;
-  categoryId: string | null;
-}) {
-  const t = await getTranslations('product');
-
-  const [related, promoted, user] = await Promise.all([
-    relatedProductsFor(productId, shopId, categoryId, 10),
-    promotedProductsForSlot('product_related', { excludeProductId: productId }),
-    currentUser(),
-  ]);
-
-  const promotedIds = new Set(promoted.map((item) => item.id));
-  const organic = related.filter((item) => !promotedIds.has(item.id));
-
-  if (organic.length === 0 && promoted.length === 0) return null;
-
-  const saved = await wishlistedProductIds(user?.id, [
-    ...promoted.map((i) => i.id),
-    ...organic.map((i) => i.id),
-  ]);
-
-  void recordImpressions(promoted.map((item) => item.campaignId));
-
-  /*
-   * Promoted items lead the SAME grid rather than sitting in their own tinted
-   * panel. The panel held a single card at full width, and it repeated the
-   * Sponsored marker the card already carries — the disclosure belongs on the
-   * item, which is what PRD §8.4 asks for and what the mockup draws.
-   */
-  const items = [...promoted.map((item) => ({ ...item, sponsored: true })), ...organic];
-
-  return (
-    <section className="mt-10 space-y-5">
-      <SectionHeader title={t('relatedHeading')} description={t('relatedHint')} />
-      <ProductGrid items={items} savedIds={saved} layout="row" railLabel={t('relatedHeading')} />
-    </section>
-  );
-}
 
 function ReviewsSkeleton() {
   return (

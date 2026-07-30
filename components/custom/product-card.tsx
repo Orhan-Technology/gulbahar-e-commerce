@@ -56,6 +56,15 @@ export interface ProductCardProps {
    */
   wishlistSlot?: React.ReactNode;
   /**
+   * A quick add-to-cart control, rendered inside the media panel at the
+   * opposite corner from the heart.
+   *
+   * Passed in for the same reason the heart is: the panel scales on hover, and
+   * a control positioned over the card from outside stays put while the panel
+   * grows away from underneath it.
+   */
+  quickAddSlot?: React.ReactNode;
+  /**
    * Where the hover pop-out grows FROM.
    *
    * A centred origin is right for a card with neighbours on both sides, but a
@@ -115,6 +124,7 @@ export function ProductCard({
   priority = false,
   hideWishlist = false,
   wishlistSlot,
+  quickAddSlot,
   edge,
 }: ProductCardProps) {
   const locale = useLocale();
@@ -203,6 +213,8 @@ export function ProductCard({
           what keeps them clickable through the card-wide click target.
         */}
         {wishlistSlot && <div className="absolute end-2.5 top-2.5 z-20">{wishlistSlot}</div>}
+
+        {quickAddSlot}
 
         {!hideWishlist && !wishlistSlot && (
           <button

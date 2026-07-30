@@ -400,6 +400,11 @@
         "forbidden": "You are not allowed to do that",
         "hidden": "An administrator hid this question"
       }
+    },
+    "rails": {
+      "moreFromShop": "More from this shop",
+      "similar": "Similar products",
+      "recentlyViewed": "Recently viewed"
     }
   },
   "shop": {
