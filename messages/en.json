@@ -2369,7 +2369,7 @@
     "inFa": "Dari",
     "inEn": "English",
     "slotsHeading": "Promotion slots",
-    "slotsHint": "Capacity and weekly price per slot. A price change applies to future bookings only.",
+    "slotsHint": "Capacity and weekly price per slot.",
     "categoriesHeading": "Categories",
     "categoriesHint": "Add, rename and reorder the category tree",
     "accountHeading": "Your admin account",

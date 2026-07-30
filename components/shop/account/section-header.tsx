@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 
 import { Link } from '@/lib/i18n/navigation';
 
@@ -32,7 +32,7 @@ export async function AccountSectionHeader({
       >
         {/* Points back the way the reader came, which is the inline START —
             left in English, right in Dari. */}
-        <ChevronRight className="h-3.5 w-3.5 rotate-180 rtl:rotate-0" aria-hidden />
+        <ChevronLeft className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
         {t('overview')}
       </Link>
       <h1 className="text-xl font-bold">{title}</h1>

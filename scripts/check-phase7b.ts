@@ -17,6 +17,7 @@
 import 'dotenv/config';
 
 import { sql } from '../lib/db';
+import { formatPhone } from '../lib/format';
 import { ActionClient, createReporter, html, signIn, status } from './lib/action-client';
 
 const ADMIN = '0700000001';
@@ -469,7 +470,18 @@ async function main() {
   const [shopkeeperRow] = await sql<{ id: string; phone: string }[]>`
     select id, phone from users where phone = ${SHOPKEEPER}
   `;
-  check('the role filter lists shopkeepers', usersPage.includes(shopkeeperRow.phone));
+  /*
+   * Compared against the FORMATTED phone, not the stored one. Since A1 every
+   * phone in the product renders through formatPhone(), so a Dari page carries
+   * "۰۷۰۰۰۰۰۰۰۲" and never the ASCII form — this assertion looked for the raw
+   * column and started failing the moment the display bug was fixed, which is
+   * the wrong way round for a check.
+   */
+  check(
+    'the role filter lists shopkeepers',
+    usersPage.includes(formatPhone(shopkeeperRow.phone, 'fa')),
+    formatPhone(shopkeeperRow.phone, 'fa'),
+  );
 
   const searched = await html('/fa/admin/users?q=0700000003', admin);
   check('search by phone finds the customer', searched.includes('0700000003'));

@@ -72,10 +72,21 @@ async function main() {
 
   const loadingFiles = walk('app', /^loading\.tsx$/);
   check(`route-level loading boundaries exist (${loadingFiles.length})`, loadingFiles.length >= 9);
-  check(
-    'and each renders the shared PageSkeleton rather than a spinner',
-    loadingFiles.every((file) => readFileSync(file, 'utf8').includes('PageSkeleton')),
-  );
+  /*
+   * The rule is "a DESIGNED skeleton, never a spinner", not "the string
+   * PageSkeleton". components/custom/page-skeleton.tsx exports more than one
+   * shape — the account hub's sections skeleton draws only the main column,
+   * because the hub layout's nav and profile panel do not re-render between
+   * sections — and a route whose content is a product grid draws that grid
+   * with <Skeleton> directly. What none of them may do is spin.
+   */
+  const spinners = loadingFiles.filter((file) => {
+    const source = readFileSync(file, 'utf8');
+    const drawsSkeleton = /page-skeleton|Skeleton\b/.test(source);
+    const spins = /animate-spin|Loader2|Spinner/.test(source);
+    return spins || !drawsSkeleton;
+  });
+  check('and each draws a designed skeleton rather than a spinner', spinners.length === 0, spinners);
 
   const skeletonSource = readFileSync('components/custom/page-skeleton.tsx', 'utf8');
   check(
