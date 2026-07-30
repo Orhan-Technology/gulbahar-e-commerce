@@ -293,6 +293,43 @@ async function main() {
     check(`${path} stays under nine top-level blocks`, blocks <= 9, { blocks });
   }
 
+  /* ---------------------------------------------------------------------- */
+  section('Dashboard KPI integrity');
+
+  /*
+   * A StatCard's figure counts up from 0 on mount (PRD §10.6), but its delta
+   * pill is not animated — so on the server render and the first client
+   * frame, the figure is 0 regardless of the real value while the pill
+   * already shows its true, final percentage. That pairing — "0" beside a
+   * live delta — is the exact regression this once was: shop kabul-electronics
+   * genuinely has a weekly order count of 10 and a +400% delta, and the SSR
+   * HTML rendered "۰" next to the pill anyway, because the pill's guard was
+   * keyed on the real value instead of the figure actually on screen.
+   */
+  function zeroValueWithDeltaPill(document: string): string[] {
+    const hits: string[] = [];
+    for (const match of document.matchAll(
+      /class="[^"]*font-bold tabular-nums[^"]*">([^<]*)<\/span><span class="rounded-pill[^"]*(?:bg-success-bg|bg-danger-bg)/g,
+    )) {
+      const bare = match[1]
+        .trim()
+        .replace(/^[^\d۰-۹]+/, '')
+        .replace(/[^\d۰-۹]+$/, '');
+      if (bare === '0' || bare === '۰') hits.push(match[1]);
+    }
+    return hits;
+  }
+
+  for (const [label, path, cookie] of [
+    ['the shop dashboard, fa', '/fa/dashboard', shopkeeper],
+    ['the shop dashboard, en', '/en/dashboard', shopkeeper],
+    ['the admin overview, fa', '/fa/admin', admin],
+  ] as const) {
+    const document = await html(path, cookie);
+    const hits = zeroValueWithDeltaPill(document);
+    check(`${label}: no stat card shows 0 beside a delta pill`, hits.length === 0, hits);
+  }
+
   await sql.end();
   process.exit(summary() > 0 ? 1 : 0);
 }

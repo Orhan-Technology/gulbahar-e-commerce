@@ -56,9 +56,19 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   in7Days.setUTCDate(in7Days.getUTCDate() + 7);
 
   /**
-   * This shop's revenue over a window, counting fulfilled orders only. `until`
-   * is exclusive, which is what makes a closed window — yesterday — expressible
+   * This shop's revenue over a window, counting fulfilled orders only — money
+   * isn't earned until an order is fulfilled, so a placed or accepted order
+   * cannot appear in a sales figure no matter how large it is. `until` is
+   * exclusive, which is what makes a closed window — yesterday — expressible
    * without a second helper.
+   *
+   * Deliberately a DIFFERENT predicate than `ordersBetween` below — one counts
+   * money, the other counts business received — so don't unify them. What
+   * must never happen is a metric's current window, its previous window and
+   * the number the tile displays reading through three different predicates:
+   * every caller of `revenueBetween` for a given metric (today/yesterday,
+   * week/prev-week) routes through this ONE function, so they cannot drift
+   * apart from each other.
    */
   const revenueBetween = (since: Date, until?: Date) =>
     db
@@ -82,6 +92,13 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
    * business came in", so an order still sitting at placed counts. Rejected
    * ones do not: the shopkeeper turned those away, and counting them would let
    * a bad week look like a good one.
+   *
+   * The orders tile's displayed count, its current-week delta input and its
+   * previous-week delta input are three separate calls to this ONE function
+   * (see `weekOrderCount` / `prevWeekOrderCount` below) — never let one of the
+   * three read a different predicate or window than the others. A tile whose
+   * number and whose delta pill disagree about what counts as "an order" is
+   * how a dashboard shows 0 orders with a +400% delta at the same time.
    */
   const ordersBetween = (since: Date, until?: Date) =>
     db
@@ -262,6 +279,8 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   const todaySales = Number(todayRows[0]?.total ?? 0);
   const yesterdaySales = Number(yesterdayRows[0]?.total ?? 0);
 
+  // Both from `ordersBetween` (see above) — the value the tile shows and the
+  // two inputs to its delta, sharing one predicate and one window shape.
   const weekOrderCount = Number(weekOrderRows[0]?.total ?? 0);
   const prevWeekOrderCount = Number(prevWeekOrderRows[0]?.total ?? 0);
 

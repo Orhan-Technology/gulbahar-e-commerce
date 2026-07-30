@@ -120,7 +120,21 @@ export function StatCard({
             ? formatRating(display, locale)
             : formatNumber(display, locale);
 
-  const hasDelta = delta !== null && delta !== undefined && delta !== 0;
+  /*
+   * Gated on `display === value` — the count-up has actually reached the real
+   * figure — rather than on `value` alone. `useCountUp` always starts a fresh
+   * mount at 0 (and, for a frame or two under a stepped clock, can undershoot
+   * past 0 before settling — see the clamp in `useCountUp`), while the delta
+   * pill below has no animation of its own and would otherwise show its true,
+   * final percentage immediately. Gating on `value` instead of on whether the
+   * two have actually met would still let a mid-flight "0" or "-1" render
+   * beside a live "+400%" pill — the exact bug this guards against. Once
+   * `display` catches up the pill fades in with whatever the real delta is,
+   * negative included: a real, settled 0 sitting beside a real "-100%" is
+   * true and worth showing, it just can never be true of a figure still on
+   * its way up.
+   */
+  const hasDelta = display === value && delta !== null && delta !== undefined && delta !== 0;
   const positive = (delta ?? 0) > 0;
   const feature = variant === 'feature';
 
@@ -227,7 +241,19 @@ function useCountUp(target: number, enabled = true) {
     const start = performance.now();
 
     const tick = (now: number) => {
-      const progress = Math.min(1, (now - start) / COUNT_UP_MS);
+      /*
+       * Clamped on BOTH ends. The rAF timestamp is not guaranteed to be at or
+       * after the `performance.now()` captured a moment earlier when a driver
+       * is stepping the clock itself (seen under a CDP-driven headless
+       * Chrome) — an unclamped lower bound lets `progress` go negative,
+       * which cubes back out to an eased value past 1 and rounds to a
+       * genuinely negative figure (an order count rendering "-1") for one
+       * frame, with the delta pill already showing its correct percentage
+       * beside it. A count can never be negative, so this is the same
+       * impossible-tile-state `hasDelta` above guards against, one layer
+       * lower.
+       */
+      const progress = Math.min(1, Math.max(0, (now - start) / COUNT_UP_MS));
       // Ease-out so the number decelerates into its final value.
       const eased = 1 - Math.pow(1 - progress, 3);
       setAnimated(Math.round(target * eased));
