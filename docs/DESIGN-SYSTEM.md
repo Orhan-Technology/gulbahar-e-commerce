@@ -27,8 +27,11 @@ for adding a use is not "does it look good" but "is this that job".
 Two rules that are easy to break and expensive to unpick:
 
 - **Stars are amber, everywhere.** They were blue, which made the loudest object
-  on a product card the one thing you cannot press. `grep 'fill-primary'` should
-  return nothing.
+  on a product card the one thing you cannot press. The check is narrower than
+  `grep 'fill-primary'`, because blue *is* the right fill for two things that are
+  not stars — the radio dot and the active tab icon. `check:design` asserts it
+  precisely: no class list containing `lucide-star` may also contain
+  `fill-primary`.
 - **One red signal per price.** The discount is an image-corner badge; the
   original price is struck and muted. A third red mark on the price line is
   three ways of saying the same thing, and it makes a 14px card shout.
@@ -151,8 +154,14 @@ drift.
 
 **Anatomy:** label + optional icon → figure (count-up on mount) → optional
 delta pill → hint line.
-**Rule:** a KPI that cannot be opened is a poster. Pass `href`, and make the
-destination land **pre-filtered** on the rows behind the figure.
+**Rule:** an **overview** KPI that cannot be opened is a poster. On
+`/dashboard` and the admin overview, pass `href` and make the destination land
+**pre-filtered** on the rows behind the figure — `check:design` follows every one
+and fails if it 404s or arrives unfiltered.
+**Exception, and the only one:** a total on a *report* page sits directly above
+the chart and table it summarises, so there is no elsewhere to go. Those four
+(`/dashboard/reports`, `/admin/reports`, `/admin/revenue`) are deliberately
+hrefless; anywhere else, no `href` is drift.
 **Don't:** put two figures that move together in one row.
 
 ### EmptyState
@@ -170,7 +179,9 @@ start — so 3.5 stars fill from the right in Dari.
 **Sizes:** `sm` 14px (cards, rails), `md` 16px (listings, shop headers), `lg`
 20px (product page, review composer).
 **Zero reviews:** renders NOTHING. `reserveSpace` keeps the line blank where a
-grid needs the alignment. There is no "(۰)" anywhere in the product.
+grid needs the alignment, which is the ProductCard and nowhere else — passing it
+somewhere no unrated value can arrive (the rating facet's 4/3/2 rows) is a no-op
+that reads as a rule. There is no "(۰)" anywhere in the product.
 
 ### Rail
 

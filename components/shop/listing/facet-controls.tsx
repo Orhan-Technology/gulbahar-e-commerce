@@ -257,7 +257,11 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
                 minRating === rating && 'bg-primary-50',
               )}
             >
-              <RatingStars value={rating} size="sm" reserveSpace />
+              {/* No `reserveSpace`: these three rows are 4, 3 and 2, so none of
+                  them can be the unrated case the prop exists for. The ProductCard
+                  is the one place that needs it, because a grid has to stay aligned
+                  across products that do and do not have reviews. */}
+              <RatingStars value={rating} size="sm" />
               <span className="text-muted-foreground text-xs">{t('andUp')}</span>
             </button>
           ))}

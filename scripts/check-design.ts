@@ -220,6 +220,63 @@ async function main() {
   check('no component formats a number outside lib/format', bypasses.length === 0, bypasses);
 
   /* ---------------------------------------------------------------------- */
+  section('Rails, rhythm and dedupe (S2, S3)');
+
+  const home = await html('/fa');
+
+  /*
+   * A rail is only a rail if it can scroll. The failure this catches is not a
+   * broken component but a starved one: the rail shipped correct and the
+   * queries fed it exactly as many items as fit, so the peek, the arrows and
+   * the scrollbar all promised something that was not there.
+   */
+  const railRegions = (home.match(/role="region"/g) ?? []).length;
+  check('the home page is built from rails', railRegions >= 4, { railRegions });
+
+  const productLinks = [...home.matchAll(/href="\/fa\/products\/([^"?]+)"/g)].map((m) => m[1]);
+  const unique = new Set(productLinks);
+  check(
+    'no product appears twice on the home page',
+    unique.size === productLinks.length,
+    { links: productLinks.length, unique: unique.size },
+  );
+
+  // One countdown. Two tickers above the fold turn urgency into decoration.
+  const countdowns = (home.match(/lucide-timer/g) ?? []).length;
+  check('the home page has exactly one countdown', countdowns === 1, { countdowns });
+
+  /* ---------------------------------------------------------------------- */
+  section('Ratings (S1, S5)');
+
+  for (const [path, cookie] of [
+    ['/fa', ''],
+    ['/fa/products', ''],
+    ['/fa/shops', ''],
+  ] as const) {
+    const document = await html(path, cookie);
+    // Star glyphs render at whatever weight the active face gives them, and
+    // Vazirmatn's is a lumpy asterisk — so the same rating became a different
+    // mark in each script.
+    check(`${path} uses no star glyphs`, !/[★☆]/.test(visibleText(document)));
+    /*
+     * Blue STARS specifically, not any blue fill. A star competes with every
+     * button on the same card for the one colour that is supposed to mean "you
+     * can press this"; the tab bar's filled house icon does not, and a bare
+     * /fill-primary/ flagged it — a check that reports the wrong thing is a
+     * check people learn to skip.
+     */
+    check(
+      `${path} has no blue stars`,
+      ![...document.matchAll(/class="([^"]*lucide-star[^"]*)"/g)].some((match) =>
+        match[1].includes('fill-primary'),
+      ),
+    );
+  }
+
+  const listing = await html('/fa/products');
+  check('no "(0)" rating anywhere', !/\(\s*[۰0]\s*\)/.test(visibleText(listing)));
+
+  /* ---------------------------------------------------------------------- */
   section('Density');
 
   /*

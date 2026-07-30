@@ -108,10 +108,26 @@ export function Rail({
   const Next = isRtl ? ChevronLeft : ChevronRight;
 
   return (
-    <div className={cn('group/rail relative', className)} role="region" aria-label={label}>
+    // `data-rail` and friends are TEST HOOKS, deliberately. The one thing that
+    // cannot be verified statically is whether a rail actually overflows —
+    // starved feeds once made every rail on the home page a flush row, and the
+    // component was blameless. `check:design` now reads scrollWidth through
+    // these, the same way it reads the listing toolbar through `id="listing-sort"`.
+    <div
+      className={cn('group/rail relative', className)}
+      role="region"
+      aria-label={label}
+      data-rail
+      // The size is part of the hook because the peek rule is not universal: a
+      // `card` or `panel` rail shows a SAMPLE of a larger set and must overflow
+      // or it is promising nothing, whereas the `tile` rail holds the entire
+      // eight-category taxonomy and ending flush at desktop width is the truth.
+      data-rail-size={size}
+    >
       <div
         ref={ref}
         onScroll={measure}
+        data-rail-scroller
         className={cn(
           // `-mx-4 px-4` lets the rail bleed to the screen edge on a phone while
           // its first card still lines up with the page gutter.
@@ -174,6 +190,7 @@ function RailButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
+      data-rail-arrow={side}
       tabIndex={-1}
       // The cards are already in the tab order and scrolling follows focus, so
       // these would be two extra stops on the way into every row.
