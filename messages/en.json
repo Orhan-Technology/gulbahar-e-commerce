@@ -370,7 +370,10 @@
     "specsShowLess": "Show less",
     "specsAllGroups": "All",
     "brandModel": "{brand} · model {model}",
-    "helpLine": "A question about your order or a return? <link>Talk to support</link>."
+    "helpLine": "A question about your order or a return? <link>Talk to support</link>.",
+    "compareHeading": "Compare similar products",
+    "compareHint": "Same category, closest in price — the differences are highlighted.",
+    "compareThisProduct": "This product"
   },
   "shop": {
     "productCount": "{count} products",

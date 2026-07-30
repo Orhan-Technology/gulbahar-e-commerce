@@ -11,6 +11,7 @@ import { BuyColumn } from '@/components/shop/product/buy-column';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
 import { FeatureList } from '@/components/shop/product/feature-list';
+import { ComparisonTable, type ComparisonColumn } from '@/components/shop/product/comparison-table';
 import { SpecTable } from '@/components/shop/product/spec-table';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
 import { ReviewList } from '@/components/shop/product/review-list';
@@ -21,6 +22,7 @@ import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot } from '@/lib/db/queries/listing';
+import { comparableProducts } from '@/lib/db/queries/comparison';
 import { productDetail } from '@/lib/db/queries/products';
 import { recordImpressions } from '@/lib/db/queries/promoted';
 import {
@@ -287,6 +289,33 @@ export default async function ProductPage({
 
           <SpecTable rows={specRows} groups={specGroups} />
 
+          {/* Absent, not empty, when there is nothing to compare — see
+              ComparisonTable's eligibility rules. */}
+          <Suspense fallback={<ComparisonSkeleton />}>
+            <ComparisonSection
+              productId={product.id}
+              categoryId={product.categoryId}
+              locale={locale}
+              current={{
+                id: product.id,
+                slug,
+                title,
+                imagePath: product.images[0]?.path ?? null,
+                blurDataUrl: product.images[0]?.blurDataUrl ?? null,
+                shopName: pickLocale(product.shopName, locale),
+                shopFloor: product.shopFloor,
+                shopUnitNumber: product.shopUnitNumber,
+                price: product.price,
+                discountPrice: product.discountPrice,
+                rating: product.rating.average,
+                reviewCount: product.rating.total,
+                values: Object.fromEntries(specRows.map((row) => [row.key, row.value])),
+                labels: Object.fromEntries(specRows.map((row) => [row.key, row.label])),
+                current: true,
+              }}
+            />
+          </Suspense>
+
           {/* Reviews */}
           <section id="reviews" className="scroll-mt-24 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -356,6 +385,67 @@ export default async function ProductPage({
           variants={variants}
           initialSaved={saved.has(product.id)}
         />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Loads the comparison set (Prompt P3).
+ *
+ * Its own Suspense boundary because it is the one section on this page that
+ * needs a second round trip after the product itself — the spec table and the
+ * features are already in hand, and blocking them behind a similar-products
+ * query would delay the content the reader asked for.
+ */
+async function ComparisonSection({
+  productId,
+  categoryId,
+  locale,
+  current,
+}: {
+  productId: string;
+  categoryId: string | null;
+  locale: string;
+  current: ComparisonColumn;
+}) {
+  const others = await comparableProducts(productId, categoryId, current.discountPrice ?? current.price);
+
+  const columns: ComparisonColumn[] = [
+    current,
+    ...others.map((row) => ({
+      id: row.id,
+      slug: row.slug,
+      title: pickLocale(row.title, locale),
+      imagePath: row.imagePath,
+      blurDataUrl: row.blurDataUrl,
+      shopName: pickLocale(row.shopName, locale),
+      shopFloor: row.shopFloor,
+      shopUnitNumber: row.shopUnitNumber,
+      price: row.price,
+      discountPrice: row.discountPrice,
+      rating: Number(row.rating),
+      reviewCount: Number(row.reviewCount),
+      values: Object.fromEntries(
+        (row.attributes ?? []).map((attribute) => [attribute.key, pickLocale(attribute.value, locale)]),
+      ),
+      labels: Object.fromEntries(
+        (row.attributes ?? []).map((attribute) => [attribute.key, pickLocale(attribute.label, locale)]),
+      ),
+    })),
+  ];
+
+  return <ComparisonTable columns={columns} />;
+}
+
+function ComparisonSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy>
+      <Skeleton className="h-5 w-48" />
+      <div className="flex gap-3 overflow-hidden">
+        {Array.from({ length: 4 }, (_, index) => (
+          <Skeleton key={index} className="rounded-card h-64 w-56 shrink-0" />
+        ))}
       </div>
     </div>
   );
