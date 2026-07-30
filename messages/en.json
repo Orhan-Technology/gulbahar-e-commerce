@@ -434,6 +434,12 @@
       "title": "Gulbahar sign-in code",
       "body": "Your sign-in code is {code} — valid for 5 minutes. Do not share it with anyone."
     },
+    "email": {
+      "verify": {
+        "title": "Gulbahar email verification",
+        "body": "Your verification code for {email} is {code} — valid for 5 minutes."
+      }
+    },
     "order": {
       "placed": {
         "title": "Order placed",
@@ -510,6 +516,10 @@
   "auth": {
     "title": "Sign in to Gulbahar",
     "subtitle": "Enter your phone number and we'll send you a sign-in code.",
+    "tabPhone": "Phone",
+    "tabEmail": "Email",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
     "phoneLabel": "Phone number",
     "phoneHint": "e.g. 0700000003 — Afghan numbers start with 07.",
     "sendCode": "Send code",
@@ -532,7 +542,8 @@
       "no_code": "No code was sent — please try again",
       "expired": "That code has expired",
       "too_many_attempts": "Too many attempts — request a new code",
-      "mismatch": "That code is incorrect"
+      "mismatch": "That code is incorrect",
+      "invalid_credentials": "That email or password is incorrect"
     },
     "signInToSave": "Sign in to save items",
     "signIn": "Sign in",
@@ -881,7 +892,18 @@
     "errors": {
       "requires_auth": "Please sign in",
       "invalid_input": "Some details are missing",
-      "invalid_phone": "That phone number is not valid"
+      "invalid_phone": "That phone number is not valid",
+      "invalid_email": "That email is not valid",
+      "email_taken": "That email is already used by another account",
+      "rate_limited": "Too many attempts — try again in a while",
+      "no_code": "No code was sent — please try again",
+      "expired": "That code has expired",
+      "too_many_attempts": "Too many attempts — request a new code",
+      "mismatch": "That code is incorrect",
+      "invalid_code": "The code must be six digits",
+      "weak_password": "Password must be at least 8 characters and not a common one",
+      "password_mismatch": "Those passwords don't match",
+      "reauth_required": "Your current password or a code to your phone is required to change it"
     },
     "myShopTitle": "My shop",
     "myShopHint": "Manage your products, orders and promotions",
@@ -892,6 +914,39 @@
       "orders": "Orders",
       "wishlist": "Saved",
       "reviews": "Reviews"
+    },
+    "security": {
+      "heading": "Account security",
+      "emailLabel": "Email",
+      "emailNotSet": "No email set",
+      "emailVerified": "Verified",
+      "addEmail": "Add email",
+      "changeEmail": "Change email",
+      "emailPlaceholder": "name@example.com",
+      "sendCode": "Send code",
+      "sending": "Sending…",
+      "codeLabel": "Six-digit code",
+      "codeSent": "Verification code sent — find it in the notification panel.",
+      "codeHint": "The code appears in the notification panel.",
+      "verifyEmail": "Verify email",
+      "verifying": "Verifying…",
+      "emailVerifiedToast": "Email verified and saved",
+      "passwordLabel": "Password",
+      "passwordNotSet": "No password set",
+      "passwordUpdatedOn": "Updated {date}",
+      "setPassword": "Set a password",
+      "changePassword": "Change password",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm new password",
+      "currentPasswordLabel": "Current password",
+      "useOtpInstead": "Get a code by SMS instead",
+      "useCurrentPasswordInstead": "Use your current password instead",
+      "requestOtp": "Send a code to my phone",
+      "otpSent": "Code sent to the notification panel",
+      "otpLabel": "Six-digit code",
+      "save": "Save",
+      "passwordSavedToast": "Password saved",
+      "cancel": "Cancel"
     }
   },
   "dashboardNav": {

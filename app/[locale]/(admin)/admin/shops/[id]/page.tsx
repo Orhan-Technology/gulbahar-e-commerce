@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopReview } from '@/lib/db/queries/admin';
-import { formatDate, formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
+import { formatDate, formatNumber, formatOpeningHours, formatPhone, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 const STATUS_BADGE = {
@@ -145,13 +145,13 @@ export default async function AdminShopReviewPage({
           {shop.ownerPhone && (
             <p className="flex items-center gap-2 text-sm" dir="ltr">
               <Phone className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
-              {shop.ownerPhone}
+              {formatPhone(shop.ownerPhone, locale)}
             </p>
           )}
           {shop.phone && shop.phone !== shop.ownerPhone && (
             <p className="text-muted-foreground flex items-center gap-2 text-sm" dir="ltr">
               <Phone className="h-4 w-4 shrink-0" aria-hidden />
-              {shop.phone}
+              {formatPhone(shop.phone, locale)}
             </p>
           )}
           {shop.floor !== null && (

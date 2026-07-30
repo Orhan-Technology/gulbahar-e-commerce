@@ -3,9 +3,18 @@ import { boolean, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizz
 import { createdAt, localeEnum, timestampCol, userRoleEnum } from './shared';
 
 /**
- * Phone-number identity (PRD §5.7, §14). There is no password — sign-in is
- * phone + OTP, and the OTP is delivered to the on-screen notification log in
- * the demo build.
+ * Phone-number identity (PRD §5.7, §14; Prompt A1). The phone IS the account:
+ * every user has exactly one, set at registration and never editable, and it
+ * stays the recovery path and the OTP target regardless of what else is added.
+ *
+ * Email + password are an OPTIONAL second credential, attached to the account
+ * the phone created rather than a second identity — there is no email-only
+ * registration path. Both columns are nullable for exactly that reason: most
+ * seeded accounts never set either. `emailVerifiedAt` gates sign-in, not
+ * `email` alone, so an entered-but-unconfirmed address can never be used to
+ * get in. Passwords are never stored in plaintext, logged, or written to the
+ * demo notification log — only `passwordHash` (argon2) and the timestamp of
+ * its last change, which the account UI surfaces as "updated {date}".
  */
 export const users = pgTable(
   'users',
@@ -17,11 +26,17 @@ export const users = pgTable(
     locale: localeEnum('locale').notNull().default('fa'),
     /** Admin can deactivate accounts (PRD §7.5) without deleting history. */
     active: boolean('active').notNull().default(true),
+    /** Lowercased and trimmed on write — see lib/auth/email.ts. */
+    email: text('email'),
+    emailVerifiedAt: timestampCol('email_verified_at'),
+    passwordHash: text('password_hash'),
+    passwordUpdatedAt: timestampCol('password_updated_at'),
     createdAt: createdAt(),
   },
   (table) => [
     uniqueIndex('users_phone_key').on(table.phone),
     index('users_role_idx').on(table.role),
+    uniqueIndex('users_email_key').on(table.email),
   ],
 );
 
@@ -69,8 +84,34 @@ export const otpCodes = pgTable(
   (table) => [index('otp_codes_phone_idx').on(table.phone, table.expiresAt)],
 );
 
+/**
+ * Short-lived email verification codes (Prompt A1) — the same shape as
+ * `otpCodes` above, one row per attempt to add or reverify an email, keyed to
+ * the account rather than to a bare address: the code proves "this user
+ * controls this inbox", not "this inbox exists", so a code issued to one
+ * account can never verify a different one that later claims the same email.
+ */
+export const emailVerificationCodes = pgTable(
+  'email_verification_codes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    email: text('email').notNull(),
+    /** SHA-256 of the 6-digit code — never the code itself. */
+    codeHash: text('code_hash').notNull(),
+    expiresAt: timestampCol('expires_at').notNull(),
+    consumedAt: timestampCol('consumed_at'),
+    attempts: integer('attempts').notNull().default(0),
+    createdAt: createdAt(),
+  },
+  (table) => [index('email_verification_codes_user_idx').on(table.userId, table.expiresAt)],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Address = typeof addresses.$inferSelect;
 export type NewAddress = typeof addresses.$inferInsert;
 export type OtpCode = typeof otpCodes.$inferSelect;
+export type EmailVerificationCode = typeof emailVerificationCodes.$inferSelect;

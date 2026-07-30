@@ -7,7 +7,9 @@ import { users } from '../db/schema';
 import { shopForUser } from '../db/queries/shops';
 import type { DbLocale, UserRole } from '../db/schema';
 import { isDemoMode } from '../demo';
+import { findUserByEmail, normalizeEmail } from './email';
 import { findUserByPhone, verifyOtp } from './otp';
+import { passwordAttemptAllowed, verifyPassword } from './password';
 
 /**
  * Auth.js v5 with a phone + OTP credentials provider (PRD §5.7, §12.2).
@@ -95,6 +97,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           phone: result.user.phone,
           role: result.user.role,
           locale: result.user.locale,
+          shopId: shop?.shopId ?? null,
+          shopSlug: shop?.slug ?? null,
+        };
+      },
+    }),
+
+    /**
+     * Email + password (Prompt A1) — a second, faster way into an account the
+     * phone already created, never a second identity. Refuses uniformly for
+     * "no such email", "email not verified", "no password set" and "wrong
+     * password": authorize() returns null in every one of those cases, so the
+     * caller sees a single indistinguishable failure and cannot use sign-in
+     * attempts to discover which emails exist (see verifyPassword's comment
+     * on the dummy-hash timing match for the same reason).
+     */
+    Credentials({
+      id: 'email',
+      name: 'Email and password',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        const email = typeof credentials?.email === 'string' ? normalizeEmail(credentials.email) : '';
+        const password = typeof credentials?.password === 'string' ? credentials.password : '';
+
+        if (!email || !password || !passwordAttemptAllowed(email)) return null;
+
+        const found = await findUserByEmail(email);
+        const eligible = found && found.emailVerifiedAt && found.passwordHash && found.active;
+
+        // Always call verifyPassword, whether or not an eligible account was
+        // found — passing null takes the same argon2-shaped time as a real
+        // mismatch, which is the whole point of the dummy hash.
+        const passwordOk = await verifyPassword(eligible ? found.passwordHash : null, password);
+        if (!eligible || !passwordOk) return null;
+
+        const shop = await shopForUser(found.id);
+
+        return {
+          id: found.id,
+          name: found.name,
+          phone: found.phone,
+          role: found.role,
+          locale: found.locale,
           shopId: shop?.shopId ?? null,
           shopSlug: shop?.slug ?? null,
         };

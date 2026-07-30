@@ -4,11 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { requestEmailVerification, verifyEmailCode } from '../auth/email';
 import { currentUser } from '../auth/guards';
-import { normalizePhone, PHONE_PATTERN } from '../auth/otp';
+import { normalizePhone, PHONE_PATTERN, requestOtp, verifyOtp } from '../auth/otp';
+import { isPasswordAllowed, setUserPassword, verifyPassword } from '../auth/password';
 import { addToCart } from '../cart';
 import { db } from '../db';
-import { addresses, orderItems, orders, products, users } from '../db/schema';
+import { addresses, orderItems, orders, products, users, type DbLocale } from '../db/schema';
 
 /**
  * Account mutations (PRD §5.4): profile, saved addresses, reorder.
@@ -152,4 +154,126 @@ export async function reorder(
 
   revalidatePath('/cart');
   return { ok: true, data: { added, skipped } };
+}
+
+/*
+ * Security: email verification and password (Prompt A1).
+ *
+ * Every action here re-derives the signed-in user from the session rather
+ * than trusting a userId the client might pass — there is no legitimate
+ * reason for these forms to ever name a different account.
+ */
+
+const emailSchema = z.object({ email: z.string().trim().toLowerCase().email() });
+
+export async function requestEmailVerificationAction(email: string): Promise<AccountResult> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const parsed = emailSchema.safeParse({ email });
+  if (!parsed.success) return { ok: false, error: 'invalid_email' };
+
+  const result = await requestEmailVerification(
+    user.id,
+    parsed.data.email,
+    (user.locale ?? 'fa') as DbLocale,
+  );
+  if (!result.ok) return { ok: false, error: result.error };
+
+  revalidatePath('/account');
+  return { ok: true };
+}
+
+const emailCodeSchema = z.object({ code: z.string().regex(/^\d{6}$/, { message: 'invalid_code' }) });
+
+export async function verifyEmailCodeAction(code: string): Promise<AccountResult<{ email: string }>> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const parsed = emailCodeSchema.safeParse({ code });
+  if (!parsed.success) return { ok: false, error: 'invalid_code' };
+
+  const result = await verifyEmailCode(user.id, parsed.data.code);
+  if (!result.ok) return { ok: false, error: result.error };
+
+  revalidatePath('/account');
+  return { ok: true, data: { email: result.email } };
+}
+
+const setPasswordSchema = z
+  .object({
+    newPassword: z.string().min(8, { message: 'weak_password' }),
+    confirmPassword: z.string(),
+    currentPassword: z.string().optional(),
+    otpCode: z
+      .string()
+      .regex(/^\d{6}$/)
+      .optional(),
+  })
+  .refine((value) => value.newPassword === value.confirmPassword, {
+    message: 'password_mismatch',
+    path: ['confirmPassword'],
+  });
+
+/**
+ * Sets a password for the first time, or changes an existing one.
+ *
+ * The two are the same action with a branch, not two actions: whether
+ * re-authentication is required depends entirely on whether the account
+ * already has a `passwordHash`, which only the server can check. A first-time
+ * set needs nothing beyond the existing session (PRD's "Set a password" —
+ * being signed in already proved who this is); a CHANGE requires the current
+ * password or, for someone who has forgotten it, a fresh OTP to the account
+ * phone — never the new password alone, or a hijacked session could lock the
+ * real owner out by rotating a credential they never typed.
+ */
+export async function setPasswordAction(
+  input: z.input<typeof setPasswordSchema>,
+): Promise<AccountResult> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const parsed = setPasswordSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'invalid_input' };
+  }
+
+  if (!isPasswordAllowed(parsed.data.newPassword)) {
+    return { ok: false, error: 'weak_password' };
+  }
+
+  const [row] = await db
+    .select({ passwordHash: users.passwordHash, phone: users.phone })
+    .from(users)
+    .where(eq(users.id, user.id))
+    .limit(1);
+
+  if (row?.passwordHash) {
+    const viaCurrentPassword =
+      parsed.data.currentPassword &&
+      (await verifyPassword(row.passwordHash, parsed.data.currentPassword));
+
+    const viaOtp =
+      !viaCurrentPassword &&
+      parsed.data.otpCode &&
+      (await verifyOtp(row.phone, parsed.data.otpCode)).ok;
+
+    if (!viaCurrentPassword && !viaOtp) return { ok: false, error: 'reauth_required' };
+  }
+
+  await setUserPassword(user.id, parsed.data.newPassword);
+
+  revalidatePath('/account');
+  return { ok: true };
+}
+
+/** Sends an OTP to the SIGNED-IN user's own phone — never a client-supplied one. */
+export async function requestPasswordChangeOtpAction(): Promise<AccountResult> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const result = await requestOtp(user.phone);
+  if (!result.ok) return { ok: false, error: result.error };
+
+  return { ok: true };
 }

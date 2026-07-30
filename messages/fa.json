@@ -434,6 +434,12 @@
       "title": "کد ورود گلبهار",
       "body": "کد ورود شما: {code} — تا ۵ دقیقه اعتبار دارد. این کد را با کسی شریک نسازید."
     },
+    "email": {
+      "verify": {
+        "title": "تایید ایمیل گلبهار",
+        "body": "کد تایید ایمیل {email}: {code} — تا ۵ دقیقه اعتبار دارد."
+      }
+    },
     "order": {
       "placed": {
         "title": "سفارش شما ثبت شد",
@@ -510,6 +516,10 @@
   "auth": {
     "title": "ورود به گلبهار",
     "subtitle": "شماره تلفن خود را وارد کنید. کد ورود برای شما فرستاده می‌شود.",
+    "tabPhone": "شماره تلفن",
+    "tabEmail": "ایمیل",
+    "emailLabel": "ایمیل",
+    "passwordLabel": "رمز عبور",
     "phoneLabel": "شماره تلفن",
     "phoneHint": "مثلاً ۰۷۰۰۰۰۰۰۰۳ — شماره‌های افغانستان با ۰۷ شروع می‌شوند.",
     "sendCode": "ارسال کد",
@@ -532,7 +542,8 @@
       "no_code": "کدی فرستاده نشده — دوباره تلاش کنید",
       "expired": "کد منقضی شده است",
       "too_many_attempts": "تلاش‌های زیاد — کد جدید بگیرید",
-      "mismatch": "کد نادرست است"
+      "mismatch": "کد نادرست است",
+      "invalid_credentials": "ایمیل یا رمز عبور نادرست است"
     },
     "signInToSave": "برای ذخیره کردن وارد شوید",
     "signIn": "ورود",
@@ -881,7 +892,18 @@
     "errors": {
       "requires_auth": "وارد شوید",
       "invalid_input": "اطلاعات کامل نیست",
-      "invalid_phone": "شماره تلفن معتبر نیست"
+      "invalid_phone": "شماره تلفن معتبر نیست",
+      "invalid_email": "ایمیل معتبر نیست",
+      "email_taken": "این ایمیل قبلاً برای حساب دیگری ثبت شده است",
+      "rate_limited": "تلاش‌های زیاد — کمی بعد دوباره تلاش کنید",
+      "no_code": "کدی فرستاده نشده — دوباره تلاش کنید",
+      "expired": "کد منقضی شده است",
+      "too_many_attempts": "تلاش‌های زیاد — کد جدید بگیرید",
+      "mismatch": "کد نادرست است",
+      "invalid_code": "کد باید شش رقم باشد",
+      "weak_password": "رمز باید حداقل ۸ کاراکتر و غیر از رمزهای رایج باشد",
+      "password_mismatch": "رمزهای وارد شده یکسان نیستند",
+      "reauth_required": "برای تغییر رمز، رمز فعلی یا کد تایید پیامکی لازم است"
     },
     "myShopTitle": "فروشگاه من",
     "myShopHint": "مدیریت محصولات، سفارش‌ها و تبلیغات فروشگاه",
@@ -892,6 +914,39 @@
       "orders": "سفارش",
       "wishlist": "علاقه‌مندی",
       "reviews": "نظر"
+    },
+    "security": {
+      "heading": "امنیت حساب",
+      "emailLabel": "ایمیل",
+      "emailNotSet": "ایمیلی ثبت نشده",
+      "emailVerified": "تایید شده",
+      "addEmail": "افزودن ایمیل",
+      "changeEmail": "تغییر ایمیل",
+      "emailPlaceholder": "name@example.com",
+      "sendCode": "ارسال کد",
+      "sending": "در حال ارسال…",
+      "codeLabel": "کد شش رقمی",
+      "codeSent": "کد تایید فرستاده شد — آن را در پنل پیام‌ها ببینید.",
+      "codeHint": "کد در پنل پیام‌ها نمایش داده می‌شود.",
+      "verifyEmail": "تایید ایمیل",
+      "verifying": "در حال تایید…",
+      "emailVerifiedToast": "ایمیل تایید و ذخیره شد",
+      "passwordLabel": "رمز عبور",
+      "passwordNotSet": "رمزی تنظیم نشده",
+      "passwordUpdatedOn": "به‌روزرسانی‌شده در {date}",
+      "setPassword": "تنظیم رمز عبور",
+      "changePassword": "تغییر رمز عبور",
+      "newPasswordLabel": "رمز جدید",
+      "confirmPasswordLabel": "تکرار رمز جدید",
+      "currentPasswordLabel": "رمز فعلی",
+      "useOtpInstead": "به‌جای آن، کد پیامکی دریافت کن",
+      "useCurrentPasswordInstead": "به‌جای آن، رمز فعلی را وارد کن",
+      "requestOtp": "ارسال کد به تلفن",
+      "otpSent": "کد به پنل پیام‌ها فرستاده شد",
+      "otpLabel": "کد شش رقمی",
+      "save": "ذخیره",
+      "passwordSavedToast": "رمز عبور ذخیره شد",
+      "cancel": "لغو"
     }
   },
   "dashboardNav": {

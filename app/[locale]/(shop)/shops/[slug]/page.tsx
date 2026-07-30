@@ -15,7 +15,7 @@ import {
 import { pickLocale } from '@/lib/db/localized';
 import { filterFacets } from '@/lib/db/queries/listing';
 import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
-import { formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
+import { formatNumber, formatOpeningHours, formatPhone, formatUnitNumber } from '@/lib/format';
 import { decodeSlug } from '@/lib/utils';
 
 /**
@@ -132,7 +132,7 @@ export default async function ShopPage({
             {shop.phone && (
               <div className="flex items-center gap-1.5">
                 <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <dd dir="ltr">{shop.phone}</dd>
+                <dd dir="ltr">{formatPhone(shop.phone, locale)}</dd>
               </div>
             )}
           </dl>

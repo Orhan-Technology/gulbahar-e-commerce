@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { addStaff, removeStaff, setDashboardLocale } from '@/lib/actions/shop-settings';
+import { formatPhone } from '@/lib/format';
 import { usePathname, useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
 
 export type StaffMember = {
@@ -78,6 +79,7 @@ export function NotificationPreferences() {
 /** Staff roster (PRD §6.8). Only the owner sees the controls. */
 export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canManage: boolean }) {
   const t = useTranslations('shopSettings.staff');
+  const locale = useLocale();
   const router = useRouter();
 
   const [name, setName] = React.useState('');
@@ -111,7 +113,7 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{member.name}</p>
               <p className="text-muted-foreground text-xs" dir="ltr">
-                {member.phone}
+                {formatPhone(member.phone, locale)}
               </p>
             </div>
             <Badge variant={member.role === 'owner' ? 'default' : 'secondary'}>

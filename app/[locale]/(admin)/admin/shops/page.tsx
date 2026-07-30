@@ -13,7 +13,7 @@ import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopDirectory } from '@/lib/db/queries/admin';
 import { categoryTree, shopCountsByStatus } from '@/lib/db/queries/shops';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import type { ShopStatus } from '@/lib/db/schema';
 
@@ -165,7 +165,7 @@ async function ShopList({ locale, query }: { locale: string; query: Query }) {
               {shop.phone && (
                 <span className="inline-flex items-center gap-1" dir="ltr">
                   <Phone className="h-3 w-3" aria-hidden />
-                  {shop.phone}
+                  {formatPhone(shop.phone, locale)}
                 </span>
               )}
               <span>

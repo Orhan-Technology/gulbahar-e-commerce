@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminUserCounts, adminUsers } from '@/lib/db/queries/admin';
-import { formatDate, formatNumber } from '@/lib/format';
+import { formatDate, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 type Query = { role?: 'customer' | 'shopkeeper' | 'admin'; q?: string };
@@ -129,7 +129,7 @@ async function UserList({
                 )}
               </td>
               <td className="p-3" dir="ltr">
-                {user.phone}
+                {formatPhone(user.phone, locale)}
               </td>
               <td className="p-3">
                 <Badge

@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 import { signIn, signOut } from '../auth';
 import { mergeGuestCart } from '../cart';
+import { findUserByEmail } from '../auth/email';
 import { findUserByPhone } from '../auth/otp';
 import { normalizePhone, PHONE_PATTERN, requestOtp } from '../auth/otp';
 
@@ -86,6 +87,45 @@ export async function verifyOtpAction(
       // verifyOtp already distinguished the reason; the provider can only signal
       // pass/fail, so the UI shows a single "code not accepted" message.
       return { ok: false, error: 'code_rejected' };
+    }
+    throw error;
+  }
+}
+
+const emailSignInSchema = z.object({
+  email: z.string().trim().toLowerCase().email({ message: 'invalid_credentials' }),
+  password: z.string().min(1, { message: 'invalid_credentials' }),
+});
+
+/**
+ * Email + password sign-in (Prompt A1). Returns the SAME uniform error code
+ * whatever went wrong — the 'email' provider already collapses every reason
+ * (no such email, unverified, no password, wrong password) into one refusal,
+ * so there is nothing more specific to report here without undoing that.
+ */
+export async function signInWithEmailAction(
+  formData: FormData,
+): Promise<ActionResult<{ role: string }>> {
+  const parsed = emailSignInSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
+  if (!parsed.success) return { ok: false, error: 'invalid_credentials' };
+
+  try {
+    await signIn('email', {
+      email: parsed.data.email,
+      password: parsed.data.password,
+      redirect: false,
+    });
+
+    const signedIn = await findUserByEmail(parsed.data.email);
+    if (signedIn) await mergeGuestCart(signedIn.id);
+
+    return { ok: true, data: { role: signedIn?.role ?? 'customer' } };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { ok: false, error: 'invalid_credentials' };
     }
     throw error;
   }

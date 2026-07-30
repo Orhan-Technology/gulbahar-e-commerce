@@ -10,7 +10,7 @@ import { RatingStars } from '@/components/custom/rating-stars';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { moderateReview } from '@/lib/actions/admin-catalogue';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 export type ModerationRow = {
@@ -62,7 +62,7 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
         <div className="min-w-0 space-y-1">
           <RatingStars value={review.rating} size="sm" />
           <p className="text-muted-foreground text-xs">
-            {review.authorName} · <span dir="ltr">{review.authorPhone}</span> ·{' '}
+            {review.authorName} · <span dir="ltr">{formatPhone(review.authorPhone, locale)}</span> ·{' '}
             {formatDate(review.createdAt, locale)}
           </p>
           <p className="text-xs">

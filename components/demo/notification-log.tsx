@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { clearReadLog, fetchNotificationLog, markLogRead, type LogEntry } from '@/lib/actions/demo';
 import { OPEN_LOG_EVENT } from '@/lib/demo';
-import { formatNumber, formatRelative } from '@/lib/format';
+import { formatNumber, formatPhone, formatRelative } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
 type ChannelFilter = 'all' | 'sms' | 'inapp';
@@ -244,7 +244,9 @@ export function NotificationLog() {
                   <Badge variant="secondary">{t(`roles.${entry.recipientRole}`)}</Badge>
                   <span className="truncate">
                     {entry.recipientName ?? t(`roles.${entry.recipientRole}`)}
-                    {entry.recipientPhone && <span dir="ltr"> · {entry.recipientPhone}</span>}
+                    {entry.recipientPhone && (
+                      <span dir="ltr"> · {formatPhone(entry.recipientPhone, locale)}</span>
+                    )}
                   </span>
                   {/* The language the template rendered in — the multilingual claim. */}
                   <Badge variant="outline" className="ms-auto shrink-0">

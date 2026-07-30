@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { orderWithTimeline } from '@/lib/db/queries/orders';
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -159,7 +159,7 @@ export default async function AdminOrderPage({
             </p>
             <p className="flex items-center gap-2 text-sm" dir="ltr">
               <Phone className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
-              {order.customerPhone}
+              {formatPhone(order.customerPhone, locale)}
             </p>
             <p className="flex items-center gap-2 text-sm">
               {order.fulfillment === 'delivery' ? (

@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { shopOrderDetail } from '@/lib/db/queries/shop-orders';
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /** Shopkeeper order detail (PRD §6.3). */
@@ -142,7 +142,7 @@ export default async function ShopOrderPage({
             className="hover:text-primary flex items-center gap-2 text-sm"
           >
             <Phone className="text-muted-foreground h-4 w-4" aria-hidden />
-            <span dir="ltr">{order.customerPhone}</span>
+            <span dir="ltr">{formatPhone(order.customerPhone, locale)}</span>
           </a>
         </section>
 

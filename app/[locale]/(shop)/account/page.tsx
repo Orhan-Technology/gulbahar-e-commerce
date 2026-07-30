@@ -1,16 +1,17 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Heart, Package, ShieldCheck, Store } from 'lucide-react';
 
 import { AddressManager } from '@/components/shop/account/address-manager';
 import { ProfileForm } from '@/components/shop/account/profile-form';
+import { SecurityForm } from '@/components/shop/account/security-form';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { requireUser } from '@/lib/auth/guards';
 import { db } from '@/lib/db';
 import { addresses, users } from '@/lib/db/schema';
 import { customerStats } from '@/lib/db/queries/orders';
 import { KABUL_DISTRICTS } from '@/lib/districts';
-import { formatMonthYear, formatNumber, formatUnitNumber } from '@/lib/format';
+import { formatMonthYear, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /** Account home (PRD §5.4): profile, saved addresses, and links onward. */
@@ -23,7 +24,16 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   const [[profile], saved] = await Promise.all([
     db
-      .select({ name: users.name, phone: users.phone, locale: users.locale })
+      .select({
+        name: users.name,
+        phone: users.phone,
+        locale: users.locale,
+        email: users.email,
+        emailVerifiedAt: users.emailVerifiedAt,
+        // The hash itself never leaves the server — only whether one exists.
+        hasPassword: sql<boolean>`${users.passwordHash} is not null`,
+        passwordUpdatedAt: users.passwordUpdatedAt,
+      })
       .from(users)
       .where(eq(users.id, session.id))
       .limit(1),
@@ -68,7 +78,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
               reads backwards if it inherits the paragraph direction. */}
           {profile?.phone && (
             <p className="text-muted-foreground text-sm tabular-nums" dir="ltr">
-              {formatUnitNumber(profile.phone, locale)}
+              {formatPhone(profile.phone, locale)}
             </p>
           )}
           {stats.memberSince && (
@@ -157,6 +167,21 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             name={profile?.name ?? ''}
             locale={profile?.locale ?? locale}
             phone={profile?.phone ?? ''}
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('security.heading')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <SecurityForm
+            locale={locale}
+            email={profile?.email ?? null}
+            emailVerifiedAt={profile?.emailVerifiedAt ?? null}
+            hasPassword={Boolean(profile?.hasPassword)}
+            passwordUpdatedAt={profile?.passwordUpdatedAt ?? null}
           />
         </CardContent>
       </Card>

@@ -89,6 +89,23 @@ export function formatOpeningHours(value: string | null | undefined, locale: str
   return `${digits(openHour)}:${pad(openMinute)} – ${digits(closeHour)}:${pad(closeMinute)}`;
 }
 
+const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';
+
+/**
+ * A phone number, e.g. «۰۷۰۰۰۰۰۰۰۳» / "0700000003" — digit-mapped only, NEVER
+ * through formatNumber/Intl.NumberFormat. A phone number is a dialable string,
+ * not a quantity: passing one through a number formatter parses it as a JS
+ * number first, which drops the leading zero every Afghan mobile number
+ * starts with and inserts thousands separators into what should read as one
+ * unbroken digit string — "0700000003" became "700,000,003" on the account
+ * page (Prompt A1) this way. `ps`, like `fa`, reads Persian digits (PRD §11);
+ * only `en` stays Latin.
+ */
+export function formatPhone(value: string, locale: string): string {
+  if (locale === 'en') return value;
+  return value.replace(/\d/g, (digit) => PERSIAN_DIGITS[Number(digit)]);
+}
+
 /**
  * A shop's unit number, e.g. "۲۱۴" / "214".
  *

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select';
 import { updateProfile } from '@/lib/actions/account';
 import { signOutAction } from '@/lib/actions/auth';
+import { formatPhone } from '@/lib/format';
 import { useRouter } from '@/lib/i18n/navigation';
 import { routing } from '@/lib/i18n/routing';
 
@@ -35,6 +36,7 @@ export function ProfileForm({
   phone: string;
 }) {
   const t = useTranslations('account');
+  const uiLocale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
   const [nextLocale, setNextLocale] = React.useState(locale);
@@ -73,7 +75,7 @@ export function ProfileForm({
       <div className="space-y-1.5">
         <Label htmlFor="phone">{t('phone')}</Label>
         {/* Phone is the identity; changing it would mean changing account. */}
-        <Input id="phone" value={phone} dir="ltr" disabled />
+        <Input id="phone" value={formatPhone(phone, uiLocale)} dir="ltr" disabled />
         <p className="text-muted-foreground text-xs">{t('phoneLocked')}</p>
       </div>
 

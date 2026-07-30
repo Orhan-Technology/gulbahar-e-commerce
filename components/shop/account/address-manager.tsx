@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { deleteAddress, saveAddress } from '@/lib/actions/account';
+import { formatPhone } from '@/lib/format';
 import { useRouter } from '@/lib/i18n/navigation';
 
 export type ManagedAddress = {
@@ -35,6 +36,7 @@ export function AddressManager({
   districts: string[];
 }) {
   const t = useTranslations('account');
+  const locale = useLocale();
   const router = useRouter();
   const [editing, setEditing] = React.useState<ManagedAddress | 'new' | null>(null);
   const [pending, startTransition] = React.useTransition();
@@ -92,7 +94,7 @@ export function AddressManager({
                 {address.district} — {address.streetDetails}
               </p>
               <p className="text-muted-foreground text-xs" dir="ltr">
-                {address.phone}
+                {formatPhone(address.phone, locale)}
               </p>
             </div>
             <div className="flex shrink-0 gap-1">

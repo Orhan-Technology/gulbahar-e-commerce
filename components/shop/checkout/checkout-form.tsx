@@ -19,7 +19,7 @@ import {
 import { HesabPaySheet } from '@/components/shop/checkout/hesabpay-sheet';
 import { saveAddress } from '@/lib/actions/account';
 import { placeOrder } from '@/lib/actions/checkout';
-import { formatCurrency, formatNumber, formatUnitNumber } from '@/lib/format';
+import { formatCurrency, formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
 import { useRouter } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -224,7 +224,7 @@ export function CheckoutForm({
                         {address.district} — {address.streetDetails}
                       </span>
                       <span className="text-muted-foreground block text-xs" dir="ltr">
-                        {address.phone}
+                        {formatPhone(address.phone, locale)}
                       </span>
                     </span>
                   </label>

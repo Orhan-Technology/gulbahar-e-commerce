@@ -26,6 +26,7 @@ import enMessages from '../messages/en.json';
 /** Every template key that exists, so a typo is a type error rather than a blank SMS. */
 export type NotificationEventKey =
   | 'otp'
+  | 'email.verify'
   | 'order.placed'
   | 'order.newForShop'
   | 'order.accepted'
