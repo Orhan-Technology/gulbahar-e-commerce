@@ -152,6 +152,11 @@ async function ProductList({
         title={query.q ? t('noMatchTitle', { term: query.q }) : t('emptyTitle')}
         description={query.q ? t('noMatchBody') : t('emptyBody')}
         action={{ label: t('addProduct'), href: '/dashboard/products/new' }}
+        // The alternative, not a lesser version of the same thing: a shop with
+        // sixty lines in a spreadsheet should not type them one at a time.
+        secondaryAction={
+          query.q ? undefined : { label: t('emptyImport'), href: '/dashboard/products/import' }
+        }
       />
     );
   }

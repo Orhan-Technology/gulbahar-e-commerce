@@ -108,7 +108,23 @@
     "noBaseline": "No earlier period to compare",
     "rangeOrdersLabel": "Orders — {days} days",
     "rangeViewsLabel": "Product views — {days} days",
-    "vsPreviousRange": "vs the previous period"
+    "vsPreviousRange": "vs the previous period",
+    "setup": {
+      "heading": "Finish setting up your shop",
+      "body": "The fuller your shop, the more customers stop at it. These are one-time jobs.",
+      "pendingHeading": "Your shop is waiting for mall approval",
+      "pendingBody": "Your shop goes live once mall management approves it — get everything ready while you wait.",
+      "progress": "{done} of {total} done",
+      "steps": {
+        "logo": "Add your shop logo",
+        "banner": "Add a shopfront photo",
+        "description": "Write a short introduction",
+        "location": "Confirm your floor and unit",
+        "phone": "Add a contact number",
+        "products": "Add your first three products",
+        "verification": "Send documents for verification"
+      }
+    }
   },
   "admin": {
     "heading": "Platform Administration",
@@ -1153,7 +1169,7 @@
     "fulfillmentHeading": "Fulfilment",
     "historyHeading": "History",
     "emptyFilteredBody": "No orders match this filter. Try another one.",
-    "emptyActionableBody": "New orders appear here without reloading the page.",
+    "emptyActionableBody": "When a customer orders, it lands here and in your bell. The sooner you accept, the sooner they relax — the first few hours are the ones that matter.",
     "filters": {
       "actionable": "In progress",
       "placed": "Awaiting acceptance",
@@ -1228,7 +1244,7 @@
     "editProduct": "Edit product",
     "viewOnStore": "View on store",
     "emptyTitle": "No products yet",
-    "emptyBody": "Add your first product, or import your whole list at once.",
+    "emptyBody": "Three steps: photograph it, set a price and stock, publish. A published product is on the storefront the same second.",
     "noMatchTitle": "Nothing found for “{term}”",
     "noMatchBody": "Try another word, or clear the filters.",
     "selectAll": "Select all",
@@ -1405,7 +1421,8 @@
         "nothing_to_import": "No valid rows left to import"
       },
       "ruleSpecs": "Spec columns are optional: spec_<key>_fa and spec_<key>_en, for example spec_storage_fa."
-    }
+    },
+    "emptyImport": "or import your whole list from a CSV"
   },
   "shopPromotions": {
     "title": "Promotions",
@@ -1417,7 +1434,7 @@
     "offers": {
       "intro": "An offer is funded by your shop, so it goes live immediately with no approval.",
       "emptyTitle": "No offers yet",
-      "emptyBody": "Create a percentage or fixed discount to show it on the storefront.",
+      "emptyBody": "A discount is yours to give and comes out of your margin; a paid placement is bought from the mall and lifts your product higher. This section is for discounts.",
       "sections": {
         "active": "Running",
         "scheduled": "Scheduled",
@@ -1561,7 +1578,7 @@
       "star1": "1 star"
     },
     "emptyTitle": "No reviews yet",
-    "emptyBody": "Customer reviews will appear here after the first purchases.",
+    "emptyBody": "Reviews arrive after the first purchases. Replying — even to an unhappy one — moves your rating and the next customer's trust.",
     "emptyAnsweredTitle": "You have answered everything",
     "emptyAnsweredBody": "No unanswered reviews left.",
     "flagged": "Reported",
@@ -1654,7 +1671,10 @@
     "noOrders": "No orders in this period.",
     "noReviews": "No reviews in this period.",
     "noPromotions": "No campaigns in this period.",
-    "noWishlist": "Nobody has saved a product yet."
+    "noWishlist": "Nobody has saved a product yet.",
+    "emptyTitle": "No report for this period yet",
+    "emptyBody": "Reports are built from fulfilled orders. After your first sale, daily takings, best sellers and your rating trend appear here.",
+    "emptyAction": "View products"
   },
   "shopSettings": {
     "title": "Settings",
@@ -1847,7 +1867,7 @@
     },
     "pendingNote": "These shops have built everything but are not yet visible to customers. Approving makes the shop and its published products public immediately.",
     "emptyTitle": "No shops match this filter",
-    "emptyBody": "Try another filter.",
+    "emptyBody": "Try another filter, or create a shop from the button above and invite its owner.",
     "floorUnit": "Floor {floor}, unit {unit}",
     "productCounts": "{published} of {total} products published",
     "owner": "Owner: {name}",
@@ -2275,7 +2295,7 @@
       "admin": "Admin"
     },
     "emptyTitle": "No users found",
-    "emptyBody": "Try another term or filter.",
+    "emptyBody": "Search by name or phone number, or clear the role filter.",
     "inactive": "Inactive",
     "you": "You",
     "colName": "Name",

@@ -6,6 +6,7 @@ import { Eye, ShoppingBag, Star, Wallet } from 'lucide-react';
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { ActionQueue } from '@/components/dashboard/action-queue';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
+import { SetupGuide, SetupGuideSkeleton } from '@/components/dashboard/setup-guide';
 import { SalesChart } from '@/components/dashboard/sales-chart';
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -73,6 +74,12 @@ export default async function DashboardPage({
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
         <div className="space-y-5">
+          {/* Above the queue, because for a new tenant it IS the queue. It
+              returns null once every step is done (Prompt C5). */}
+          <Suspense fallback={<SetupGuideSkeleton />}>
+            <SetupGuide shopId={user.shopId} />
+          </Suspense>
+
           <Suspense fallback={<QueueSkeleton />}>
             <QueueSection shopId={user.shopId} locale={locale} />
           </Suspense>

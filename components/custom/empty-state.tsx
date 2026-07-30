@@ -12,6 +12,16 @@ export interface EmptyStateProps {
   title: string;
   description?: string;
   action?: { label: string; href: string } | { label: string; onClick: () => void };
+  /**
+   * A second, quieter way out (Prompt C5).
+   *
+   * Exactly one primary action stays the rule — the point of an empty state is
+   * to make the next step obvious — but some of them have a genuine
+   * alternative that is not a lesser version of the same thing: adding a
+   * product by hand versus importing sixty from a spreadsheet. Rendered as a
+   * text link so it cannot compete with the button.
+   */
+  secondaryAction?: { label: string; href: string };
   className?: string;
 }
 
@@ -31,6 +41,7 @@ export function EmptyState({
   title,
   description,
   action,
+  secondaryAction,
   className,
 }: EmptyStateProps) {
   return (
@@ -63,6 +74,15 @@ export function EmptyState({
             {action.label}
           </Button>
         ))}
+
+      {secondaryAction && (
+        <Link
+          href={secondaryAction.href}
+          className="text-primary text-sm font-medium underline-offset-2 hover:underline"
+        >
+          {secondaryAction.label}
+        </Link>
+      )}
     </div>
   );
 }

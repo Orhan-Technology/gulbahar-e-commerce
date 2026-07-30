@@ -10,7 +10,13 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { categories } from './categories';
-import { createdAt, shopMemberRoleEnum, shopStatusEnum, type LocalizedText } from './shared';
+import {
+  createdAt,
+  shopMemberRoleEnum,
+  shopStatusEnum,
+  timestampCol,
+  type LocalizedText,
+} from './shared';
 import { users } from './users';
 
 /**
@@ -34,6 +40,17 @@ export const shops = pgTable(
     unitNumber: text('unit_number'),
     phone: text('phone'),
     hours: text('hours'),
+    /**
+     * When mall management last confirmed this is a registered business at this
+     * unit (Prompt C7). Denormalised from shop_verifications so the badge on a
+     * shop card costs no join — it is read on every listing and every product
+     * page, and the verification record itself is read once, by the admin.
+     *
+     * Null means unverified, which is the NORMAL starting state: approval
+     * decides whether a shop may list at all, verification confirms the
+     * paperwork, and a shop can be approved and unverified for months.
+     */
+    verifiedAt: timestampCol('verified_at'),
     logoPath: text('logo_path'),
     bannerPath: text('banner_path'),
     /** Written by admin on reject; visible to the shopkeeper so they can amend. */

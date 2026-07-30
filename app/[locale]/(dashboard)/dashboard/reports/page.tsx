@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Heart, Receipt, ShoppingBag, Wallet } from 'lucide-react';
+import { BarChart3, Heart, Receipt, ShoppingBag, Wallet } from 'lucide-react';
 
+import { EmptyState } from '@/components/custom/empty-state';
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { RatingTrendChart } from '@/components/dashboard/reports/rating-trend-chart';
 import { StatusDonut } from '@/components/dashboard/reports/status-donut';
@@ -90,6 +91,23 @@ export default async function ShopReportsPage({
 async function Totals({ shopId, period }: { shopId: string; period: ReportPeriod }) {
   const t = await getTranslations('shopReports');
   const totals = await salesTotals(shopId, period);
+
+  /*
+   * A shop with no sales in the window gets an EXPLANATION rather than four
+   * zeroes (Prompt C5). Four tiles reading ؋ ۰ look like a broken screen to
+   * someone who has never had a sale; a sentence saying what will be here, and
+   * when, does not.
+   */
+  if (totals.orderCount === 0) {
+    return (
+      <EmptyState
+        illustration={<BarChart3 className="h-7 w-7" />}
+        title={t('emptyTitle')}
+        description={t('emptyBody')}
+        action={{ label: t('emptyAction'), href: '/dashboard/products' }}
+      />
+    );
+  }
 
   return (
     <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
