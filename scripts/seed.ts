@@ -13,7 +13,9 @@ import {
   orderEvents,
   orderItems,
   orders,
+  productAnswers,
   productImages,
+  productQuestions,
   productViewDays,
   productVariants,
   products,
@@ -335,6 +337,8 @@ async function main() {
 
   // -------------------------------------------------------------------- shops
   const shopIds = new Map<string, string>();
+  /** Who answers a question for each shop (Prompt P4). */
+  const shopOwnerIds = new Map<string, string>();
   for (const [index, shop] of shopSeed.entries()) {
     const images = manifest.shops[shop.slug];
     const [row] = await db
@@ -356,6 +360,7 @@ async function main() {
       })
       .returning();
     shopIds.set(shop.slug, row.id);
+    shopOwnerIds.set(shop.slug, shopkeeperRows[index].id);
 
     await db
       .insert(shopMembers)
@@ -1161,6 +1166,88 @@ async function main() {
     await db.insert(productViewDays).values(viewDayValues.slice(index, index + 500));
   }
 
+  // ------------------------------------------------------------- questions Q&A
+  /*
+   * Product questions (Prompt P4), seeded LAST.
+   *
+   * Order matters for a reason that is not obvious: every order reference in
+   * the demo comes out of the shared PRNG, and the runbook and the checks name
+   * specific ones (GC-24788, GC-24338). Anything that draws from it must
+   * therefore be appended, never inserted between existing draws (CLAUDE.md).
+   *
+   * Most are answered, because a section full of unanswered questions makes the
+   * shops look absent. The two or three left PENDING all belong to the demo
+   * shopkeeper's own shop, so the action queue has live work in it when the
+   * presenter opens the dashboard.
+   */
+  const questionValues: Array<{
+    productSlug: string;
+    ask: string;
+    answer: string | null;
+    daysAgo: number;
+  }> = [
+    { productSlug: 'iphone-13-128', ask: 'گرانتی شامل باتری هم می‌شود یا فقط بورد؟', answer: 'گرانتی دکان شامل بورد و باتری هر دو است، به‌شرطی که ضربه یا آب‌خوردگی نداشته باشد.', daysAgo: 9 },
+    { productSlug: 'iphone-13-128', ask: 'کارتن و لوازم اصلی همراهش است؟', answer: 'بله، کارتن اصل با کیبل و سنجاق سیم‌کارت. آداپتر برق طبق سیاست اپل داخل کارتن نیست.', daysAgo: 4 },
+    { productSlug: 'samsung-galaxy-a54-128', ask: 'دو سیم‌کارت را هم‌زمان می‌گیرد؟', answer: 'بله، دو سیم‌کارت فعال هم‌زمان و جای کارت حافظه جدا دارد.', daysAgo: 12 },
+    { productSlug: 'xiaomi-redmi-note-13', ask: 'شارژر ۳۳ واتی داخل کارتن است؟', answer: 'بله، شارژر ۳۳ واتی اصلی داخل کارتن می‌آید.', daysAgo: 6 },
+    { productSlug: 'samsung-tab-a9', ask: 'برای درس آنلاین صنف نهم مناسب است؟', answer: 'بله، برای ویدیو کنفرانس و کتاب‌های PDF کاملاً کافی است. اگر برای رسامی می‌خواهید، قلم جدا لازم دارد.', daysAgo: 15 },
+    { productSlug: 'lg-tv-43-smart', ask: 'پایه دیواری همراهش می‌آید؟', answer: 'پایه رومیزی همراه است؛ پایه دیواری را دکان با نصب رایگان می‌دهد.', daysAgo: 11 },
+    { productSlug: 'midea-fridge-260l', ask: 'با استبلایزر کار کند یا مستقیم؟', answer: 'برای برق کابل استبلایزر توصیه می‌شود. خود یخچال محافظ ولتاژ ساده دارد اما استبلایزر عمر کمپرسور را بیشتر می‌کند.', daysAgo: 20 },
+    { productSlug: 'solar-panel-150w', ask: 'برای روشن کردن یک تلویزیون و چند چراغ کافی است؟', answer: 'با یک باتری ۱۰۰ آمپر و انورتر ۵۰۰ واتی، بله. برای یخچال باید حداقل دو پنل بگیرید.', daysAgo: 8 },
+    { productSlug: 'casio-edifice-steel', ask: 'بند را می‌شود کوتاه کرد؟', answer: 'بله، تنظیم بند در همین دکان رایگان انجام می‌شود.', daysAgo: 14 },
+    { productSlug: 'seiko-automatic-5', ask: 'اگر چند روز نپوشم می‌ایستد؟', answer: 'بله، حدود ۴۰ ساعت ذخیره دارد. بعد از آن با چند بار تکان دادن یا کوک دستی دوباره کار می‌کند.', daysAgo: 22 },
+    { productSlug: 'nike-air-running', ask: 'سایز ۴۳ موجود است؟', answer: 'بله، سایز ۴۳ در رنگ مشکی و خاکستری موجود است.', daysAgo: 5 },
+    { productSlug: 'mens-leather-oxford', ask: 'چرم طبیعی است یا مصنوعی؟', answer: 'چرم طبیعی گاوی با دوخت گودیر. کف آن هم قابل تعویض است.', daysAgo: 17 },
+    { productSlug: 'womens-embroidered-dress', ask: 'گلدوزی ماشینی است؟', answer: 'خیر، گلدوزی سینه و آستین کاملاً دستی است و برای هر پیراهن چند روز وقت می‌گیرد.', daysAgo: 10 },
+    { productSlug: 'moulinex-blender', ask: 'کاسه شیشه‌ای است یا پلاستیکی؟', answer: 'کاسه شیشه‌ای است، به همین دلیل بوی زردچوبه و ادویه نمی‌گیرد.', daysAgo: 13 },
+    { productSlug: 'gold-ring-21k-simple', ask: 'با فاکتور رسمی می‌دهید؟', answer: 'بله، با فاکتور رسمی و مهر عیار. سایز انگشتر هم رایگان تنظیم می‌شود.', daysAgo: 19 },
+    // Left unanswered on the demo shopkeeper's own shop — this is the live work
+    // the action queue shows when the presenter opens the dashboard.
+    { productSlug: 'jbl-flip-speaker', ask: 'چند ساعت شارژ نگه می‌دارد و ضد آب است؟', answer: null, daysAgo: 2 },
+    { productSlug: 'anker-powerbank-20000', ask: 'لپ‌تاپ را هم شارژ می‌کند یا فقط موبایل؟', answer: null, daysAgo: 1 },
+    { productSlug: 'lg-tv-43-smart', ask: 'ریسیور جداگانه لازم دارد یا کانال‌ها را خودش می‌گیرد؟', answer: null, daysAgo: 1 },
+  ];
+
+  const shopOwnerByShopId = new Map(
+    shopSeed.map((shop) => [shopIds.get(shop.slug)!, shopOwnerIds.get(shop.slug)!]),
+  );
+
+  let answeredQuestions = 0;
+  for (const entry of questionValues) {
+    const productId = productIds.get(entry.productSlug);
+    const product = productBySlug.get(entry.productSlug);
+    if (!productId || !product) continue;
+
+    const shopId = shopIds.get(product.shopSlug)!;
+    const asker = pick(customerRows);
+    const askedAt = daysAgo(entry.daysAgo);
+
+    const [question] = await db
+      .insert(productQuestions)
+      .values({
+        productId,
+        shopId,
+        userId: asker.id,
+        body: entry.ask,
+        status: entry.answer ? 'answered' : 'pending',
+        createdAt: askedAt,
+      })
+      .returning({ id: productQuestions.id });
+
+    if (entry.answer) {
+      answeredQuestions += 1;
+      const answeredAt = new Date(
+        Math.min(askedAt.getTime() + 36 * 60 * 60 * 1000, NOW.getTime() - 60 * 60 * 1000),
+      );
+      await db.insert(productAnswers).values({
+        questionId: question.id,
+        answeredBy: shopOwnerByShopId.get(shopId)!,
+        body: entry.answer,
+        createdAt: answeredAt,
+      });
+    }
+  }
+
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();
   console.log('Row counts:');
@@ -1176,6 +1263,9 @@ async function main() {
   console.log(`  fulfilled items     ${fulfilledItems.length} reviewable`);
   console.log(`  wishlist rows       ${wishlistValues.length}`);
   console.log(`  out-of-stock        ${soldOutSlugs.size} products (action queue)`);
+  console.log(
+    `  questions           ${questionValues.length} (${answeredQuestions} answered, ${questionValues.length - answeredQuestions} waiting)`,
+  );
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');
   console.log('  admin        0700000001');

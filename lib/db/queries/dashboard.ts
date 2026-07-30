@@ -433,7 +433,13 @@ export async function unansweredReviewCount(shopId: string) {
 }
 
 export type ActionQueueEntry = {
-  kind: 'new_order' | 'to_ready' | 'needs_reply' | 'out_of_stock' | 'expiring_promotion';
+  kind:
+    | 'new_order'
+    | 'to_ready'
+    | 'needs_reply'
+    | 'needs_answer'
+    | 'out_of_stock'
+    | 'expiring_promotion';
   id: string;
   title: string;
   subtitle: string;
@@ -456,7 +462,7 @@ export async function actionQueueItems(
 ): Promise<ActionQueueEntry[]> {
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-  const [orderRows, reviewRows, stockRows, promoRows] = await Promise.all([
+  const [orderRows, reviewRows, questionRows, stockRows, promoRows] = await Promise.all([
     // Orders sitting at placed (accept/reject) or accepted (mark ready), scoped
     // to this shop's own lines.
     db.execute(sql`
@@ -487,6 +493,22 @@ export async function actionQueueItems(
       order by r.rating asc, r.created_at asc
       limit 4
     `),
+    /*
+     * Unanswered customer questions (Prompt P4).
+     *
+     * Ranked directly under new orders rather than with the reviews: a question
+     * is a customer who has NOT bought yet and is waiting on the shop to
+     * decide, so answering it is closer to taking an order than to replying to
+     * one. Oldest first — the one that has been waiting longest.
+     */
+    db.execute(sql`
+      select q.id, q.body, q.created_at, p.title
+      from product_questions q
+      join products p on p.id = q.product_id
+      where q.shop_id = ${shopId} and q.status = 'pending'
+      order by q.created_at asc
+      limit 6
+    `),
     db.execute(sql`
       select p.id, p.slug, p.title, p.created_at
       from products p
@@ -515,6 +537,12 @@ export async function actionQueueItems(
   const unanswered = reviewRows as unknown as Array<{
     id: string;
     rating: number;
+    created_at: string;
+    title: Record<string, string>;
+  }>;
+  const questions = questionRows as unknown as Array<{
+    id: string;
+    body: string;
     created_at: string;
     title: Record<string, string>;
   }>;
@@ -551,6 +579,16 @@ export async function actionQueueItems(
       href: `/dashboard/reviews?unanswered=1&reply=${row.id}`,
       at: new Date(row.created_at),
     })),
+    ...questions.map((row): ActionQueueEntry => ({
+      kind: 'needs_answer',
+      id: row.id,
+      title: pickLocale(row.title as never, locale),
+      subtitle: row.body,
+      // Deep-links with the composer open on this question, the same shape the
+      // review row uses — the queue is a place to DO the work, not to find it.
+      href: `/dashboard/questions?status=pending&answer=${row.id}`,
+      at: new Date(row.created_at),
+    })),
     ...stock.map((row): ActionQueueEntry => ({
       kind: 'out_of_stock',
       id: row.id,
@@ -572,10 +610,11 @@ export async function actionQueueItems(
   // Urgency order, then oldest first within a kind.
   const rank: Record<ActionQueueEntry['kind'], number> = {
     new_order: 0,
-    to_ready: 1,
-    needs_reply: 2,
-    out_of_stock: 3,
-    expiring_promotion: 4,
+    needs_answer: 1,
+    to_ready: 2,
+    needs_reply: 3,
+    out_of_stock: 4,
+    expiring_promotion: 5,
   };
   return entries.sort((a, b) => rank[a.kind] - rank[b.kind] || a.at.getTime() - b.at.getTime());
 }

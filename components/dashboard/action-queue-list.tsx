@@ -14,7 +14,13 @@ import { cn } from '@/lib/utils';
 
 export type QueueRow = {
   key: string;
-  kind: 'new_order' | 'to_ready' | 'needs_reply' | 'out_of_stock' | 'expiring_promotion';
+  kind:
+    | 'new_order'
+    | 'to_ready'
+    | 'needs_reply'
+    | 'needs_answer'
+    | 'out_of_stock'
+    | 'expiring_promotion';
   title: string;
   subtitle: string;
   href: string;

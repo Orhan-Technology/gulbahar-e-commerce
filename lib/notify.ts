@@ -43,6 +43,8 @@ export type NotificationEventKey =
   | 'campaign.expiring'
   | 'review.received'
   | 'review.responded'
+  | 'question.asked'
+  | 'question.answered'
   | 'user.roleChanged';
 
 type MessageTree = Record<string, unknown>;

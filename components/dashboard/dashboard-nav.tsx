@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Megaphone,
+  MessageCircleQuestion,
   MoreHorizontal,
   Package,
   Settings,
@@ -52,6 +53,7 @@ const PRIMARY: NavItem[] = [
 
 const SECONDARY: NavItem[] = [
   { href: '/dashboard/promotions', icon: Megaphone, key: 'promotions' },
+  { href: '/dashboard/questions', icon: MessageCircleQuestion, key: 'questions' },
   { href: '/dashboard/reviews', icon: Star, key: 'reviews' },
   { href: '/dashboard/reports', icon: BarChart3, key: 'reports' },
   { href: '/dashboard/profile', icon: Store, key: 'profile' },

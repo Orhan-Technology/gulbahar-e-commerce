@@ -52,6 +52,13 @@ export const paymentMethodEnum = pgEnum('payment_method', ['cod', 'hesabpay']);
 
 export const reviewStatusEnum = pgEnum('review_status', ['visible', 'reported', 'removed']);
 
+/**
+ * Question lifecycle (Prompt P4): pending → answered, with `hidden` as the
+ * admin's moderation outcome. There is no 'reported' state — a question is one
+ * sentence and the admin either leaves it or hides it.
+ */
+export const questionStatusEnum = pgEnum('question_status', ['pending', 'answered', 'hidden']);
+
 export const offerTypeEnum = pgEnum('offer_type', ['percent', 'fixed']);
 
 export const offerScopeEnum = pgEnum('offer_scope', ['shop', 'products']);
@@ -92,6 +99,7 @@ export type OrderStatus = (typeof orderStatusEnum.enumValues)[number];
 export type FulfillmentMethod = (typeof fulfillmentEnum.enumValues)[number];
 export type PaymentMethod = (typeof paymentMethodEnum.enumValues)[number];
 export type ReviewStatus = (typeof reviewStatusEnum.enumValues)[number];
+export type QuestionStatus = (typeof questionStatusEnum.enumValues)[number];
 export type OfferType = (typeof offerTypeEnum.enumValues)[number];
 export type OfferScope = (typeof offerScopeEnum.enumValues)[number];
 export type PromotionSlotKey = (typeof promotionSlotKeyEnum.enumValues)[number];

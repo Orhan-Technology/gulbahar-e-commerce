@@ -12,6 +12,7 @@ export * from './shops';
 export * from './products';
 export * from './orders';
 export * from './reviews';
+export * from './questions';
 export * from './cart';
 export * from './promotions';
 export * from './notifications';

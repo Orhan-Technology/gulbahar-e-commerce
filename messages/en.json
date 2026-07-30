@@ -57,7 +57,8 @@
       "acceptedToast": "Order {reference} accepted",
       "readyToast": "Order {reference} marked ready",
       "undo": "Undo",
-      "showMore": "{n, plural, one {# more item} other {{count} more items}}"
+      "showMore": "{n, plural, one {# more item} other {{count} more items}}",
+      "needsAnswer": "New question about “{product}”"
     },
     "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
@@ -373,7 +374,33 @@
     "helpLine": "A question about your order or a return? <link>Talk to support</link>.",
     "compareHeading": "Compare similar products",
     "compareHint": "Same category, closest in price — the differences are highlighted.",
-    "compareThisProduct": "This product"
+    "compareThisProduct": "This product",
+    "questions": {
+      "heading": "Questions and answers",
+      "composerLabel": "Write your question",
+      "placeholder": "For example: does the warranty cover the battery?",
+      "ask": "Send question",
+      "sending": "Sending…",
+      "sent": "Your question was sent — the shop has been notified.",
+      "tooShort": "A question needs at least 10 characters",
+      "shopWillAnswer": "{shop} answers these.",
+      "signInToAsk": "Sign in to ask a question.",
+      "signIn": "Sign in",
+      "awaitingAnswer": "Awaiting an answer",
+      "shopAnswer": "{shop} replied",
+      "you": "You",
+      "emptyTitle": "Be the first to ask",
+      "emptyBody": "Ask anything about this product — sizing, warranty, the colours in stock. The shop answers right here.",
+      "errors": {
+        "requires_auth": "Sign in to ask a question",
+        "invalid_input": "That question is not valid",
+        "too_short": "A question needs at least 10 characters",
+        "unknown_product": "That product is not available",
+        "not_found": "That question was not found",
+        "forbidden": "You are not allowed to do that",
+        "hidden": "An administrator hid this question"
+      }
+    }
   },
   "shop": {
     "productCount": "{count} products",
@@ -511,6 +538,16 @@
       "roleChanged": {
         "title": "Your account role changed",
         "body": "Your account role is now “{role}”. Admin note: {note}"
+      }
+    },
+    "question": {
+      "asked": {
+        "title": "New question about a product",
+        "body": "A customer asked about “{productTitle}”. Answer from your shop panel."
+      },
+      "answered": {
+        "title": "Your question was answered",
+        "body": "The shop answered your question about “{productTitle}”."
       }
     }
   },
@@ -1061,7 +1098,8 @@
       "suspended": "Suspended",
       "closed": "Closed"
     },
-    "pendingOrders": "{n, plural, one {# order awaiting acceptance} other {{count} orders awaiting acceptance}}"
+    "pendingOrders": "{n, plural, one {# order awaiting acceptance} other {{count} orders awaiting acceptance}}",
+    "questions": "Questions"
   },
   "shopOrders": {
     "title": "Orders",
@@ -2428,6 +2466,66 @@
       "running": "Resetting…",
       "done": "Demo data reset",
       "failed": "The reset failed"
+    }
+  },
+  "shopQuestions": {
+    "title": "Customer questions",
+    "intro": "Questions customers have asked about your products. Your answer is public on the product page.",
+    "filters": {
+      "all": "All",
+      "pending": "Awaiting an answer",
+      "answered": "Answered"
+    },
+    "statusPending": "Awaiting an answer",
+    "statusAnswered": "Answered",
+    "askedBy": "{name} · {date}",
+    "answer": "Answer",
+    "edit": "Edit answer",
+    "yourAnswer": "Your answer",
+    "placeholder": "Keep it short and clear…",
+    "send": "Send answer",
+    "sending": "Sending…",
+    "cancel": "Cancel",
+    "answered": "Your answer is live",
+    "undo": "Undo",
+    "emptyTitle": "No questions yet",
+    "emptyBody": "When a customer asks about a product, it lands here and you can answer it.",
+    "emptyPendingTitle": "Nothing waiting",
+    "emptyPendingBody": "Every question has been answered.",
+    "errors": {
+      "requires_auth": "Please sign in",
+      "forbidden": "That question belongs to another shop",
+      "not_found": "That question was not found",
+      "invalid_input": "That answer is not valid",
+      "too_short": "That answer is too short",
+      "hidden": "An administrator hid this question"
+    }
+  },
+  "adminQuestions": {
+    "title": "Product questions",
+    "intro": "Customer questions and the shops' answers. Admin can hide a question — never edit one.",
+    "status": {
+      "pending": "Awaiting an answer",
+      "answered": "Answered",
+      "hidden": "Hidden"
+    },
+    "askedBy": "{name} · {date}",
+    "shopAnswer": "Shop answer",
+    "hide": "Hide",
+    "restore": "Restore",
+    "hideTitle": "Hide this question?",
+    "hideBody": "It is taken off the product page. The text is not changed and it can be restored later.",
+    "confirmHide": "Hide it",
+    "cancel": "Cancel",
+    "working": "Working…",
+    "hidden": "Question hidden",
+    "restored": "Question restored",
+    "emptyTitle": "No questions yet",
+    "emptyBody": "When customers ask about products, they appear here.",
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "not_found": "That question was not found",
+      "invalid_input": "That request is not valid"
     }
   }
 }

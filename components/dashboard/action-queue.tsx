@@ -65,6 +65,15 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
           }),
         };
       }
+      case 'needs_answer':
+        return {
+          ...base,
+          tone: 'primary' as const,
+          title: t('needsAnswer', { product: entry.title }),
+          // The question ITSELF, not a count of them: the shopkeeper can often
+          // answer it in their head before they have clicked anything.
+          subtitle: entry.subtitle,
+        };
       case 'needs_reply':
         return {
           ...base,

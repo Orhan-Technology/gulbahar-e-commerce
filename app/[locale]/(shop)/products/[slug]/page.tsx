@@ -12,6 +12,7 @@ import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
 import { FeatureList } from '@/components/shop/product/feature-list';
 import { ComparisonTable, type ComparisonColumn } from '@/components/shop/product/comparison-table';
+import { QuestionSection } from '@/components/shop/product/question-section';
 import { SpecTable } from '@/components/shop/product/spec-table';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
 import { ReviewList } from '@/components/shop/product/review-list';
@@ -24,6 +25,7 @@ import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot } from '@/lib/db/queries/listing';
 import { comparableProducts } from '@/lib/db/queries/comparison';
 import { productDetail } from '@/lib/db/queries/products';
+import { productQuestionThreads } from '@/lib/db/queries/questions';
 import { recordImpressions } from '@/lib/db/queries/promoted';
 import {
   recordProductView,
@@ -345,6 +347,15 @@ export default async function ProductPage({
               <ReviewList productId={product.id} slug={slug} page={currentReviewPage} />
             </Suspense>
           </section>
+
+          {/* Questions and answers — always present, never hidden when empty. */}
+          <Suspense fallback={<QuestionsSkeleton />}>
+            <QuestionSectionLoader
+              productId={product.id}
+              productSlug={slug}
+              shopName={pickLocale(product.shopName, locale)}
+            />
+          </Suspense>
         </div>
 
       </div>
@@ -398,6 +409,55 @@ export default async function ProductPage({
  * features are already in hand, and blocking them behind a similar-products
  * query would delay the content the reader asked for.
  */
+/**
+ * Loads the Q&A threads for the viewer (Prompt P4).
+ *
+ * The VIEWER decides what is in the list — a pending question belongs to its
+ * author and to the shop — so this cannot be hoisted into the page's parallel
+ * fetch without also hoisting the session read it depends on.
+ */
+async function QuestionSectionLoader({
+  productId,
+  productSlug,
+  shopName,
+}: {
+  productId: string;
+  productSlug: string;
+  shopName: string;
+}) {
+  const viewer = await currentUser();
+  const threads = await productQuestionThreads(
+    productId,
+    viewer?.id ?? null,
+    viewer?.shopId ?? null,
+  );
+
+  return (
+    <QuestionSection
+      productSlug={productSlug}
+      shopName={shopName}
+      signedIn={Boolean(viewer?.id)}
+      threads={threads.map((thread) => ({
+        ...thread,
+        createdAt: thread.createdAt.toISOString(),
+        answer: thread.answer
+          ? { body: thread.answer.body, createdAt: thread.answer.createdAt.toISOString() }
+          : null,
+      }))}
+    />
+  );
+}
+
+function QuestionsSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy>
+      <Skeleton className="h-5 w-40" />
+      <Skeleton className="rounded-card h-28 w-full" />
+      <Skeleton className="rounded-card h-20 w-full" />
+    </div>
+  );
+}
+
 async function ComparisonSection({
   productId,
   categoryId,

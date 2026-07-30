@@ -1,5 +1,12 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { BarChart3, ChevronRight, Settings, Star, Store } from 'lucide-react';
+import {
+  BarChart3,
+  ChevronRight,
+  MessageCircleQuestion,
+  Settings,
+  Star,
+  Store,
+} from 'lucide-react';
 
 import { Link } from '@/lib/i18n/navigation';
 
@@ -11,6 +18,7 @@ import { Link } from '@/lib/i18n/navigation';
  * tap target for each.
  */
 const ITEMS = [
+  { href: '/dashboard/questions', icon: MessageCircleQuestion, key: 'questions' },
   { href: '/dashboard/reviews', icon: Star, key: 'reviews' },
   { href: '/dashboard/reports', icon: BarChart3, key: 'reports' },
   { href: '/dashboard/profile', icon: Store, key: 'profile' },
