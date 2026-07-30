@@ -2,7 +2,8 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { ActionQueueList, type QueueRow } from '@/components/dashboard/action-queue-list';
 import type { ActionQueueEntry } from '@/lib/db/queries/dashboard';
-import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDate, formatNumber, formatRelative } from '@/lib/format';
+import { SLA_TONE, slaLevel } from '@/lib/queue-sla';
 
 /**
  * The action queue — the dashboard's hero, above every number on the screen
@@ -35,12 +36,33 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
   const locale = await getLocale();
   const t = await getTranslations('dashboard.queue');
 
+  const now = new Date();
+
   const rows: QueueRow[] = entries.map((entry) => {
+    /*
+     * SLA COLOURING applies to blocking rows only (Prompt C4). An expiring
+     * promotion that has been "waiting" three days is not late — nobody is on
+     * the other end of it — and colouring it red would spend the alarm on the
+     * one row nobody has to rush.
+     */
+    const level = entry.urgency === 'blocking' ? slaLevel(entry.at, now) : 'fine';
+
     const base = {
       key: `${entry.kind}-${entry.id}`,
       kind: entry.kind,
+      urgency: entry.urgency,
       href: entry.href,
       at: entry.at.toISOString(),
+      /*
+       * The age as PRESSURE, not as a timestamp. "waiting 3 days" is a fact
+       * about a customer; "۲۸ سرطان" is a fact about a calendar, and only one
+       * of them makes anyone pick up the phone.
+       */
+      waiting:
+        entry.urgency === 'blocking' && level !== 'fine'
+          ? t('waiting', { age: formatRelative(entry.at, locale, now.getTime()) })
+          : undefined,
+      slaLevel: level,
     };
 
     switch (entry.kind) {
@@ -53,7 +75,9 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
           orderId: entry.id,
           reference: entry.title,
           advanceTo: entry.kind === 'new_order' ? ('accepted' as const) : ('ready' as const),
-          tone: entry.kind === 'new_order' ? ('danger' as const) : ('warning' as const),
+          // The rail is the SLA now, not the row type: a two-hour-old order and
+          // a three-day-old one are different situations.
+          tone: SLA_TONE[level],
           title: t(entry.kind === 'new_order' ? 'newOrder' : 'markReady', {
             reference: entry.title,
           }),
@@ -68,7 +92,8 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
       case 'needs_answer':
         return {
           ...base,
-          tone: 'primary' as const,
+          tone: SLA_TONE[level],
+          questionId: entry.id,
           title: t('needsAnswer', { product: entry.title }),
           // The question ITSELF, not a count of them: the shopkeeper can often
           // answer it in their head before they have clicked anything.
@@ -78,6 +103,7 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
         return {
           ...base,
           tone: 'primary' as const,
+          reviewId: entry.id,
           title: t('needsReply', { product: entry.title }),
           subtitle: t('needsReplySub', {
             rating: formatNumber(Number(entry.subtitle), locale),
@@ -87,6 +113,7 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
         return {
           ...base,
           tone: 'warning' as const,
+          productId: entry.id,
           title: t('outOfStock', { product: entry.title }),
           subtitle: t('outOfStockSub'),
         };
@@ -102,9 +129,29 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
 
   const hidden = Math.max(0, rows.length - VISIBLE_ROWS);
 
+  /*
+   * LEAD WITH MEANING (Prompt C4). The panel's first line used to be a bare
+   * count in a pill; it now says what the count is ABOUT — "۲ مشتری منتظر
+   * تأیید سفارش شما هستند" — because a number tells you there is work and a
+   * sentence tells you what kind.
+   */
+  const blocking = rows.filter((row) => row.urgency === 'blocking').length;
+  const lead =
+    blocking > 0
+      ? t('leadBlocking', { n: blocking, count: formatNumber(blocking, locale) })
+      : rows.length > 0
+        ? t('leadImportant', { n: rows.length, count: formatNumber(rows.length, locale) })
+        : undefined;
+
   return (
     <ActionQueueList
       rows={rows}
+      lead={lead}
+      groupLabels={{
+        blocking: t('groupBlocking'),
+        important: t('groupImportant'),
+        housekeeping: t('groupHousekeeping'),
+      }}
       heading={t('heading')}
       emptyTitle={t('allCaughtUpTitle')}
       emptyBody={t('allCaughtUpBody')}

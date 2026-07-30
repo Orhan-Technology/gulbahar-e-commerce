@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
-import { categories, products, reviews, users } from '../db/schema';
+import { categories, orderItems, orders, products, reviews, shopMembers, users } from '../db/schema';
 import { notify } from '../notify';
 
 /**
@@ -311,6 +311,60 @@ export async function setUserActive(userId: string, active: boolean): Promise<Ad
   if (!updated) return { ok: false, error: 'not_found' };
 
   revalidatePath('/admin/users');
+  return { ok: true };
+}
+
+/**
+ * Nudges a shop about an order it has left sitting (Prompt C4).
+ *
+ * The admin's job here is a LANDLORD'S, not a moderator's: they cannot accept
+ * the order on the shop's behalf — that would put mall management inside a
+ * tenant's transaction (PRD §3.1) — but they can make sure the tenant knows.
+ * So this writes a notification and nothing else, and the order's state is
+ * untouched.
+ */
+export async function nudgeShopAboutOrder(orderId: string): Promise<AdminActionResult> {
+  const context = await requireAdminContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = z.string().uuid().safeParse(orderId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [order] = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      status: orders.status,
+      shopId: orderItems.shopId,
+    })
+    .from(orders)
+    .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
+    .where(eq(orders.id, parsed.data))
+    .limit(1);
+
+  if (!order) return { ok: false, error: 'not_found' };
+  // Nudging a finished order would be the mall chasing work already done.
+  if (order.status !== 'placed' && order.status !== 'accepted') {
+    return { ok: false, error: 'not_pending' };
+  }
+
+  const [owner] = await db
+    .select({ userId: shopMembers.userId })
+    .from(shopMembers)
+    .where(and(eq(shopMembers.shopId, order.shopId), eq(shopMembers.role, 'owner')))
+    .limit(1);
+
+  await notify({
+    eventKey: 'order.nudged',
+    channel: 'inapp',
+    recipientUserId: owner?.userId ?? null,
+    recipientRole: 'shopkeeper',
+    locale: 'fa',
+    values: { reference: order.reference },
+  });
+
+  revalidatePath('/admin');
+  revalidatePath('/admin/orders');
   return { ok: true };
 }
 

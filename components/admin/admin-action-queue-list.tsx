@@ -6,6 +6,10 @@ import { CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { InlineDecision } from '@/components/admin/inline-decision';
+import {
+  InlineNudgeShop,
+  InlineReviewModeration,
+} from '@/components/admin/inline-queue-actions';
 import { pressable } from '@/components/motion/pressable';
 import { formatNumber, formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -17,6 +21,9 @@ export type AdminQueueRow = {
   /** The decision target — a shop id or a campaign id. Absent on link-only rows. */
   decisionId?: string;
   decisionKind?: 'shop' | 'campaign';
+  /** Ids for the two row types that decide in place since C4. */
+  reviewId?: string;
+  orderId?: string;
   monogram: string;
   title: string;
   subtitle: string;
@@ -104,6 +111,9 @@ export function AdminActionQueueList({
         {(expanded ? rows : rows.slice(0, visibleRows)).map((row, index) => {
           const leaving = resolved.has(row.key);
           const decidable = row.decisionId && row.decisionKind;
+          // Every row type now acts in place, so the chevron is only for rows
+          // that genuinely have nowhere to act — none, today.
+          const actionable = decidable || row.reviewId || row.orderId;
 
           return (
             <li
@@ -138,7 +148,7 @@ export function AdminActionQueueList({
 
                   <div className="min-w-0 flex-1 space-y-2">
                     <div className="flex flex-wrap items-baseline gap-x-2">
-                      {decidable ? (
+                      {actionable ? (
                         <Link href={row.href} className="hover:text-primary text-sm font-semibold">
                           {row.title}
                         </Link>
@@ -165,10 +175,22 @@ export function AdminActionQueueList({
                         onRollback={() => restore(row.key)}
                       />
                     )}
+
+                    {row.reviewId && (
+                      <InlineReviewModeration
+                        reviewId={row.reviewId}
+                        onOptimistic={() => dismiss(row.key)}
+                        onRollback={() => restore(row.key)}
+                      />
+                    )}
+
+                    {/* The row stays: the order is still unanswered, and what
+                        changed is that the shopkeeper has been told. */}
+                    {row.orderId && <InlineNudgeShop orderId={row.orderId} />}
                   </div>
 
                   {/* A row with no inline decision is a link, and says so. */}
-                  {!decidable && (
+                  {!actionable && (
                     <Link
                       href={row.href}
                       className={cn(

@@ -58,7 +58,33 @@
       "readyToast": "Order {reference} marked ready",
       "undo": "Undo",
       "showMore": "{n, plural, one {# more item} other {{count} more items}}",
-      "needsAnswer": "New question about “{product}”"
+      "needsAnswer": "New question about “{product}”",
+      "groupBlocking": "A customer is waiting",
+      "groupImportant": "Important for the shop",
+      "groupHousekeeping": "Housekeeping",
+      "leadBlocking": "{n, plural, one {# customer is waiting on you} other {{count} customers are waiting on you}}",
+      "leadImportant": "{n, plural, one {# job needs you} other {{count} jobs need you}}",
+      "waiting": "waiting {age}",
+      "replyAction": "Reply",
+      "answerAction": "Answer",
+      "replyPlaceholder": "A short, courteous reply…",
+      "answerPlaceholder": "A clear answer to the customer's question…",
+      "send": "Send",
+      "cancel": "Cancel",
+      "replied": "Your reply is live",
+      "answered": "Your answer is live",
+      "restocked": "Stock updated",
+      "stockLabel": "Stock",
+      "saveStock": "Save",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "not_found": "Not found",
+        "invalid_input": "That input is not valid",
+        "too_short": "That is too short",
+        "requires_auth": "Please sign in",
+        "hidden": "This item is hidden",
+        "already_answered": "Already answered"
+      }
     },
     "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
@@ -496,6 +522,10 @@
       "fulfilled": {
         "title": "Order delivered",
         "body": "Order {reference} has been delivered. Thank you — please leave a review."
+      },
+      "nudged": {
+        "title": "A reminder from mall management",
+        "body": "Order {reference} is still unanswered. Please accept or reject it."
       }
     },
     "shop": {
@@ -1772,9 +1802,16 @@
       "errors": {
         "forbidden": "You are not allowed to do that.",
         "invalid_input": "That input is not valid.",
-        "not_pending": "This is no longer waiting.",
+        "not_pending": "That order is no longer waiting",
         "reason_too_short": "The reason needs to be more complete."
-      }
+      },
+      "keepReview": "Keep",
+      "hideReview": "Hide",
+      "reviewKept": "The review stays up",
+      "reviewHidden": "Review hidden",
+      "nudge": "Nudge the shop",
+      "nudgedShort": "Nudge sent",
+      "nudged": "The shop has been reminded"
     },
     "revenue": {
       "heading": "Promotion income this month",

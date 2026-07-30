@@ -58,7 +58,33 @@
       "readyToast": "سفارش {reference} آمادهٔ تحویل شد",
       "undo": "لغو",
       "showMore": "{n, plural, one {# مورد دیگر} other {{count} مورد دیگر}}",
-      "needsAnswer": "پرسش تازه درباره «{product}»"
+      "needsAnswer": "پرسش تازه درباره «{product}»",
+      "groupBlocking": "مشتری منتظر است",
+      "groupImportant": "مهم برای دکان",
+      "groupHousekeeping": "کارهای عادی",
+      "leadBlocking": "{n, plural, other {{count} مشتری منتظر شماست}}",
+      "leadImportant": "{n, plural, other {{count} کار در انتظار شماست}}",
+      "waiting": "منتظر از {age}",
+      "replyAction": "پاسخ به نظر",
+      "answerAction": "پاسخ به پرسش",
+      "replyPlaceholder": "پاسخ کوتاه و محترمانه…",
+      "answerPlaceholder": "پاسخ روشن به پرسش مشتری…",
+      "send": "ارسال",
+      "cancel": "لغو",
+      "replied": "پاسخ شما ثبت شد",
+      "answered": "پاسخ شما ثبت شد",
+      "restocked": "موجودی به‌روز شد",
+      "stockLabel": "موجودی",
+      "saveStock": "ذخیره",
+      "errors": {
+        "forbidden": "اجازه این کار را ندارید",
+        "not_found": "پیدا نشد",
+        "invalid_input": "ورودی معتبر نیست",
+        "too_short": "متن خیلی کوتاه است",
+        "requires_auth": "وارد شوید",
+        "hidden": "این مورد پنهان شده است",
+        "already_answered": "قبلاً پاسخ داده شده"
+      }
     },
     "vsYesterday": "نسبت به دیروز، همین ساعت",
     "weekOrders": "{n, plural, other {{count} سفارش}}",
@@ -496,6 +522,10 @@
       "fulfilled": {
         "title": "سفارش تحویل شد",
         "body": "سفارش {reference} تحویل داده شد. از خرید شما سپاسگزاریم — نظر خود را ثبت کنید."
+      },
+      "nudged": {
+        "title": "یادآوری از مدیریت مرکز",
+        "body": "سفارش {reference} هنوز پاسخ نگرفته است. لطفاً آن را تایید یا رد کنید."
       }
     },
     "shop": {
@@ -1772,9 +1802,16 @@
       "errors": {
         "forbidden": "اجازهٔ این کار را ندارید.",
         "invalid_input": "اطلاعات نامعتبر است.",
-        "not_pending": "این مورد دیگر در انتظار نیست.",
+        "not_pending": "این سفارش دیگر در انتظار نیست",
         "reason_too_short": "دلیل باید کامل‌تر باشد."
-      }
+      },
+      "keepReview": "نگه‌داشتن",
+      "hideReview": "پنهان کردن",
+      "reviewKept": "نظر روی سایت ماند",
+      "reviewHidden": "نظر پنهان شد",
+      "nudge": "یادآوری به دکان",
+      "nudgedShort": "یادآوری فرستاده شد",
+      "nudged": "یادآوری برای دکان فرستاده شد"
     },
     "revenue": {
       "heading": "درآمد تبلیغات این ماه",

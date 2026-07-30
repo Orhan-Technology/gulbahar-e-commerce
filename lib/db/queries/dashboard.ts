@@ -2,6 +2,7 @@ import { and, count, desc, eq, gte, lt, sql } from 'drizzle-orm';
 
 import { db } from '..';
 import { parseConsoleRange, type ConsoleRange } from '../../console-range';
+import type { QueueClass } from '../../queue-sla';
 import { pickLocale } from '../localized';
 import { campaigns, orderItems, orders, products, wishlistItems } from '../schema';
 
@@ -469,6 +470,11 @@ export async function unansweredReviewCount(shopId: string) {
 }
 
 export type ActionQueueEntry = {
+  /**
+   * What the row costs while it waits (Prompt C4): a customer, the shop's
+   * standing, or neither. Rows are grouped by this before they are sorted.
+   */
+  urgency: QueueClass;
   kind:
     | 'new_order'
     | 'to_ready'
@@ -596,6 +602,8 @@ export async function actionQueueItems(
 
   const entries: ActionQueueEntry[] = [
     ...orders_.map((row): ActionQueueEntry => ({
+      // A customer placed this and is waiting for an answer.
+      urgency: 'blocking',
       kind: row.status === 'placed' ? 'new_order' : 'to_ready',
       id: row.id,
       title: row.reference,
@@ -604,6 +612,8 @@ export async function actionQueueItems(
       at: new Date(row.created_at),
     })),
     ...unanswered.map((row): ActionQueueEntry => ({
+      // Nobody is blocked, but it is public and it is about the shop.
+      urgency: 'important',
       kind: 'needs_reply',
       id: row.id,
       title: pickLocale(row.title as never, locale),
@@ -616,6 +626,8 @@ export async function actionQueueItems(
       at: new Date(row.created_at),
     })),
     ...questions.map((row): ActionQueueEntry => ({
+      // Someone is deciding whether to buy and cannot until this is answered.
+      urgency: 'blocking',
       kind: 'needs_answer',
       id: row.id,
       title: pickLocale(row.title as never, locale),
@@ -626,6 +638,7 @@ export async function actionQueueItems(
       at: new Date(row.created_at),
     })),
     ...stock.map((row): ActionQueueEntry => ({
+      urgency: 'important',
       kind: 'out_of_stock',
       id: row.id,
       title: pickLocale(row.title as never, locale),
@@ -634,6 +647,7 @@ export async function actionQueueItems(
       at: new Date(row.created_at),
     })),
     ...promos.map((row): ActionQueueEntry => ({
+      urgency: 'housekeeping',
       kind: 'expiring_promotion',
       id: row.id,
       title: pickLocale(row.slot_name as never, locale),
@@ -643,8 +657,17 @@ export async function actionQueueItems(
     })),
   ];
 
-  // Urgency order, then oldest first within a kind.
-  const rank: Record<ActionQueueEntry['kind'], number> = {
+  /*
+   * CLASS FIRST, then age (Prompt C4). Within a class the oldest row leads,
+   * because the thing that has been waiting longest is the thing to do next —
+   * which is the opposite of the storefront, where newest wins.
+   *
+   * `kind` still breaks ties inside a class so the ordering is stable between
+   * renders; without it two rows created in the same second could swap places
+   * on every refresh.
+   */
+  const classRank: Record<QueueClass, number> = { blocking: 0, important: 1, housekeeping: 2 };
+  const kindRank: Record<ActionQueueEntry['kind'], number> = {
     new_order: 0,
     needs_answer: 1,
     to_ready: 2,
@@ -652,5 +675,11 @@ export async function actionQueueItems(
     out_of_stock: 4,
     expiring_promotion: 5,
   };
-  return entries.sort((a, b) => rank[a.kind] - rank[b.kind] || a.at.getTime() - b.at.getTime());
+
+  return entries.sort(
+    (a, b) =>
+      classRank[a.urgency] - classRank[b.urgency] ||
+      a.at.getTime() - b.at.getTime() ||
+      kindRank[a.kind] - kindRank[b.kind],
+  );
 }

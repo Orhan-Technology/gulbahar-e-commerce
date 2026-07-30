@@ -35,6 +35,14 @@ export interface ActionQueueItemProps {
    * link instead and the chevron is dropped.
    */
   actions?: React.ReactNode;
+  /**
+   * Pre-formatted "waiting 3 days", on rows that are late (Prompt C4).
+   *
+   * A separate prop rather than folded into the subtitle because it is a
+   * DIFFERENT KIND of fact — the subtitle says what the row is, this says how
+   * long it has been ignored — and it is the one that should be coloured.
+   */
+  waiting?: string;
   /** Applies the slide-in animation for items that just arrived (PRD §10.6). */
   isNew?: boolean;
   className?: string;
@@ -54,6 +62,7 @@ export function ActionQueueItem({
   href,
   tone = 'primary',
   actions,
+  waiting,
   isNew = false,
   className,
 }: ActionQueueItemProps) {
@@ -72,6 +81,19 @@ export function ActionQueueItem({
     <span className={cn('rounded-pill w-[3px] shrink-0 self-stretch', TONES[tone])} aria-hidden />
   );
 
+  // Takes the tone of the rail beside it, so severity is stated twice for
+  // anyone who cannot rely on a 3px colour.
+  const pressure = waiting ? (
+    <span
+      className={cn(
+        'rounded-pill text-2xs px-2 py-0.5 font-semibold',
+        tone === 'danger' ? 'bg-danger-bg text-danger' : 'bg-warning-bg text-warning-fg',
+      )}
+    >
+      {waiting}
+    </span>
+  ) : null;
+
   if (actions) {
     return (
       <div className={cn('flex gap-3 p-4', isNew && 'animate-queue-in', className)}>
@@ -81,7 +103,7 @@ export function ActionQueueItem({
             <Link href={href} className="hover:text-primary text-sm font-semibold">
               {title}
             </Link>
-            {time}
+            {pressure ?? time}
           </div>
           {subtitle && <p className="text-xs leading-relaxed text-neutral-600">{subtitle}</p>}
           {actions}
@@ -103,7 +125,7 @@ export function ActionQueueItem({
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-baseline gap-x-2">
           <span className="text-foreground text-sm font-semibold">{title}</span>
-          {time}
+          {pressure ?? time}
         </span>
         {subtitle && (
           <span className="mt-1 block text-xs leading-relaxed text-neutral-600">{subtitle}</span>

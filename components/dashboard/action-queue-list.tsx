@@ -7,9 +7,15 @@ import { CheckCircle2, ChevronDown } from 'lucide-react';
 import { ActionQueueItem } from '@/components/custom/action-queue-item';
 import { EmptyState } from '@/components/custom/empty-state';
 import { InlineOrderAction } from '@/components/dashboard/inline-order-action';
+import {
+  InlineQuestionAnswer,
+  InlineReviewReply,
+  InlineStockUpdate,
+} from '@/components/dashboard/inline-queue-actions';
 import { pressable } from '@/components/motion/pressable';
 import { OrderRejectButton } from '@/components/dashboard/orders/order-reject-button';
 import { formatNumber } from '@/lib/format';
+import type { QueueClass } from '@/lib/queue-sla';
 import { cn } from '@/lib/utils';
 
 export type QueueRow = {
@@ -21,16 +27,25 @@ export type QueueRow = {
     | 'needs_answer'
     | 'out_of_stock'
     | 'expiring_promotion';
+  /** Which group the row sits in (Prompt C4). */
+  urgency: QueueClass;
   title: string;
   subtitle: string;
   href: string;
   /** ISO string — the client never formats it, only hands it to <time>. */
   at: string;
   tone: 'primary' | 'warning' | 'danger' | 'muted';
+  /** Pre-formatted "waiting 3 days", on late blocking rows only. */
+  waiting?: string;
+  slaLevel?: 'fine' | 'warning' | 'danger';
   /** Present on order rows, which carry an inline control. */
   orderId?: string;
   reference?: string;
   advanceTo?: 'accepted' | 'ready';
+  /** Ids for the other row types' inline composers (Prompt C4). */
+  questionId?: string;
+  reviewId?: string;
+  productId?: string;
 };
 
 /**
@@ -50,6 +65,8 @@ export type QueueRow = {
  */
 export function ActionQueueList({
   rows,
+  lead,
+  groupLabels,
   heading,
   emptyTitle,
   emptyBody,
@@ -57,6 +74,10 @@ export function ActionQueueList({
   visibleRows,
 }: {
   rows: QueueRow[];
+  /** One sentence saying what the count is about — pre-formatted. */
+  lead?: string;
+  /** Pre-translated group headings, keyed by urgency class. */
+  groupLabels?: Record<QueueClass, string>;
   heading: string;
   emptyTitle: string;
   emptyBody: string;
@@ -111,21 +132,33 @@ export function ActionQueueList({
 
   return (
     <section className="rounded-card border-border bg-card overflow-hidden border">
-      <header className="border-border flex items-center gap-2 border-b p-4">
-        <h2 className="text-sm font-bold">{heading}</h2>
-        <span
-          className={cn(
-            'rounded-pill px-2 py-1 text-2xs font-bold tabular-nums transition-colors duration-150',
-            remaining > 0 ? 'bg-danger text-danger-fg' : 'bg-success-bg text-success',
-          )}
-        >
-          {formatNumber(remaining, locale)}
-        </span>
+      <header className="border-border border-b p-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold">{heading}</h2>
+          <span
+            className={cn(
+              'rounded-pill px-2 py-1 text-2xs font-bold tabular-nums transition-colors duration-150',
+              remaining > 0 ? 'bg-danger text-danger-fg' : 'bg-success-bg text-success',
+            )}
+          >
+            {formatNumber(remaining, locale)}
+          </span>
+        </div>
+        {/* The sentence, not the number: what the count is about. */}
+        {lead && <p className="text-muted-foreground mt-1 text-sm">{lead}</p>}
       </header>
 
       <ul className="divide-border divide-y">
-        {(expanded ? rows : rows.slice(0, visibleRows)).map((row, index) => {
+        {(expanded ? rows : rows.slice(0, visibleRows)).map((row, index, shown) => {
           const leaving = resolved.has(row.key);
+          // A group heading before the first row of each class, with its count
+          // — but only while there is more than one class on screen, because a
+          // single heading over the whole list says nothing.
+          const startsGroup =
+            groupLabels !== undefined &&
+            row.urgency !== shown[index - 1]?.urgency &&
+            new Set(shown.map((entry) => entry.urgency)).size > 1;
+
           return (
             <li
               key={row.key}
@@ -136,12 +169,27 @@ export function ActionQueueList({
               aria-hidden={leaving}
             >
               <div className="overflow-hidden">
+                {startsGroup && groupLabels && (
+                  <p className="text-2xs bg-neutral-50 px-4 py-1.5 font-bold text-neutral-500">
+                    {groupLabels[row.urgency]} ·{' '}
+                    {formatNumber(
+                      shown.filter((entry) => entry.urgency === row.urgency).length,
+                      locale,
+                    )}
+                  </p>
+                )}
                 <ActionQueueItem
+                  waiting={row.waiting}
                   title={row.title}
                   subtitle={row.subtitle}
                   timestamp={row.at}
                   href={row.href}
                   tone={row.tone}
+                  /*
+                   * EVERY row type carries a real action (Prompt C4). Orders
+                   * had them and the rest had a chevron, so the queue's promise
+                   * — act without leaving — broke halfway down the list.
+                   */
                   actions={
                     row.orderId && row.advanceTo ? (
                       <div className="flex flex-wrap gap-2">
@@ -157,6 +205,24 @@ export function ActionQueueList({
                           <OrderRejectButton orderId={row.orderId} size="sm" />
                         )}
                       </div>
+                    ) : row.questionId ? (
+                      <InlineQuestionAnswer
+                        questionId={row.questionId}
+                        onOptimistic={() => dismiss(row.key)}
+                        onRollback={() => restore(row.key)}
+                      />
+                    ) : row.reviewId ? (
+                      <InlineReviewReply
+                        reviewId={row.reviewId}
+                        onOptimistic={() => dismiss(row.key)}
+                        onRollback={() => restore(row.key)}
+                      />
+                    ) : row.productId ? (
+                      <InlineStockUpdate
+                        productId={row.productId}
+                        onOptimistic={() => dismiss(row.key)}
+                        onRollback={() => restore(row.key)}
+                      />
                     ) : undefined
                   }
                   // Only the first few animate in; a dozen rows sliding at once

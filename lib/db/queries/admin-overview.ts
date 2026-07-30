@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 
 import { db } from '..';
+import { SLA_HOURS } from '../../queue-sla';
 import { pickLocale } from '../localized';
 import type { LocalizedText } from '../schema/shared';
 
@@ -21,7 +22,15 @@ import type { LocalizedText } from '../schema/shared';
  * order and become a problem: the customer is waiting, and the shop has not
  * looked. Two days is the point at which the mall, not the shop, owns it.
  */
-const STALE_ORDER_HOURS = 48;
+/**
+ * When an order counts as stalled.
+ *
+ * FROM THE SHARED SLA TABLE (Prompt C4), not a number of its own. The
+ * shopkeeper's queue colours a row red at the same threshold, so the mall and
+ * the tenant agree on what "late" means — two definitions is how a landlord
+ * ends up chasing a shop the shop's own screen says is fine.
+ */
+const STALE_ORDER_HOURS = SLA_HOURS.danger;
 
 export type AdminQueueEntry = {
   kind: 'pending_shop' | 'requested_campaign' | 'reported_review' | 'stale_order';

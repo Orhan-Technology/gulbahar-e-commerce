@@ -62,6 +62,7 @@ export async function AdminActionQueue({ entries }: { entries: AdminQueueEntry[]
       case 'reported_review':
         return {
           ...base,
+          reviewId: entry.id,
           tone: 'primary' as const,
           title: t('reportedReview', { product: entry.title }),
           subtitle: t('reportedReviewSub', {
@@ -71,7 +72,10 @@ export async function AdminActionQueue({ entries }: { entries: AdminQueueEntry[]
       case 'stale_order':
         return {
           ...base,
-          tone: 'muted' as const,
+          orderId: entry.id,
+          // Past the shared 48-hour threshold by definition (lib/queue-sla.ts),
+          // so it is late rather than merely old.
+          tone: 'danger' as const,
           title: t('staleOrder', { reference: entry.title }),
           subtitle: entry.subtitle ? t('staleOrderSub', { shop: entry.subtitle }) : '',
         };
