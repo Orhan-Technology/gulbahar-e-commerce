@@ -590,3 +590,38 @@
     display: none;
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Print (Prompt C6)
+ *
+ * The pick/pack slip is the one screen in this product that is meant to leave
+ * it. A shop assistant walks to a shelf with paper, and everything that helps
+ * on a screen — the console rail, the tab bar, the demo panel, hover shadows —
+ * is ink wasted and space taken from the thing being read.
+ *
+ * `print:hidden` handles the page's own controls; these rules handle the chrome
+ * the LAYOUT draws, which the page cannot reach.
+ * ------------------------------------------------------------------------- */
+@media print {
+  nav,
+  header,
+  footer,
+  [data-demo-panel],
+  [data-range-control] {
+    display: none !important;
+  }
+
+  /* White on white, at full width: a boxed card wastes a centimetre of every
+     edge on A4, and background tints cost toner for nothing. */
+  body {
+    background: #fff;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+}

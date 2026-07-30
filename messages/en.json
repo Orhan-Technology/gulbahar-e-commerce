@@ -1208,7 +1208,7 @@
       "markFulfilled": "Mark fulfilled",
       "rejectTitle": "Reject this order",
       "rejectBody": "A rejection cannot be undone. The customer is notified immediately.",
-      "reasonLabel": "Reason for rejection",
+      "reasonLabel": "More detail (optional)",
       "reasonPlaceholder": "For example: this item is out of stock right now.",
       "reasonNote": "This text is sent to the customer exactly as you write it.",
       "cancel": "Cancel",
@@ -1225,6 +1225,13 @@
         "invalid_input": "That input is not valid",
         "reason_required": "A reason is required to reject an order",
         "transition_not_allowed": "This order's status changed in the meantime. Reload the page."
+      },
+      "reasonCodeLabel": "Reason",
+      "rejectReasons": {
+        "out_of_stock": "Out of stock",
+        "cannot_fulfil": "Cannot fulfil this",
+        "customer_unreachable": "Customer unreachable",
+        "price_error": "Price was wrong"
       }
     },
     "filteredBy": "Filtered:",
@@ -1233,6 +1240,39 @@
       "1d": "Today",
       "7d": "Last 7 days",
       "30d": "Last 30 days"
+    },
+    "rejectReasons": {
+      "out_of_stock": "Out of stock",
+      "cannot_fulfil": "Cannot fulfil this",
+      "customer_unreachable": "Customer unreachable",
+      "price_error": "Price was wrong"
+    },
+    "searchPlaceholder": "Search by order reference, customer phone or product…",
+    "slip": {
+      "title": "Pick and pack slip",
+      "print": "Print",
+      "customer": "Customer",
+      "item": "Item",
+      "qty": "Qty",
+      "lineTotal": "Amount",
+      "shopTotal": "This shop's total",
+      "collectAtShop": "Collection from the shop",
+      "floorUnit": "Floor {floor} · Unit {unit}",
+      "sharedOrderNote": "This order is shared with another shop; the total above is this shop's part only."
+    },
+    "bulk": {
+      "selectAll": "Select all ({count})",
+      "selected": "{n, plural, one {# order selected} other {{count} orders selected}}",
+      "acceptAll": "Accept all",
+      "readyAll": "Mark all ready",
+      "printAll": "Print slips",
+      "clear": "Clear",
+      "done": "{n, plural, one {# order updated} other {{count} orders updated}}",
+      "partial": "{done} updated, {failed} failed — try those again",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That selection is not valid"
+      }
     }
   },
   "shopProducts": {
@@ -2603,5 +2643,21 @@
       "30d": "30 days",
       "90d": "90 days"
     }
+  },
+  "shopVerification": {
+    "title": "Shop verification",
+    "intro": "Verification is separate from approval: approval lets you sell, verification shows that your business is registered and trading from this unit in Gulbahar Center.",
+    "statusVerified": "Your shop is verified",
+    "statusUnverified": "Not verified yet",
+    "verifiedOn": "Verified on {date}",
+    "unverifiedBody": "You can trade without it; the badge earns trust from customers who have not bought from you before.",
+    "documentsHeading": "Documents needed",
+    "docLicence": "Business licence",
+    "docOwnerId": "Owner's tazkira or passport",
+    "docUnitAgreement": "Unit agreement or deed for Gulbahar Center",
+    "privacyNote": "Documents are seen by mall management only and are never shown on the storefront.",
+    "uploadTitle": "Send your documents",
+    "uploadBody": "Uploading is not enabled in this demo build. For now, bring the documents to the mall management office.",
+    "comingSoon": "Coming soon"
   }
 }

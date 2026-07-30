@@ -49,6 +49,8 @@ export type ShopOrderFilters = {
   /** 'actionable' collapses placed+accepted+ready into the working queue. */
   bucket?: 'actionable';
   range?: OrderRange;
+  /** Order reference, customer phone, or a product title (Prompt C6). */
+  search?: string;
   limit?: number;
 };
 
@@ -66,6 +68,32 @@ export async function shopOrderList(filters: ShopOrderFilters) {
   else if (filters.bucket === 'actionable') {
     conditions.push(inArray(orders.status, ACTIONABLE_STATUSES));
   }
+  /*
+   * SEARCH across the three things a shopkeeper has in front of them when they
+   * go looking (Prompt C6): the order reference a customer read out, the phone
+   * number they are calling from, and the product they are asking about.
+   *
+   * `ilike` rather than the trigram search used on the storefront: these are
+   * identifiers, not prose, and a fuzzy match on an order reference would
+   * return the wrong order to someone about to hand over stock.
+   */
+  if (filters.search?.trim()) {
+    const pattern = `%${filters.search.trim()}%`;
+    conditions.push(
+      sql`(
+        ${orders.reference} ilike ${pattern}
+        or ${users.phone} ilike ${pattern}
+        or exists (
+          select 1 from order_items oi2
+          join products p2 on p2.id = oi2.product_id
+          where oi2.order_id = ${orders.id}
+            and oi2.shop_id = ${filters.shopId}
+            and (p2.title->>'fa' ilike ${pattern} or p2.title->>'en' ilike ${pattern})
+        )
+      )`,
+    );
+  }
+
   if (filters.range) {
     conditions.push(gte(orders.createdAt, orderRangeStart(filters.range)));
     // Matches the KPI tile, which counts business received and so excludes the

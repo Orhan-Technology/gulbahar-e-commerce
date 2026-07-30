@@ -18,6 +18,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { advanceOrderStatus } from '@/lib/actions/shop-orders';
+import { ORDER_REJECT_REASONS, type OrderRejectReason } from '@/lib/order-reject-reasons';
+import { cn } from '@/lib/utils';
 
 /**
  * Rejecting an order (PRD §6.3).
@@ -46,17 +48,29 @@ export function OrderRejectButton({
 
   const [pending, startTransition] = React.useTransition();
   const [open, setOpen] = React.useState(false);
+  const [reasonCode, setReasonCode] = React.useState<OrderRejectReason | null>(null);
   const [reason, setReason] = React.useState('');
 
   function reject() {
+    if (!reasonCode) return;
+
     startTransition(async () => {
-      const result = await advanceOrderStatus({ orderId, to: 'rejected', reason });
+      const result = await advanceOrderStatus({
+        orderId,
+        to: 'rejected',
+        reasonCode,
+        // Optional now: the code carries the meaning, and this adds detail when
+        // the shopkeeper has any. Requiring a sentence fifty times a month is a
+        // tax, and taxes get avoided.
+        reason: reason.trim() || undefined,
+      });
       if (!result.ok) {
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
       toast.success(t('done.rejected'));
       setOpen(false);
+      setReasonCode(null);
       setReason('');
       router.refresh();
     });
@@ -82,6 +96,33 @@ export function OrderRejectButton({
             <DialogDescription>{t('rejectBody')}</DialogDescription>
           </DialogHeader>
 
+          {/*
+            THE CODE FIRST (Prompt C6). It is what the customer's message is
+            written from — in THEIR language, not the shopkeeper's — and what
+            the mall counts when it looks at a shop's rejection rate.
+          */}
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">{t('reasonCodeLabel')}</legend>
+            <div className="flex flex-wrap gap-2">
+              {ORDER_REJECT_REASONS.map((code) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => setReasonCode(code)}
+                  aria-pressed={reasonCode === code}
+                  className={cn(
+                    'rounded-pill border px-3 py-1.5 text-xs font-medium transition-colors duration-150',
+                    reasonCode === code
+                      ? 'border-primary bg-primary-50 text-primary font-semibold'
+                      : 'border-border bg-card hover:border-primary',
+                  )}
+                >
+                  {t(`rejectReasons.${code}` as never)}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
           <div className="space-y-1.5">
             <Label htmlFor={`reason-${orderId}`}>{t('reasonLabel')}</Label>
             <Textarea
@@ -102,7 +143,7 @@ export function OrderRejectButton({
             <Button
               variant="destructive"
               onClick={reject}
-              disabled={pending || reason.trim().length < 3}
+              disabled={pending || !reasonCode}
             >
               {pending ? t('rejecting') : t('confirmReject')}
             </Button>

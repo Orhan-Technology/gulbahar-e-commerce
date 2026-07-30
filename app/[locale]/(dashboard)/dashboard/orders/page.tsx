@@ -1,9 +1,11 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Package, ShoppingBag, Store, Truck, X } from 'lucide-react';
+import { Package, Printer, ShoppingBag, Store, Truck, X } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
+import { SearchBox } from '@/components/custom/search-box';
 import { LiveRefresh } from '@/components/dashboard/live-refresh';
+import { BulkOrderSelection } from '@/components/dashboard/orders/bulk-order-bar';
 import { OrderActions } from '@/components/dashboard/orders/order-actions';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,7 +17,7 @@ import { pressable } from '@/components/motion/pressable';
 import { cn } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/db/schema';
 
-type Query = { status?: OrderStatus; range?: string };
+type Query = { status?: OrderStatus; range?: string; q?: string; order?: string };
 
 const STATUS_BADGE: Record<
   OrderStatus,
@@ -124,6 +126,8 @@ export default async function ShopOrdersPage({
         </div>
       )}
 
+      <SearchBox placeholder={t('searchPlaceholder')} />
+
       <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
         {chips.map((chip) => (
           <Link
@@ -169,8 +173,11 @@ async function OrderList({
     // A range is a window across every status, so it replaces the actionable
     // default rather than narrowing it — otherwise "orders this week" would
     // silently exclude the fulfilled ones, which are most of them.
-    bucket: query.status || range ? undefined : 'actionable',
+    // A search is a different axis again: it must reach fulfilled orders too,
+    // or looking up a reference from last week silently finds nothing.
+    bucket: query.status || range || query.q ? undefined : 'actionable',
     range,
+    search: query.q,
   });
 
   if (orders.length === 0) {
@@ -184,51 +191,76 @@ async function OrderList({
   }
 
   return (
-    <ul className="space-y-2">
-      {orders.map((order) => (
-        <li key={order.id} className="rounded-card border-border bg-card space-y-3 border p-3">
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div className="min-w-0">
-              <Link
-                href={`/dashboard/orders/${order.id}`}
-                className="hover:text-primary text-sm font-bold"
-                dir="ltr"
-              >
-                {order.reference}
-              </Link>
-              <p className="text-muted-foreground text-xs">
-                {order.customerName} · {formatRelative(order.createdAt, locale)}
-              </p>
-            </div>
-            <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
-          </div>
+    <div className="space-y-2">
+      {/*
+        The rows are rendered HERE, on the server, and handed to the client
+        component as nodes. A render prop would be the obvious shape and does
+        not work: a function cannot cross the RSC boundary (see the note on
+        SelectableOrder.content).
+      */}
+      <BulkOrderSelection
+        orders={orders.map((order) => ({
+          id: order.id,
+          reference: order.reference,
+          status: order.status,
+          content: (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <Link
+                    href={`/dashboard/orders/${order.id}`}
+                    className="hover:text-primary text-sm font-bold"
+                    dir="ltr"
+                  >
+                    {order.reference}
+                  </Link>
+                  <p className="text-muted-foreground text-xs">
+                    {order.customerName} · {formatRelative(order.createdAt, locale)}
+                  </p>
+                </div>
+                <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
+              </div>
 
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-            <span className="inline-flex items-center gap-1">
-              <Package className="h-3 w-3" aria-hidden />
-              {t('itemCount', { count: formatNumber(order.shopItemCount, locale) })}
-            </span>
-            <span className="text-foreground font-medium">
-              {formatCurrency(order.shopSubtotal, locale)}
-            </span>
-            <span className="inline-flex items-center gap-1">
-              {order.fulfillment === 'delivery' ? (
-                <Truck className="h-3 w-3" aria-hidden />
-              ) : (
-                <Store className="h-3 w-3" aria-hidden />
-              )}
-              {t(`fulfillment.${order.fulfillment}`)}
-            </span>
-            <span>{t(`payment.${order.paymentMethod}`)}</span>
-            {/* An order shared with another shop: say so, because either shop's
-                action moves the shared status (see lib/actions/shop-orders.ts). */}
-            {order.shopCount > 1 && <Badge variant="outline">{t('sharedOrder')}</Badge>}
-          </div>
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <span className="inline-flex items-center gap-1">
+                  <Package className="h-3 w-3" aria-hidden />
+                  {t('itemCount', { count: formatNumber(order.shopItemCount, locale) })}
+                </span>
+                <span className="text-foreground font-medium">
+                  {formatCurrency(order.shopSubtotal, locale)}
+                </span>
+                <span className="inline-flex items-center gap-1">
+                  {order.fulfillment === 'delivery' ? (
+                    <Truck className="h-3 w-3" aria-hidden />
+                  ) : (
+                    <Store className="h-3 w-3" aria-hidden />
+                  )}
+                  {t(`fulfillment.${order.fulfillment}`)}
+                </span>
+                <span>{t(`payment.${order.paymentMethod}`)}</span>
+                {/* An order shared with another shop: say so, because either
+                    shop's action moves the shared status. */}
+                {order.shopCount > 1 && <Badge variant="outline">{t('sharedOrder')}</Badge>}
+              </div>
 
-          <OrderActions orderId={order.id} status={order.status} size="sm" />
-        </li>
-      ))}
-    </ul>
+              <div className="flex flex-wrap items-center gap-2">
+                <OrderActions orderId={order.id} status={order.status} size="sm" />
+
+                {/* Paper, for the person walking to the shelf (Prompt C6). */}
+                <Link
+                  href={`/dashboard/orders/${order.id}/slip`}
+                  target="_blank"
+                  className="text-muted-foreground hover:text-primary inline-flex items-center gap-1 text-xs"
+                >
+                  <Printer className="h-3.5 w-3.5" aria-hidden />
+                  {t('slip.print')}
+                </Link>
+              </div>
+            </>
+          ),
+        }))}
+      />
+    </div>
   );
 }
 

@@ -11,6 +11,9 @@ import { orderEvents, orders, users, type OrderStatus } from '../db/schema';
 import { shopNameFor } from '../db/queries/shop-orders';
 import { formatCurrency } from '../format';
 import { notify, type NotificationEventKey } from '../notify';
+import { ORDER_REJECT_REASONS, type OrderRejectReason } from '../order-reject-reasons';
+import faMessages from '../../messages/fa.json';
+import enMessages from '../../messages/en.json';
 
 /**
  * Order transitions driven by the shopkeeper (PRD §6.3, §13.2).
@@ -62,12 +65,68 @@ async function requireShopContext() {
 const inputSchema = z.object({
   orderId: z.string().uuid(),
   to: z.enum(['accepted', 'rejected', 'ready', 'fulfilled']),
-  // Required for a rejection: "we cannot fulfil this" without a reason is what
-  // makes a marketplace feel arbitrary.
+  /*
+   * A rejection carries a CODE from the shared list (Prompt C6), and may carry
+   * a note as well. The code is what the customer's message is written from —
+   * translated into their language rather than the shopkeeper's — and what
+   * C9's shop-health view counts. "We cannot fulfil this" with no reason at all
+   * is what makes a marketplace feel arbitrary.
+   */
+  reasonCode: z.enum(ORDER_REJECT_REASONS).optional(),
   reason: z.string().trim().min(3).max(300).optional(),
 });
 
 export type AdvanceOrderInput = z.input<typeof inputSchema>;
+
+/**
+ * Advances several orders at once (Prompt C6).
+ *
+ * REPORTS PARTIAL FAILURE rather than throwing on the first one. A shopkeeper
+ * selecting five orders and pressing "accept all" will occasionally hit one
+ * another staff member already accepted, and the honest answer is "4 accepted,
+ * 1 could not" — not a red toast that leaves them wondering which four went
+ * through.
+ *
+ * Sequential rather than parallel on purpose: each call writes an event and
+ * sends a notification, and five concurrent transactions against the same rows
+ * is a deadlock waiting for a busy Friday. Five orders is not a batch job.
+ */
+export async function bulkAdvanceOrders(
+  orderIds: string[],
+  to: 'accepted' | 'ready',
+): Promise<OrderActionResult<{ done: string[]; failed: string[] }>> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = z.array(z.string().uuid()).min(1).max(50).safeParse(orderIds);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const done: string[] = [];
+  const failed: string[] = [];
+
+  for (const orderId of parsed.data) {
+    const result = await advanceOrderStatus({ orderId, to });
+    if (result.ok) done.push(orderId);
+    else failed.push(orderId);
+  }
+
+  return { ok: true, data: { done, failed } };
+}
+
+/**
+ * The enumerated reason, in the reader's language.
+ *
+ * Resolved through the same message tree the UI uses, so the sentence a
+ * customer receives is the sentence the shopkeeper picked — not a second
+ * translation that drifts.
+ */
+function rejectReasonText(code: OrderRejectReason, locale: string): string {
+  const messages = locale === 'en' ? enMessages : faMessages;
+  const table = (messages as unknown as {
+    shopOrders: { rejectReasons: Record<string, string> };
+  }).shopOrders.rejectReasons;
+  return table[code] ?? code;
+}
 
 export async function advanceOrderStatus(
   input: AdvanceOrderInput,
@@ -77,9 +136,9 @@ export async function advanceOrderStatus(
 
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'invalid_input' };
-  const { orderId, to, reason } = parsed.data;
+  const { orderId, to, reasonCode, reason } = parsed.data;
 
-  if (to === 'rejected' && !reason) return { ok: false, error: 'reason_required' };
+  if (to === 'rejected' && !reasonCode) return { ok: false, error: 'reason_required' };
 
   // Which statuses may legally become `to` — the inverse of TRANSITIONS.
   const allowedFrom = (Object.keys(TRANSITIONS) as OrderStatus[]).filter((from) =>
@@ -118,7 +177,13 @@ export async function advanceOrderStatus(
     fromStatus: allowedFrom.length === 1 ? allowedFrom[0] : null,
     toStatus: to,
     actorUserId: context.userId,
-    note: reason ?? null,
+    /*
+     * The code first, then the note. Stored as one string because order_events
+     * has one note column and the code is a stable prefix — `reason:code` —
+     * which the customer's timeline and the health report can both parse
+     * without a migration on a table that is append-only by design.
+     */
+    note: reasonCode ? [`reason:${reasonCode}`, reason].filter(Boolean).join(' — ') : (reason ?? null),
   });
 
   // The SMS is written in the CUSTOMER's language, not the shopkeeper's.
@@ -140,7 +205,11 @@ export async function advanceOrderStatus(
       shopName: shop ? pickLocale(shop.name, locale) : '',
       fulfillment: updated.fulfillment,
       total: formatCurrency(updated.total, locale),
-      reason: reason ?? '',
+      // Translated into the CUSTOMER's language from the code, with the
+      // shopkeeper's own words appended when they added any.
+      reason: reasonCode
+        ? [rejectReasonText(reasonCode, locale), reason].filter(Boolean).join(' — ')
+        : (reason ?? ''),
     },
   });
 
