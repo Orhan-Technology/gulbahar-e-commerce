@@ -20,6 +20,7 @@ import { HeaderSearch } from '@/components/shop/search/header-search';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import type { AppLocale } from '@/lib/i18n/routing';
 import { cn } from '@/lib/utils';
 
 export type SiteHeaderProps = {
@@ -37,6 +38,8 @@ export type SiteHeaderProps = {
    * offer's countdown — and is simply ABSENT when nothing is expiring.
    */
   liveOffer?: boolean;
+  /** The locales the admin has published (A4) — passed to the switcher. */
+  locales?: readonly AppLocale[];
 };
 
 /**
@@ -53,7 +56,13 @@ export type SiteHeaderProps = {
  * of fact it actually is, with no change affordance that would lead nowhere.
  * The live badge is real but CONDITIONAL — see `liveOffer`.
  */
-export function SiteHeader({ cartCount, user, categories, liveOffer = false }: SiteHeaderProps) {
+export function SiteHeader({
+  cartCount,
+  user,
+  categories,
+  liveOffer = false,
+  locales,
+}: SiteHeaderProps) {
   const t = useTranslations();
   const locale = useLocale();
   const [scrolled, setScrolled] = React.useState(false);
@@ -152,7 +161,7 @@ export function SiteHeader({ cartCount, user, categories, liveOffer = false }: S
             </span>
           </span>
 
-          <LocaleSwitcher />
+          <LocaleSwitcher locales={locales} />
 
           <Link
             href="/cart"

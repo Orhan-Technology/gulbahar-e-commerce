@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { usePathname, useRouter } from '@/lib/i18n/navigation';
-import { routing } from '@/lib/i18n/routing';
+import { routing, type AppLocale } from '@/lib/i18n/routing';
 
 /**
  * Language switcher (PRD §11).
@@ -21,8 +21,21 @@ import { routing } from '@/lib/i18n/routing';
  * Replaces the Phase 1 bare select. Switching preserves the current path via
  * next-intl's locale-aware router, so a customer reading a product page in Dari
  * lands on the same product in English rather than being sent home.
+ *
+ * WHICH locales it offers is a setting, not the routing table (A4). `routing`
+ * lists every locale the app has structure for, and that includes Pashto —
+ * whose strings are deferred (PRD §11). Offering it would hand a visitor a
+ * half-translated storefront, so the published set comes from
+ * `platform_settings` and the caller passes it down; the routing table remains
+ * the fallback for surfaces with no database read of their own.
  */
-export function LocaleSwitcher({ className }: { className?: string }) {
+export function LocaleSwitcher({
+  className,
+  locales = routing.locales,
+}: {
+  className?: string;
+  locales?: readonly AppLocale[];
+}) {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -40,7 +53,7 @@ export function LocaleSwitcher({ className }: { className?: string }) {
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {routing.locales.map((value) => (
+        {locales.map((value) => (
           <DropdownMenuItem
             key={value}
             onSelect={() => router.replace(pathname, { locale: value })}

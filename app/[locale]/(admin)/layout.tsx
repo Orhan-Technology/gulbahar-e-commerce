@@ -6,6 +6,7 @@ import { NotificationBell } from '@/components/dashboard/notification-bell';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminPendingCounts } from '@/lib/db/queries/admin';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -33,10 +34,11 @@ export default async function AdminLayout({
   const user = await requireAdmin(locale);
   const t = await getTranslations('adminNav');
 
-  const [counts, notifications, unread] = await Promise.all([
+  const [counts, notifications, unread, settings] = await Promise.all([
     adminPendingCounts(),
     userNotifications(user.id, user.role, 20),
     unreadNotificationCount(user.id, user.role),
+    siteSettings(),
   ]);
 
   // Formatted here so the nav needs no locale of its own; null hides the badge.
@@ -66,7 +68,7 @@ export default async function AdminLayout({
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               {t('viewStorefront')}
             </Link>
-            <LocaleSwitcher />
+            <LocaleSwitcher locales={settings.publishedLocales} />
             <NotificationBell
               unreadCount={unread}
               notifications={notifications.map((item) => ({

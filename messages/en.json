@@ -629,7 +629,6 @@
   "footer": {
     "tagline": "Gulbahar Center's marketplace online — real shops, delivered in Kabul.",
     "visitUs": "Visit us",
-    "hours": "Saturday to Thursday, 8:00 to 19:00",
     "floorGuide": "Floor guide",
     "explore": "Explore",
     "floor1": "Floor 1",
@@ -638,8 +637,7 @@
     "floor2Trades": "Electronics, watches, jewellery, home appliances",
     "floor3": "Floor 3",
     "floor3Trades": "Clothing, shoes, bags, toys, sportswear",
-    "copyright": "© 2026 Gulbahar Center — demo build",
-    "phone": "020 220 1400",
+    "copyright": "© 2026 {name} — demo build",
     "trustPickupTitle": "Free in-store pickup",
     "trustPickupBody": "From the shop, at Gulbahar Center",
     "trustDeliveryTitle": "Fast Kabul delivery",
@@ -654,7 +652,8 @@
     "shopsHeading": "Shops & services",
     "trackOrder": "Track an order",
     "paymentMethods": "Payment methods",
-    "cashOnDelivery": "Cash on delivery"
+    "cashOnDelivery": "Cash on delivery",
+    "pricesIn": "Prices in {currency}"
   },
   "products": {
     "title": "All products",
@@ -903,7 +902,10 @@
       "invalid_code": "The code must be six digits",
       "weak_password": "Password must be at least 8 characters and not a common one",
       "password_mismatch": "Those passwords don't match",
-      "reauth_required": "Your current password or a code to your phone is required to change it"
+      "reauth_required": "Your current password or a code to your phone is required to change it",
+      "not_found": "Not found",
+      "unknown_product": "That product no longer exists",
+      "not_purchased": "You can review an item once you have bought it"
     },
     "myShopTitle": "My shop",
     "myShopHint": "Manage your products, orders and promotions",
@@ -947,6 +949,92 @@
       "save": "Save",
       "passwordSavedToast": "Password saved",
       "cancel": "Cancel"
+    },
+    "navLabel": "Account sections",
+    "overview": "Account overview",
+    "comingSoon": "Coming soon",
+    "sections": {
+      "orders": {
+        "title": "My orders",
+        "body": "Track orders and revisit past ones",
+        "count": "{n, plural, one {# order} other {{count} orders}}"
+      },
+      "wishlist": {
+        "title": "Wishlist",
+        "body": "Things you saved for later",
+        "count": "{n, plural, one {# saved item} other {{count} saved items}}"
+      },
+      "addresses": {
+        "title": "My addresses",
+        "body": "Delivery addresses for faster checkout",
+        "count": "{n, plural, one {# address} other {{count} addresses}}"
+      },
+      "reviews": {
+        "title": "My reviews",
+        "body": "Reviews you have written for products",
+        "count": "{n, plural, one {# review} other {{count} reviews}}"
+      },
+      "security": {
+        "title": "Security and sign-in",
+        "body": "Email, password and the account phone number"
+      },
+      "settings": {
+        "title": "Settings",
+        "body": "Language and notifications"
+      },
+      "support": {
+        "title": "Support",
+        "body": "Contact Gulbahar Center and get help with an order"
+      }
+    },
+    "panel": {
+      "heading": "Profile information",
+      "fullName": "Full name",
+      "editName": "Edit name",
+      "phone": "Phone number",
+      "phoneIsIdentity": "Your phone number is your account identity.",
+      "email": "Email address",
+      "password": "Password",
+      "passwordSet": "Set",
+      "defaultAddress": "Default address",
+      "language": "Language"
+    },
+    "signOutConfirmTitle": "Sign out of your account?",
+    "signOutConfirmBody": "You'll need a code sent to your phone, or your password, to sign back in.",
+    "reviews": {
+      "saved": "Your review was saved",
+      "deleted": "Your review was deleted",
+      "edit": "Edit review",
+      "delete": "Delete review",
+      "deleteTitle": "Delete this review?",
+      "deleteBody": "It will be removed from the product page. You can review the item again later.",
+      "bodyPlaceholder": "Tell others how it went…",
+      "shopReplied": "{shop} replied",
+      "emptyTitle": "No reviews yet",
+      "emptyBody": "Once an order is delivered you can review anything you bought.",
+      "emptyAction": "View orders"
+    },
+    "settings": {
+      "languageHeading": "Language",
+      "languageHint": "Your choice applies on this device and to your account messages.",
+      "notificationsHeading": "Notifications",
+      "inAppTitle": "In-app notifications",
+      "inAppBody": "Order updates arrive in the bell at the top of the page — always on.",
+      "smsTitle": "SMS and push",
+      "smsBody": "Per-channel choices become available when the SMS service goes live."
+    },
+    "support": {
+      "phoneLabel": "Call the centre",
+      "hoursLabel": "Opening hours",
+      "addressLabel": "Address",
+      "orderHelpTitle": "Order help",
+      "orderHelpBody": "Order status and the details of each one",
+      "shopHelpTitle": "Contact a shop",
+      "shopHelpBody": "For a question about an item, reach the shop directly"
+    },
+    "payments": {
+      "title": "Payment methods",
+      "body": "Cash on delivery and HesabPay are chosen at checkout. Saved payment methods are coming."
     }
   },
   "dashboardNav": {

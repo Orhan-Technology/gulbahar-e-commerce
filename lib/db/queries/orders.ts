@@ -144,30 +144,6 @@ export async function customerOrders(userId: string) {
   }));
 }
 
-/** Counts for the account header's stat chips. */
-export async function customerStats(userId: string) {
-  const rows = await db.execute(sql`
-    select
-      (select count(*)::int from orders where user_id = ${userId}) as orders,
-      (select count(*)::int from wishlist_items where user_id = ${userId}) as wishlist,
-      (select count(*)::int from reviews where user_id = ${userId} and status = 'visible') as reviews,
-      (select min(created_at) from users where id = ${userId}) as member_since
-  `);
-
-  const [row] = rows as unknown as Array<{
-    orders: number;
-    wishlist: number;
-    reviews: number;
-    member_since: string | null;
-  }>;
-
-  return {
-    orders: Number(row?.orders ?? 0),
-    wishlist: Number(row?.wishlist ?? 0),
-    reviews: Number(row?.reviews ?? 0),
-    memberSince: row?.member_since ? new Date(row.member_since) : null,
-  };
-}
 
 /**
  * Orders visible to one shop (PRD §3.1, §6.3).

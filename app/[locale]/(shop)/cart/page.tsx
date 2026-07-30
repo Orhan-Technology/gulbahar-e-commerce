@@ -7,9 +7,9 @@ import { PriceDisplay } from '@/components/custom/price-display';
 import { Button } from '@/components/ui/button';
 import { CartLineControls } from '@/components/shop/cart/cart-line-controls';
 import { getCart } from '@/lib/cart';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { pickLocale } from '@/lib/db/localized';
 import { formatCurrency, formatNumber } from '@/lib/format';
-import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/offers';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -21,7 +21,7 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
   setRequestLocale(locale);
   const t = await getTranslations('cart');
 
-  const cart = await getCart();
+  const [cart, settings] = await Promise.all([getCart(), siteSettings()]);
 
   if (cart.groups.length === 0) {
     return (
@@ -36,7 +36,7 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
     );
   }
 
-  const freeDeliveryGap = FREE_DELIVERY_THRESHOLD - cart.total;
+  const freeDeliveryGap = settings.freeDeliveryThreshold - cart.total;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
@@ -193,7 +193,7 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
               <p className="rounded-control bg-primary-50 text-primary-800 px-3 py-2 text-xs">
                 {t('freeDeliveryHint', {
                   amount: formatCurrency(freeDeliveryGap, locale),
-                  fee: formatCurrency(DELIVERY_FEE, locale),
+                  fee: formatCurrency(settings.deliveryFee, locale),
                 })}
               </p>
             )}

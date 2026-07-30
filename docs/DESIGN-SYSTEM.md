@@ -198,6 +198,30 @@ One implementation for every listing surface: result count, sort (popularity
 first, no alphabetical option), and on mobile a filter button badged with the
 active count. Sticky under the header.
 
+### UnavailableCard
+
+**Anatomy:** dashed border, muted fill, no shadow, icon at reduced opacity,
+title, one honest sentence, and a "به‌زودی / Coming soon" pill.
+**Interaction:** none. `role="group"` + `aria-disabled`, nothing focusable,
+no `cursor-pointer`. A greyed-out button still takes tab focus and still
+invites a click; a region does neither.
+
+**THE HONESTY RULE — applies to every surface, not just this component:**
+
+> A disabled surface states what it will do and why it is not available. It
+> never shows placeholder data, never opens a dialog, and never appears without
+> a real product reason.
+
+Anything that fails that test is DELETED rather than disabled. The test is
+whether a presenter would have to say "that one doesn't do anything yet" out
+loud — if so, the card is either wrong or missing its sentence.
+
+Decided so far: payment methods KEPT-disabled (cash on delivery and HesabPay
+are real rails chosen at checkout; saved instruments are not built), per-channel
+notification toggles KEPT-disabled (they become real when SMS goes live), and
+loyalty points, membership tiers and subscriptions OMITTED — inventing a tier
+on a client demo is a lie, not a placeholder.
+
 ---
 
 ## 7. Checks

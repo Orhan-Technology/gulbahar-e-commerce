@@ -15,4 +15,5 @@ export * from './reviews';
 export * from './cart';
 export * from './promotions';
 export * from './notifications';
+export * from './settings';
 export * from './relations';

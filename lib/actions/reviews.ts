@@ -97,3 +97,43 @@ export async function submitReview(input: {
   revalidatePath(`/products/${parsed.data.productSlug}`);
   return { ok: true, mode: 'created' };
 }
+
+/**
+ * Deletes the author's own review (Prompt A2, /account/reviews).
+ *
+ * A hard delete, unlike admin moderation which sets `status = 'removed'` and
+ * keeps the row for audit. The difference is deliberate: moderation is a
+ * decision ABOUT someone that has to stay on the record, while this is a person
+ * withdrawing their own words, and the order line becomes reviewable again —
+ * which the unique key on `order_item_id` allows only if the row is actually
+ * gone.
+ *
+ * `userId` in the WHERE clause is the authorisation check, not a check done
+ * beforehand, so a forged review id cannot reach someone else's row.
+ */
+export async function deleteMyReview(
+  reviewId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const parsed = z.string().uuid().safeParse(reviewId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [deleted] = await db
+    .delete(reviews)
+    .where(and(eq(reviews.id, parsed.data), eq(reviews.userId, user.id)))
+    .returning({ productId: reviews.productId });
+
+  if (!deleted) return { ok: false, error: 'not_found' };
+
+  const [product] = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(eq(products.id, deleted.productId))
+    .limit(1);
+
+  if (product) revalidatePath(`/products/${product.slug}`);
+  revalidatePath('/account/reviews');
+  return { ok: true };
+}

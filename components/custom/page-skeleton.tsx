@@ -91,3 +91,39 @@ export function PageSkeleton({
     </div>
   );
 }
+
+/**
+ * The account hub's section skeleton (Prompt A2).
+ *
+ * Separate from PageSkeleton's four variants because it draws only the MAIN
+ * COLUMN. The hub layout owns the page padding, the sticky nav and the profile
+ * panel, and those do not re-render between sections — a full-page skeleton
+ * here would blank two columns that never went away and make every move
+ * between sections look like a fresh page load, which is exactly what the
+ * persistent layout exists to avoid.
+ */
+export function AccountSectionSkeleton({
+  rows = 4,
+  /** Section headers are two lines; the hub's own header is a card. */
+  header = 'heading',
+}: {
+  rows?: number;
+  header?: 'heading' | 'card';
+}) {
+  return (
+    <div className="space-y-4" aria-busy>
+      {header === 'card' ? (
+        <Skeleton className="rounded-card h-28 w-full" />
+      ) : (
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <Skeleton className="h-3 w-64" />
+        </div>
+      )}
+
+      {Array.from({ length: rows }, (_, index) => (
+        <Skeleton key={index} className="rounded-card h-20 w-full" />
+      ))}
+    </div>
+  );
+}

@@ -37,7 +37,8 @@ export default async function OrderDetailPage({
   const shops = [...new Map(order.items.map((item) => [item.shopId, item])).values()];
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 px-4 py-4 sm:py-6">
+    // The hub layout owns the page frame (Prompt A2).
+    <div className="max-w-2xl space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-mono text-lg font-bold tabular-nums">{order.reference}</h1>

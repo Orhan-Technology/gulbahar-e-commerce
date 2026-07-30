@@ -7,6 +7,7 @@ import { NotificationBell } from '@/components/dashboard/notification-bell';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { shopById } from '@/lib/db/queries/shops';
 import { shopOrderCounts } from '@/lib/db/queries/shop-orders';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
@@ -37,13 +38,14 @@ export default async function DashboardLayout({
   const t = await getTranslations('dashboardNav');
   const common = await getTranslations('common');
 
-  const [shop, notifications, unread, orderCounts] = await Promise.all([
+  const [shop, notifications, unread, orderCounts, settings] = await Promise.all([
     shopById(user.shopId),
     userNotifications(user.id, user.role, 20),
     unreadNotificationCount(user.id, user.role),
     // Feeds the Orders tab badge. Fetched here rather than in the client bar so
     // the count is in the first paint instead of popping in after hydration.
     shopOrderCounts(user.shopId),
+    siteSettings(),
   ]);
 
   const shopName = shop ? pickLocale(shop.name, locale) : t('yourShop');
@@ -88,7 +90,10 @@ export default async function DashboardLayout({
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
               {t('viewStorefront')}
             </Link>
-            <LocaleSwitcher className="text-primary-foreground hover:bg-primary-600 hover:text-primary-foreground" />
+            <LocaleSwitcher
+              className="text-primary-foreground hover:bg-primary-600 hover:text-primary-foreground"
+              locales={settings.publishedLocales}
+            />
             <NotificationBell
               onDark
               unreadCount={unread}

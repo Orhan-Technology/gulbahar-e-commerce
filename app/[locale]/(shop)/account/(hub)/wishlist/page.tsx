@@ -34,7 +34,7 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
 
   if (items.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
+      <div className="py-6">
         <EmptyState
           illustration={<Heart className="h-7 w-7" />}
           title={t('emptyTitle')}
@@ -45,8 +45,9 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
     );
   }
 
+  // The hub layout owns the page frame (Prompt A2).
   return (
-    <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
+    <div className="space-y-4">
       <h1 className="text-xl font-bold">
         {t('title')} · {formatNumber(items.length, locale)}
       </h1>

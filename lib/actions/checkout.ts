@@ -18,6 +18,7 @@ import {
   type DbLocale,
 } from '../db/schema';
 import { deliveryFeeFor } from '../offers';
+import { deliveryRates } from '../db/queries/settings';
 import { formatCurrency } from '../format';
 import { notify, notifyMany, type NotifyParams } from '../notify';
 
@@ -89,7 +90,9 @@ export async function placeOrder(input: {
   }
 
   const discountTotal = cart.offerSavings;
-  const deliveryFee = deliveryFeeFor(cart.total, parsed.data.fulfillment);
+  // The rates the admin set, not the constants — what the cart quoted and
+  // what the order is charged have to come from the same row (A4).
+  const deliveryFee = deliveryFeeFor(cart.total, parsed.data.fulfillment, await deliveryRates());
   const total = cart.total + deliveryFee;
 
   const created = await db.transaction(async (tx) => {

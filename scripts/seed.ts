@@ -28,7 +28,8 @@ import {
   type OrderStatus,
   type PromotionSlotKey,
 } from '../lib/db/schema';
-import { promotionSlots } from '../lib/db/schema';
+import { platformSettings, promotionSlots } from '../lib/db/schema';
+import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
 import { formatCurrency } from '../lib/format';
 import { pickLocale } from '../lib/db/localized';
@@ -220,6 +221,18 @@ async function main() {
   }
 
   console.log('\nSeeding the Gulbahar demo world…\n');
+
+  // ----------------------------------------------------------------- settings
+  /*
+   * The marketplace's own facts (A4). Seeded FIRST and with no PRNG draw of its
+   * own: every order reference below comes out of the shared generator, and the
+   * runbook names specific ones (GC-24788, GC-24338), so anything inserted
+   * before them must not touch the draw sequence.
+   *
+   * These values are the ones the app previously hard-coded, so a seeded
+   * database and a bare `db:push` render identically until the admin edits them.
+   */
+  await db.insert(platformSettings).values({ id: 1, ...DEFAULT_SETTINGS });
 
   // ---------------------------------------------------------------- categories
   const categoryIds = new Map<string, string>();

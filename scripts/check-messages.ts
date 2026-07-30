@@ -54,9 +54,21 @@ function sourceFiles(dir: string): string[] {
 
 const problems: string[] = [];
 
+/**
+ * Comments are stripped before anything is matched.
+ *
+ * The house rule, learned the hard way by `npm run audit` (CLAUDE.md): a static
+ * auditor that reads its own explanatory prose reports it. A comment that
+ * mentions `t('x')` while explaining a cast is not a call, and reporting it
+ * sends the reader looking for a key that was never used.
+ */
+function stripComments(source: string): string {
+  return source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/[^\n]*/g, '$1');
+}
+
 /* 1 + 2 — every literal t('…') call resolves to a string in fa */
 for (const file of [...sourceFiles('app'), ...sourceFiles('components')]) {
-  const source = readFileSync(file, 'utf8');
+  const source = stripComments(readFileSync(file, 'utf8'));
 
   const namespaces = [
     ...new Set(

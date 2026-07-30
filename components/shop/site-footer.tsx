@@ -11,10 +11,10 @@ import {
 } from 'lucide-react';
 
 import { pickLocale } from '@/lib/db/localized';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { categoryTree } from '@/lib/db/queries/shops';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatOpeningHours, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
-import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/offers';
 
 /**
  * Footer (PRD §5.1): the four promises, then link columns, then the mall's own
@@ -28,13 +28,17 @@ import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/offers';
  * social accounts — and this build has none of those pages, no app and no
  * accounts. Rendering them would be twenty dead ends in the most-scrutinised
  * part of a demo, so the columns are the mockup's shape filled with what is
- * genuinely there. The delivery promise reads its numbers from lib/offers so it
- * cannot drift from what checkout actually charges.
+ * genuinely there.
+ *
+ * Every mall fact here — address, hours, support number, delivery fee and
+ * threshold, currency label — is read from `platform_settings`, which the admin
+ * edits (A4). The delivery promise in particular cannot drift from what
+ * checkout charges, because both read the same row.
  */
 export async function SiteFooter() {
   const t = await getTranslations();
   const locale = await getLocale();
-  const tree = await categoryTree(locale);
+  const [tree, settings] = await Promise.all([categoryTree(locale), siteSettings()]);
 
   const promises: Array<{ icon: LucideIcon; title: string; body: string }> = [
     {
@@ -46,8 +50,8 @@ export async function SiteFooter() {
       icon: Truck,
       title: t('footer.trustDeliveryTitle'),
       body: t('footer.trustDeliveryBody', {
-        fee: formatNumber(DELIVERY_FEE, locale),
-        threshold: formatNumber(FREE_DELIVERY_THRESHOLD, locale),
+        fee: formatNumber(settings.deliveryFee, locale),
+        threshold: formatNumber(settings.freeDeliveryThreshold, locale),
       }),
     },
     {
@@ -96,15 +100,15 @@ export async function SiteFooter() {
           <p className="text-sm leading-relaxed text-neutral-600">{t('footer.tagline')}</p>
           <p className="flex items-start gap-2 text-sm text-neutral-600">
             <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            {t('brand.tagline')}
+            {pickLocale(settings.address, locale)}
           </p>
           <p className="flex items-center gap-2 text-sm text-neutral-600">
             <Clock className="h-4 w-4 shrink-0" aria-hidden />
-            {t('footer.hours')}
+            {formatOpeningHours(settings.hours, locale)}
           </p>
           <p className="flex items-center gap-2 text-sm text-neutral-600">
             <Phone className="h-4 w-4 shrink-0" aria-hidden />
-            <span dir="ltr">{t('footer.phone')}</span>
+            <span dir="ltr">{formatPhone(settings.supportPhone, locale)}</span>
           </p>
         </FooterColumn>
 
@@ -145,8 +149,13 @@ export async function SiteFooter() {
       {/* ---------------------------------------------------------------- */}
       {/* Bottom bar — copyright and the two payment methods that exist    */}
       <div className="border-border mx-auto mt-10 flex max-w-page flex-wrap items-center justify-between gap-3 border-t px-4 py-5 sm:px-7">
-        <span className="text-xs text-neutral-500">{t('footer.copyright')}</span>
+        <span className="text-xs text-neutral-500">
+          {t('footer.copyright', { name: pickLocale(settings.mallName, locale) })}
+        </span>
         <span className="flex items-center gap-2">
+          <span className="text-2xs text-neutral-500">
+            {t('footer.pricesIn', { currency: pickLocale(settings.currencyLabel, locale) })}
+          </span>
           <span className="text-2xs text-neutral-500">{t('footer.paymentMethods')}</span>
           <span className="rounded-control bg-card text-2xs border-border border px-2.5 py-1 font-semibold text-neutral-700">
             {t('checkout.hesabpay')}

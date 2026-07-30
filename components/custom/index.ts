@@ -43,6 +43,7 @@ export {
 export { SectionHeader, SectionHeaderSkeleton, type SectionHeaderProps } from './section-header';
 export { ShopCard, ShopCardSkeleton, type ShopCardProps } from './shop-card';
 export { SponsoredBadge, SponsoredBadgeSkeleton } from './sponsored-badge';
+export { UnavailableCard, type UnavailableCardProps } from './unavailable-card';
 export {
   StatCard,
   StatCardSkeleton,

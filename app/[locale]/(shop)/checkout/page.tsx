@@ -10,8 +10,8 @@ import { currentUser } from '@/lib/auth/guards';
 import { getCart } from '@/lib/cart';
 import { db } from '@/lib/db';
 import { pickLocale } from '@/lib/db/localized';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { addresses } from '@/lib/db/schema';
-import { DELIVERY_FEE, FREE_DELIVERY_THRESHOLD } from '@/lib/offers';
 import { KABUL_DISTRICTS } from '@/lib/districts';
 
 /**
@@ -27,7 +27,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
   setRequestLocale(locale);
   const t = await getTranslations('checkout');
 
-  const cart = await getCart();
+  const [cart, settings] = await Promise.all([getCart(), siteSettings()]);
 
   if (cart.groups.length === 0) {
     return (
@@ -90,8 +90,8 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
           districts={KABUL_DISTRICTS}
           pickupShops={pickupShops}
           cartTotal={cart.total}
-          deliveryFee={DELIVERY_FEE}
-          freeDeliveryThreshold={FREE_DELIVERY_THRESHOLD}
+          deliveryFee={settings.deliveryFee}
+          freeDeliveryThreshold={settings.freeDeliveryThreshold}
         />
       </div>
     </div>

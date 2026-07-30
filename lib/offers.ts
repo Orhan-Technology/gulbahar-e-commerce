@@ -116,11 +116,27 @@ export function bestOfferFor(lines: OfferLine[], shopOffers: ActiveOffer[]): App
   return best;
 }
 
-/** Kabul delivery fee (PRD §5.3). Free above a threshold, as the seed assumes. */
+/**
+ * Kabul delivery fee (PRD §5.3). Free above a threshold, as the seed assumes.
+ *
+ * These are the FALLBACK values only. Since A4 the live numbers live in
+ * `platform_settings` and are edited by the admin, so every caller that can
+ * reach the database passes `rates` from `deliveryRates()`. The constants stay
+ * because this module is imported by check scripts and by pure-function tests
+ * that have no request context, and because they are what the query itself
+ * falls back to on an unseeded database — one source for "what the app charges
+ * when nobody has said otherwise".
+ */
 export const DELIVERY_FEE = 150;
 export const FREE_DELIVERY_THRESHOLD = 20000;
 
-export function deliveryFeeFor(subtotalAfterDiscount: number, fulfillment: 'delivery' | 'pickup') {
+export type DeliveryRates = { fee: number; threshold: number };
+
+export function deliveryFeeFor(
+  subtotalAfterDiscount: number,
+  fulfillment: 'delivery' | 'pickup',
+  rates: DeliveryRates = { fee: DELIVERY_FEE, threshold: FREE_DELIVERY_THRESHOLD },
+) {
   if (fulfillment === 'pickup') return 0;
-  return subtotalAfterDiscount >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
+  return subtotalAfterDiscount >= rates.threshold ? 0 : rates.fee;
 }

@@ -43,7 +43,7 @@ export default async function OrdersPage({
 
   if (orders.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
+      <div className="py-6">
         <EmptyState
           illustration={<Package className="h-7 w-7" />}
           title={t('emptyTitle')}
@@ -70,8 +70,10 @@ export default async function OrdersPage({
     })),
   ].filter((chip) => chip.count > 0 || chip.key === 'all');
 
+  // The hub layout owns the page frame — max width, gutters and vertical
+  // rhythm — so a section only lays out its own column (Prompt A2).
   return (
-    <div className="mx-auto max-w-2xl space-y-4 px-4 py-4 sm:py-6">
+    <div className="max-w-2xl space-y-4">
       <h1 className="text-xl font-bold">{t('title')}</h1>
 
       <nav className="flex scrollbar-none snap-x gap-2 overflow-x-auto pb-1">
