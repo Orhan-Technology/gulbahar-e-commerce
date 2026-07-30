@@ -511,6 +511,12 @@
         "title": "Shop replied",
         "body": "{shopName} replied to your review of \"{productTitle}\"."
       }
+    },
+    "user": {
+      "roleChanged": {
+        "title": "Your account role changed",
+        "body": "Your account role is now “{role}”. Admin note: {note}"
+      }
     }
   },
   "auth": {
@@ -1657,7 +1663,9 @@
     "revenue": "Revenue",
     "orders": "Orders",
     "reports": "Reports",
-    "users": "Users"
+    "users": "Users",
+    "settings": "Settings",
+    "sectionsHeading": "Console sections"
   },
   "adminOverview": {
     "title": "Overview",
@@ -2183,8 +2191,24 @@
       "forbidden": "You are not allowed to do that",
       "invalid_input": "That input is not valid",
       "not_found": "That account was not found",
-      "cannot_deactivate_self": "You cannot deactivate your own account"
-    }
+      "cannot_deactivate_self": "You cannot deactivate your own account",
+      "cannot_change_own_role": "You cannot change your own role",
+      "last_admin": "The last active admin cannot be demoted",
+      "too_small": "The note must be at least three characters"
+    },
+    "colActivity": "Activity",
+    "inviteShopOwner": "Invite a shop owner",
+    "changeRole": "Change role",
+    "roleTitle": "Change this account's role",
+    "roleBody": "The role decides which surfaces this account can reach. Your note is sent to this person.",
+    "roleNote": "Note (required)",
+    "roleNotePlaceholder": "Why the role is changing…",
+    "roleNoteHint": "The note is recorded as a notification to this account.",
+    "roleShopkeeperHint": "With no shop yet, their first sign-in lands on shop registration.",
+    "confirmRole": "Change role",
+    "roleChanged": "Account role changed",
+    "activityOrders": "{n, plural, one {# order} other {{count} orders}}",
+    "activityReviews": "{n, plural, one {# review} other {{count} reviews}}"
   },
   "demoLog": {
     "open": "Message log",
@@ -2326,5 +2350,63 @@
     "emptySearchTitle": "Nothing found for \"{term}\"",
     "emptySearchBody": "Try a different spelling, or browse everything in the mall.",
     "browseAll": "Browse all products"
+  },
+  "adminSettings": {
+    "title": "Platform settings",
+    "intro": "Mall details, promotion pricing, categories and languages. Anything saved here shows on the storefront immediately.",
+    "marketplaceHeading": "Mall details",
+    "marketplaceHint": "These values are read by the storefront footer, the cart, checkout and the support page.",
+    "mallName": "Mall name",
+    "address": "Address",
+    "hours": "Opening hours",
+    "hoursHint": "24-hour Latin format, e.g. 08:00-19:00 — the display is localised automatically.",
+    "supportPhone": "Support phone",
+    "deliveryFee": "Delivery fee (afghanis)",
+    "deliveryFeePreview": "On the storefront: {amount}",
+    "freeDeliveryThreshold": "Free delivery above (afghanis)",
+    "freeDeliveryPreview": "Free above {amount}",
+    "currencyLabel": "Currency label",
+    "inFa": "Dari",
+    "inEn": "English",
+    "slotsHeading": "Promotion slots",
+    "slotsHint": "Capacity and weekly price per slot. A price change applies to future bookings only.",
+    "categoriesHeading": "Categories",
+    "categoriesHint": "Add, rename and reorder the category tree",
+    "accountHeading": "Your admin account",
+    "accountHint": "Email and password for the account you are signed in as",
+    "localesHeading": "Languages",
+    "defaultLocale": "Default language",
+    "defaultLocaleHint": "The default locale is compiled into routing and every generated path, so it is a deploy-time setting.",
+    "localeRequired": "The default language is always published.",
+    "localeStructureOnly": "Pashto structure is in place but its strings are not written yet — it stays unpublished until they are.",
+    "locales": {
+      "fa": "Dari",
+      "en": "English",
+      "ps": "Pashto"
+    },
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Settings saved",
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "invalid_input": "That input is not valid",
+      "invalid_hours": "Hours must look like 08:00-19:00",
+      "invalid_phone": "That phone number is not valid",
+      "default_locale_required": "The default language cannot be unpublished",
+      "locale_not_translated": "That language has no translations yet",
+      "too_small": "This field cannot be empty",
+      "too_big": "That value is too large"
+    },
+    "danger": {
+      "heading": "Reset demo data",
+      "body": "Every table is dropped and reseeded. Orders, reviews and any accounts created during the demo are lost.",
+      "signOutWarning": "You are signed out afterwards, because every user id is reissued.",
+      "confirmWord": "reset",
+      "typeToConfirm": "Type “{word}” to confirm",
+      "reset": "Reset demo data",
+      "running": "Resetting…",
+      "done": "Demo data reset",
+      "failed": "The reset failed"
+    }
   }
 }

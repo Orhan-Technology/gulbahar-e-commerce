@@ -1,12 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { getTranslations } from 'next-intl/server';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { categories, products, reviews, users } from '../db/schema';
+import { notify } from '../notify';
 
 /**
  * Catalogue governance (PRD §7.2).
@@ -307,6 +309,85 @@ export async function setUserActive(userId: string, active: boolean): Promise<Ad
     .returning({ id: users.id });
 
   if (!updated) return { ok: false, error: 'not_found' };
+
+  revalidatePath('/admin/users');
+  return { ok: true };
+}
+
+/**
+ * Changes an account's role, with a written reason (Prompt A4).
+ *
+ * The NOTE IS REQUIRED and is not decoration. A role change is the single most
+ * consequential thing on this screen — promoting to shopkeeper opens the seller
+ * panel, promoting to admin hands over the whole platform — and the demo has no
+ * audit table, so the note is delivered to the person it happened to as an
+ * in-app notification. That makes it a real record in the notification log
+ * rather than a field that gets dropped: the admin has to say why, and the
+ * subject gets told.
+ *
+ * Two guards, both about not stranding people:
+ * - Never your own account. An admin demoting themselves loses the console with
+ *   no way back short of a database client.
+ * - Never the last admin, for the same reason at platform scale.
+ *
+ * A new shopkeeper with no shop is NOT stranded either: the dashboard layout
+ * sends them to /dashboard/register-shop, which is the existing onboarding path.
+ */
+const roleChangeSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(['customer', 'shopkeeper', 'admin']),
+  note: z.string().trim().min(3).max(200),
+});
+
+export async function setUserRole(
+  input: z.input<typeof roleChangeSchema>,
+): Promise<AdminActionResult> {
+  const context = await requireAdminContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = roleChangeSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? 'invalid_input' };
+  }
+
+  if (parsed.data.userId === context.userId) return { ok: false, error: 'cannot_change_own_role' };
+
+  const [subject] = await db
+    .select({ id: users.id, role: users.role, locale: users.locale })
+    .from(users)
+    .where(eq(users.id, parsed.data.userId))
+    .limit(1);
+
+  if (!subject) return { ok: false, error: 'not_found' };
+  if (subject.role === parsed.data.role) return { ok: true };
+
+  if (subject.role === 'admin') {
+    const [{ remaining }] = await db
+      .select({ remaining: sql<number>`count(*)::int` })
+      .from(users)
+      .where(and(eq(users.role, 'admin'), eq(users.active, true)));
+
+    if (Number(remaining) <= 1) return { ok: false, error: 'last_admin' };
+  }
+
+  await db.update(users).set({ role: parsed.data.role }).where(eq(users.id, subject.id));
+
+  // The subject reads their own message, so the role name is resolved in THEIR
+  // locale — `ps` falls back to Dari, the same substitution notify() makes,
+  // because Pashto strings are deferred (PRD §11).
+  const t = await getTranslations({
+    locale: subject.locale === 'ps' ? 'fa' : subject.locale,
+    namespace: 'adminUsers.roles',
+  });
+
+  await notify({
+    eventKey: 'user.roleChanged',
+    channel: 'inapp',
+    recipientUserId: subject.id,
+    recipientRole: parsed.data.role,
+    locale: subject.locale,
+    values: { role: t(parsed.data.role), note: parsed.data.note },
+  });
 
   revalidatePath('/admin/users');
   return { ok: true };

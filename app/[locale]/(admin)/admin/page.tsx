@@ -1,13 +1,16 @@
 import { Suspense } from 'react';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
+import { ChevronRight } from 'lucide-react';
 
 import { AdminActionQueue } from '@/components/admin/admin-action-queue';
 import { PlatformHealth, PlatformHealthSkeleton } from '@/components/admin/platform-health';
 import { RevenueBlock, RevenueBlockSkeleton } from '@/components/admin/revenue-block';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ADMIN_SECTIONS } from '@/lib/admin-sections';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminActionQueue } from '@/lib/db/queries/admin-overview';
 import { formatNumber } from '@/lib/format';
+import { Link } from '@/lib/i18n/navigation';
 
 /**
  * Admin overview — quality-bar screen #4 (PRD §7, §10.8).
@@ -57,7 +60,52 @@ export default async function AdminOverviewPage({
       <Suspense fallback={<PlatformHealthSkeleton />}>
         <PlatformHealth />
       </Suspense>
+
+      {/*
+        The console's own index, the same pattern as the account hub (A4): the
+        rail is the navigation on a desktop, but the overview is where someone
+        arrives, and a section they have never opened is invisible in a dark
+        sidebar they have stopped reading. Rendered from ADMIN_SECTIONS, so this
+        and the rail cannot disagree about what the console contains.
+      */}
+      <ConsoleSections />
     </div>
+  );
+}
+
+async function ConsoleSections() {
+  const t = await getTranslations('adminNav');
+
+  return (
+    <section aria-labelledby="console-sections-heading" className="space-y-3">
+      <h2 id="console-sections-heading" className="text-sm font-bold">
+        {t('sectionsHeading')}
+      </h2>
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {ADMIN_SECTIONS.filter((section) => section.href !== '/admin').map((section) => {
+          const Icon = section.icon;
+          return (
+            <li key={section.href}>
+              <Link
+                href={section.href}
+                className="rounded-card border-border bg-card hover:border-primary flex h-full items-center gap-3 border p-3 transition-colors duration-150"
+              >
+                <span className="rounded-control bg-primary-50 text-primary flex h-9 w-9 shrink-0 items-center justify-center">
+                  <Icon className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="min-w-0 flex-1 text-sm font-medium">
+                  {t(section.key as never)}
+                </span>
+                <ChevronRight
+                  className="h-4 w-4 shrink-0 text-neutral-400 rtl:rotate-180"
+                  aria-hidden
+                />
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 

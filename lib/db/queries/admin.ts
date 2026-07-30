@@ -372,6 +372,13 @@ export async function adminUsers(filters: AdminUserFilters) {
       shopName: shops.name,
       shopSlug: shops.slug,
       orderCount: sql<number>`(select count(*)::int from orders o where o.user_id = users.id)`,
+      /*
+       * Activity summary (Prompt A4). Two correlated counts rather than two
+       * joins: a join to orders AND reviews multiplies the rows against each
+       * other, and the shop join above already makes this a one-to-many.
+       */
+      reviewCount: sql<number>`(select count(*)::int from reviews r where r.user_id = users.id and r.status = 'visible')`,
+      lastOrderAt: sql<Date | null>`(select max(o.created_at) from orders o where o.user_id = users.id)`,
     })
     .from(users)
     .leftJoin(shopMembers, eq(shopMembers.userId, users.id))

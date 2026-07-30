@@ -1,15 +1,18 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Users } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 
+import { CreateShopDialog } from '@/components/admin/create-shop-dialog';
 import { UserRowActions } from '@/components/admin/user-row-actions';
 import { EmptyState } from '@/components/custom/empty-state';
 import { SearchBox } from '@/components/custom/search-box';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminUserCounts, adminUsers } from '@/lib/db/queries/admin';
+import { categoryTree } from '@/lib/db/queries/shops';
 import { formatDate, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -29,7 +32,7 @@ export default async function AdminUsersPage({
   const admin = await requireAdmin(locale);
   const t = await getTranslations('adminUsers');
 
-  const counts = await adminUserCounts();
+  const [counts, tree] = await Promise.all([adminUserCounts(), categoryTree(locale)]);
 
   const chips = [
     { key: 'all', href: '/admin/users', count: counts.all, active: !query.role },
@@ -43,9 +46,30 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-4 p-6">
-      <div>
-        <h1 className="text-lg font-bold">{t('title')}</h1>
-        <p className="text-muted-foreground max-w-prose text-sm">{t('intro')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-bold">{t('title')}</h1>
+          <p className="text-muted-foreground max-w-prose text-sm">{t('intro')}</p>
+        </div>
+
+        {/*
+          The invite lives here as well as on /admin/shops, and it is the SAME
+          dialog and the same action — this is where an admin is already looking
+          when a tenant asks to be set up, and a second implementation would be
+          a second set of rules for who owns the new shop.
+        */}
+        <CreateShopDialog
+          categories={tree.map((root) => ({
+            id: root.id,
+            label: pickLocale(root.name, locale) ?? root.slug,
+          }))}
+          trigger={
+            <Button size="sm">
+              <Plus />
+              {t('inviteShopOwner')}
+            </Button>
+          }
+        />
       </div>
 
       <SearchBox placeholder={t('searchPlaceholder')} />
@@ -107,7 +131,7 @@ async function UserList({
             <th className="p-3 text-start font-normal">{t('colPhone')}</th>
             <th className="p-3 text-start font-normal">{t('colRole')}</th>
             <th className="p-3 text-start font-normal">{t('colShop')}</th>
-            <th className="p-3 text-start font-normal">{t('colOrders')}</th>
+            <th className="p-3 text-start font-normal">{t('colActivity')}</th>
             <th className="p-3 text-start font-normal">{t('colJoined')}</th>
             <th className="p-3 text-end font-normal">{t('colActions')}</th>
           </tr>
@@ -147,12 +171,37 @@ async function UserList({
               <td className="p-3 text-xs">
                 {user.shopName ? pickLocale(user.shopName, locale) : '—'}
               </td>
-              <td className="p-3 text-xs">{formatNumber(user.orderCount, locale)}</td>
+              {/*
+                Orders AND reviews, not a bare order count: "what has this person
+                done here" is the question a role change turns on, and a
+                shopkeeper candidate with eleven orders and seven reviews is a
+                different proposition from an account that has never bought
+                anything.
+              */}
+              <td className="p-3 text-xs">
+                <span className="block">
+                  {t('activityOrders', {
+                    n: user.orderCount,
+                    count: formatNumber(user.orderCount, locale),
+                  })}
+                </span>
+                <span className="text-muted-foreground block">
+                  {t('activityReviews', {
+                    n: user.reviewCount,
+                    count: formatNumber(user.reviewCount, locale),
+                  })}
+                </span>
+              </td>
               <td className="text-muted-foreground p-3 text-xs">
                 {formatDate(user.createdAt, locale, 'short')}
               </td>
               <td className="p-3 text-end">
-                <UserRowActions userId={user.id} active={user.active} isSelf={user.id === selfId} />
+                <UserRowActions
+                  userId={user.id}
+                  role={user.role}
+                  active={user.active}
+                  isSelf={user.id === selfId}
+                />
               </td>
             </tr>
           ))}

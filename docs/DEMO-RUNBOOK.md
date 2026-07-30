@@ -86,6 +86,7 @@ Back to the desktop window.
 | `درآمد` — pause here                                        | "**؋ ۲۳۸٬۵۰۰ this month**, ؋ ۱٬۲۰۲٬۰۰۰ to date. This is your income, not the shops' sales. Occupancy is at 50% — nine of eighteen places sold." |
 | Scroll: twelve-month trend, then the slot inventory          | "A year of it, growing. And this table is what you have left to sell — the vacant row is revenue on the floor. Every figure is the price snapshotted when they booked, so changing your rate card never rewrites history." |
 | `گزارش‌ها` briefly                                          | "And the marketplace view — GMV, order volume, which categories move."                                                                                                                                                 |
+| `تنظیمات` → **کرایه تحویل** 150 → 200, save, then open the storefront in the other tab | "Your mall, your numbers. The footer, the cart and what an order is actually charged all read this one row — nobody edits code to change a delivery fee." (Set it back to 150 before the next rehearsal.) |
 
 **Talking point — the one to land:** "Every shop you sign up is a customer for this
 page. The mall already sells physical advertising space; this is the same business with
@@ -99,6 +100,18 @@ better reporting."
 | Keep the tracking page visible. **⌘⇧D → Orders → GC-24788 → step forward** twice | "The shop accepts, then marks it ready. The customer's timeline moves as it happens."                                                    |
 | Open the notification log                                                        | "And every message that went out, in the language each person reads. Dari here, English for a customer who prefers it — same templates." |
 | Switch to `/en` from the header                                                  | "The whole thing in English, left to right, same data."                                                                                  |
+
+**Two-minute optional beat — "is this a real platform?"** Worth doing if the room is
+technical, or if anyone asks how people sign in. It answers both in one pass.
+
+| Do this                                                                     | Say this                                                                                                                    |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `/fa/account` → **امنیت و ورود** → **افزودن ایمیل**, enter any address       | "The phone number IS the account here — it registers you, it recovers you. Email is an extra way in, never a second identity." |
+| Open the notification log, read the six-digit code, enter it                 | "Same channel as the sign-in code. Today it renders in this panel; behind it is where an Afghan SMS gateway drops in."         |
+| **تنظیم رمز عبور**, set one, watch "به‌روزرسانی‌شده در …" appear             | "Stored hashed with argon2 — the password itself is never written anywhere, not to the database, not to that log."             |
+| Sign out from the bottom of the account page                                | "And out."                                                                                                                    |
+| Sign in again on the **ایمیل** tab with the email and password              | "Same account, same eleven orders, same history. Two doors, one person."                                                       |
+| Optional: try the same email with a wrong password                          | "And a wrong password and an unknown email give the identical message — nothing here tells an attacker which one they got right." |
 
 **Closing line:** "Nothing here talks to an external service. It runs on this laptop.
 That is deliberate — it means what you have seen is what exists."
@@ -248,3 +261,51 @@ and lift on hover.
 Demo notes: the queue on both panels shows all of its row types at seed time,
 and the directory's featured strip has two live placements with one slot still
 unsold — which is the number the admin revenue view is showing.
+
+---
+
+## What changed in the A-series (account hub, credentials, admin console)
+
+**Two ways in, one identity.** The phone number is still the account: it
+registers you, it is never editable, and it stays the recovery path and the OTP
+target. Email and password are an optional second credential added from the
+account area — an unverified email cannot sign in, and an account with no
+password cannot either. A wrong password and an unknown email produce the
+identical message, and the check compares them character for character.
+
+**The account hub.** `/account` was a heading over three forms; it is now a
+landing surface with a profile header, seven real routes, and a persistent
+section nav on desktop. On a phone the hub IS the nav — every section is its own
+URL, so it is linkable and survives the back button. The end column is the
+per-field profile panel: name edits in place, the phone shows a lock and the
+sentence explaining why, and any row with nothing in it shows the ACTION that
+would fill it rather than an empty value.
+
+**Reviews you wrote.** `/account/reviews` is entirely built from data that was
+already there — the product page has shown these reviews to everyone else since
+S5. The author can now edit or withdraw one, and the shop's reply travels with
+it.
+
+**Honest about what is not built.** Payment methods and the SMS/push toggles
+render as visibly disabled surfaces that say what they will do and why they are
+not here. Loyalty points, membership tiers and subscriptions were omitted
+outright. If asked: "we would rather show you a smaller thing that is real."
+
+**The mall's own settings.** `/admin/settings` edits the marketplace: name,
+address, opening hours, support number, delivery fee, free-delivery threshold,
+currency label, promotion slot pricing and which languages are published. These
+are not a settings screen for their own sake — the storefront footer, the cart,
+checkout and the support page all read the one row, and so does the fee an order
+is actually charged. Editing the delivery fee live is the strongest two-line
+demonstration on this surface that the platform is theirs.
+
+**Users.** Role changes now require a written note, which is delivered to the
+person it happened to as a notification, and every row carries an activity
+summary (orders and reviews) so a promotion is an informed decision. An admin
+cannot change their own role, and the last active admin cannot be demoted.
+
+Demo notes: the danger zone on `/admin/settings` is absent unless `DEMO_MODE` is
+true, and it asks you to type a word rather than press a second button — the
+reset drops every table, takes minutes, and signs you out as a side effect.
+`npm run check:account` verifies the whole set and puts back everything it
+changes.
