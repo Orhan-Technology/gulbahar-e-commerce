@@ -193,7 +193,7 @@ async function UserList({
                 </span>
               </td>
               <td className="text-muted-foreground p-3 text-xs">
-                {formatDate(user.createdAt, locale, 'short')}
+                {formatDate(user.createdAt, locale, 'medium')}
               </td>
               <td className="p-3 text-end">
                 <UserRowActions

@@ -77,7 +77,9 @@
     "ratingCount": "{n, plural, one {از # نظر} other {از {count} نظر}}",
     "noReviewsYet": "هنوز نظری ثبت نشده",
     "topSellersHeading": "پرفروش‌ها این هفته",
-    "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} · {views} بازدید"
+    "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} · {views} بازدید",
+    "topSellersHeadingRanged": "پرفروش‌ترین‌ها — {days} روز اخیر",
+    "noBaseline": "دوره قبلی برای مقایسه وجود ندارد"
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -1789,7 +1791,8 @@
       "gmvHeading": "ارزش کل فروش",
       "gmvHint": "از سفارش‌های تحویل‌شده",
       "leaderboardHeading": "پرفروش‌ترین دکان‌ها",
-      "leaderboardOrders": "{n, plural, one {# سفارش} other {{count} سفارش}}"
+      "leaderboardOrders": "{n, plural, one {# سفارش} other {{count} سفارش}}",
+      "noBaseline": "دوره قبلی برای مقایسه وجود ندارد"
     }
   },
   "adminShops": {

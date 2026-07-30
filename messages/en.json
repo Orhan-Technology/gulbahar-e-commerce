@@ -77,7 +77,9 @@
     "ratingCount": "{n, plural, one {from # review} other {from {count} reviews}}",
     "noReviewsYet": "No reviews yet",
     "topSellersHeading": "Best sellers this week",
-    "topSellersUnits": "{n, plural, one {# sold} other {{count} sold}} · {views} views"
+    "topSellersUnits": "{n, plural, one {# sold} other {{count} sold}} · {views} views",
+    "topSellersHeadingRanged": "Best sellers — last {days} days",
+    "noBaseline": "No earlier period to compare"
   },
   "admin": {
     "heading": "Platform Administration",
@@ -1789,7 +1791,8 @@
       "gmvHeading": "Gross merchandise value",
       "gmvHint": "From fulfilled orders",
       "leaderboardHeading": "Top shops by revenue",
-      "leaderboardOrders": "{n, plural, one {# order} other {{count} orders}}"
+      "leaderboardOrders": "{n, plural, one {# order} other {{count} orders}}",
+      "noBaseline": "No earlier period to compare"
     }
   },
   "adminShops": {

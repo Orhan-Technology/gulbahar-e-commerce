@@ -17,7 +17,6 @@ import {
 } from '@/lib/db/queries/admin-revenue';
 import { activeShopCount, platformTotals } from '@/lib/db/queries/admin-reports';
 import {
-  formatCompact,
   formatCurrency,
   formatDate,
   formatList,
@@ -174,7 +173,9 @@ async function Headline({ locale }: { locale: string }) {
       <StatCard
         label={t('platformGmv')}
         value={platform.gmv}
-        format="compact"
+        // Currency, in full. The mall's own GMV abbreviated to "1.2M" is the
+        // one number on this screen nobody wants rounded (Prompt C2).
+        format="currency"
         hint={t('gmvHint', {
           orders: formatNumber(platform.orderCount, locale),
           shops: formatNumber(shops.trading, locale),
@@ -372,8 +373,8 @@ async function ActiveTable({ locale, className }: { locale: string; className?: 
     <Panel
       title={t('activeHeading')}
       note={t('reachSummary', {
-        impressions: formatCompact(totals.impressions, locale),
-        clicks: formatCompact(totals.clicks, locale),
+        impressions: formatNumber(totals.impressions, locale),
+        clicks: formatNumber(totals.clicks, locale),
         ctr: formatPercent(ctr, locale),
       })}
       className={className}
@@ -412,14 +413,14 @@ async function ActiveTable({ locale, className }: { locale: string; className?: 
                     )}
                   </td>
                   <td className="py-2 text-neutral-500">
-                    {formatDate(campaign.startsAt, locale, 'short')} —{' '}
-                    {formatDate(campaign.endsAt, locale, 'short')}
+                    {formatDate(campaign.startsAt, locale, 'medium')} —{' '}
+                    {formatDate(campaign.endsAt, locale, 'medium')}
                   </td>
                   <td className="py-2 text-end font-bold">
                     {formatCurrency(campaign.pricePaid, locale)}
                   </td>
                   <td className="py-2 text-end text-neutral-500">
-                    {formatCompact(campaign.impressions, locale)}
+                    {formatNumber(campaign.impressions, locale)}
                   </td>
                 </tr>
               ))}

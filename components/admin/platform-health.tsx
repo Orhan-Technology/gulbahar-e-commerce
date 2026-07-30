@@ -75,7 +75,10 @@ export async function PlatformHealth() {
           icon={<UserPlus className="h-4 w-4" aria-hidden />}
           href="/admin/users?role=customer"
           delta={customers.delta}
-          hint={t('vsPrevious')}
+          // "vs previous period" with no percentage beside it promises a
+          // comparison that was never made (Prompt C2). With no baseline the
+          // card states the window instead.
+          hint={customers.delta !== null ? t('vsPrevious') : t('noBaseline')}
           hintTone={(customers.delta ?? 0) >= 0 ? 'success' : 'danger'}
         />
       </div>

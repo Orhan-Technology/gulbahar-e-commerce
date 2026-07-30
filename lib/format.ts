@@ -145,6 +145,15 @@ export function formatDayMonth(date: Date | string | number, locale: string): st
   }).format(new Date(date));
 }
 
+/**
+ * A date, localised.
+ *
+ * 'short' is NUMERIC and therefore ambiguous — `en-US` renders 7/1/26, which an
+ * Afghan reader parses as the seventh of January (Prompt C2). Use 'medium'
+ * anywhere a date is read rather than scanned, which is everywhere a person is
+ * being told something. 'short' survives for dense tables where the column has
+ * a header saying what it is.
+ */
 export function formatDate(
   date: Date | string | number,
   locale: string,

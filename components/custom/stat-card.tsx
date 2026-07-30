@@ -113,7 +113,14 @@ export function StatCard({
     format === 'currency'
       ? formatCurrency(display, locale)
       : format === 'compact'
-        ? formatCompact(display, locale)
+        ? /*
+           * Still supported, and deliberately UNUSED by both consoles (Prompt
+           * C2): compact notation does not localise to Dari digits the way the
+           * grouped form does, and it hides precision from someone reading
+           * their own business. The storefront may want it one day for a
+           * "10K+ sold" badge, which is a different kind of claim.
+           */
+          formatCompact(display, locale)
         : format === 'percent'
           ? formatPercent(display, locale)
           : format === 'decimal'

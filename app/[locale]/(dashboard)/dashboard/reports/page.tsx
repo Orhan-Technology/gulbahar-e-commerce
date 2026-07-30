@@ -19,7 +19,7 @@ import {
   statusBreakdown,
   type ReportPeriod,
 } from '@/lib/db/queries/shop-reports';
-import { formatCompact, formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 const PERIODS: ReportPeriod[] = [7, 30, 90];
@@ -231,8 +231,8 @@ async function PromotionSection({
               </div>
               <p className="text-muted-foreground text-xs">
                 {t('impressionsClicks', {
-                  impressions: formatCompact(row.impressions, locale),
-                  clicks: formatCompact(row.clicks, locale),
+                  impressions: formatNumber(row.impressions, locale),
+                  clicks: formatNumber(row.clicks, locale),
                   ctr: formatPercent(
                     row.impressions > 0 ? row.clicks / row.impressions : 0,
                     locale,

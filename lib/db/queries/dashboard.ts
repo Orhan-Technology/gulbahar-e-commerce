@@ -19,6 +19,14 @@ export type ShopDashboardStats = Awaited<ReturnType<typeof shopDashboardStats>>;
 /** Matches the storefront's own "only N left" threshold (PRD §5.2). */
 const LOW_STOCK_THRESHOLD = 5;
 
+/**
+ * The dashboard's trailing window, in days.
+ *
+ * One constant so the chart, the best sellers and the label under them cannot
+ * disagree — and so the number in the heading is the number in the query.
+ */
+export const TREND_DAYS = 30;
+
 export async function shopDashboardStats(shopId: string, now: Date = new Date()) {
   const startOfToday = new Date(now);
   startOfToday.setUTCHours(0, 0, 0, 0);
@@ -40,8 +48,14 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
   const startOfWeek = new Date(startOfToday);
   startOfWeek.setUTCDate(startOfWeek.getUTCDate() - 6);
 
+  /*
+   * The trailing-30-day window, shared by the sales chart and the best-seller
+   * list beside it. Named rather than open-coded twice, because the whole point
+   * of C2 is that two figures on one screen answer the same question over the
+   * same period.
+   */
   const start30 = new Date(startOfToday);
-  start30.setUTCDate(start30.getUTCDate() - 29);
+  start30.setUTCDate(start30.getUTCDate() - (TREND_DAYS - 1));
 
   /*
    * The week before this one, for the KPI deltas. Both windows are seven whole
@@ -245,6 +259,14 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
      * second thing you want once you know what is moving — so nothing is lost
      * by ranking on the honest column.
      *
+     * THE WINDOW IS THE CHART'S WINDOW (Prompt C2), and that is a bug fix, not
+     * a refinement. This counted every fulfilled order since the shop opened
+     * while the chart above it covered thirty days, so single products showed
+     * ؋ 628,200 and ؋ 644,000 beside a thirty-day total of ؋ 602,900 — three
+     * numbers on one screen that cannot all be true. Two figures that sit next
+     * to each other have to answer the same question over the same period, and
+     * the heading now says which period that is.
+     *
      * Written as one aggregate scan with explicit aliases rather than
      * correlated subqueries: drizzle renders an interpolated `${products.id}`
      * unqualified inside a sql template, which is ambiguous against the joined
@@ -265,8 +287,11 @@ export async function shopDashboardStats(shopId: string, now: Date = new Date())
         coalesce(sum(oi.price_snapshot * oi.quantity) filter (where o.status = 'fulfilled'), 0)::int as revenue,
         (select count(*) from wishlist_items wi where wi.product_id = p.id)::int as wishlist_count
       from products p
-      left join order_items oi on oi.product_id = p.id
-      left join orders o on o.id = oi.order_id
+      left join order_items oi
+        on oi.product_id = p.id and oi.shop_id = ${shopId}
+      left join orders o
+        on o.id = oi.order_id
+        and o.created_at >= ${start30.toISOString()}::timestamptz
       where p.shop_id = ${shopId}
       group by p.id
       order by order_count desc, revenue desc, p.view_count desc

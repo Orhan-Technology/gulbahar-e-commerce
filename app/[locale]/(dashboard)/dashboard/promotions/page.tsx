@@ -17,7 +17,7 @@ import {
   shopPublishedProducts,
   slotInventory,
 } from '@/lib/db/queries/shop-promotions';
-import { formatCompact, formatCurrency, formatNumber } from '@/lib/format';
+import { formatCurrency, formatNumber } from '@/lib/format';
 
 /**
  * Promotions (PRD §6.4).
@@ -117,9 +117,9 @@ export default async function ShopPromotionsPage({
             <Stat label={t('featured.spend')} value={formatCurrency(totals.totalSpend, locale)} />
             <Stat
               label={t('featured.impressions')}
-              value={formatCompact(totals.impressions, locale)}
+              value={formatNumber(totals.impressions, locale)}
             />
-            <Stat label={t('featured.clicks')} value={formatCompact(totals.clicks, locale)} />
+            <Stat label={t('featured.clicks')} value={formatNumber(totals.clicks, locale)} />
           </dl>
 
           <section className="space-y-2">

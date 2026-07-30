@@ -14,7 +14,7 @@ import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
-import { actionQueueItems, shopDashboardStats } from '@/lib/db/queries/dashboard';
+import { actionQueueItems, shopDashboardStats, TREND_DAYS } from '@/lib/db/queries/dashboard';
 import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -104,12 +104,19 @@ async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
          * there is something to compare.
          */
         delta={stats.todaySales > 0 ? stats.todayDelta : null}
+        /*
+         * A card in a row of four never goes silent (Prompt C2). When there is
+         * no baseline the hint SAYS SO rather than disappearing — an empty
+         * caption beside three populated ones reads as a rendering fault, and
+         * "vs previous period" printed with no percentage beside it is worse
+         * still, because it promises a comparison it did not make.
+         */
         hint={
           stats.todaySales === 0
             ? t('noSalesYet')
             : stats.todayDelta !== null
               ? t('vsYesterday')
-              : undefined
+              : t('noBaseline')
         }
         hintTone={(stats.todayDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
@@ -120,20 +127,26 @@ async function KpiRow({ shopId, locale }: { shopId: string; locale: string }) {
         icon={<ShoppingBag className="h-4 w-4" aria-hidden />}
         href="/dashboard/orders?range=7d"
         delta={stats.ordersDelta}
-        hint={t('vsLastWeek')}
+        hint={stats.ordersDelta !== null ? t('vsLastWeek') : t('noBaseline')}
         hintTone={(stats.ordersDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
       <StatCard
         label={t('weekViewsLabel')}
         value={stats.weekViews}
-        format="compact"
+        /*
+         * FULL GROUPED NUMBER, never "1.2K" (Prompt C2). Compact notation does
+         * not localise to Dari digits the way the grouped form does, and it
+         * hides precision from the one person entitled to it — the shopkeeper
+         * reading their own business.
+         */
+        format="count"
         icon={<Eye className="h-4 w-4" aria-hidden />}
         // Views are a property of the catalogue, so the drill-down is the
         // product list ordered by exactly the number the tile is showing.
         href="/dashboard/products?sort=views"
         delta={stats.viewsDelta}
-        hint={t('vsLastWeek')}
+        hint={stats.viewsDelta !== null ? t('vsLastWeek') : t('noBaseline')}
         hintTone={(stats.viewsDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
@@ -179,9 +192,12 @@ async function ChartSection({ shopId, locale }: { shopId: string; locale: string
 
       {first && last && (
         <p className="text-2xs text-neutral-400">
+          {/* 'medium', not 'short': a numeric range reads as 7/1/26 in
+              en-US, which is the seventh of January to an Afghan reader
+              (Prompt C2). */}
           {t('salesChartRange', {
-            from: formatDate(first.day, locale, 'short'),
-            to: formatDate(last.day, locale, 'short'),
+            from: formatDate(first.day, locale, 'medium'),
+            to: formatDate(last.day, locale, 'medium'),
           })}
         </p>
       )}
@@ -204,7 +220,12 @@ async function TopSellers({ shopId, locale }: { shopId: string; locale: string }
 
   return (
     <section className="rounded-card border-border bg-card space-y-1 border p-4">
-      <h2 className="mb-2 text-sm font-bold">{t('topSellersHeading')}</h2>
+      {/* The window is IN the heading: this list and the chart above it cover
+          the same thirty days, and saying so is what makes them comparable
+          (Prompt C2). */}
+      <h2 className="mb-2 text-sm font-bold">
+        {t('topSellersHeadingRanged', { days: formatNumber(TREND_DAYS, locale) })}
+      </h2>
 
       {/* Rows rather than a table: four columns at 390px are unreadable however
           they are styled, and the revenue figure is the only one that has to
