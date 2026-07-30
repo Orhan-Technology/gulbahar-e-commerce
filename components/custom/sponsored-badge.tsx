@@ -42,6 +42,14 @@ export function SponsoredBadge({
 
   return (
     <span
+      /*
+       * A stable hook for the auditors. Every other marker on this badge is
+       * translated text, and next-intl ships the whole message tree to every
+       * page — so a check that greps for «تبلیغ شده» matches pages that have no
+       * sponsored card at all (CLAUDE.md). This attribute is in the markup only
+       * where the badge actually rendered.
+       */
+      data-sponsored="true"
       className={cn(
         'rounded-pill text-2xs inline-flex items-center gap-1 px-2.5 py-1.5 font-semibold',
         TONES[tone],

@@ -54,6 +54,24 @@ Locale is `/fa` throughout. `⌘⇧D` / `Ctrl+Shift+D` opens the control panel.
 **Talking point for the segment:** the customer never has to phone a shop to ask what
 is in stock — that is the trust problem this solves.
 
+**Two-minute PDP beat — the depth question.** Do this if anyone asks "is there
+anything behind the pretty pages", or before the dashboard leg if the room is
+technical.
+
+| Do this                                                                     | Say this                                                                                                              |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Open **آیفون ۱۳ ۱۲۸ گیگابایت** and scroll slowly to the specifications      | "Watch the buy box. It follows you down and condenses — the price and the button never leave, which is where carts are won." |
+| Point at **مشخصات**, then at **مقایسه با محصولات مشابه**                    | "Real specifications, in both languages, on every one of seventy-five products. And because every shop describes a phone with the same keys, the platform can line four of them up and highlight what differs." |
+| Scroll to **پرسش و پاسخ** and read the answered question                    | "Customers ask, the shop answers, and the answer is public with the shop's name on it."                               |
+| **⌘⇧D → Roles → عبدالله احمدی**, ask a question on a **الکترونیک کابل** product | "So — I am a customer, and I want to know something before I buy."                                                    |
+| **⌘⇧D → Roles → the electronics shopkeeper**, `/fa/dashboard`               | "And it is already in their queue, above the stock warnings, with the answer box open."                               |
+| Answer it there, then reload the product page                               | "Answered from the queue, live on the page. That loop is the whole product in one minute."                            |
+
+**If asked about the sponsored card:** "A paid placement buys position among
+RELEVANT products, never an appearance among irrelevant ones. There is a
+promoted watch in this demo — you will find it beside jewellery, and never on
+the school-shoes page."
+
 ### 2 · Shop dashboard — 4 minutes
 
 Move to the 390px window for this segment.
@@ -309,3 +327,41 @@ true, and it asks you to type a word rather than press a second button — the
 reset drops every table, takes minutes, and signs you out as a side effect.
 `npm run check:account` verifies the whole set and puts back everything it
 changes.
+
+---
+
+## What changed in the P-series (product page depth)
+
+**Products that have something to say.** Every one of the seventy-five carries
+specifications, three to five features, a brand and a real paragraph of
+description, in Dari and English — 434 spec rows written as Kabul retail rather
+than filler. Shopkeepers edit them with the category template pre-filled, so two
+shops describe a phone with the same keys, which is what makes comparison
+possible at all.
+
+**A buy box that follows.** On desktop it sticks for the whole page and
+condenses to thumbnail, price, quantity and button once the top scrolls past.
+On a phone the price and the button still sit under the photograph, and the
+bottom bar behaves as it always did. Reduced motion turns it into a plain static
+column.
+
+**Compare similar products.** Up to three others from the same category, nearest
+in price, with the current product marked and every differing value tinted. It
+renders only when at least two products share three specification keys — the JBL
+speaker has one category peer, and the section is simply absent there.
+
+**Questions and answers.** Customers ask on the product page; unanswered
+questions land in the shopkeeper's action queue with the answer box open, above
+the stock warnings. Answering publishes it publicly with the shop's badge. A
+pending question is visible only to its author and the owning shop — a public
+list of unanswered questions is a list of a shop's silences.
+
+**Three rails instead of one.** More from this shop, similar products from other
+shops, and the reader's own recently-viewed trail (from the browser, never the
+database). A product appears in at most one of them, and a rail with fewer than
+four items does not render.
+
+Demo notes: the promoted watch now appears only where it is relevant — beside
+jewellery, never on the school-shoes page — which is worth showing if anyone
+asks how advertising is kept honest. `npm run check:product` verifies the whole
+set (30 assertions) and puts back everything it changes.
