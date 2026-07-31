@@ -633,13 +633,19 @@ async function main() {
     afterProfile.hours,
   );
 
-  const shopPage = await html(`/fa/shops/${shop.slug}`);
+  /*
+   * The ABOUT tab, not the shop's front page. C8 moved opening hours out of the
+   * hero — where they were one chip among five — into the tab that answers
+   * "when are you open"; the hero now carries a computed OPEN/CLOSED pill
+   * instead, which is the more useful form of the same fact.
+   */
+  const shopPage = await html(`/fa/shops/${shop.slug}?tab=about`);
   check(
     'and render with Persian digits on the storefront',
     shopPage.includes('۹:۱۵') && shopPage.includes('۲۰:۴۵'),
     '۹:۱۵ – ۲۰:۴۵ expected',
   );
-  const shopPageEn = await html(`/en/shops/${shop.slug}`);
+  const shopPageEn = await html(`/en/shops/${shop.slug}?tab=about`);
   check(
     'and with Latin digits in English',
     shopPageEn.includes('9:15') && shopPageEn.includes('20:45'),

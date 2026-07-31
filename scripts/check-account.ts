@@ -316,6 +316,10 @@ async function main() {
         supportPhone: before.supportPhone,
         deliveryFee: probeFee,
         freeDeliveryThreshold: probeThreshold,
+        // Added by C11 and required, like every other field on this form: the
+        // action takes the whole settings row rather than a patch, so a caller
+        // omitting a field is a caller that would blank it.
+        pickupHoldHours: before.pickupHoldHours,
         currencyLabel: before.currencyLabel,
       },
     ]);

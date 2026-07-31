@@ -362,6 +362,89 @@ function zeroValueWithDeltaPill(document: string): string[] {
     check(`${label}: no stat card shows 0 beside a delta pill`, hits.length === 0, hits);
   }
 
+  /* ---------------------------------------------------------------------- */
+  section('Consoles show whole numbers and one heading each (C13)');
+
+  /*
+   * NO ABBREVIATED NUMBERS anywhere in a console (Prompt C2). "1.2K" does not
+   * localise to Dari digits and hides precision from somebody reading their
+   * own business — and the failure mode is that `formatCompact` gets reached
+   * for by whoever adds the next tile, so this is checked on the rendered
+   * page rather than by grepping for the helper.
+   *
+   * Matched on the SUFFIX FORMS Intl produces in both locales: "K"/"M" in en
+   * and «هزار»/«میلیون» in fa. Checking for a bare "K" would fire on any Latin
+   * word in a shop name.
+   */
+  for (const [label, path, cookie] of [
+    ['the shop dashboard, fa', '/fa/dashboard', shopkeeper],
+    ['the shop dashboard, en', '/en/dashboard', shopkeeper],
+    ['the mall console, fa', '/fa/admin', admin],
+    ['the mall console, en', '/en/admin', admin],
+    ['the reports page', '/fa/dashboard/reports', shopkeeper],
+    ['the revenue page', '/fa/admin/revenue', admin],
+  ] as const) {
+    const text = visibleText(await html(path, cookie));
+    const abbreviations = [
+      ...text.matchAll(/[\d۰-۹](?:\.[\d۰-۹]+)?\s?(K|M|هزار|میلیون)\b/g),
+    ].map((match) => match[0]);
+    check(`${label}: no abbreviated numbers`, abbreviations.length === 0, abbreviations);
+  }
+
+  /*
+   * ONE HEADING PER CONSOLE PAGE. The shop panel used to print its identity in
+   * the top bar, again as a greeting, and again as a status pill; the check
+   * above counts the shop NAME, and this counts H1s, which is what catches the
+   * same mistake made with a different string.
+   */
+  for (const [label, path, cookie] of [
+    ['the shop dashboard', '/fa/dashboard', shopkeeper],
+    ['the mall console', '/fa/admin', admin],
+    ['the reports page', '/fa/dashboard/reports', shopkeeper],
+    ['the floors view', '/fa/admin/floors', admin],
+  ] as const) {
+    const document = await html(path, cookie);
+    const headings = [...document.matchAll(/<h1[\s>]/g)].length;
+    check(`${label}: exactly one h1`, headings === 1, { headings });
+  }
+
+  /* ---------------------------------------------------------------------- */
+  section('The new surfaces are reachable and RTL-safe (C13)');
+
+  for (const [label, path, cookie] of [
+    ['floor occupancy', '/fa/admin/floors', admin],
+    ['the slot calendar', '/fa/admin/promotions/calendar', admin],
+    ['settlements', '/fa/admin/settlements', admin],
+    ['the audit log', '/fa/admin/audit', admin],
+    ['shop health', '/fa/admin/shops?view=health', admin],
+    ['the views report', '/fa/dashboard/reports?report=views', shopkeeper],
+    ['the timing report', '/fa/dashboard/reports?report=timing', shopkeeper],
+    ['the public floor map', '/fa/floors', undefined],
+  ] as const) {
+    const code = await status(path, cookie);
+    check(`${label} renders`, code === 200, { path, code });
+  }
+
+  /*
+   * PHYSICAL DIRECTION IN THE NEW MARKUP. `npm run audit` catches left/right
+   * utilities in source; this catches them where it actually matters — in the
+   * HTML these pages ship — because a class assembled at runtime never appears
+   * in a file for the static sweep to find.
+   */
+  for (const [label, path, cookie] of [
+    ['the floor map', '/fa/floors', undefined],
+    ['the slot calendar', '/fa/admin/promotions/calendar', admin],
+    ['the timing grid', '/fa/dashboard/reports?report=timing', shopkeeper],
+  ] as const) {
+    const document = await html(path, cookie);
+    const physical = [
+      ...document.matchAll(/class="[^"]*\b(ml-|mr-|pl-|pr-|left-|right-|text-left|text-right)[^"]*"/g),
+    ].map((match) => match[1]);
+    check(`${label}: no physical direction utilities`, physical.length === 0, [
+      ...new Set(physical),
+    ]);
+  }
+
   await sql.end();
   process.exit(summary() > 0 ? 1 : 0);
 }

@@ -417,14 +417,23 @@ async function main() {
     want: directGmv.orders,
   });
 
-  // The top-shops column must not exceed GMV: a multi-shop basket split wrongly
-  // would credit both shops with the whole order.
+  /*
+   * The top-shops column must not exceed GMV: a multi-shop basket split wrongly
+   * would credit both shops with the whole order.
+   *
+   * FULFILLED ONLY, on both sides. This assertion used to sum every line except
+   * rejections while the GMV tile above the column counted fulfilled — so the
+   * column legitimately summed to MORE than the total it sat under, and this
+   * check was asserting the drift rather than catching it (Prompt C2, fixed in
+   * C9). One predicate per metric; the order COUNT beside it still counts
+   * business received.
+   */
   const shopRows = await topShops(90, 100);
   const shopRevenueSum = shopRows.reduce((sum, shop) => sum + shop.revenue, 0);
   const [directLines] = await sql<{ total: number }[]>`
     select coalesce(sum(oi.price_snapshot * oi.quantity), 0)::int as total
     from order_items oi join orders o on o.id = oi.order_id
-    where o.created_at >= now() - interval '90 days' and o.status <> 'rejected'
+    where o.created_at >= now() - interval '90 days' and o.status = 'fulfilled'
   `;
   check(
     'per-shop revenue equals the sum of order LINES, not order totals',

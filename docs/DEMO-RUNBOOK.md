@@ -90,6 +90,30 @@ Move to the 390px window for this segment.
 **Talking point:** a tenant can run their whole shop from the phone in their pocket —
 that is what makes adoption realistic.
 
+**Reserve & collect — 90 seconds.** The beat that separates this from a delivery
+marketplace. Do it on the phone window, still as بلال پوپل.
+
+| Do this                                                        | Say this                                                                                                                                              |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `سفارش‌ها` → open **GC-25142**                                 | "This customer did not want delivery. They reserved it and are coming to unit ۲۱۴ to collect."                                                        |
+| Point at the code field on the row                             | "When they walk up they read out five characters. He types them in — he does not press a button that says 'done', because then nobody checks anything." |
+| **⌘⇧D → Roles → عبدالله احمدی**, open `/fa/account/orders/GC-25142` | "And this is what the customer is holding. The code, the floor, the unit, the mall's hours, and when the hold runs out."                          |
+| Back to the shopkeeper, type the code, press **تحویل بده**     | "Matched. Collected."                                                                                                                                 |
+| Return to `/fa/dashboard` and point at the amber panel          | "And this is the other half: a reservation nobody came for. Releasing it puts the stock back on the shelf and tells the customer. His phone number is on the row, because ringing first is the better move." |
+
+**Talking point:** "Delivery is the hard half of e-commerce in Kabul. This is the half
+you already have — a building people are walking through anyway."
+
+**Reports that say what to fix — 60 seconds.** Only if the room is a shopkeeper or a
+sceptic about whether any of this is useful after launch week.
+
+| Do this                                             | Say this                                                                                                                             |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `گزارش‌ها` → **بازدید بدون فروش**                   | "Not 'here is your revenue'. These are products people opened and did not buy — the hard part already happened."                     |
+| Point at the last column                            | "And what to try first. Photos before price, always: price is the only one that costs him money."                                     |
+| **سرعت پاسخ**                                       | "This is the one he cannot work out alone. His median time to accept, against the rest of the mall — anonymised, and the mall's line excludes him so it is a fair comparison." |
+| **خروجی CSV**                                       | "And any of it opens in Excel, in Dari, with the numbers still summable."                                                            |
+
 ### 3 · Admin — 4 minutes
 
 Back to the desktop window.
@@ -109,6 +133,28 @@ Back to the desktop window.
 **Talking point — the one to land:** "Every shop you sign up is a customer for this
 page. The mall already sells physical advertising space; this is the same business with
 better reporting."
+
+**The mall modules — 3 minutes.** These are the screens no generic marketplace admin
+has. If time is short, do floors and the calendar and skip the rest.
+
+| Do this                                                     | Say this                                                                                                                                                        |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `منزل‌ها`                                                    | "Your building. Three floors, every unit, who is in it, what each floor earned in thirty days."                                                                  |
+| Point at a dashed unit                                      | "And the gaps. Those are unit numbers between your tenants that nobody holds — we do not have your lease list, so we do not pretend to; this is what the data actually supports." |
+| Tap a unit number and change it                             | "Units are assigned here, by you. A shop cannot move itself on the map."                                                                                        |
+| `تبلیغات` → **تقویم جایگاه‌ها**                              | "This is the one to look at. Every placement surface, every day of the month. The blue is sold. **The white is what you have not asked anyone to buy yet.**"    |
+| Step to next month                                          | "And forward — that is your pipeline, in a month you can still sell."                                                                                            |
+| `دکان‌ها` → **نیاز به توجه**                                 | "Tenants worth a phone call: slow to accept, turning orders away, rating sliding, shelf empty, paperwork lapsed. Each one with the evidence beside it, so the call is a fact and not an accusation. And the only button is 'tell them'." |
+| `تصفیه حساب`                                                 | "You will ask how shops get paid. They are paid directly — cash or HesabPay, and you are not in the payment path. This screen shows the shape a settlement run would have when you want one. There are no numbers on it on purpose." |
+| `سابقه تصامیم`                                               | "And every decision anyone made in this console, with who and why. The day you have two staff, this is the screen you will care about most."                     |
+
+**Verification — 90 seconds.** Best done straight after approving the pending shop.
+
+| Do this                                              | Say this                                                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `تأیید هویت` → open the waiting submission           | "A shop has sent its licence and the owner's tazkira. These are identity documents, so they are not in the public folder and they are not in any link — they stream through a route that checks who is asking." |
+| Approve it, then open that shop's public page        | "And the tick appears. It is not a rating — tap it."                                                                                          |
+| Tap the badge, read the popover                      | "It says exactly one thing: mall management has confirmed this is a registered business at this unit. Only a landlord can say that, which is why it is worth something." |
 
 ### 4 · Close — 3 minutes
 
@@ -131,6 +177,16 @@ technical, or if anyone asks how people sign in. It answers both in one pass.
 | Sign in again on the **ایمیل** tab with the email and password              | "Same account, same eleven orders, same history. Two doors, one person."                                                       |
 | Optional: try the same email with a wrong password                          | "And a wrong password and an unknown email give the identical message — nothing here tells an attacker which one they got right." |
 
+**Ninety seconds if the room is quiet — the mall as a place.**
+
+| Do this                                                       | Say this                                                                                                                             |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `/fa/floors`                                                  | "Somebody who is already in the building, or about to drive over. Which floor sells shoes, and is the shop open right now."          |
+| Filter by a category                                          | "Filtering dims — it never removes. A map that changes shape when you filter it stops being a map."                                  |
+| Tap a unit → the shop page → `درباره`                         | "And the same plan on the shop's own page, with their unit lit up and the neighbours still visible."                                 |
+| `نظرات` on the same shop                                      | "These are about the SERVICE — the phone, the wait, the packing — not about a product. Only a customer whose order that shop actually fulfilled can write one." |
+| The bell in the header                                        | "And whatever you saw in the notification log, the person it was addressed to sees here, with a link straight to the thing it is about." |
+
 **Closing line:** "Nothing here talks to an external service. It runs on this laptop.
 That is deliberate — it means what you have seen is what exists."
 
@@ -144,12 +200,18 @@ That is deliberate — it means what you have seen is what exists."
 | Live hero placement              | الکترونیک کابل, ؋ ۹۶٬۰۰۰                                    |
 | Campaign awaiting approval       | لوازم خانه سلام — بالای فهرست دکان‌ها, ؋ ۱۴٬۰۰۰             |
 | Placement revenue                | ؋ ۲۳۸٬۵۰۰ this month · ؋ ۱٬۲۰۲٬۰۰۰ across 12 months          |
-| Orders                           | 220 over 90 days · 10 awaiting acceptance                   |
+| Orders                           | 221 over 90 days · 10 awaiting acceptance                   |
 | Reported reviews                 | 2, in the admin moderation queue                            |
 | Demo customer                    | عبدالله احمدی · `0700000003` · Dari · 11 orders             |
 | Their order for the closing beat | **GC-24788** — the one still `placed`, stable across resets |
 | Demo shopkeeper                  | بلال پوپل · `0700000002` · owner of الکترونیک کابل          |
 | Admin                            | مدیریت گلبهار · `0700000001`                                |
+| Reserve & collect, live hold     | **GC-25142** — demo customer, الکترونیک کابل, code on screen |
+| Reserve & collect, expired hold  | **GC-25025** — same shop, past its window, releasable        |
+| Verification waiting             | مرکز موبایل — documents submitted, undecided                 |
+| Verification rejected            | آرایشی بهار — illegible licence, with the reason on file     |
+| Audit entries                    | 32, every one derived from a decision the seed actually made |
+| Vacant units                     | 73 gaps in `/admin/floors`, 65 on the public map — derived from real numbering, never a fixed list |
 
 ---
 
@@ -365,3 +427,47 @@ Demo notes: the promoted watch now appears only where it is relevant — beside
 jewellery, never on the school-shoes page — which is worth showing if anyone
 asks how advertising is kept honest. `npm run check:product` verifies the whole
 set (30 assertions) and puts back everything it changes.
+
+---
+
+## What changed in the C-series (consoles, mall modules, mall-native commerce)
+
+The set that turned two admin panels into a landlord's console and added the two
+things a delivery-only marketplace cannot do.
+
+**Both consoles.** One shell, one date range in the URL, one page-header recipe. The
+shop's identity is stated once in the chrome instead of three times above the fold, and
+the admin's grid of links to its own sidebar is gone. Every metric now obeys the range,
+and a value and its delta come from the same helper — which surfaced a real defect: the
+admin's per-shop revenue column counted every order except rejections while the GMV tile
+above it counted fulfilled only, so the column summed to more than the total it sat
+under.
+
+**Rating stars** are solid silhouettes in two tones. They were amber stars beside hollow
+grey outlines, which reads as damage rather than as an unearned portion.
+
+**The mall modules.** Floor occupancy with derived vacancies; a month-by-day calendar of
+placement inventory whose empty cells are the point; shop health with the evidence on
+each row; settlements designed and disabled with no invented numbers; and an audit log
+every mutating admin action writes to.
+
+**Shopkeeper reports** that say what to fix rather than how much was sold: products
+people open and do not buy with a suggested fix, stock fixable in place, time-to-accept
+against an anonymised mall median that excludes the viewing shop, and when orders
+actually arrive. All four export to CSV that opens correctly in Excel in Dari.
+
+**The shop page** is four shareable tabs with a story, a floor plan, live offers, and
+service reviews earned by a fulfilled order. Shops can be followed.
+
+**Reserve & collect** with a code the customer reads out at the counter, a hold window
+from admin settings, stock taken off the shelf on acceptance and put back when a hold
+expires. Plus a public floor map of all three floors.
+
+**Notifications** are a real surface on all three roles, over the rows the app already
+wrote. The bell used to filter to in-app messages while almost every order event is
+written as SMS — so the demo log showed a customer their order being accepted while
+their own bell showed nothing.
+
+**Checks added:** `check:shop`, `check:admin`, `check:reports`, `check:collect`,
+`check:notify`, plus new invariants in `check:design` (no abbreviated numbers in a
+console, one h1 per console page, no physical direction utilities in the new markup).
