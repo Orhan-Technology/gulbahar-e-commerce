@@ -1,7 +1,16 @@
 import { createTranslator } from 'next-intl';
 
+import { eq } from 'drizzle-orm';
+
 import { db } from './db';
-import { notifications, type DbLocale, type NotificationChannel, type UserRole } from './db/schema';
+import {
+  notifications,
+  users,
+  type DbLocale,
+  type NotificationChannel,
+  type UserRole,
+} from './db/schema';
+import { isCategoryEnabled, notificationCategory } from './notification-links';
 import faMessages from '../messages/fa.json';
 import enMessages from '../messages/en.json';
 
@@ -96,6 +105,25 @@ export async function notify(params: NotifyParams) {
   } = params;
 
   const { title, body } = renderTemplate(eventKey, locale, values);
+
+  /*
+   * MUTED CATEGORIES ARE NOT WRITTEN AT ALL (Prompt C12).
+   *
+   * Checked here rather than filtered at read time, because a notification the
+   * recipient asked not to receive should not exist: one that exists but is
+   * hidden still appears in the demo log, and the bell and the log must never
+   * disagree. `otp` and every account-level message bypass this — a sign-in
+   * code is not a preference.
+   */
+  if (recipientUserId) {
+    const [recipient] = await db
+      .select({ prefs: users.notificationPrefs })
+      .from(users)
+      .where(eq(users.id, recipientUserId))
+      .limit(1);
+
+    if (!isCategoryEnabled(recipient?.prefs, notificationCategory(eventKey))) return null;
+  }
 
   const [row] = await db
     .insert(notifications)

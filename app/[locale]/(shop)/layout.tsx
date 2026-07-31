@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { StretchScroll } from '@/components/motion/stretch-scroll';
 import { MobileTabBar } from '@/components/shop/mobile-tab-bar';
 import { SiteFooter } from '@/components/shop/site-footer';
+import { BellSlot } from '@/components/custom/bell-slot';
 import { SiteHeader } from '@/components/shop/site-header';
 import { currentUser } from '@/lib/auth/guards';
 import { getCartCount } from '@/lib/cart';
@@ -46,6 +47,7 @@ export default async function ShopLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader
+        bell={<BellSlot />}
         cartCount={cartCount}
         user={user ? { name: user.name, role: user.role } : null}
         categories={categories}

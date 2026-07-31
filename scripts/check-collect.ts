@@ -120,7 +120,9 @@ async function main() {
     events.some((event) => event.to === 'fulfilled' && event.note === 'collected'),
   );
 
-  // Put it back exactly as seeded.
+  // Put it back exactly as seeded — including the NOTIFICATION the action
+  // wrote. Scoped by event key and recipient, never by "recent": the seed's own
+  // notifications carry today's timestamps (CLAUDE.md).
   await db
     .update(orders)
     .set({ status: 'ready', holdExpiresAt: hold.holdExpiresAt })
@@ -128,6 +130,10 @@ async function main() {
   await db
     .delete(orderEvents)
     .where(and(eq(orderEvents.orderId, hold.id), eq(orderEvents.note, 'collected')));
+  await db.execute(raw`
+    delete from notifications
+    where event_key = 'order.collected' and payload->>'reference' = ${hold.reference}
+  `);
 
   // --------------------------------------------------------- expired hold
   report.section('An unclaimed hold gives the stock back');
@@ -225,6 +231,10 @@ async function main() {
     await db
       .delete(orderEvents)
       .where(and(eq(orderEvents.orderId, expired.id), eq(orderEvents.note, 'reason:hold_expired')));
+    await db.execute(raw`
+      delete from notifications
+      where event_key = 'order.holdExpired' and payload->>'reference' = ${expired.reference}
+    `);
   }
 
   // A hold still inside its window must NOT be releasable.

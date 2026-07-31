@@ -1109,6 +1109,115 @@ async function main() {
     createdAt: daysAgo(2, 10, 15),
   });
 
+  /*
+   * THE DEMO CUSTOMER'S OWN BELL (Prompt C12).
+   *
+   * The block above addresses whoever placed the fourteen most recent orders,
+   * and the draw rarely put the demo customer among them — so the storefront
+   * bell, the surface where a customer reads about their own order, opened
+   * empty. These are their own orders, so every reference resolves and every
+   * deep link lands.
+   */
+  const demoCustomerRow = customerRows.find((row) => row.phone === '0700000003')!;
+  const demoCustomerOrders = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      total: orders.total,
+      status: orders.status,
+      createdAt: orders.createdAt,
+    })
+    .from(orders)
+    .where(eq(orders.userId, demoCustomerRow.id))
+    .orderBy(desc(orders.createdAt))
+    .limit(4);
+
+  const alreadyNotified = new Set(
+    notificationValues
+      .map((row) => (row.payload as Record<string, string> | null)?.reference)
+      .filter(Boolean),
+  );
+
+  for (const [index, order] of demoCustomerOrders.entries()) {
+    if (alreadyNotified.has(order.reference)) continue;
+
+    const values = {
+      reference: order.reference,
+      total: formatCurrency(order.total, 'fa'),
+    };
+    const rendered = renderTemplate('order.placed', 'fa', values);
+
+    notificationValues.push({
+      eventKey: 'order.placed',
+      recipientUserId: demoCustomerRow.id,
+      recipientRole: 'customer' as const,
+      // 'sms' is how it WOULD have gone out; nothing is ever really sent in
+      // this build, and the bell shows it regardless (Prompt C12).
+      channel: 'sms' as const,
+      locale: 'fa',
+      title: rendered.title,
+      body: rendered.body,
+      payload: { ...values, orderId: order.id },
+      // The newest stays unread so the storefront bell opens with a count.
+      read: index > 0,
+      createdAt: new Date(
+        Math.min(order.createdAt.getTime() + 60 * 1000, NOW.getTime() - 4 * 60 * 1000),
+      ),
+    });
+  }
+
+  /*
+   * THE DEMO SHOPKEEPER'S OWN BELL (Prompt C12).
+   *
+   * The block above addresses the CUSTOMER on each recent order, and the draw
+   * had put almost none of those on the demo accounts — so the shop panel's
+   * bell opened empty on the one console the walkthrough spends most of its
+   * time in. These are the shopkeeper's side of orders that already exist, at
+   * the demo shop, so nothing here is invented: every reference resolves and
+   * every deep link lands on a real row.
+   */
+  const demoShopId = shopIds.get(shopSeed[0].slug)!;
+  const demoOwnerId = shopOwnerIds.get(shopSeed[0].slug)!;
+
+  const demoShopOrders = await db
+    .selectDistinct({
+      id: orders.id,
+      reference: orders.reference,
+      total: orders.total,
+      createdAt: orders.createdAt,
+      status: orders.status,
+    })
+    .from(orders)
+    .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
+    .where(eq(orderItems.shopId, demoShopId))
+    .orderBy(desc(orders.createdAt))
+    .limit(6);
+
+  for (const order of demoShopOrders) {
+    const values = {
+      reference: order.reference,
+      itemCount: 1,
+      total: formatCurrency(order.total, 'fa'),
+    };
+    const rendered = renderTemplate('order.newForShop', 'fa', values);
+
+    notificationValues.push({
+      eventKey: 'order.newForShop',
+      recipientUserId: demoOwnerId,
+      recipientRole: 'shopkeeper' as const,
+      channel: 'sms' as const,
+      locale: 'fa',
+      title: rendered.title,
+      body: rendered.body,
+      payload: { ...values, orderId: order.id },
+      // The two most recent stay unread, so the bell opens with a count on it.
+      read: order !== demoShopOrders[0] && order !== demoShopOrders[1],
+      createdAt: new Date(
+        Math.min(order.createdAt.getTime() + 2 * 60 * 1000, NOW.getTime() - 3 * 60 * 1000),
+      ),
+    });
+  }
+
   await db.insert(notifications).values(notificationValues);
 
   // ---------------------------------------------------------- stalled order

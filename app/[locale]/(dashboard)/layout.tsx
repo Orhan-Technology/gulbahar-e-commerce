@@ -3,7 +3,7 @@ import { ExternalLink, Store } from 'lucide-react';
 
 import { DashboardSidebar, DashboardTabBar } from '@/components/dashboard/dashboard-nav';
 import { StretchScroll } from '@/components/motion/stretch-scroll';
-import { NotificationBell } from '@/components/dashboard/notification-bell';
+import { BellSlot } from '@/components/custom/bell-slot';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
@@ -12,7 +12,6 @@ import { shopById } from '@/lib/db/queries/shops';
 import { shopOrderCounts } from '@/lib/db/queries/shop-orders';
 import { shopQuestionCounts } from '@/lib/db/queries/questions';
 import { shopReviewCounts } from '@/lib/db/queries/shop-reviews';
-import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -40,11 +39,10 @@ export default async function DashboardLayout({
   const t = await getTranslations('dashboardNav');
   const common = await getTranslations('common');
 
-  const [shop, notifications, unread, orderCounts, settings, questionCounts, reviewCounts] =
+  // The bell fetches its own data now (components/custom/bell-slot.tsx).
+  const [shop, orderCounts, settings, questionCounts, reviewCounts] =
     await Promise.all([
       shopById(user.shopId),
-      userNotifications(user.id, user.role, 20),
-      unreadNotificationCount(user.id, user.role),
       // Feeds the Orders tab badge. Fetched here rather than in the client bar
       // so the count is in the first paint instead of popping in after
       // hydration — the same reason the two counts below it are here.
@@ -108,17 +106,7 @@ export default async function DashboardLayout({
               className="text-primary-foreground hover:bg-primary-600 hover:text-primary-foreground"
               locales={settings.publishedLocales}
             />
-            <NotificationBell
-              onDark
-              unreadCount={unread}
-              notifications={notifications.map((item) => ({
-                id: item.id,
-                title: item.title,
-                body: item.body,
-                read: item.read,
-                createdAt: item.createdAt.toISOString(),
-              }))}
-            />
+            <BellSlot onDark />
           </div>
         </div>
       </header>

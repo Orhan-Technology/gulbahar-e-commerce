@@ -2,13 +2,12 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ExternalLink, ShieldCheck } from 'lucide-react';
 
 import { AdminNav } from '@/components/admin/admin-nav';
-import { NotificationBell } from '@/components/dashboard/notification-bell';
+import { BellSlot } from '@/components/custom/bell-slot';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminPendingCounts } from '@/lib/db/queries/admin';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { verificationCounts } from '@/lib/db/queries/verification';
-import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -32,13 +31,14 @@ export default async function AdminLayout({
   setRequestLocale(locale);
 
   // Admin role required; a signed-in non-admin is sent to the storefront.
-  const user = await requireAdmin(locale);
+  // The guard is the point of the call; the bell reads the session itself.
+  await requireAdmin(locale);
   const t = await getTranslations('adminNav');
 
-  const [counts, notifications, unread, settings, verifications] = await Promise.all([
+  // The bell fetches its own data now (components/custom/bell-slot.tsx) — one
+  // server component for all three surfaces rather than three prop-builders.
+  const [counts, settings, verifications] = await Promise.all([
     adminPendingCounts(),
-    userNotifications(user.id, user.role, 20),
-    unreadNotificationCount(user.id, user.role),
     siteSettings(),
     verificationCounts(),
   ]);
@@ -71,16 +71,7 @@ export default async function AdminLayout({
               {t('viewStorefront')}
             </Link>
             <LocaleSwitcher locales={settings.publishedLocales} />
-            <NotificationBell
-              unreadCount={unread}
-              notifications={notifications.map((item) => ({
-                id: item.id,
-                title: item.title,
-                body: item.body,
-                read: item.read,
-                createdAt: item.createdAt.toISOString(),
-              }))}
-            />
+            <BellSlot />
           </div>
         </div>
       </header>

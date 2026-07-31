@@ -1,4 +1,13 @@
-import { boolean, index, integer, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { createdAt, localeEnum, timestampCol, userRoleEnum } from './shared';
 
@@ -31,6 +40,16 @@ export const users = pgTable(
     emailVerifiedAt: timestampCol('email_verified_at'),
     passwordHash: text('password_hash'),
     passwordUpdatedAt: timestampCol('password_updated_at'),
+    /**
+     * Which notification categories this person wants (Prompt C12).
+     *
+     * ABSENT MEANS EVERYTHING ON, which is why this is nullable and sparse: a
+     * row only ever records the categories somebody has turned OFF. Seeding a
+     * full object for every user would mean a new category defaults to
+     * "muted" for existing accounts and to "on" for new ones — the same
+     * feature behaving differently depending on when you signed up.
+     */
+    notificationPrefs: jsonb('notification_prefs').$type<Record<string, boolean>>(),
     createdAt: createdAt(),
   },
   (table) => [

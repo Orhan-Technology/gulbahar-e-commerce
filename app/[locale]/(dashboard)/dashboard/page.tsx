@@ -84,13 +84,17 @@ export default async function DashboardPage({
             <SetupGuide shopId={user.shopId} />
           </Suspense>
 
-          {/* Expired reservations sit ABOVE the queue: they are goods sitting
-              in the back that nobody is coming for, and every hour they stay
-              there is stock the shop cannot sell (Prompt C11). Renders nothing
-              when there are none. */}
-          <Suspense fallback={null}>
-            <ExpiredHolds shopId={user.shopId} now={now} />
-          </Suspense>
+          {/*
+            Expired reservations sit ABOVE the queue: goods in the back that
+            nobody is coming for, and every hour they stay there is stock the
+            shop cannot sell (Prompt C11). Renders nothing when there are none.
+
+            NO SUSPENSE around it, deliberately. A boundary needs a designed
+            fallback and this section has nothing to fall back TO — its empty
+            state is absence — so `fallback={null}` would be a boundary that
+            renders a blank gap, which is the pattern check:design refuses.
+          */}
+          <ExpiredHolds shopId={user.shopId} now={now} />
 
           <Suspense fallback={<QueueSkeleton />}>
             <QueueSection shopId={user.shopId} locale={locale} />

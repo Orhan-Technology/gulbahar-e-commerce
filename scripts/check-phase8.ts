@@ -633,9 +633,15 @@ async function main() {
       (select count(*)::int from shops where slug like 'demo-applicant-%') as applicants,
       (select count(*)::int from notifications) as notifications
   `;
+  /*
+   * 221: the 220 drawn by the order loop plus the ONE reserve-and-collect hold
+   * the seed stages for the demo (GC-25142, Prompt C11). Written as a literal
+   * rather than "whatever is there now", which is the whole point of this
+   * assertion — a control-panel run that leaks an order has to fail here.
+   */
   check(
-    'the seeded shape is back: 220 orders, one pending shop, no demo applicants',
-    restored.orders === 220 && restored.pending === 1 && restored.applicants === 0,
+    'the seeded shape is back: 221 orders, one pending shop, no demo applicants',
+    restored.orders === 221 && restored.pending === 1 && restored.applicants === 0,
     restored,
   );
   check(

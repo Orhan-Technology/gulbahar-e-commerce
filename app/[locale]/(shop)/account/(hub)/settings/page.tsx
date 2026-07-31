@@ -3,10 +3,12 @@ import { Bell, MessageSquare } from 'lucide-react';
 
 import { UnavailableCard } from '@/components/custom/unavailable-card';
 import { LanguageForm } from '@/components/shop/account/language-form';
+import { NotificationPreferences } from '@/components/shop/account/notification-preferences';
 import { PaymentMethodsCard } from '@/components/shop/account/payment-methods-card';
 import { AccountSectionHeader } from '@/components/shop/account/section-header';
 import { requireUser } from '@/lib/auth/guards';
 import { accountProfile } from '@/lib/db/queries/account';
+import { notificationPreferences } from '@/lib/db/queries/notifications';
 import { siteSettings } from '@/lib/db/queries/settings';
 
 /**
@@ -28,7 +30,11 @@ export default async function AccountSettingsPage({
   const t = await getTranslations('account');
 
   const session = await requireUser(locale);
-  const [profile, settings] = await Promise.all([accountProfile(session.id), siteSettings()]);
+  const [profile, settings, preferences] = await Promise.all([
+    accountProfile(session.id),
+    siteSettings(),
+    notificationPreferences(session.id),
+  ]);
 
   return (
     <div className="space-y-4">
@@ -59,6 +65,17 @@ export default async function AccountSettingsPage({
             <p className="text-sm font-medium">{t('settings.inAppTitle')}</p>
             <p className="text-muted-foreground text-xs">{t('settings.inAppBody')}</p>
           </div>
+        </div>
+
+        {/*
+          WHICH notifications, now that there is a centre to receive them in
+          (Prompt C12). These are real switches on a real column — a muted
+          category is never written at all — which is why they sit above the
+          channel card rather than inside it: one of these sections works and
+          the other is honest about not existing yet.
+        */}
+        <div className="border-border mt-3 border-t pt-1">
+          <NotificationPreferences preferences={preferences} />
         </div>
 
         <UnavailableCard

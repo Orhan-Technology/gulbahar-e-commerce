@@ -38,7 +38,8 @@
     "check:shop": "tsx scripts/check-shop.ts",
     "check:admin": "tsx scripts/check-admin.ts",
     "check:reports": "tsx scripts/check-reports.ts",
-    "check:collect": "tsx scripts/check-collect.ts"
+    "check:collect": "tsx scripts/check-collect.ts",
+    "check:notify": "tsx scripts/check-notify.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

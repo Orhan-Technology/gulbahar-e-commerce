@@ -3185,5 +3185,46 @@
     "emptyBody": "Try another category, or another floor.",
     "shopsOnFloor": "{count} shops",
     "viewShop": "Open shop page"
+  },
+  "notificationCentre": {
+    "title": "Notifications",
+    "subtitle": "{count} messages, newest first.",
+    "all": "Everything",
+    "markAllRead": "Mark all read",
+    "seeAll": "See all notifications",
+    "empty": "Nothing yet.",
+    "emptyTitle": "No notifications yet",
+    "emptyBody": "Order updates, replies to your reviews and questions, and news from shops you follow all arrive here.",
+    "preferencesHint": "You choose which of these you receive.",
+    "preferencesLink": "Notification settings",
+    "categories": {
+      "orders": "Orders",
+      "reviews": "Reviews",
+      "questions": "Questions",
+      "promotions": "Placements",
+      "shops": "Shops",
+      "account": "Account"
+    },
+    "preferences": {
+      "categories": {
+        "orders": "Orders",
+        "reviews": "Reviews",
+        "questions": "Questions",
+        "promotions": "Placements",
+        "shops": "Shops",
+        "account": "Account"
+      },
+      "hints": {
+        "orders": "Accepted, ready, collected, and anything that changes about an order you placed.",
+        "reviews": "Replies from shops to reviews you have written.",
+        "questions": "Answers to questions you asked on a product.",
+        "promotions": "Decisions on placements you booked. Shopkeepers only.",
+        "shops": "News from shops you follow, and anything about your own shop."
+      },
+      "errors": {
+        "requires_auth": "Sign in first.",
+        "invalid_input": "Something was not right. Try again."
+      }
+    }
   }
 }

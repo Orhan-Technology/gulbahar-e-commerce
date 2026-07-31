@@ -25,6 +25,14 @@ import { cn } from '@/lib/utils';
 
 export type SiteHeaderProps = {
   cartCount: number;
+  /**
+   * The notification bell, rendered by the LAYOUT and handed in.
+   *
+   * A node, not a component reference: this file is `'use client'`, and a
+   * server component cannot be imported into one — only passed through as
+   * children or a prop (CLAUDE.md).
+   */
+  bell?: React.ReactNode;
   /** Null when nobody is signed in. */
   user: { name?: string | null; role: string } | null;
   categories: Array<{ slug: string; label: string }>;
@@ -62,6 +70,7 @@ export function SiteHeader({
   categories,
   liveOffer = false,
   locales,
+  bell,
 }: SiteHeaderProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -162,6 +171,17 @@ export function SiteHeader({
           </span>
 
           <LocaleSwitcher locales={locales} />
+
+          {/*
+            The storefront was the one surface without a bell (Prompt C12) —
+            which is the surface where an order's own customer reads about it.
+            Passed IN as a node rather than imported: this header is a client
+            component, and a server component that touches the database cannot
+            be imported into one. Doing so pulls postgres into the browser
+            bundle and the page 500s on `Can't resolve 'perf_hooks'`
+            (CLAUDE.md's RSC-boundary rule, third variation).
+          */}
+          {bell}
 
           <Link
             href="/cart"
