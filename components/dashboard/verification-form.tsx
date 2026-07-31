@@ -146,8 +146,16 @@ export function VerificationForm({ canSubmit }: { canSubmit: boolean }) {
             >
               <span className="rounded-control flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden bg-neutral-100">
                 {attachment.preview ? (
-                  // A plain <img>: this is a local object URL, which next/image
-                  // cannot optimise and must not try to.
+                  /*
+                   * A plain <img>, and one of the few in this product.
+                   *
+                   * The source is a local object URL for a file that has not
+                   * left the browser: next/image would try to fetch and
+                   * optimise it on the server, which cannot see it. The fixed
+                   * 48px box above supplies the dimensions the audit rule is
+                   * really asking for.
+                   */
+                  // audit-allow raw-img — a local object URL, sized by its container
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={attachment.preview} alt="" className="h-full w-full object-cover" />
                 ) : (
