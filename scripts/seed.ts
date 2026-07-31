@@ -31,7 +31,12 @@ import {
   type OrderStatus,
   type PromotionSlotKey,
 } from '../lib/db/schema';
-import { platformSettings, promotionSlots } from '../lib/db/schema';
+import {
+  platformSettings,
+  promotionSlots,
+  shopVerificationDocuments,
+  shopVerifications,
+} from '../lib/db/schema';
 import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { specTemplateFor } from '../lib/product-templates';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
@@ -1248,6 +1253,82 @@ async function main() {
     }
   }
 
+  // -------------------------------------------------------------- verification
+  /*
+   * Every badge state, so the admin queue and the storefront both have
+   * something to show (Prompt C7).
+   *
+   * No DOCUMENT FILES are written. The seed runs offline and a fabricated
+   * "business licence" image would be a fake identity document sitting in a
+   * repository — the rows carry a placeholder path that the authenticated route
+   * simply fails to read, which is the honest failure mode. The demo beat is
+   * the shopkeeper uploading a real file live.
+   */
+  const verificationPlan: Array<{
+    shopSlug: string;
+    status: 'verified' | 'submitted' | 'rejected';
+    reason?: string;
+    daysAgo: number;
+  }> = shopSeed
+    .filter((shop) => shop.status !== 'pending')
+    .map((shop, index) => {
+      if (index === 1) return { shopSlug: shop.slug, status: 'submitted' as const, daysAgo: 2 };
+      if (index === 2)
+        return {
+          shopSlug: shop.slug,
+          status: 'rejected' as const,
+          reason: 'جواز کسب خوانا نیست — لطفاً عکس واضح‌تر با نور کافی بفرستید.',
+          daysAgo: 9,
+        };
+      // Every third shop stays unverified, which is the normal state and the
+      // one the badge's absence has to look right for.
+      if (index % 3 === 0) return null;
+      return { shopSlug: shop.slug, status: 'verified' as const, daysAgo: 30 + index };
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+  let verifiedShops = 0;
+  for (const entry of verificationPlan) {
+    const shopId = shopIds.get(entry.shopSlug);
+    if (!shopId) continue;
+
+    const submittedAt = daysAgo(entry.daysAgo);
+    const decidedAt = entry.status === 'submitted' ? null : daysAgo(Math.max(1, entry.daysAgo - 2));
+
+    const [record] = await db
+      .insert(shopVerifications)
+      .values({
+        shopId,
+        status: entry.status,
+        submittedAt,
+        decidedAt,
+        decidedBy: entry.status === 'submitted' ? null : admin.id,
+        reason: entry.reason ?? null,
+        expiresAt:
+          entry.status === 'verified' ? new Date(decidedAt!.getTime() + 365 * 86_400_000) : null,
+        createdAt: submittedAt,
+      })
+      .returning({ id: shopVerifications.id });
+
+    for (const kind of ['business_licence', 'owner_id'] as const) {
+      await db.insert(shopVerificationDocuments).values({
+        verificationId: record.id,
+        kind,
+        // Points at nothing on purpose — see the note above.
+        filePath: `${shopId}/seed-${kind}.pdf`,
+        mime: 'application/pdf',
+        size: 128 * 1024,
+        originalName: `${kind}.pdf`,
+        uploadedAt: submittedAt,
+      });
+    }
+
+    if (entry.status === 'verified') {
+      verifiedShops += 1;
+      await db.update(shops).set({ verifiedAt: decidedAt }).where(eq(shops.id, shopId));
+    }
+  }
+
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();
   console.log('Row counts:');
@@ -1265,6 +1346,9 @@ async function main() {
   console.log(`  out-of-stock        ${soldOutSlugs.size} products (action queue)`);
   console.log(
     `  questions           ${questionValues.length} (${answeredQuestions} answered, ${questionValues.length - answeredQuestions} waiting)`,
+  );
+  console.log(
+    `  verifications       ${verificationPlan.length} (${verifiedShops} verified, 1 waiting, 1 rejected)`,
   );
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');

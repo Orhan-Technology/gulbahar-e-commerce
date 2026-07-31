@@ -605,6 +605,20 @@
         "title": "Your question was answered",
         "body": "The shop answered your question about “{productTitle}”."
       }
+    },
+    "verification": {
+      "submitted": {
+        "title": "A shop asked to be verified",
+        "body": "“{shopName}” sent documents for verification."
+      },
+      "approved": {
+        "title": "Your shop is verified",
+        "body": "The badge now shows on your shop page and your products. It is valid for a year."
+      },
+      "rejected": {
+        "title": "Your verification documents were not accepted",
+        "body": "Reason: {reason} — you can send them again once corrected."
+      }
     }
   },
   "auth": {
@@ -1824,7 +1838,8 @@
     "reports": "Reports",
     "users": "Users",
     "settings": "Settings",
-    "sectionsHeading": "Console sections"
+    "sectionsHeading": "Console sections",
+    "verifications": "Verification"
   },
   "adminOverview": {
     "title": "Overview",
@@ -1871,7 +1886,9 @@
       "reviewHidden": "Review hidden",
       "nudge": "Nudge the shop",
       "nudgedShort": "Nudge sent",
-      "nudged": "The shop has been reminded"
+      "nudged": "The shop has been reminded",
+      "verification": "Verification request — {shop}",
+      "verificationSub": "Documents sent, waiting on a review"
     },
     "revenue": {
       "heading": "Promotion income this month",
@@ -2658,6 +2675,87 @@
     "privacyNote": "Documents are seen by mall management only and are never shown on the storefront.",
     "uploadTitle": "Send your documents",
     "uploadBody": "Uploading is not enabled in this demo build. For now, bring the documents to the mall management office.",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "statusWaiting": "Your documents are being reviewed",
+    "statusRejected": "Your documents were not accepted",
+    "waitingSince": "Sent on {date}",
+    "expiresOn": "Valid until {date}",
+    "certifyNote": "By sending these you certify that your business is registered and trading from this unit in Gulbahar Center. The documents are seen by mall management only.",
+    "chooseFiles": "Choose files",
+    "fileHint": "JPG, PNG or PDF — up to 8 MB each, six files maximum.",
+    "removeFile": "Remove file",
+    "noteLabel": "Note for the reviewer (optional)",
+    "notePlaceholder": "For example: the licence is in my brother's name, the unit agreement is attached.",
+    "submit": "Send for review",
+    "submitting": "Sending…",
+    "submitted": "Your documents were sent",
+    "kinds": {
+      "business_licence": "Business licence",
+      "owner_id": "Tazkira / passport",
+      "unit_agreement": "Unit deed or agreement",
+      "other": "Other document"
+    },
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "no_documents": "Choose at least one document",
+      "too_many_documents": "Six files at most",
+      "unsupported_type": "JPG, PNG or PDF only",
+      "too_large": "Each file must be under 8 MB",
+      "already_submitted": "You already have a submission under review"
+    }
+  },
+  "adminVerifications": {
+    "title": "Shop verification",
+    "intro": "Review the documents shops have sent. Verification lasts a year and its badge shows on the shop page and its products.",
+    "filters": {
+      "waiting": "Waiting",
+      "verified": "Verified",
+      "rejected": "Rejected"
+    },
+    "status": {
+      "submitted": "Submitted",
+      "under_review": "Under review",
+      "verified": "Verified",
+      "rejected": "Rejected",
+      "expired": "Expired"
+    },
+    "floorUnit": "Floor {floor} · Unit {unit}",
+    "submittedOn": "Sent on {date}",
+    "openDocument": "Open document",
+    "approve": "Verify",
+    "reject": "Reject",
+    "claim": "I'll review this",
+    "approved": "Shop verified",
+    "rejected": "Documents rejected",
+    "rejectTitle": "Reject these documents",
+    "rejectBody": "The reason is sent to the shop owner so they know what to correct.",
+    "reasonLabel": "Reason",
+    "reasonPlaceholder": "For example: the business licence is not legible, please send a clearer photo.",
+    "reasonNote": "This text is sent to the shop exactly as written.",
+    "confirmReject": "Reject",
+    "cancel": "Cancel",
+    "kinds": {
+      "business_licence": "Business licence",
+      "owner_id": "Tazkira / passport",
+      "unit_agreement": "Unit deed or agreement",
+      "other": "Other document"
+    },
+    "emptyQueueTitle": "Nothing to review",
+    "emptyQueueBody": "When a shop sends documents, they land here.",
+    "emptyTitle": "Nothing in this state",
+    "emptyBody": "Try another filter.",
+    "errors": {
+      "forbidden": "You are not allowed to do that",
+      "not_found": "Not found",
+      "invalid_input": "That input is not valid",
+      "reason_required": "The reason must be at least 10 characters",
+      "already_decided": "That submission has already been decided"
+    }
+  },
+  "verification": {
+    "badgeLabel": "Verified shop",
+    "popoverTitle": "Verified shop",
+    "popoverBody": "Gulbahar Center management has confirmed this is a registered business operating at this unit in the mall.",
+    "verifiedOn": "Verified on {date}"
   }
 }

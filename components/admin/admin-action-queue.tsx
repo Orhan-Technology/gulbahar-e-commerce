@@ -44,6 +44,14 @@ export async function AdminActionQueue({ entries }: { entries: AdminQueueEntry[]
           title: t('pendingShop', { shop: entry.title }),
           subtitle: entry.subtitle ? t('pendingShopSub', { category: entry.subtitle }) : '',
         };
+      case 'verification':
+        return {
+          ...base,
+          verificationId: entry.id,
+          tone: 'warning' as const,
+          title: t('verification', { shop: entry.title }),
+          subtitle: t('verificationSub'),
+        };
       case 'requested_campaign': {
         // Packed as "slot|price" by the query.
         const [slot, price] = entry.subtitle.split('|');

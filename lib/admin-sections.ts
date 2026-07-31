@@ -1,4 +1,5 @@
 import {
+  BadgeCheck,
   BarChart3,
   FolderTree,
   LayoutDashboard,
@@ -33,12 +34,13 @@ export type AdminSection = {
   icon: LucideIcon;
   /** Overview matches exactly — every other path also starts with /admin. */
   exact?: boolean;
-  badge?: 'shops' | 'reviews' | 'promotions' | 'orders';
+  badge?: 'shops' | 'verifications' | 'reviews' | 'promotions' | 'orders';
 };
 
 export const ADMIN_SECTIONS: AdminSection[] = [
   { href: '/admin', icon: LayoutDashboard, key: 'overview', exact: true },
   { href: '/admin/shops', icon: Store, key: 'shops', badge: 'shops' },
+  { href: '/admin/verifications', icon: BadgeCheck, key: 'verifications', badge: 'verifications' },
   { href: '/admin/products', icon: Package, key: 'products' },
   { href: '/admin/categories', icon: FolderTree, key: 'categories' },
   { href: '/admin/reviews', icon: Star, key: 'reviews', badge: 'reviews' },

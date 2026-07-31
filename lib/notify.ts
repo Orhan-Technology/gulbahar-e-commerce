@@ -44,6 +44,9 @@ export type NotificationEventKey =
   | 'review.received'
   | 'review.responded'
   | 'order.nudged'
+  | 'verification.submitted'
+  | 'verification.approved'
+  | 'verification.rejected'
   | 'question.asked'
   | 'question.answered'
   | 'user.roleChanged';

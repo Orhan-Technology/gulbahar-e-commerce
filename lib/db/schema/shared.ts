@@ -86,6 +86,29 @@ export const notificationChannelEnum = pgEnum('notification_channel', ['sms', 'i
 
 export const localeEnum = pgEnum('locale', ['fa', 'en', 'ps']);
 
+/**
+ * Verification lifecycle (Prompt C7).
+ *
+ * `none` is absence of a record rather than a row, so it is not in the enum —
+ * a shop with no verification row simply has none. The states here are the ones
+ * a ROW can be in: submitted by the shop, under review by an admin, decided
+ * either way, or lapsed.
+ */
+export const verificationStatusEnum = pgEnum('verification_status', [
+  'submitted',
+  'under_review',
+  'verified',
+  'rejected',
+  'expired',
+]);
+
+export const verificationDocumentKindEnum = pgEnum('verification_document_kind', [
+  'business_licence',
+  'owner_id',
+  'unit_agreement',
+  'other',
+]);
+
 /* ---------------------------------------------------------------------------
  * Union types derived from the enums, so application code and Zod schemas stay
  * in lockstep with the database rather than re-declaring the same string lists.
@@ -106,3 +129,5 @@ export type PromotionSlotKey = (typeof promotionSlotKeyEnum.enumValues)[number];
 export type CampaignStatus = (typeof campaignStatusEnum.enumValues)[number];
 export type NotificationChannel = (typeof notificationChannelEnum.enumValues)[number];
 export type DbLocale = (typeof localeEnum.enumValues)[number];
+export type VerificationStatus = (typeof verificationStatusEnum.enumValues)[number];
+export type VerificationDocumentKind = (typeof verificationDocumentKindEnum.enumValues)[number];

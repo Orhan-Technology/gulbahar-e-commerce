@@ -6,6 +6,7 @@ import { MapPin, Store } from 'lucide-react';
 
 import { ImageGallery, ImageGallerySkeleton } from '@/components/custom/image-gallery';
 import { RatingStars } from '@/components/custom/rating-stars';
+import { VerifiedBadge } from '@/components/shop/verified-badge';
 import { BuyColumn } from '@/components/shop/product/buy-column';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
@@ -231,8 +232,14 @@ export default async function ProductPage({
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="text-foreground block truncate text-sm font-semibold">
+                <span className="text-foreground flex items-center gap-1 truncate text-sm font-semibold">
                   {pickLocale(product.shopName, locale)}
+                  {/* The mall's own confirmation, where the buyer is deciding
+                      whether to trust this seller (Prompt C7). */}
+                  <VerifiedBadge
+                    verifiedAt={product.shopVerifiedAt ? product.shopVerifiedAt.toISOString() : null}
+                    size="sm"
+                  />
                 </span>
                 {product.shopFloor !== null && (
                   <span className="text-muted-foreground flex items-center gap-1 text-xs">

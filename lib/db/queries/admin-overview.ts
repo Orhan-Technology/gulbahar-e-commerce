@@ -33,7 +33,12 @@ import type { LocalizedText } from '../schema/shared';
 const STALE_ORDER_HOURS = SLA_HOURS.danger;
 
 export type AdminQueueEntry = {
-  kind: 'pending_shop' | 'requested_campaign' | 'reported_review' | 'stale_order';
+  kind:
+    | 'pending_shop'
+    | 'verification'
+    | 'requested_campaign'
+    | 'reported_review'
+    | 'stale_order';
   id: string;
   title: string;
   subtitle: string;
@@ -54,7 +59,7 @@ export type AdminQueueEntry = {
  * in the same way.
  */
 export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[]> {
-  const [shopRows, campaignRows, reviewRows, orderRows] = await Promise.all([
+  const [shopRows, verificationRows, campaignRows, reviewRows, orderRows] = await Promise.all([
     db.execute(sql`
       select s.id::text as id, s.slug, s.name, s.created_at,
              c.name as category_name
@@ -63,6 +68,21 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       where s.status = 'pending'
       order by s.created_at asc
       limit 8
+    `),
+
+    /*
+     * Verification submissions (Prompt C7). Ranked directly under pending
+     * shops: both are a tenant waiting on the mall for something only the mall
+     * can give, and a shop that sent its papers a week ago and heard nothing
+     * has learned something about how the mall runs.
+     */
+    db.execute(sql`
+      select v.id::text as id, v.submitted_at, s.name, s.slug
+      from shop_verifications v
+      join shops s on s.id = v.shop_id
+      where v.status in ('submitted', 'under_review')
+      order by v.submitted_at asc
+      limit 6
     `),
     db.execute(sql`
       select c.id::text as id, c.price_paid, c.starts_at, c.ends_at, c.created_at,
@@ -133,6 +153,13 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
 
   const initial = (name: LocalizedText) => pickLocale(name, locale).trim().charAt(0);
 
+  const verifications = verificationRows as unknown as Array<{
+    id: string;
+    submitted_at: string;
+    name: LocalizedText;
+    slug: string;
+  }>;
+
   return [
     ...shops.map((row): AdminQueueEntry => ({
       kind: 'pending_shop',
@@ -143,6 +170,15 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       subtitle: row.category_name ? pickLocale(row.category_name, locale) : '',
       href: `/admin/shops/${row.slug}`,
       at: new Date(row.created_at),
+      monogram: initial(row.name),
+    })),
+    ...verifications.map((row): AdminQueueEntry => ({
+      kind: 'verification',
+      id: row.id,
+      title: pickLocale(row.name, locale),
+      subtitle: '',
+      href: '/admin/verifications',
+      at: new Date(row.submitted_at),
       monogram: initial(row.name),
     })),
     ...campaigns.map((row): AdminQueueEntry => ({

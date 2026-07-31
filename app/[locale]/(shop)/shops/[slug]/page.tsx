@@ -12,6 +12,7 @@ import {
   ProductListingSkeleton,
   type ListingSearchParams,
 } from '@/components/shop/listing/product-listing';
+import { VerifiedBadge } from '@/components/shop/verified-badge';
 import { pickLocale } from '@/lib/db/localized';
 import { filterFacets } from '@/lib/db/queries/listing';
 import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
@@ -96,7 +97,12 @@ export default async function ShopPage({
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
-          <h1 className="text-xl font-bold">{pickLocale(shop.name, locale)}</h1>
+          {/* The badge sits WITH the name, not in a row of chips below it: it
+              is a fact about who this is, not another attribute (Prompt C7). */}
+          <h1 className="flex flex-wrap items-center gap-1.5 text-xl font-bold">
+            {pickLocale(shop.name, locale)}
+            <VerifiedBadge verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null} />
+          </h1>
 
           <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             {shop.rating > 0 && (

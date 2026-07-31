@@ -7,6 +7,7 @@ import { LocaleSwitcher } from '@/components/shop/locale-switcher';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminPendingCounts } from '@/lib/db/queries/admin';
 import { siteSettings } from '@/lib/db/queries/settings';
+import { verificationCounts } from '@/lib/db/queries/verification';
 import { unreadNotificationCount, userNotifications } from '@/lib/db/queries/notifications';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -34,11 +35,12 @@ export default async function AdminLayout({
   const user = await requireAdmin(locale);
   const t = await getTranslations('adminNav');
 
-  const [counts, notifications, unread, settings] = await Promise.all([
+  const [counts, notifications, unread, settings, verifications] = await Promise.all([
     adminPendingCounts(),
     userNotifications(user.id, user.role, 20),
     unreadNotificationCount(user.id, user.role),
     siteSettings(),
+    verificationCounts(),
   ]);
 
   // Formatted here so the nav needs no locale of its own; null hides the badge.
@@ -87,6 +89,7 @@ export default async function AdminLayout({
         <AdminNav
           counts={{
             shops: badge(counts.pendingShops),
+            verifications: badge(verifications.waiting),
             reviews: badge(counts.reportedReviews),
             promotions: badge(counts.requestedCampaigns),
             orders: badge(counts.placedOrders),

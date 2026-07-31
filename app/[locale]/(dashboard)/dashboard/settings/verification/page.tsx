@@ -1,27 +1,26 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { BadgeCheck, FileText } from 'lucide-react';
+import { BadgeCheck, Clock, FileText, ShieldAlert } from 'lucide-react';
 
-import { UnavailableCard } from '@/components/custom/unavailable-card';
 import { ConsolePageHeader } from '@/components/console/page-header';
+import { VerificationForm } from '@/components/dashboard/verification-form';
+import { Badge } from '@/components/ui/badge';
 import { requireShopkeeper } from '@/lib/auth/guards';
+import { currentVerification } from '@/lib/db/queries/verification';
 import { shopById } from '@/lib/db/queries/shops';
 import { formatDate } from '@/lib/format';
 
 /**
  * Shop verification, from the shopkeeper's side (Prompts C5, C7).
  *
- * The setup guide's last step points here, so the page exists as soon as the
- * step does — a checklist row that leads nowhere is worse than a missing row.
+ * WHAT IT CLAIMS, stated on the page because the claim is the whole feature:
+ * mall management confirms this is a registered business operating at this unit
+ * in Gulbahar Center. Only a landlord can say that — a self-service marketplace
+ * can verify an email address.
  *
- * WHAT IT CLAIMS, stated here because the claim is the whole feature: mall
- * management confirms this is a registered business operating at this unit in
- * Gulbahar Center. That is a claim only a mall can make, and it is why the
- * badge means something a self-service marketplace's cannot.
- *
- * The document UPLOAD is not built yet, and this says so rather than showing a
- * dropzone that discards files (A3's honesty rule). What is real today is the
- * status: a verified shop shows its date, an unverified one shows what it would
- * take.
+ * The page has one job at a time. Before submitting it is a form; while a
+ * review is open it is a status, because a second submission on top of an open
+ * one hands the admin two sets of papers for one shop; after a rejection it is
+ * the reason plus the form again, which is the only state where both belong.
  */
 export default async function VerificationPage({
   params,
@@ -33,8 +32,14 @@ export default async function VerificationPage({
   const user = await requireShopkeeper(locale);
   const t = await getTranslations('shopVerification');
 
-  const shop = await shopById(user.shopId);
+  const [shop, verification] = await Promise.all([
+    shopById(user.shopId),
+    currentVerification(user.shopId),
+  ]);
+
   const verified = Boolean(shop?.verifiedAt);
+  const waiting = verification?.status === 'submitted' || verification?.status === 'under_review';
+  const rejected = verification?.status === 'rejected';
 
   return (
     <div className="max-w-2xl space-y-4 p-4">
@@ -46,22 +51,65 @@ export default async function VerificationPage({
             className={
               verified
                 ? 'rounded-control bg-success-bg text-success flex h-10 w-10 shrink-0 items-center justify-center'
-                : 'rounded-control flex h-10 w-10 shrink-0 items-center justify-center bg-neutral-100 text-neutral-500'
+                : waiting
+                  ? 'rounded-control bg-warning-bg text-warning-fg flex h-10 w-10 shrink-0 items-center justify-center'
+                  : 'rounded-control flex h-10 w-10 shrink-0 items-center justify-center bg-neutral-100 text-neutral-500'
             }
           >
-            <BadgeCheck className="h-5 w-5" aria-hidden />
+            {verified ? (
+              <BadgeCheck className="h-5 w-5" aria-hidden />
+            ) : waiting ? (
+              <Clock className="h-5 w-5" aria-hidden />
+            ) : (
+              <ShieldAlert className="h-5 w-5" aria-hidden />
+            )}
           </span>
+
           <div className="min-w-0">
             <p className="text-sm font-semibold">
-              {verified ? t('statusVerified') : t('statusUnverified')}
+              {verified
+                ? t('statusVerified')
+                : waiting
+                  ? t('statusWaiting')
+                  : rejected
+                    ? t('statusRejected')
+                    : t('statusUnverified')}
             </p>
             <p className="text-muted-foreground text-sm">
               {verified && shop?.verifiedAt
                 ? t('verifiedOn', { date: formatDate(shop.verifiedAt, locale) })
-                : t('unverifiedBody')}
+                : waiting && verification?.submittedAt
+                  ? t('waitingSince', { date: formatDate(verification.submittedAt, locale) })
+                  : t('unverifiedBody')}
             </p>
+
+            {/* The reason, verbatim. A rejection a shop cannot act on is a dead
+                end, so the admin's own words are shown as written. */}
+            {rejected && verification?.reason && (
+              <p className="rounded-control bg-danger-bg text-danger mt-2 p-2 text-sm">
+                {verification.reason}
+              </p>
+            )}
+
+            {verified && verification?.expiresAt && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                {t('expiresOn', { date: formatDate(verification.expiresAt, locale) })}
+              </p>
+            )}
           </div>
         </div>
+
+        {waiting && verification && verification.documents.length > 0 && (
+          <ul className="border-border mt-3 space-y-1 border-t pt-3">
+            {verification.documents.map((document) => (
+              <li key={document.id} className="flex items-center gap-2 text-xs text-neutral-600">
+                <FileText className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                <span className="min-w-0 flex-1 truncate">{document.originalName}</span>
+                <Badge variant="secondary">{t(`kinds.${document.kind}` as never)}</Badge>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="rounded-card border-border bg-card space-y-2 border p-4">
@@ -74,12 +122,7 @@ export default async function VerificationPage({
         <p className="text-muted-foreground text-xs">{t('privacyNote')}</p>
       </section>
 
-      <UnavailableCard
-        icon={<FileText className="h-5 w-5" />}
-        title={t('uploadTitle')}
-        body={t('uploadBody')}
-        pillLabel={t('comingSoon')}
-      />
+      <VerificationForm canSubmit={!waiting && !verified} />
     </div>
   );
 }

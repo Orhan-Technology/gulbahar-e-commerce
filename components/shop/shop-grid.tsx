@@ -16,6 +16,8 @@ export type ShopGridItem = {
   unitNumber: string | null;
   logoPath: string | null;
   bannerPath: string | null;
+  /** When the mall verified the shop, or null (Prompt C7). */
+  verifiedAt?: Date | null;
   sponsored?: boolean;
 };
 
@@ -57,6 +59,7 @@ export async function ShopGrid({
           unitNumber={shop.unitNumber}
           logoPath={shop.logoPath}
           bannerPath={shop.bannerPath}
+          verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null}
           isSponsored={shop.sponsored}
         />
       ))}

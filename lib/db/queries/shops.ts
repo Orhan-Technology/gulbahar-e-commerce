@@ -40,6 +40,7 @@ export async function shopDirectory(filters: ShopDirectoryFilters) {
       unitNumber: shops.unitNumber,
       logoPath: shops.logoPath,
       bannerPath: shops.bannerPath,
+      verifiedAt: shops.verifiedAt,
       rating: shopRatingAvg,
       reviewCount: shopReviewCount,
       productCount: shopPublishedProductCount,
@@ -74,6 +75,9 @@ export async function shopDetail(slug: string) {
       hours: shops.hours,
       logoPath: shops.logoPath,
       bannerPath: shops.bannerPath,
+      // Denormalised, so the badge costs no join on a page that is read far
+      // more often than the verification record is written (Prompt C7).
+      verifiedAt: shops.verifiedAt,
       rejectionReason: shops.rejectionReason,
       createdAt: shops.createdAt,
       rating: shopRatingAvg,

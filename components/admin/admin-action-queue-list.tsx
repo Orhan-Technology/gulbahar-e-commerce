@@ -17,13 +17,20 @@ import { cn } from '@/lib/utils';
 
 export type AdminQueueRow = {
   key: string;
-  kind: 'pending_shop' | 'requested_campaign' | 'reported_review' | 'stale_order';
+  kind:
+    | 'pending_shop'
+    | 'verification'
+    | 'requested_campaign'
+    | 'reported_review'
+    | 'stale_order';
   /** The decision target — a shop id or a campaign id. Absent on link-only rows. */
   decisionId?: string;
   decisionKind?: 'shop' | 'campaign';
   /** Ids for the two row types that decide in place since C4. */
   reviewId?: string;
   orderId?: string;
+  /** Verification rows link to the queue, where the documents are (C7). */
+  verificationId?: string;
   monogram: string;
   title: string;
   subtitle: string;
@@ -113,6 +120,9 @@ export function AdminActionQueueList({
           const decidable = row.decisionId && row.decisionKind;
           // Every row type now acts in place, so the chevron is only for rows
           // that genuinely have nowhere to act — none, today.
+          // A verification row is a LINK on purpose: deciding it needs the
+          // documents on screen, and a thumbnail of a tazkira in an overview
+          // panel is exactly what C7's security rules exist to prevent.
           const actionable = decidable || row.reviewId || row.orderId;
 
           return (

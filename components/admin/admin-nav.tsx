@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 
 export type AdminBadgeCounts = {
   shops: string | null;
+  verifications: string | null;
   reviews: string | null;
   promotions: string | null;
   orders: string | null;

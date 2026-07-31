@@ -6,6 +6,7 @@ import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
+import { VerifiedBadge } from '@/components/shop/verified-badge';
 import { formatNumber, formatRating, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,13 @@ export interface ShopCardProps {
   logoPath?: string | null;
   bannerPath?: string | null;
   isSponsored?: boolean;
+  /**
+   * ISO timestamp when the mall verified this shop, or null (Prompt C7).
+   *
+   * A string rather than a Date because the card is rendered from server data
+   * into a client component, and a Date does not survive that boundary intact.
+   */
+  verifiedAt?: string | null;
   /**
    * `card` is the banner-and-logo tile. `row` is the mall directory's compact
    * form — a monogram disc beside the name and one line of metadata — which is
@@ -41,6 +49,7 @@ export interface ShopCardProps {
 export function ShopCard({
   slug,
   name,
+  verifiedAt,
   categoryName,
   rating,
   reviewCount,
@@ -83,6 +92,7 @@ export function ShopCard({
           <span className="flex items-center gap-2">
             <span className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150">
               {name}
+              <VerifiedBadge verifiedAt={verifiedAt ?? null} size="sm" className="ms-1 align-middle" />
             </span>
             {isSponsored && <SponsoredBadge tone="inline" />}
           </span>
@@ -162,7 +172,10 @@ export function ShopCard({
           )}
         </div>
 
-        <h3 className="clamp-1 text-foreground text-sm font-semibold">{name}</h3>
+        <h3 className="clamp-1 text-foreground flex items-center gap-1 text-sm font-semibold">
+          {name}
+          <VerifiedBadge verifiedAt={verifiedAt ?? null} size="sm" />
+        </h3>
         {categoryName && <p className="text-muted-foreground truncate text-xs">{categoryName}</p>}
 
         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
