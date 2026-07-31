@@ -6,6 +6,7 @@ import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
+import { recordAdminAction } from '../audit';
 import { pickLocale } from '../db/localized';
 import {
   shopMembers,
@@ -223,6 +224,17 @@ export async function decideVerification(
     values: { reason: reason ?? '' },
   });
 
+  await recordAdminAction({
+    actorId: user.id,
+    actorName: user.name?.trim() || user.phone,
+    action: decision === 'verified' ? 'verification.verify' : 'verification.reject',
+    targetType: 'shop',
+    targetId: record.shopId,
+    targetLabel: await shopNameFor(record.shopId),
+    reason: reason ?? null,
+    detail: { expiresAt: decision === 'verified' ? expiresAt.toISOString() : null },
+  });
+
   revalidatePath('/admin/verifications');
   revalidatePath('/admin');
   revalidatePath('/dashboard/settings/verification');
@@ -238,12 +250,26 @@ export async function claimVerification(verificationId: string): Promise<Verific
   const parsed = z.string().uuid().safeParse(verificationId);
   if (!parsed.success) return { ok: false, error: 'invalid_input' };
 
-  await db
+  const [claimed] = await db
     .update(shopVerifications)
     .set({ status: 'under_review' })
     .where(
       and(eq(shopVerifications.id, parsed.data), eq(shopVerifications.status, 'submitted')),
-    );
+    )
+    .returning({ shopId: shopVerifications.shopId });
+
+  // Only when it actually moved: claiming an already-claimed submission is a
+  // no-op, and logging it would fill the audit page with nothing happening.
+  if (claimed) {
+    await recordAdminAction({
+      actorId: user.id,
+      actorName: user.name?.trim() || user.phone,
+      action: 'verification.claim',
+      targetType: 'shop',
+      targetId: claimed.shopId,
+      targetLabel: await shopNameFor(claimed.shopId),
+    });
+  }
 
   revalidatePath('/admin/verifications');
   return { ok: true };

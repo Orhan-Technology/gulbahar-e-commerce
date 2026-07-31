@@ -44,6 +44,7 @@ export type NotificationEventKey =
   | 'review.received'
   | 'review.responded'
   | 'order.nudged'
+  | 'shop.nudged'
   | 'verification.submitted'
   | 'verification.approved'
   | 'verification.rejected'

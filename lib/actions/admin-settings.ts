@@ -4,10 +4,11 @@ import { revalidatePath } from 'next/cache';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { normalizePhone } from '../auth/otp';
 import { platformSettings, type DbLocale } from '../db/schema';
+import { requireAdminContext } from '../admin-context';
+import { recordAdminAction } from '../audit';
 
 /**
  * Marketplace settings (Prompt A4).
@@ -28,11 +29,6 @@ import { platformSettings, type DbLocale } from '../db/schema';
 
 export type AdminSettingsResult = { ok: true } | { ok: false; error: string };
 
-async function requireAdminContext() {
-  const user = await currentUser();
-  if (!user?.id || user.role !== 'admin') return null;
-  return { userId: user.id };
-}
 
 const localizedText = z.object({
   fa: z.string().trim().min(1).max(120),
@@ -80,10 +76,34 @@ export async function updateMarketplaceSettings(
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'invalid_input' };
   }
 
+  // Read before the write so the audit line can name what actually MOVED. A
+  // settings row has ten fields and an entry saying only "settings changed"
+  // sends whoever reads it to a diff they cannot get.
+  const [before] = await db
+    .select()
+    .from(platformSettings)
+    .where(eq(platformSettings.id, 1))
+    .limit(1);
+
   await db
     .update(platformSettings)
     .set({ ...parsed.data, updatedAt: new Date() })
     .where(eq(platformSettings.id, 1));
+
+  const changed: Record<string, string | number | null> = {};
+  for (const [key, value] of Object.entries(parsed.data)) {
+    const previous = before?.[key as keyof typeof before];
+    const next = typeof value === 'object' ? JSON.stringify(value) : String(value);
+    const old = typeof previous === 'object' ? JSON.stringify(previous) : String(previous);
+    if (old !== next) changed[key] = next;
+  }
+
+  await recordAdminAction({
+    ...context,
+    action: 'settings.update',
+    targetType: 'settings',
+    detail: changed,
+  });
 
   /*
    * The layout, not a page: the footer carries the delivery promise and the
@@ -125,6 +145,13 @@ export async function updatePublishedLocales(
     .update(platformSettings)
     .set({ publishedLocales: [...new Set(parsed.data)], updatedAt: new Date() })
     .where(eq(platformSettings.id, 1));
+
+  await recordAdminAction({
+    ...context,
+    action: 'settings.locales',
+    targetType: 'settings',
+    detail: { locales: [...new Set(parsed.data)].join(', ') },
+  });
 
   revalidatePath('/', 'layout');
   return { ok: true };

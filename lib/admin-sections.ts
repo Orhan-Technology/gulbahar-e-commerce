@@ -1,10 +1,13 @@
 import {
   BadgeCheck,
+  Banknote,
+  Building2,
   BarChart3,
   FolderTree,
   LayoutDashboard,
   Megaphone,
   Package,
+  ScrollText,
   Settings,
   ShoppingBag,
   Star,
@@ -40,14 +43,19 @@ export type AdminSection = {
 export const ADMIN_SECTIONS: AdminSection[] = [
   { href: '/admin', icon: LayoutDashboard, key: 'overview', exact: true },
   { href: '/admin/shops', icon: Store, key: 'shops', badge: 'shops' },
+  // The building itself, straight after the tenants — a mall manager thinks
+  // "floor two" long before they think "shop directory" (Prompt C9).
+  { href: '/admin/floors', icon: Building2, key: 'floors' },
   { href: '/admin/verifications', icon: BadgeCheck, key: 'verifications', badge: 'verifications' },
   { href: '/admin/products', icon: Package, key: 'products' },
   { href: '/admin/categories', icon: FolderTree, key: 'categories' },
   { href: '/admin/reviews', icon: Star, key: 'reviews', badge: 'reviews' },
   { href: '/admin/promotions', icon: Megaphone, key: 'promotions', badge: 'promotions' },
   { href: '/admin/revenue', icon: Wallet, key: 'revenue' },
+  { href: '/admin/settlements', icon: Banknote, key: 'settlements' },
   { href: '/admin/orders', icon: ShoppingBag, key: 'orders', badge: 'orders' },
   { href: '/admin/reports', icon: BarChart3, key: 'reports' },
   { href: '/admin/users', icon: Users, key: 'users' },
+  { href: '/admin/audit', icon: ScrollText, key: 'audit' },
   { href: '/admin/settings', icon: Settings, key: 'settings' },
 ];

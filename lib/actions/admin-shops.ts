@@ -4,12 +4,13 @@ import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { pickLocale } from '../db/localized';
 import { shopMembers, shops, users } from '../db/schema';
 import { shopOwnerAndStaff } from '../db/queries/admin';
 import { notifyMany } from '../notify';
+import { requireAdminContext } from '../admin-context';
+import { recordAdminAction } from '../audit';
 
 /**
  * Shop lifecycle, admin side (PRD §7.1).
@@ -28,11 +29,6 @@ import { notifyMany } from '../notify';
 export type AdminActionResult<T = undefined> =
   ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
 
-async function requireAdminContext() {
-  const user = await currentUser();
-  if (!user?.id || user.role !== 'admin') return null;
-  return { userId: user.id };
-}
 
 /** Storefront surfaces that change the instant a shop's status does. */
 function revalidateStorefront(slug: string) {
@@ -74,6 +70,14 @@ export async function approveShop(shopId: string): Promise<AdminActionResult> {
       values: { shopName: pickLocale(updated.name, member.locale) },
     })),
   );
+
+  await recordAdminAction({
+    ...context,
+    action: 'shop.approve',
+    targetType: 'shop',
+    targetId: updated.id,
+    targetLabel: updated.name.fa,
+  });
 
   revalidateStorefront(updated.slug);
   return { ok: true };
@@ -126,6 +130,15 @@ export async function rejectShop(input: z.input<typeof rejectSchema>): Promise<A
       })),
   );
 
+  await recordAdminAction({
+    ...context,
+    action: 'shop.reject',
+    targetType: 'shop',
+    targetId: updated.id,
+    targetLabel: updated.name.fa,
+    reason: parsed.data.reason,
+  });
+
   revalidateStorefront(updated.slug);
   return { ok: true };
 }
@@ -145,6 +158,14 @@ export async function setShopStatus(
   const parsed = statusSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: 'invalid_input' };
 
+  // `from` is read before the write so the audit line can say what changed:
+  // "approved → suspended" is the fact, "suspended" alone is half of it.
+  const [before] = await db
+    .select({ status: shops.status, name: shops.name })
+    .from(shops)
+    .where(eq(shops.id, parsed.data.shopId))
+    .limit(1);
+
   const [updated] = await db
     .update(shops)
     .set({ status: parsed.data.status })
@@ -152,6 +173,15 @@ export async function setShopStatus(
     .returning({ slug: shops.slug });
 
   if (!updated) return { ok: false, error: 'not_found' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'shop.status',
+    targetType: 'shop',
+    targetId: parsed.data.shopId,
+    targetLabel: before?.name.fa ?? updated.slug,
+    detail: { from: before?.status ?? null, to: parsed.data.status },
+  });
 
   revalidateStorefront(updated.slug);
   return { ok: true };
@@ -272,6 +302,15 @@ export async function createShopWithOwner(
       values: { shopName: data.nameFa, phone: data.ownerPhone },
     },
   ]);
+
+  await recordAdminAction({
+    ...context,
+    action: 'shop.create',
+    targetType: 'shop',
+    targetId: created.id,
+    targetLabel: data.nameFa,
+    detail: { owner: data.ownerName, phone: data.ownerPhone, ownerCreated: String(ownerCreated) },
+  });
 
   revalidateStorefront(created.slug);
   return { ok: true, data: { shopId: created.id, slug: created.slug, ownerCreated } };

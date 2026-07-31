@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, inArray } from 'drizzle-orm';
 import path from 'node:path';
 
 import { db, sql as pg } from '../lib/db';
@@ -21,6 +21,7 @@ import {
   products,
   reviewResponses,
   reviews,
+  adminAuditLog,
   shopFollows,
   shopReviewRows,
   shopMembers,
@@ -1426,6 +1427,87 @@ async function main() {
   }
   if (followValues.length > 0) await db.insert(shopFollows).values(followValues);
 
+  // --------------------------------------------------------------- audit log
+  /*
+   * The admin's decision history (Prompt C9).
+   *
+   * DERIVED FROM WHAT THIS SEED ACTUALLY DID, not invented alongside it. Every
+   * row below points at a shop or a campaign that exists, with the timestamp
+   * the decision carries in its own table — so an admin can open the audit page,
+   * click through to the shop, and find exactly the state the entry describes.
+   * A log of fictional decisions would be the one screen in the console that
+   * cannot survive being checked.
+   *
+   * Written directly rather than through recordAdminAction() because the seed
+   * is reconstructing history: the helper stamps `now`, and every entry here
+   * belongs to the day the thing it records happened.
+   */
+  const auditRows: Array<typeof adminAuditLog.$inferInsert> = [];
+  const actor = { actorId: admin.id, actorName: admin.name ?? 'مدیریت گلبهار' };
+
+  for (const [index, shop] of shopSeed.entries()) {
+    if (shop.status === 'pending') continue;
+    const shopId = shopIds.get(shop.slug);
+    if (!shopId) continue;
+
+    auditRows.push({
+      ...actor,
+      action: 'shop.approve',
+      targetType: 'shop',
+      targetId: shopId,
+      targetLabel: shop.name.fa,
+      // A day after the application landed, which is the seeded created_at.
+      createdAt: daysAgo(Math.max(1, 120 - index * 3 - 1)),
+    });
+  }
+
+  for (const entry of verificationPlan) {
+    const shopId = shopIds.get(entry.shopSlug);
+    if (!shopId || entry.status === 'submitted') continue;
+
+    const decidedAt = daysAgo(Math.max(1, entry.daysAgo - 2));
+    auditRows.push({
+      ...actor,
+      action: entry.status === 'verified' ? 'verification.verify' : 'verification.reject',
+      targetType: 'shop',
+      targetId: shopId,
+      targetLabel: shopSeed.find((shop) => shop.slug === entry.shopSlug)?.name.fa ?? null,
+      reason: entry.reason ?? null,
+      createdAt: decidedAt,
+    });
+  }
+
+  const decidedCampaigns = await db
+    .select({
+      id: campaigns.id,
+      createdAt: campaigns.createdAt,
+      // The shop and the slot, so the entry says WHAT was approved. A row
+      // reading only "approved a placement" is a timestamp with no subject —
+      // and the label is snapshotted here for the same reason the column
+      // exists (lib/db/schema/audit.ts).
+      shopName: shops.name,
+      slotName: promotionSlots.name,
+      pricePaid: campaigns.pricePaid,
+    })
+    .from(campaigns)
+    .innerJoin(shops, eq(campaigns.shopId, shops.id))
+    .innerJoin(promotionSlots, eq(campaigns.slotId, promotionSlots.id))
+    .where(inArray(campaigns.status, ['approved', 'active', 'ended']));
+
+  for (const campaign of decidedCampaigns.slice(0, 12)) {
+    auditRows.push({
+      ...actor,
+      action: 'campaign.approve',
+      targetType: 'campaign',
+      targetId: campaign.id,
+      targetLabel: `${campaign.shopName.fa} · ${campaign.slotName.fa}`,
+      detail: { pricePaid: campaign.pricePaid },
+      createdAt: campaign.createdAt,
+    });
+  }
+
+  await db.insert(adminAuditLog).values(auditRows);
+
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();
   console.log('Row counts:');
@@ -1449,6 +1531,7 @@ async function main() {
   );
   console.log(`  shop reviews        ${shopReviewCount} (one per fulfilled order per shop)`);
   console.log(`  shop follows        ${followValues.length}`);
+  console.log(`  audit entries       ${auditRows.length} (derived from seeded decisions)`);
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');
   console.log('  admin        0700000001');

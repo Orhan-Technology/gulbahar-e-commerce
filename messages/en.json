@@ -567,6 +567,10 @@
       "invited": {
         "title": "Your shop is ready",
         "body": "Gulbahar management created \"{shopName}\" for you. Sign in with {phone}."
+      },
+      "nudged": {
+        "title": "A note from mall management",
+        "body": "Gulbahar Center management has noticed something customers see on your shop: {issue} Please take a look when you can."
       }
     },
     "campaign": {
@@ -1854,7 +1858,10 @@
     "users": "Users",
     "settings": "Settings",
     "sectionsHeading": "Console sections",
-    "verifications": "Verification"
+    "verifications": "Verification",
+    "floors": "Floors",
+    "settlements": "Settlements",
+    "audit": "Audit log"
   },
   "adminOverview": {
     "title": "Overview",
@@ -2020,6 +2027,42 @@
         "bad_phone": "The number must start with 07 and be ten digits",
         "owner_is_admin": "That number belongs to mall management and cannot own a shop",
         "owner_has_shop": "That number already belongs to another shop"
+      }
+    },
+    "health": {
+      "viewLabel": "Needs attention",
+      "floorUnit": "Floor {floor} · Unit {unit}",
+      "allWellTitle": "Nothing needs your attention",
+      "allWellBody": "In the last {days} days no shop was slow to accept, turned business away, lost rating, ran out of things to sell, or let its paperwork lapse.",
+      "nudge": "Nudge shop",
+      "nudgeSentShort": "Sent",
+      "nudgeSent": "The shop has been told.",
+      "flags": {
+        "slow_acceptance": "Slow to accept",
+        "high_rejection": "Turning orders away",
+        "falling_rating": "Rating falling",
+        "no_products": "Nothing published",
+        "verification_expired": "Verification lapsed"
+      },
+      "evidence": {
+        "slow_acceptance": "median {hours} hours to accept, across {orders} orders",
+        "high_rejection": "{rate} of {orders} orders rejected",
+        "falling_rating": "{from} → {to} across the period",
+        "no_products": "the shop page has nothing on it for customers to buy",
+        "verification_expired": "the badge is off the shop until the papers are renewed"
+      },
+      "nudgeIssues": {
+        "slow_acceptance": "orders from your shop are waiting a long time before you accept them.",
+        "high_rejection": "a large share of the orders customers place with you are being rejected.",
+        "falling_rating": "your service rating has dropped compared with earlier in the period.",
+        "no_products": "your shop page currently has no published products on it.",
+        "verification_expired": "your verification has expired, so the badge is no longer on your shop."
+      },
+      "errors": {
+        "forbidden": "Only mall management can do that.",
+        "invalid_input": "Something was not right. Try again.",
+        "not_found": "This shop is no longer available.",
+        "no_owner": "This shop has no owner to notify."
       }
     }
   },
@@ -2198,15 +2241,6 @@
         "capacity_below_sold": "Capacity cannot go below what is already sold"
       }
     },
-    "calendar": {
-      "empty": "No slots to show.",
-      "legend": "Each cell is one week. Green: places free · Amber: partly booked · Red: full.",
-      "slot": "Slot",
-      "capacity": "Capacity {count}",
-      "cellFull": "Full",
-      "cellFree": "{count} free",
-      "cellTitle": "{slot} — week of {week}: {booked} of {capacity} booked"
-    },
     "manual": {
       "trigger": "Manual booking",
       "title": "Book a slot for a shop",
@@ -2242,6 +2276,37 @@
         "product_not_publishable": "The chosen product is not published, or not from this shop"
       },
       "productOptional": "Product (optional — leave empty to promote the shop itself)"
+    },
+    "calendar": {
+      "empty": "No slots to show.",
+      "legend": "Each cell is one week. Green: places free · Amber: partly booked · Red: full.",
+      "slot": "Slot",
+      "capacity": "Capacity {count}",
+      "cellFull": "Full",
+      "cellFree": "{count} free",
+      "cellTitle": "{slot} — week of {week}: {booked} of {capacity} booked"
+    },
+    "slotCalendar": {
+      "title": "Slot calendar",
+      "subtitle": "{vacant} of {total} slot-days this month are unsold.",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "slot": "Placement",
+      "perWeek": "{price} / week",
+      "vacantDays": "Unsold days",
+      "legendFull": "Fully booked",
+      "legendPartial": "Partly booked",
+      "legendVacant": "Unsold",
+      "bookingsTitle": "Bookings this month",
+      "clearSlotFilter": "Show every placement",
+      "runs": "{from} to {to}",
+      "status": {
+        "requested": "Awaiting decision",
+        "approved": "Booked",
+        "active": "Running"
+      },
+      "emptyTitle": "Nothing booked this month",
+      "emptyBody": "Every placement surface is free. Use “Book a placement” to sell one, or step forward a month."
     }
   },
   "adminRevenue": {
@@ -2855,6 +2920,108 @@
         "invalid_input": "Choose a rating between 1 and 5.",
         "not_purchased": "You can review a shop after it has fulfilled an order for you.",
         "not_found": "This shop is no longer available."
+      }
+    }
+  },
+  "adminFloors": {
+    "title": "Floor occupancy",
+    "subtitle": "{floors} floors · {shops} shops · {vacant} unit numbers with no tenant",
+    "floorTitle": "Floor {floor}",
+    "active": "Trading",
+    "pending": "Waiting",
+    "unverified": "Unverified",
+    "vacant": "Gaps",
+    "revenue": "Last {days} days",
+    "unit": "Unit {unit}",
+    "productCount": "{count} products",
+    "vacantUnit": "Unit {unit} — no tenant",
+    "status": {
+      "approved": "Trading",
+      "pending": "Waiting",
+      "suspended": "Suspended",
+      "closed": "Closed"
+    },
+    "emptyTitle": "No shop has a floor recorded yet",
+    "emptyBody": "This view is built from the floor and unit number on each shop. Add them and the plan fills itself in.",
+    "emptyAction": "Open the shop directory"
+  },
+  "adminSettlements": {
+    "title": "Settlements",
+    "subtitle": "How shops get paid — the shape of it, before it exists.",
+    "unavailableTitle": "Payouts are not part of this build",
+    "unavailableBody": "This demo runs entirely on one machine with no payment provider and no bank connection, so there is nothing here that could move money. Rather than show invented figures, the screen shows the structure a real settlement run would have — which is the part worth agreeing on now.",
+    "pill": "Not in this build",
+    "columns": {
+      "shop": "Shop",
+      "period": "Period",
+      "revenue": "Fulfilled revenue",
+      "commission": "Commission",
+      "net": "Net payable",
+      "status": "Payout"
+    },
+    "emptyTitle": "No settlement periods",
+    "emptyBody": "Rows would appear here once a period closes: one per shop, with the revenue it fulfilled, the mall’s commission at the agreed rate, and what is left to pay out.",
+    "todayTitle": "How it works today",
+    "todayBody": "Every order in this build is cash on delivery or HesabPay direct to the shop, so the shop already holds the money and the mall is not in the payment path at all. Commission would be invoiced separately. If Gulbahar wants to collect payments centrally instead, that is a different flow — and a bigger conversation than a settlement table."
+  },
+  "adminAudit": {
+    "title": "Audit log",
+    "subtitle": "{count} decisions by {actors} people in the last {days} days.",
+    "all": "Everything",
+    "older": "Older entries",
+    "emptyTitle": "Nothing recorded yet",
+    "emptyBody": "Every approval, rejection, verification, role change and settings edit is written here as it happens, with who did it and why.",
+    "targets": {
+      "shop": "Shop",
+      "product": "Product",
+      "review": "Review",
+      "category": "Category",
+      "user": "Account",
+      "campaign": "Placement",
+      "slot": "Placement slot",
+      "order": "Order",
+      "settings": "Settings"
+    },
+    "actions": {
+      "shop": {
+        "approve": "Approved a shop",
+        "reject": "Sent a shop back with changes",
+        "status": "Changed a shop’s status",
+        "create": "Created a shop",
+        "nudge": "Nudged a shop"
+      },
+      "verification": {
+        "verify": "Verified a shop",
+        "reject": "Rejected a verification",
+        "claim": "Took a verification for review"
+      },
+      "product": {
+        "unpublish": "Unpublished a product"
+      },
+      "review": {
+        "moderate": "Decided on a reported review"
+      },
+      "category": {
+        "save": "Saved a category",
+        "delete": "Deleted a category",
+        "reorder": "Reordered categories"
+      },
+      "user": {
+        "role": "Changed an account’s role",
+        "active": "Changed an account’s access"
+      },
+      "campaign": {
+        "approve": "Approved a placement",
+        "reject": "Rejected a placement",
+        "end": "Ended a placement early",
+        "create": "Booked a placement"
+      },
+      "slot": {
+        "update": "Changed placement pricing"
+      },
+      "settings": {
+        "update": "Changed marketplace settings",
+        "locales": "Changed the published languages"
       }
     }
   }

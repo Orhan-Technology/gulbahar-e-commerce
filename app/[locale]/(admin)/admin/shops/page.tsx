@@ -1,15 +1,18 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { MapPin, Phone, Plus, Store } from 'lucide-react';
+import { HeartPulse, MapPin, Phone, Plus, Store } from 'lucide-react';
 
 import { CreateShopDialog } from '@/components/admin/create-shop-dialog';
+import { ShopHealthList } from '@/components/admin/shop-health-list';
+import { RangeControl } from '@/components/console/range-control';
 import { ShopActions } from '@/components/admin/shop-actions';
 import { EmptyState } from '@/components/custom/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
+import { parseConsoleRange, type ConsoleRangeKey } from '@/lib/console-range';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopDirectory } from '@/lib/db/queries/admin';
 import { categoryTree, shopCountsByStatus } from '@/lib/db/queries/shops';
@@ -17,7 +20,7 @@ import { formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import type { ShopStatus } from '@/lib/db/schema';
 
-type Query = { status?: ShopStatus; q?: string };
+type Query = { status?: ShopStatus; q?: string; view?: string; range?: ConsoleRangeKey };
 
 const STATUS_BADGE: Record<ShopStatus, 'success' | 'warning' | 'secondary' | 'destructive'> = {
   approved: 'success',
@@ -26,7 +29,18 @@ const STATUS_BADGE: Record<ShopStatus, 'success' | 'warning' | 'secondary' | 'de
   closed: 'destructive',
 };
 
-/** Shop directory and pending queue (PRD §7.1). */
+/**
+ * Shop directory, pending queue, and shop health (PRD §7.1, Prompt C9).
+ *
+ * TWO VIEWS OF ONE LIST, not two pages. The directory answers "who is in the
+ * mall"; health answers "who should I call today". They are the same tenants
+ * asked a different question, and splitting them into separate routes would put
+ * a nav item between an admin and the only screen on this console that tells
+ * them what to do without being asked.
+ *
+ * The health view carries the console date range, because "slow to accept" is
+ * a statement about a period and a flag with no window behind it is an opinion.
+ */
 export default async function AdminShopsPage({
   params,
   searchParams,
@@ -43,13 +57,16 @@ export default async function AdminShopsPage({
   const [counts, tree] = await Promise.all([shopCountsByStatus(), categoryTree(locale)]);
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
 
+  const health = query.view === 'health';
+  const range = parseConsoleRange(query.range);
+
   const chips = [
-    { key: 'all', href: '/admin/shops', count: total, active: !query.status },
+    { key: 'all', href: '/admin/shops', count: total, active: !query.status && !health },
     ...(['pending', 'approved', 'suspended', 'closed'] as const).map((status) => ({
       key: status,
       href: `/admin/shops?status=${status}`,
       count: counts[status] ?? 0,
-      active: query.status === status,
+      active: !health && query.status === status,
     })),
   ];
 
@@ -57,6 +74,7 @@ export default async function AdminShopsPage({
     <div className="space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-lg font-bold">{t('title')}</h1>
+        {health && <RangeControl current={range.key} />}
         <CreateShopDialog
           categories={tree.map((root) => ({
             id: root.id,
@@ -88,6 +106,23 @@ export default async function AdminShopsPage({
             </Badge>
           </Link>
         ))}
+
+        {/* Separated from the status chips by a divider: it filters a different
+            axis, and sitting flush against them would read as a sixth status. */}
+        <span className="bg-border mx-1 w-px self-stretch" aria-hidden />
+
+        <Link
+          href="/admin/shops?view=health"
+          data-shops-view="health"
+          className={`rounded-pill flex items-center gap-1.5 border px-3 py-1.5 text-xs font-medium ${
+            health
+              ? 'border-primary bg-primary-50 text-primary'
+              : 'border-border bg-card hover:border-primary'
+          }`}
+        >
+          <HeartPulse className="h-3.5 w-3.5" aria-hidden />
+          {t('health.viewLabel')}
+        </Link>
       </div>
 
       {/* The pending queue is the live-demo moment, so it gets a standing note
@@ -98,8 +133,11 @@ export default async function AdminShopsPage({
         </p>
       )}
 
-      <Suspense key={`${query.status ?? 'all'}-${query.q ?? ''}`} fallback={<ShopListSkeleton />}>
-        <ShopList locale={locale} query={query} />
+      <Suspense
+        key={`${health ? 'health' : query.status ?? 'all'}-${query.q ?? ''}-${range.key}`}
+        fallback={<ShopListSkeleton />}
+      >
+        {health ? <ShopHealthList days={range.days} /> : <ShopList locale={locale} query={query} />}
       </Suspense>
     </div>
   );

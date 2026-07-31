@@ -303,3 +303,149 @@ export async function topPayingShops(limit = 6) {
     campaignCount: Number(row.campaign_count),
   }));
 }
+
+/* -------------------------------------------------------------------------- */
+/* The slot calendar (Prompt C9)                                              */
+
+export type SlotDay = {
+  /** YYYY-MM-DD. */
+  day: string;
+  booked: number;
+};
+
+export type SlotMonthRow = {
+  slotId: string;
+  slotKey: string;
+  slotName: LocalizedText;
+  capacity: number;
+  pricePerWeek: number;
+  days: SlotDay[];
+  /** Slot-days with nothing in them — the unsold inventory, in one number. */
+  vacantDays: number;
+};
+
+export type MonthBooking = {
+  id: string;
+  slotId: string;
+  slotKey: string;
+  slotName: LocalizedText;
+  shopId: string;
+  shopName: LocalizedText;
+  status: string;
+  startsAt: Date;
+  endsAt: Date;
+  pricePaid: number;
+};
+
+/**
+ * A month of placement inventory, slot by slot and day by day (Prompt C9).
+ *
+ * WHY A CALENDAR AND NOT A TOTAL. The revenue page already answers "what did
+ * placements earn"; nobody could answer "what is still for sale in October",
+ * which is the question that turns this from a report into a sales tool. An
+ * empty cell here is money the mall has not asked anyone for yet.
+ *
+ * The BOUNDS ARE PASSED IN, from lib/locale-month.ts — the caller knows which
+ * calendar the reader uses, and a Gregorian month hard-coded here would put the
+ * grid a fortnight away from the Dari header above it.
+ *
+ * DAY GRANULARITY, not weekly. Campaigns are sold by the week but they do not
+ * start on Mondays — a booking running the 12th to the 26th leaves the first
+ * eleven days of the month sellable, and a weekly grid would paint that whole
+ * first week as occupied and hide the gap.
+ *
+ * Only SOLD campaigns occupy a cell: approved and active. A requested booking
+ * is a hope, and colouring the calendar with hopes would oversell the slot the
+ * moment two shops ask for the same week.
+ */
+export async function slotMonth(start: Date, end: Date) {
+
+  const rows = await db.execute(sql`
+    with days as (
+      select generate_series(
+        ${start.toISOString()}::timestamptz,
+        ${end.toISOString()}::timestamptz - interval '1 day',
+        interval '1 day'
+      ) as day
+    )
+    select
+      ps.id::text as slot_id,
+      ps.key::text as slot_key,
+      ps.name as slot_name,
+      ps.capacity::int as capacity,
+      ps.price_per_week::int as price_per_week,
+      to_char(days.day, 'YYYY-MM-DD') as day,
+      (
+        select count(*)::int from campaigns c
+        where c.slot_id = ps.id
+          and c.status in ('approved', 'active')
+          -- Overlap, not containment: a campaign spanning the day occupies it.
+          and c.starts_at < days.day + interval '1 day'
+          and c.ends_at >= days.day
+      ) as booked
+    from promotion_slots ps
+    cross join days
+    order by ps.price_per_week desc, days.day asc
+  `);
+
+  const bySlot = new Map<string, SlotMonthRow>();
+  for (const row of rows as unknown as Array<Record<string, unknown>>) {
+    const slotId = String(row.slot_id);
+    const entry = bySlot.get(slotId) ?? {
+      slotId,
+      slotKey: String(row.slot_key),
+      slotName: row.slot_name as LocalizedText,
+      capacity: Number(row.capacity),
+      pricePerWeek: Number(row.price_per_week),
+      days: [],
+      vacantDays: 0,
+    };
+
+    const booked = Number(row.booked);
+    entry.days.push({ day: String(row.day), booked });
+    if (booked === 0) entry.vacantDays += 1;
+    bySlot.set(slotId, entry);
+  }
+
+  return [...bySlot.values()];
+}
+
+/** Every booking touching the month, for the list under the grid. */
+export async function monthBookings(start: Date, end: Date): Promise<MonthBooking[]> {
+
+  const rows = await db.execute(sql`
+    select
+      c.id::text as id,
+      c.slot_id::text as slot_id,
+      ps.key::text as slot_key,
+      ps.name as slot_name,
+      s.id::text as shop_id,
+      s.name as shop_name,
+      c.status::text as status,
+      c.starts_at as starts_at,
+      c.ends_at as ends_at,
+      c.price_paid::int as price_paid
+    from campaigns c
+    join promotion_slots ps on ps.id = c.slot_id
+    join shops s on s.id = c.shop_id
+    where c.starts_at < ${end.toISOString()}::timestamptz
+      and c.ends_at >= ${start.toISOString()}::timestamptz
+      -- Requested bookings ARE listed, unlike in the grid: a pending request is
+      -- exactly what an admin opened this page to decide.
+      and c.status in ('requested', 'approved', 'active')
+    order by c.starts_at asc
+  `);
+
+  return (rows as unknown as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id),
+    slotId: String(row.slot_id),
+    slotKey: String(row.slot_key),
+    slotName: row.slot_name as LocalizedText,
+    shopId: String(row.shop_id),
+    shopName: row.shop_name as LocalizedText,
+    status: String(row.status),
+    startsAt: new Date(String(row.starts_at)),
+    endsAt: new Date(String(row.ends_at)),
+    pricePaid: Number(row.price_paid),
+  }));
+}

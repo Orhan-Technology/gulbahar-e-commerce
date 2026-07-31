@@ -4,7 +4,6 @@ import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { pickLocale } from '../db/localized';
 import { campaigns, products, promotionSlots, shopMembers, shops, users } from '../db/schema';
@@ -12,6 +11,8 @@ import { slotAvailability } from '../db/queries/shop-promotions';
 import { formatDate } from '../format';
 import { notifyMany } from '../notify';
 import { slotAcceptsProduct, slotRequiresProduct } from '../promotions';
+import { requireAdminContext } from '../admin-context';
+import { recordAdminAction } from '../audit';
 
 /**
  * Promotion inventory and campaign decisions (PRD §7.3).
@@ -30,11 +31,6 @@ import { slotAcceptsProduct, slotRequiresProduct } from '../promotions';
 export type AdminActionResult<T = undefined> =
   ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
 
-async function requireAdminContext() {
-  const user = await currentUser();
-  if (!user?.id || user.role !== 'admin') return null;
-  return { userId: user.id };
-}
 
 function revalidatePromotions() {
   revalidatePath('/admin/promotions');
@@ -117,6 +113,15 @@ export async function updateSlot(input: z.input<typeof slotSchema>): Promise<Adm
     .set({ capacity: parsed.data.capacity, pricePerWeek: parsed.data.pricePerWeek })
     .where(eq(promotionSlots.id, parsed.data.slotId));
 
+  await recordAdminAction({
+    ...context,
+    action: 'slot.update',
+    targetType: 'slot',
+    targetId: parsed.data.slotId,
+    targetLabel: current.key,
+    detail: { capacity: parsed.data.capacity, pricePerWeek: parsed.data.pricePerWeek },
+  });
+
   revalidatePromotions();
   return { ok: true };
 }
@@ -174,6 +179,14 @@ export async function approveCampaign(campaignId: string): Promise<AdminActionRe
     endsAt: formatDate(updated.endsAt, locale),
   }));
 
+  await recordAdminAction({
+    ...context,
+    action: 'campaign.approve',
+    targetType: 'campaign',
+    targetId: updated.id,
+    targetLabel: slot ? slot.name.fa : null,
+  });
+
   revalidatePromotions();
   return { ok: true };
 }
@@ -214,6 +227,15 @@ export async function rejectCampaign(
     reason: parsed.data.reason,
   }));
 
+  await recordAdminAction({
+    ...context,
+    action: 'campaign.reject',
+    targetType: 'campaign',
+    targetId: updated.id,
+    targetLabel: slot ? slot.name.fa : null,
+    reason: parsed.data.reason,
+  });
+
   revalidatePromotions();
   return { ok: true };
 }
@@ -233,6 +255,13 @@ export async function endCampaign(campaignId: string): Promise<AdminActionResult
     .returning({ id: campaigns.id });
 
   if (!updated) return { ok: false, error: 'not_running' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'campaign.end',
+    targetType: 'campaign',
+    targetId: updated.id,
+  });
 
   revalidatePromotions();
   return { ok: true };
@@ -333,6 +362,15 @@ export async function createCampaignForShop(
     slotName: slotRow ? pickLocale(slotRow.name, locale) : '',
     endsAt: formatDate(endsAt, locale),
   }));
+
+  await recordAdminAction({
+    ...context,
+    action: 'campaign.create',
+    targetType: 'campaign',
+    targetId: created.id,
+    targetLabel: slotRow ? slotRow.name.fa : null,
+    detail: { weeks: parsed.data.weeks, pricePaid },
+  });
 
   revalidatePromotions();
   return { ok: true, data: { id: created.id, pricePaid } };

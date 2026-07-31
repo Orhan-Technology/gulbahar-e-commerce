@@ -109,7 +109,37 @@ for (const file of [...sourceFiles('app'), ...sourceFiles('components')]) {
   }
 }
 
-/* 3 — fa/en parity */
+/*
+ * 3 — no literal dot inside a key name.
+ *
+ * next-intl uses "." to express nesting, so a key written as
+ * `"shop.approve": "…"` is not a key called shop.approve — it throws
+ * INVALID_KEY the moment the tree is loaded, and the page 500s at render with
+ * a message that names the character rather than the file. Caught here because
+ * the natural way to write it is exactly the way that breaks: the audit log's
+ * action codes ARE dotted, and mirroring them one-for-one into messages looks
+ * obviously right (Prompt C9).
+ */
+function dottedKeys(tree: Tree, prefix = ''): string[] {
+  const found: string[] = [];
+  for (const [key, value] of Object.entries(tree)) {
+    if (key.includes('.')) found.push(`${prefix}${key}`);
+    if (value && typeof value === 'object') {
+      found.push(...dottedKeys(value as Tree, `${prefix}${key}.`));
+    }
+  }
+  return found;
+}
+
+for (const [locale, tree] of Object.entries(LOCALES)) {
+  for (const key of dottedKeys(tree as Tree)) {
+    problems.push(
+      `messages/${locale}.json: "${key}" contains a dot — next-intl reads that as nesting and throws INVALID_KEY`,
+    );
+  }
+}
+
+/* 4 — fa/en parity */
 const faKeys = new Set(flatten(LOCALES.fa));
 const enKeys = new Set(flatten(LOCALES.en));
 for (const key of faKeys) if (!enKeys.has(key)) problems.push(`messages/en.json: missing ${key}`);

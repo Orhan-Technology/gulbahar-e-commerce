@@ -5,10 +5,21 @@ import { getTranslations } from 'next-intl/server';
 import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { currentUser } from '../auth/guards';
 import { db } from '../db';
-import { categories, orderItems, orders, products, reviews, shopMembers, users } from '../db/schema';
+import {
+  categories,
+  orderItems,
+  orders,
+  products,
+  reviews,
+  shopMembers,
+  shops,
+  users,
+} from '../db/schema';
+import { shopOwnerAndStaff } from '../db/queries/admin';
 import { notify } from '../notify';
+import { requireAdminContext } from '../admin-context';
+import { recordAdminAction } from '../audit';
 
 /**
  * Catalogue governance (PRD §7.2).
@@ -24,11 +35,6 @@ import { notify } from '../notify';
 export type AdminActionResult<T = undefined> =
   ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
 
-async function requireAdminContext() {
-  const user = await currentUser();
-  if (!user?.id || user.role !== 'admin') return null;
-  return { userId: user.id };
-}
 
 /* -------------------------------------------------------------------------- */
 /* Products — unpublish only                                                  */
@@ -55,9 +61,17 @@ export async function unpublishProduct(productId: string): Promise<AdminActionRe
     .update(products)
     .set({ status: 'unpublished' })
     .where(and(eq(products.id, parsed.data), eq(products.status, 'published')))
-    .returning({ slug: products.slug });
+    .returning({ slug: products.slug, title: products.title });
 
   if (!updated) return { ok: false, error: 'not_published' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'product.unpublish',
+    targetType: 'product',
+    targetId: parsed.data,
+    targetLabel: updated.title.fa,
+  });
 
   revalidatePath('/admin/products');
   revalidatePath('/products');
@@ -151,11 +165,27 @@ export async function saveCategory(
         .where(eq(categories.id, data.id))
         .returning({ id: categories.id });
       if (!updated) return { ok: false, error: 'not_found' };
+      await recordAdminAction({
+        ...context,
+        action: 'category.save',
+        targetType: 'category',
+        targetId: updated.id,
+        targetLabel: data.name.fa,
+        detail: { mode: 'update', slug: data.slug },
+      });
       revalidateTaxonomy();
       return { ok: true, data: { id: updated.id } };
     }
 
     const [created] = await db.insert(categories).values(values).returning({ id: categories.id });
+    await recordAdminAction({
+      ...context,
+      action: 'category.save',
+      targetType: 'category',
+      targetId: created.id,
+      targetLabel: data.name.fa,
+      detail: { mode: 'create', slug: data.slug },
+    });
     revalidateTaxonomy();
     return { ok: true, data: { id: created.id } };
   } catch (error) {
@@ -201,9 +231,20 @@ export async function deleteCategory(categoryId: string): Promise<AdminActionRes
   const [deleted] = await db
     .delete(categories)
     .where(eq(categories.id, parsed.data))
-    .returning({ id: categories.id });
+    .returning({ id: categories.id, name: categories.name, slug: categories.slug });
 
   if (!deleted) return { ok: false, error: 'not_found' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'category.delete',
+    targetType: 'category',
+    // The row is gone, so the label is the ONLY record of what was removed —
+    // exactly the case the snapshot column exists for.
+    targetId: null,
+    targetLabel: deleted.name.fa,
+    detail: { slug: deleted.slug },
+  });
 
   revalidateTaxonomy();
   return { ok: true };
@@ -220,6 +261,13 @@ export async function reorderCategories(orderedIds: string[]): Promise<AdminActi
   for (const [index, id] of parsed.data.entries()) {
     await db.update(categories).set({ sort: index }).where(eq(categories.id, id));
   }
+
+  await recordAdminAction({
+    ...context,
+    action: 'category.reorder',
+    targetType: 'category',
+    detail: { count: parsed.data.length },
+  });
 
   revalidateTaxonomy();
   return { ok: true };
@@ -265,10 +313,19 @@ export async function moderateReview(
   if (!updated) return { ok: false, error: 'not_found' };
 
   const [product] = await db
-    .select({ slug: products.slug })
+    .select({ slug: products.slug, title: products.title })
     .from(products)
     .where(eq(products.id, updated.productId))
     .limit(1);
+
+  await recordAdminAction({
+    ...context,
+    action: 'review.moderate',
+    targetType: 'review',
+    targetId: parsed.data.reviewId,
+    targetLabel: product?.title.fa ?? null,
+    detail: { decision: parsed.data.decision },
+  });
 
   // Removing a review changes the product's derived rating, which is on cards
   // everywhere as well as the product page.
@@ -300,15 +357,24 @@ export async function setUserActive(userId: string, active: boolean): Promise<Ad
 
   // An admin locking themselves out mid-demo would be unrecoverable without a
   // database console.
-  if (parsed.data.userId === context.userId) return { ok: false, error: 'cannot_deactivate_self' };
+  if (parsed.data.userId === context.actorId) return { ok: false, error: 'cannot_deactivate_self' };
 
   const [updated] = await db
     .update(users)
     .set({ active: parsed.data.active })
     .where(eq(users.id, parsed.data.userId))
-    .returning({ id: users.id });
+    .returning({ id: users.id, name: users.name, phone: users.phone });
 
   if (!updated) return { ok: false, error: 'not_found' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'user.active',
+    targetType: 'user',
+    targetId: updated.id,
+    targetLabel: updated.name ?? updated.phone,
+    detail: { active: String(parsed.data.active) },
+  });
 
   revalidatePath('/admin/users');
   return { ok: true };
@@ -363,6 +429,14 @@ export async function nudgeShopAboutOrder(orderId: string): Promise<AdminActionR
     values: { reference: order.reference },
   });
 
+  await recordAdminAction({
+    ...context,
+    action: 'shop.nudge',
+    targetType: 'order',
+    targetId: order.id,
+    targetLabel: order.reference,
+  });
+
   revalidatePath('/admin');
   revalidatePath('/admin/orders');
   return { ok: true };
@@ -373,11 +447,11 @@ export async function nudgeShopAboutOrder(orderId: string): Promise<AdminActionR
  *
  * The NOTE IS REQUIRED and is not decoration. A role change is the single most
  * consequential thing on this screen — promoting to shopkeeper opens the seller
- * panel, promoting to admin hands over the whole platform — and the demo has no
- * audit table, so the note is delivered to the person it happened to as an
- * in-app notification. That makes it a real record in the notification log
- * rather than a field that gets dropped: the admin has to say why, and the
- * subject gets told.
+ * panel, promoting to admin hands over the whole platform — so it is recorded
+ * twice: once in the audit log with the reason (Prompt C9), and once as an
+ * in-app notification to the person it happened to. Neither is redundant. The
+ * log is what mall management reads afterwards; the notification is what stops
+ * a role change from being something done to someone silently.
  *
  * Two guards, both about not stranding people:
  * - Never your own account. An admin demoting themselves loses the console with
@@ -404,10 +478,16 @@ export async function setUserRole(
     return { ok: false, error: parsed.error.issues[0]?.message ?? 'invalid_input' };
   }
 
-  if (parsed.data.userId === context.userId) return { ok: false, error: 'cannot_change_own_role' };
+  if (parsed.data.userId === context.actorId) return { ok: false, error: 'cannot_change_own_role' };
 
   const [subject] = await db
-    .select({ id: users.id, role: users.role, locale: users.locale })
+    .select({
+      id: users.id,
+      role: users.role,
+      locale: users.locale,
+      name: users.name,
+      phone: users.phone,
+    })
     .from(users)
     .where(eq(users.id, parsed.data.userId))
     .limit(1);
@@ -443,6 +523,95 @@ export async function setUserRole(
     values: { role: t(parsed.data.role), note: parsed.data.note },
   });
 
+  await recordAdminAction({
+    ...context,
+    action: 'user.role',
+    targetType: 'user',
+    targetId: subject.id,
+    targetLabel: subject.name ?? subject.phone,
+    reason: parsed.data.note,
+    detail: { from: subject.role, to: parsed.data.role },
+  });
+
   revalidatePath('/admin/users');
+  return { ok: true };
+}
+
+/**
+ * Nudges a shop about something on the health list (Prompt C9).
+ *
+ * The landlord's move, and the ONLY one available here. Management cannot
+ * publish a product for a tenant, accept their orders or edit their page —
+ * admin owns the platform, shops own their content (PRD §3.1) — so what is left
+ * is telling them, in writing, that customers are seeing it.
+ *
+ * The MESSAGE NAMES THE ISSUE. A notification reading "please review your shop"
+ * is noise; "your median time to accept an order is 19 hours" is something a
+ * shopkeeper can act on this afternoon. The caller passes the flag, the
+ * shopkeeper reads it in their own language.
+ */
+const nudgeSchema = z.object({
+  shopId: z.string().uuid(),
+  flag: z.enum([
+    'slow_acceptance',
+    'high_rejection',
+    'falling_rating',
+    'no_products',
+    'verification_expired',
+  ]),
+});
+
+export async function nudgeShopAboutHealth(
+  input: z.input<typeof nudgeSchema>,
+): Promise<AdminActionResult> {
+  const context = await requireAdminContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = nudgeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [shop] = await db
+    .select({ id: shops.id, name: shops.name })
+    .from(shops)
+    .where(and(eq(shops.id, parsed.data.shopId), eq(shops.status, 'approved')))
+    .limit(1);
+
+  if (!shop) return { ok: false, error: 'not_found' };
+
+  const members = await shopOwnerAndStaff(shop.id);
+  const owners = members.filter((member) => member.role === 'owner');
+  if (owners.length === 0) return { ok: false, error: 'no_owner' };
+
+  for (const owner of owners) {
+    // The issue text is resolved in the OWNER's language, the same substitution
+    // notify() makes — ps falls back to Dari (PRD §11).
+    const t = await getTranslations({
+      locale: owner.locale === 'ps' ? 'fa' : owner.locale,
+      // NOT `…health.nudge`: that key is already the button's label, and a
+      // messages key may be a string OR a namespace, never both — the object
+      // silently wins and every t('nudge') renders the raw key (CLAUDE.md).
+      namespace: 'adminShops.health.nudgeIssues',
+    });
+
+    await notify({
+      eventKey: 'shop.nudged',
+      channel: 'inapp',
+      recipientUserId: owner.id,
+      recipientRole: 'shopkeeper',
+      locale: owner.locale,
+      values: { issue: t(parsed.data.flag) },
+    });
+  }
+
+  await recordAdminAction({
+    ...context,
+    action: 'shop.nudge',
+    targetType: 'shop',
+    targetId: shop.id,
+    targetLabel: shop.name.fa,
+    detail: { flag: parsed.data.flag },
+  });
+
+  revalidatePath('/admin/shops');
   return { ok: true };
 }

@@ -12,9 +12,11 @@ import type { LocalizedText } from '../schema/shared';
  *   - GMV counts what CUSTOMERS paid — orders.total, including delivery — not the
  *     sum of shop subtotals. Attribution by shop belongs in the top-shops table,
  *     where a multi-shop order is split correctly through order_items.
- *   - Rejected orders are excluded from money but INCLUDED in the status mix, since
- *     a rejection rate is exactly the kind of thing platform reporting exists to
- *     surface.
+ *   - Money is FULFILLED orders only, everywhere, and the predicate is applied
+ *     per COLUMN rather than per query so a revenue figure and an order count
+ *     can sit in one row without agreeing about what counts (Prompt C2).
+ *     Rejected orders stay INCLUDED in the status mix, since a rejection rate
+ *     is exactly the kind of thing platform reporting exists to surface.
  *
  * `days` rather than a Date, so the clock is read here and not during render
  * (React 19 purity). Aggregates are cast — see queries/fragments.ts.
@@ -104,12 +106,17 @@ export async function topShops(days: PlatformPeriod, limit = 8) {
       s.id::text as id,
       s.slug as slug,
       s.name as name,
-      sum(oi.price_snapshot * oi.quantity)::int as revenue,
-      count(distinct o.id)::int as order_count
+      -- ONE PREDICATE PER METRIC (Prompt C2), applied per column rather than
+      -- to the whole query: revenue is FULFILLED money, order_count is business
+      -- received. Sharing one <> 'rejected' between them made this column sum to
+      -- more than the GMV tile above it, which is the drift C2 exists to stop.
+      coalesce(sum(oi.price_snapshot * oi.quantity)
+        filter (where o.status = 'fulfilled'), 0)::int as revenue,
+      count(distinct o.id) filter (where o.status <> 'rejected')::int as order_count
     from order_items oi
     join orders o on o.id = oi.order_id
     join shops s on s.id = oi.shop_id
-    where o.created_at >= ${since(days)}::timestamptz and o.status <> 'rejected'
+    where o.created_at >= ${since(days)}::timestamptz
     group by s.id, s.slug, s.name
     order by revenue desc
     limit ${limit}
@@ -130,15 +137,16 @@ export async function topCategories(days: PlatformPeriod, limit = 8) {
     select
       coalesce(root.id, leaf.id)::text as id,
       coalesce(root.name, leaf.name) as name,
-      sum(oi.price_snapshot * oi.quantity)::int as revenue,
-      sum(oi.quantity)::int as units
+      coalesce(sum(oi.price_snapshot * oi.quantity)
+        filter (where o.status = 'fulfilled'), 0)::int as revenue,
+      coalesce(sum(oi.quantity) filter (where o.status = 'fulfilled'), 0)::int as units
     from order_items oi
     join orders o on o.id = oi.order_id
     join products p on p.id = oi.product_id
     join categories leaf on leaf.id = p.category_id
     -- A product sits on a leaf; managers think in top-level categories.
     left join categories root on root.id = leaf.parent_id
-    where o.created_at >= ${since(days)}::timestamptz and o.status <> 'rejected'
+    where o.created_at >= ${since(days)}::timestamptz
     group by 1, 2
     order by revenue desc
     limit ${limit}
