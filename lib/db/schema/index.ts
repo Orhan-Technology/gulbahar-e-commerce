@@ -18,4 +18,5 @@ export * from './promotions';
 export * from './notifications';
 export * from './settings';
 export * from './verification';
+export * from './shop-social';
 export * from './relations';

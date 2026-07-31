@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Banknote, MapPin, Smartphone, Store } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
+import { RateShopsPrompt } from '@/components/shop/account/rate-shops-prompt';
 import { ReorderButton } from '@/components/shop/account/reorder-button';
 import { requireUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
@@ -61,6 +62,16 @@ export default async function OrderDetailPage({
           )}
         />
       </section>
+
+      {/* "How was it?" — the shop-service review, offered once the order is
+          done and gone once it is written (Prompt C8). */}
+      {order.status === 'fulfilled' && (
+        <RateShopsPrompt
+          orderId={order.id}
+          orderReference={order.reference}
+          userId={session.id}
+        />
+      )}
 
       {/* The append-only event chain, which is the audit trail (PRD §14) */}
       {order.events.length > 1 && (

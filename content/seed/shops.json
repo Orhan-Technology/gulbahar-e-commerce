@@ -9,11 +9,16 @@
       "en": "Kabul Electronics"
     },
     "description": {
-      "fa": "فروش لوازم برقی و الکترونیکی اصل با گرانتی. بیش از ۱۵ سال در مرکز گلبهار.",
-      "en": "Genuine electronics and appliances with warranty. Over 15 years in Gulbahar Center."
+      "fa": "فروش لوازم برقی و الکترونیکی اصل با گرانتی رسمی و نصب رایگان.",
+      "en": "Genuine electronics and appliances with an official warranty and free installation."
     },
     "hours": "8:00-19:00",
-    "phone": "0700100201"
+    "phone": "0700100201",
+    "since": 2009,
+    "story": {
+      "fa": "الکترونیک کابل کار خود را با یک پیشخوان کوچک رادیو و پکه آغاز کرد و امروز یکی از بزرگ‌ترین فروشگاه‌های لوازم برقی منزلت دوم گلبهار است. هر دستگاه پیش از فروش آزمایش می‌شود و گرانتی رسمی دارد. تیم ما نصب و آموزش کار با دستگاه را در خود دکان انجام می‌دهد.",
+      "en": "Kabul Electronics started with one counter of radios and fans and is now among the largest appliance shops on the second floor. Every unit is tested before it is sold and carries a written warranty. Our staff will set the device up and show you how it works, right at the counter."
+    }
   },
   {
     "slug": "markaz-mobile",
@@ -29,7 +34,12 @@
       "en": "Official mobile and tablet dealer. Trade-in, buy and sell at fair prices."
     },
     "hours": "8:30-20:00",
-    "phone": "0700100202"
+    "phone": "0700100202",
+    "since": 2014,
+    "story": {
+      "fa": "مرکز موبایل نمایندگی رسمی چند برند مشهور است و از روز نخست روی یک اصل ایستاده: قیمت واحد برای همه. تبدیل گوشی کهنه به نو، خرید و فروش دست دوم و انتقال معلومات به‌صورت رایگان انجام می‌شود.",
+      "en": "Markaz Mobile is an authorised dealer for several well-known brands, and has kept one rule since the first day: one price for everyone. Trade in an old handset, buy or sell second-hand, and we move your data across free of charge."
+    }
   },
   {
     "slug": "bahar-cosmetics",
@@ -45,7 +55,12 @@
       "en": "Authentic cosmetics from well-known international brands. Free advice from our staff."
     },
     "hours": "9:00-19:30",
-    "phone": "0700100203"
+    "phone": "0700100203",
+    "since": 2016,
+    "story": {
+      "fa": "آرایشی بهار محصولات اصل را مستقیم از نمایندگی‌های منطقه می‌آورد و هر قلم را با کد اصالت می‌فروشد. مشاوره پوست و انتخاب رنگ در دکان رایگان است و می‌توانید هر محصول را پیش از خرید امتحان کنید.",
+      "en": "Bahar Cosmetics brings authentic lines straight from regional distributors and sells every item with its authenticity code. Skin advice and shade matching are free in store, and you are welcome to try anything before you buy."
+    }
   },
   {
     "slug": "golden-perfumes",
@@ -61,7 +76,12 @@
       "en": "Authentic oriental and French fragrances. Try any scent in store."
     },
     "hours": "9:00-20:00",
-    "phone": "0700100204"
+    "phone": "0700100204",
+    "since": 2012,
+    "story": {
+      "fa": "عطریات طلایی عطرهای شرقی و فرانسوی را در کنار هم دارد و ترکیب سفارشی نیز می‌سازد. هر عطر را می‌توانید در دکان امتحان کنید؛ کارمندان ما شما را برای انتخاب رایحه مناسب فصل و مناسبت راهنمایی می‌کنند.",
+      "en": "Golden Perfumes carries oriental and French houses side by side and blends custom scents to order. Try anything on the counter — our staff will help you find a fragrance that suits the season and the occasion."
+    }
   },
   {
     "slug": "noor-watches",
@@ -77,7 +97,12 @@
       "en": "Men's and women's watches from trusted brands. On-site repair and battery change."
     },
     "hours": "8:30-19:00",
-    "phone": "0700100205"
+    "phone": "0700100205",
+    "since": 2007,
+    "story": {
+      "fa": "ساعت‌سازی نور از سال‌ها پیش در منزل دوم گلبهار کار می‌کند و در کنار فروش، ورکشاپ ترمیم خود را دارد. تعویض بطری، تنظیم بند و ترمیم ماشین ساعت در همان روز انجام می‌شود.",
+      "en": "Noor Watches has traded on the second floor for years and keeps its own repair bench beside the display. Battery changes, strap fitting and movement repairs are done the same day."
+    }
   },
   {
     "slug": "ariana-clothing",
@@ -93,7 +118,12 @@
       "en": "Men's and women's clothing, Turkish and locally tailored. All sizes available."
     },
     "hours": "9:00-19:30",
-    "phone": "0700100206"
+    "phone": "0700100206",
+    "since": 2011,
+    "story": {
+      "fa": "پوشاک آریانا لباس ترکی وارداتی را در کنار دوخت محلی عرضه می‌کند و خیاط دکان تنگ و کوتاه‌کاری را رایگان انجام می‌دهد. از سایز خُرد تا سایز بزرگ همه موجود است.",
+      "en": "Ariana Clothing stocks imported Turkish lines alongside locally tailored pieces, and our in-shop tailor takes in and shortens free of charge. Every size from small to extra large is on the rail."
+    }
   },
   {
     "slug": "pamir-shoes",
@@ -109,7 +139,12 @@
       "en": "Genuine leather shoes for men and women. School and sports shoes also available."
     },
     "hours": "8:00-19:00",
-    "phone": "0700100207"
+    "phone": "0700100207",
+    "since": 2013,
+    "story": {
+      "fa": "کفش پامیر روی چرم اصل تمرکز دارد و برای هر جفت ضمانت درز و تخته می‌دهد. بخش کفش مکتب و ورزشی در آغاز سال تعلیمی بزرگ‌ترین بخش دکان می‌شود.",
+      "en": "Pamir Shoes works in genuine leather and guarantees the stitching and the sole on every pair. The school and sports section becomes the biggest part of the shop when term starts."
+    }
   },
   {
     "slug": "salam-home",
@@ -125,7 +160,12 @@
       "en": "Every kitchen and household item in one place. Free delivery within Kabul."
     },
     "hours": "8:00-19:00",
-    "phone": "0700100208"
+    "phone": "0700100208",
+    "since": 2010,
+    "story": {
+      "fa": "لوازم خانه سلام هر چیزی را که یک آشپزخانه ضرورت دارد در یک جا جمع کرده است، از دیگ و پطنوس تا وسایل برقی کوچک. رسانیدن در داخل شهر کابل رایگان است.",
+      "en": "Salam Home Appliances gathers everything a kitchen needs in one place, from pots and trays to small electricals. Delivery anywhere inside Kabul is free."
+    }
   },
   {
     "slug": "kudak-toys",
@@ -141,7 +181,12 @@
       "en": "Safe, well-made toys for every age. Birthday and Eid gifts."
     },
     "hours": "9:00-19:00",
-    "phone": "0700100209"
+    "phone": "0700100209",
+    "since": 2017,
+    "story": {
+      "fa": "بازی‌های کودک تنها اسباب‌بازی‌هایی را می‌آورد که مواد آن بی‌خطر و مناسب سن کودک باشد. بسته‌بندی هدیه برای تولد و عید در دکان و بدون هزینه انجام می‌شود.",
+      "en": "Kudak Toys stocks only toys whose materials are safe and age-appropriate. Gift wrapping for birthdays and Eid is done at the counter at no charge."
+    }
   },
   {
     "slug": "danesh-stationery",
@@ -157,7 +202,12 @@
       "en": "School and office stationery, books and art supplies. Discounts for schools."
     },
     "hours": "7:30-18:30",
-    "phone": "0700100210"
+    "phone": "0700100210",
+    "since": 2008,
+    "story": {
+      "fa": "قرطاسیه دانش از آغاز با مکاتب ناحیه کار کرده و برای خریدهای صنفی تخفیف می‌دهد. لوازم رسامی، کتاب و قرطاسیه دفتر همیشه موجود است.",
+      "en": "Danesh Stationery has supplied schools in the district since it opened and gives a discount on class-sized orders. Art materials, books and office stationery are always in stock."
+    }
   },
   {
     "slug": "herat-jewellery",
@@ -173,7 +223,12 @@
       "en": "Gold and silver with guaranteed purity. Custom jewellery made to order."
     },
     "hours": "9:00-18:30",
-    "phone": "0700100211"
+    "phone": "0700100211",
+    "since": 2005,
+    "story": {
+      "fa": "زرگری هرات با عیار تضمین‌شده کار می‌کند و برگه عیار را با هر خرید می‌دهد. سفارش ساخت، ترمیم و تبدیل طلای کهنه در ورکشاپ خود دکان انجام می‌شود.",
+      "en": "Herat Jewellery works to a guaranteed purity and issues an assay slip with every purchase. Custom pieces, repairs and old-gold exchange are done in our own workshop."
+    }
   },
   {
     "slug": "zarin-bags",
@@ -189,7 +244,12 @@
       "en": "Handbags, school backpacks and travel luggage. Durable goods at fair prices."
     },
     "hours": "8:30-19:00",
-    "phone": "0700100212"
+    "phone": "0700100212",
+    "since": 2015,
+    "story": {
+      "fa": "بکس و بورس زرین از بکس مکتب تا بکس سفر را عرضه می‌کند و روی زیپ و بند هر بکس ضمانت می‌دهد. ترمیم زیپ برای مشتریان دکان رایگان است.",
+      "en": "Zarin Bags & Luggage runs from school backpacks to travel cases, and guarantees the zip and the straps on everything it sells. Zip repairs are free for our customers."
+    }
   },
   {
     "slug": "alborz-sports",
@@ -205,7 +265,12 @@
       "en": "Sportswear and equipment for football, cricket and the gym."
     },
     "hours": "9:00-19:30",
-    "phone": "0700100213"
+    "phone": "0700100213",
+    "since": 2018,
+    "story": {
+      "fa": "ورزشی البرز لوازم فوتبال، کرکت و جیم را از برندهای شناخته‌شده می‌آورد و برای تیم‌ها لباس با نام و نمبر چاپ می‌کند. سایزبندی اطفال نیز کامل است.",
+      "en": "Alborz Sportswear carries football, cricket and gym gear from known brands, and prints team kit with names and numbers. Children’s sizes are stocked in full."
+    }
   },
   {
     "slug": "kabul-dried-fruit",
@@ -222,6 +287,11 @@
     },
     "hours": "8:00-19:00",
     "phone": "0700100214",
-    "status": "pending"
+    "status": "pending",
+    "since": 2006,
+    "story": {
+      "fa": "خشکه‌بار و شیرینی کابل پسته، بادام و کشمش را مستقیم از باغداران شمالی می‌گیرد و شیرینی خانگی خود را روزانه تازه می‌سازد. بسته‌بندی هدیه برای مهمانی و عید سفارش گرفته می‌شود.",
+      "en": "Kabul Dried Fruit & Sweets buys pistachios, almonds and raisins straight from growers in the north, and makes its own sweets fresh each day. Gift boxes for guests and Eid are made to order."
+    }
   }
 ]

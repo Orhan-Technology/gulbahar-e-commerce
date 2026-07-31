@@ -463,7 +463,14 @@
     "noMatchTitle": "Nothing in this shop for \"{term}\"",
     "noMatchBody": "Try a different term.",
     "noProductsTitle": "This shop has no products yet",
-    "noProductsBody": "Products will be added soon."
+    "noProductsBody": "Products will be added soon.",
+    "whatsapp": "WhatsApp",
+    "openState": {
+      "open": "Open now",
+      "closingSoon": "Closing in {minutes} min",
+      "closed": "Closed",
+      "opensAt": "· opens {time}"
+    }
   },
   "cart": {
     "increaseQuantity": "Increase quantity",
@@ -949,7 +956,11 @@
     },
     "shopCount": "{n, plural, one {# shop} other {{count} shops}}",
     "emptyFilteredTitle": "No orders in this state",
-    "emptyFilteredBody": "Try another state, or look at all your orders."
+    "emptyFilteredBody": "Try another state, or look at all your orders.",
+    "rateShops": {
+      "title": "How was it?",
+      "body": "Tell other customers how this shop handled your order — the call, the wait, the packing. It takes a moment and it is the thing people read before buying from someone new."
+    }
   },
   "wishlist": {
     "title": "Wishlist",
@@ -1143,6 +1154,10 @@
     "payments": {
       "title": "Payment methods",
       "body": "Cash on delivery and HesabPay are chosen at checkout. Saved payment methods are coming."
+    },
+    "following": {
+      "title": "Shops you follow",
+      "browse": "Browse shops"
     }
   },
   "dashboardNav": {
@@ -2757,5 +2772,90 @@
     "popoverTitle": "Verified shop",
     "popoverBody": "Gulbahar Center management has confirmed this is a registered business operating at this unit in the mall.",
     "verifiedOn": "Verified on {date}"
+  },
+  "shopPage": {
+    "follow": "Follow",
+    "following": "Following",
+    "followed": "You are following this shop. We will tell you about new products and offers.",
+    "inShopCategories": "Categories in this shop",
+    "allInShop": "Everything",
+    "errors": {
+      "requires_auth": "Sign in first.",
+      "invalid_input": "Something was not right. Try again.",
+      "not_found": "This shop is no longer available.",
+      "not_purchased": "You can review a shop after it has fulfilled an order for you."
+    },
+    "tabs": {
+      "label": "Shop sections",
+      "products": "Products",
+      "offers": "Offers",
+      "about": "About",
+      "reviews": "Reviews"
+    },
+    "rows": {
+      "topSellers": {
+        "title": "Best sellers",
+        "hint": "What this shop sells most of."
+      },
+      "trending": {
+        "title": "Most viewed",
+        "hint": "What customers have been looking at this week."
+      },
+      "newArrivals": {
+        "title": "New arrivals",
+        "hint": "The latest additions to this shop."
+      }
+    },
+    "offers": {
+      "scopeShop": "Everything in this shop",
+      "scopeProducts": "{count} selected products",
+      "until": "Until {date}",
+      "emptyTitle": "No offer running right now",
+      "emptyBody": "Shops set their own discounts and they usually run for a few days. Follow this shop and you will see its next one.",
+      "emptyAction": "Browse the products"
+    },
+    "about": {
+      "storyTitle": "About this shop",
+      "noStory": "This shop has not written about itself yet.",
+      "hoursLabel": "Opening hours",
+      "phoneLabel": "Phone",
+      "locationLabel": "In the mall",
+      "floorUnitValue": "Floor {floor} · Unit {unit}",
+      "tenureLabel": "At Gulbahar Center",
+      "tenureValue": "{years} years",
+      "verifiedTitle": "Verified by mall management",
+      "verifiedBody": "Gulbahar Center management has confirmed that this is a registered business trading from this unit. It is not a rating and it says nothing about prices or quality.",
+      "verifiedOn": "Confirmed {date}",
+      "planTitle": "Floor {floor}",
+      "planEntrance": "Entrance",
+      "planStairs": "Stairs",
+      "planHint": "This shop is unit {unit} on floor {floor}. The plan is a guide, not to scale."
+    },
+    "reviews": {
+      "title": "What customers say about this shop",
+      "subtitle": "These reviews are about the service — answering the phone, how long the order took, how it was packed. Reviews of a particular item are on that product’s page.",
+      "verifiedPurchase": "Verified order",
+      "emptyTitle": "No reviews of this shop yet",
+      "emptyBody": "Only customers whose orders this shop has fulfilled can write one, so the first will appear after the next delivery."
+    },
+    "reviewForm": {
+      "trigger": "How was it?",
+      "title": "Review this shop",
+      "description": "About order {reference} — the service, not the item itself.",
+      "ratingLabel": "Your rating",
+      "bodyLabel": "What happened?",
+      "bodyPlaceholder": "Did they answer the phone? Was the order ready when they said? How was it packed?",
+      "bodyOptional": "Optional, but it is the part other customers read.",
+      "cancel": "Cancel",
+      "submit": "Post review",
+      "saving": "Posting…",
+      "created": "Thank you — your review is now on the shop page.",
+      "errors": {
+        "requires_auth": "Sign in first.",
+        "invalid_input": "Choose a rating between 1 and 5.",
+        "not_purchased": "You can review a shop after it has fulfilled an order for you.",
+        "not_found": "This shop is no longer available."
+      }
+    }
   }
 }

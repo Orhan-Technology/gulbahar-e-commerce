@@ -55,21 +55,33 @@ export const productWishlistCount: SQL<number> = sql<number>`(
 )`;
 
 /**
- * Shop rating derived from that shop's product reviews (PRD §5.5) rather than
- * stored, so it can never drift from the reviews it summarises.
- * Outer query must select FROM shops.
+ * A shop's rating is the average of its SHOP reviews — the service ones — not
+ * of its product reviews (Prompt C8).
+ *
+ * It used to average the products, which was the only thing available before
+ * shop_reviews existed. The moment the shop page grew a reviews tab that number
+ * became a contradiction on a single screen: the hero said 4.0 from thirteen
+ * product reviews while the tab under it said 3.4 from twelve service reviews,
+ * and a reader has no way to tell which one is "this shop's rating".
+ *
+ * The service average is also the more honest answer to the question a shop
+ * card is asked. A shop does not choose how good a Samsung television is; it
+ * chooses whether to answer the phone, whether the order is ready when it said,
+ * and whether it tells you the truth about stock. Product quality belongs to
+ * the product, and that is exactly where product reviews still show it.
+ *
+ * Derived rather than stored, as before, so it cannot drift from the rows it
+ * summarises. Outer query must select FROM shops.
  */
 export const shopRatingAvg: SQL<number> = sql<number>`coalesce((
-  select avg(r.rating)::float8 from reviews r
-  join products p on p.id = r.product_id
-  where p.shop_id = shops.id and r.status = 'visible'
+  select avg(sr.rating)::float8 from shop_reviews sr
+  where sr.shop_id = shops.id and sr.status = 'visible'
 ), 0)`;
 
 /** Outer query must select FROM shops. */
 export const shopReviewCount: SQL<number> = sql<number>`(
-  select count(*)::int from reviews r
-  join products p on p.id = r.product_id
-  where p.shop_id = shops.id and r.status = 'visible'
+  select count(*)::int from shop_reviews sr
+  where sr.shop_id = shops.id and sr.status = 'visible'
 )`;
 
 /** Outer query must select FROM shops. Published products only. */

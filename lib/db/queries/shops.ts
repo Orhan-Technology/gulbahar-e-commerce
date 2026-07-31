@@ -66,6 +66,8 @@ export async function shopDetail(slug: string) {
       slug: shops.slug,
       name: shops.name,
       description: shops.description,
+      /** The About tab's longer copy (Prompt C8). */
+      story: shops.story,
       status: shops.status,
       categoryId: shops.categoryId,
       categoryName: categories.name,
@@ -73,6 +75,8 @@ export async function shopDetail(slug: string) {
       unitNumber: shops.unitNumber,
       phone: shops.phone,
       hours: shops.hours,
+      /** When this tenant took the unit — rendered as "N years at Gulbahar". */
+      tenantSince: shops.tenantSince,
       logoPath: shops.logoPath,
       bannerPath: shops.bannerPath,
       // Denormalised, so the badge costs no join on a page that is read far

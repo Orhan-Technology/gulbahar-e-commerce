@@ -1,10 +1,7 @@
 import { Suspense } from 'react';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Clock, MapPin, Phone, Store } from 'lucide-react';
 
-import { RatingStars } from '@/components/custom/rating-stars';
 import { SearchBox } from '@/components/custom/search-box';
 import { FacetControls } from '@/components/shop/listing/facet-controls';
 import {
@@ -12,146 +9,176 @@ import {
   ProductListingSkeleton,
   type ListingSearchParams,
 } from '@/components/shop/listing/product-listing';
-import { VerifiedBadge } from '@/components/shop/verified-badge';
-import { pickLocale } from '@/lib/db/localized';
+import { AboutTab } from '@/components/shop/shop-page/about-tab';
+import { MerchandisingRows } from '@/components/shop/shop-page/merchandising-rows';
+import { OffersTab } from '@/components/shop/shop-page/offers-tab';
+import { ReviewsTab } from '@/components/shop/shop-page/reviews-tab';
+import { ShopHero } from '@/components/shop/shop-page/shop-hero';
+import { parseShopTab, ShopTabs } from '@/components/shop/shop-page/shop-tabs';
+import { InShopCategories } from '@/components/shop/shop-page/in-shop-categories';
+import { currentUser } from '@/lib/auth/guards';
 import { filterFacets } from '@/lib/db/queries/listing';
+import { siteSettings } from '@/lib/db/queries/settings';
+import {
+  shopActiveOffers,
+  shopCategories,
+  shopFollowState,
+  shopServiceRating,
+} from '@/lib/db/queries/shop-page';
 import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
-import { formatNumber, formatOpeningHours, formatPhone, formatUnitNumber } from '@/lib/format';
 import { decodeSlug } from '@/lib/utils';
 
 /**
- * Shop page (PRD §5.1): banner, logo, derived rating, floor/unit and hours,
- * about — and then A CATEGORY PAGE.
+ * The shop page (PRD §5.1, Prompt C8).
  *
- * The catalogue below the header is the same listing component as /categories
- * and /search, scoped to this shop: same toolbar, same sort, same facets, same
- * applied-filter chips, same load-more. It used to be a bare grid with an
- * in-shop search and a chip row of its own, which meant a shopper who had
- * learned how to narrow a category page had to learn something else the moment
- * they stepped into a shop.
+ * FOUR TABS, EACH A REAL URL. Products, offers, about, reviews — `?tab=` rather
+ * than client state, so every one of them is shareable, back-buttonable,
+ * server-rendered and indexable, and so three of them cost nothing to visit a
+ * page that only wants the fourth.
  *
- * The SHOP facet is hidden here — on this page it can only navigate away from
- * the shop the page is about.
+ * The PRODUCTS tab is still the same listing component as /categories and
+ * /search, scoped to this shop: same toolbar, same sort, same facets, same
+ * chips, same load-more. A shopper who learned to narrow a category page must
+ * not have to learn something else on stepping into a shop. What C8 adds above
+ * it is merchandising — what sells, what people are looking at, what is new —
+ * which is the part a mall page can do that a search results page cannot.
+ *
+ * The SHOP facet is hidden throughout: on this page it can only navigate away
+ * from the shop the page is about.
  *
  * A shop that is not approved 404s rather than rendering — a pending shop's
- * catalogue must stay invisible until admin flips the switch (PRD §7.1).
+ * catalogue stays invisible until admin flips the switch (PRD §7.1).
  */
 export default async function ShopPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<ListingSearchParams>;
+  searchParams: Promise<ListingSearchParams & { tab?: string }>;
 }) {
   const { locale, slug: rawSlug } = await params;
   // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
   const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
   const query = await searchParams;
-  const t = await getTranslations('shop');
+  const tab = parseShopTab(query.tab);
 
   const shop = await shopDetail(slug);
   if (!shop || shop.status !== 'approved') notFound();
 
-  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  /*
+   * The clock is read ONCE, here, and handed down. A client component may not
+   * call `new Date()` during render (React 19 purity, CLAUDE.md), and reading
+   * it twice on one page could put the open pill and the offer countdown a
+   * second apart.
+   */
+  const now = new Date();
+
+  // The follow state needs the viewer, so the session is resolved first; the
+  // three reads that do not depend on it run together.
+  const user = await currentUser();
+  const [settings, followState, offers, serviceRating] = await Promise.all([
+    siteSettings(),
+    shopFollowState(shop.id, user?.id),
+    shopActiveOffers(shop.id, now),
+    shopServiceRating(shop.id),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-6xl px-4 pb-6">
+      <ShopHero
+        shop={shop}
+        follow={followState}
+        mallHours={settings.hours}
+        now={now}
+        signedIn={Boolean(user?.id)}
+      />
+
+      <ShopTabs
+        slug={slug}
+        active={tab}
+        counts={{
+          products: shop.productCount,
+          offers: offers.length,
+          reviews: serviceRating.total,
+        }}
+        locale={locale}
+      />
+
+      <div className="mt-6">
+        {tab === 'products' && (
+          <ProductsTab
+            slug={slug}
+            shopId={shop.id}
+            productCount={shop.productCount}
+            locale={locale}
+            query={query}
+          />
+        )}
+        {tab === 'offers' && <OffersTab shopId={shop.id} shopSlug={slug} />}
+        {tab === 'about' && <AboutTab shop={shop} now={now} />}
+        {tab === 'reviews' && <ReviewsTab shopId={shop.id} />}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The catalogue, with the shop's own merchandising above it.
+ *
+ * The IN-SHOP CATEGORY CHIPS list only the categories this shop actually
+ * stocks. The global facet panel offers the whole tree, which on a shoe shop's
+ * page means twenty-three categories that return nothing — the chips are the
+ * fast path and the panel is the complete one.
+ *
+ * The merchandising rows are HIDDEN the moment a filter is applied. Someone who
+ * has typed a search or picked a category is looking for a specific thing, and
+ * three rails of "what else we sell" between them and their results is the
+ * marketplace pattern that makes filtered pages feel broken.
+ */
+async function ProductsTab({
+  slug,
+  shopId,
+  productCount,
+  locale,
+  query,
+}: {
+  slug: string;
+  shopId: string;
+  productCount: number;
+  locale: string;
+  query: ListingSearchParams & { tab?: string };
+}) {
+  const t = await getTranslations('shop');
+
+  const [facets, tree, inShopCategories] = await Promise.all([
+    filterFacets(locale),
+    categoryTree(locale),
+    shopCategories(shopId),
+  ]);
+
   const facetOptions = {
     ...facets,
     categories: tree,
     hide: ['shop'] as Array<'category' | 'shop'>,
   };
 
+  const browsing = !query.q && !query.category && !query.priceMin && !query.priceMax;
+
   return (
-    <div className="mx-auto max-w-6xl px-4 pb-6">
-      {/* Banner */}
-      <div className="bg-primary-800 sm:rounded-card relative -mx-4 h-40 overflow-hidden sm:mx-0 sm:mt-4 sm:h-56">
-        {shop.bannerPath ? (
-          <Image
-            src={shop.bannerPath}
-            alt=""
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover"
-          />
-        ) : (
-          <div className="from-primary-900 to-primary-700 h-full w-full ltr:bg-linear-to-r rtl:bg-linear-to-l" />
-        )}
-      </div>
+    <div className="space-y-8">
+      {browsing && <MerchandisingRows shopId={shopId} productCount={productCount} />}
 
-      {/* Identity block, logo overlapping the banner */}
-      <div className="rounded-card border-border bg-card shadow-card relative -mt-10 flex flex-col gap-3 border p-4 sm:-mt-12 sm:flex-row sm:items-start sm:gap-5">
-        <div className="rounded-card border-card bg-primary-100 shadow-card relative h-20 w-20 shrink-0 overflow-hidden border-2">
-          {shop.logoPath ? (
-            <Image
-              src={shop.logoPath}
-              alt={pickLocale(shop.name, locale)}
-              fill
-              sizes="80px"
-              className="object-cover"
-            />
-          ) : (
-            <span className="flex h-full w-full items-center justify-center">
-              <Store className="text-primary-700 h-7 w-7" aria-hidden />
-            </span>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1 space-y-2">
-          {/* The badge sits WITH the name, not in a row of chips below it: it
-              is a fact about who this is, not another attribute (Prompt C7). */}
-          <h1 className="flex flex-wrap items-center gap-1.5 text-xl font-bold">
-            {pickLocale(shop.name, locale)}
-            <VerifiedBadge verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null} />
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            {shop.rating > 0 && (
-              <RatingStars value={shop.rating} count={shop.reviewCount} size="sm" />
-            )}
-            <span className="text-muted-foreground">
-              {t('productCount', { count: formatNumber(shop.productCount, locale) })}
-            </span>
-            {shop.categoryName && (
-              <span className="text-muted-foreground">{pickLocale(shop.categoryName, locale)}</span>
-            )}
-          </div>
-
-          {/* Floor/unit is pickup metadata, not a browsing axis (PRD §4). */}
-          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-neutral-600">
-            {shop.floor !== null && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <dd>
-                  {t('floorUnit', {
-                    floor: formatNumber(shop.floor, locale),
-                    unit: formatUnitNumber(shop.unitNumber, locale) || '—',
-                  })}
-                </dd>
-              </div>
-            )}
-            {shop.hours && (
-              <div className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <dd>{formatOpeningHours(shop.hours, locale)}</dd>
-              </div>
-            )}
-            {shop.phone && (
-              <div className="flex items-center gap-1.5">
-                <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                <dd dir="ltr">{formatPhone(shop.phone, locale)}</dd>
-              </div>
-            )}
-          </dl>
-
-          {shop.description && (
-            <p className="text-muted-foreground text-sm">{pickLocale(shop.description, locale)}</p>
-          )}
-        </div>
-      </div>
-
-      {/* The shop's own catalogue — the same listing as everywhere else */}
-      <div className="mt-6 space-y-4">
+      <div className="space-y-4">
         <h2 className="text-base font-bold">{t('catalogue')}</h2>
+
+        {inShopCategories.length > 1 && (
+          <InShopCategories
+            slug={slug}
+            categories={inShopCategories}
+            active={typeof query.category === 'string' ? query.category : undefined}
+          />
+        )}
 
         <SearchBox placeholder={t('searchInShop')} />
 
@@ -166,7 +193,7 @@ export default async function ShopPage({
                 query={query}
                 locale={locale}
                 facets={facetOptions}
-                scope={{ shopIds: [shop.id] }}
+                scope={{ shopIds: [shopId] }}
                 emptyHref={`/shops/${slug}`}
               />
             </Suspense>

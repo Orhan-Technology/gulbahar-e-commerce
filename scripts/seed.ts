@@ -21,6 +21,8 @@ import {
   products,
   reviewResponses,
   reviews,
+  shopFollows,
+  shopReviewRows,
   shopMembers,
   shops,
   users,
@@ -51,6 +53,8 @@ import {
   RESPONSES_FA,
   REVIEWS_EN,
   REVIEWS_FA,
+  SHOP_REVIEWS_EN,
+  SHOP_REVIEWS_FA,
   STREET_DETAILS,
   SURNAMES,
 } from './seed-data/people';
@@ -136,6 +140,10 @@ type ShopSeed = {
   unit: string;
   name: LocalizedText;
   description: LocalizedText;
+  /** The About tab's longer copy (Prompt C8). */
+  story: LocalizedText;
+  /** Gregorian year this tenant took the unit — rendered as a duration. */
+  since: number;
   hours: string;
   phone: string;
   status?: 'pending';
@@ -354,6 +362,9 @@ async function main() {
         status: shop.status === 'pending' ? 'pending' : 'approved',
         name: shop.name,
         description: shop.description,
+        story: shop.story,
+        // 1 Hamal-ish: the day of the year is noise, the year is the fact.
+        tenantSince: new Date(Date.UTC(shop.since, 2, 21)),
         categoryId: categoryIds.get(shop.category) ?? null,
         floor: shop.floor,
         unitNumber: shop.unit,
@@ -469,6 +480,14 @@ async function main() {
   const fulfilledItems: Array<{
     orderItemId: string;
     productSlug: string;
+    shopSlug: string;
+    userId: string;
+    fulfilledAt: Date;
+  }> = [];
+
+  /** One row per (fulfilled order, shop) — what a SHOP review is earned by. */
+  const fulfilledOrdersByShop: Array<{
+    orderId: string;
     shopSlug: string;
     userId: string;
     fulfilledAt: Date;
@@ -666,6 +685,16 @@ async function main() {
           userId: customer.id,
           fulfilledAt,
         });
+      }
+
+      /*
+       * The ORDER, once per shop it touched — the entitlement a shop review is
+       * written against (Prompt C8). Recorded here rather than re-derived later
+       * because it costs no random draw: adding one inside this loop would
+       * renumber every order reference the runbook names (CLAUDE.md).
+       */
+      for (const shopSlug of new Set(lines.map((line) => line.product.shopSlug))) {
+        fulfilledOrdersByShop.push({ orderId: order.id, shopSlug, userId: customer.id, fulfilledAt });
       }
     }
   }
@@ -1329,6 +1358,74 @@ async function main() {
     }
   }
 
+  // ----------------------------------------------- shop reviews and follows
+  /*
+   * SEEDED LAST, deliberately (Prompt C8).
+   *
+   * Every draw from the PRNG shifts the ones after it, and the order references
+   * the runbook and the check scripts name — GC-24788, GC-24338 — come out of
+   * draws made much earlier. Appending this block at the very end means it
+   * cannot renumber anything (CLAUDE.md).
+   *
+   * The entitlement is the real one: one review per FULFILLED order per SHOP,
+   * written by the customer who placed it, which is the same rule
+   * submitShopReview enforces at the action boundary.
+   */
+  const shopReviewCandidates = sample(
+    fulfilledOrdersByShop,
+    Math.min(70, fulfilledOrdersByShop.length),
+  );
+  let shopReviewCount = 0;
+
+  for (const candidate of shopReviewCandidates) {
+
+    // Service ratings skew a little harsher than product ratings: people
+    // forgive a product they chose themselves sooner than a wasted trip.
+    const roll = rand();
+    const rating = roll < 0.4 ? 5 : roll < 0.72 ? 4 : roll < 0.88 ? 3 : roll < 0.97 ? 2 : 1;
+
+    const english = chance(0.1) && SHOP_REVIEWS_EN[rating];
+    const body = english ? pick(SHOP_REVIEWS_EN[rating]) : pick(SHOP_REVIEWS_FA[rating]);
+
+    // Same clamp as the product reviews: never dated after fulfilment, never
+    // dated in the future.
+    const raw = candidate.fulfilledAt.getTime() + intBetween(1, 8) * DAY_MS;
+    const createdAt = new Date(
+      Math.min(
+        Math.max(raw, candidate.fulfilledAt.getTime() + 3 * 60 * 60 * 1000),
+        NOW.getTime() - 45 * 60 * 1000,
+      ),
+    );
+
+    await db.insert(shopReviewRows).values({
+      shopId: shopIds.get(candidate.shopSlug)!,
+      userId: candidate.userId,
+      orderId: candidate.orderId,
+      rating,
+      body,
+      createdAt,
+    });
+    shopReviewCount += 1;
+  }
+
+  // Follows. Every customer follows a few shops, so the account hub and C12's
+  // fan-out both have something real to read.
+  const followPairs = new Set<string>();
+  const followValues: Array<{ userId: string; shopId: string; createdAt: Date }> = [];
+  for (const customer of customerRows) {
+    for (const shop of sample(shopSeed.filter((entry) => entry.status !== 'pending'), intBetween(0, 4))) {
+      const key = `${customer.id}:${shop.slug}`;
+      if (followPairs.has(key)) continue;
+      followPairs.add(key);
+      followValues.push({
+        userId: customer.id,
+        shopId: shopIds.get(shop.slug)!,
+        createdAt: daysAgo(intBetween(1, 90)),
+      });
+    }
+  }
+  if (followValues.length > 0) await db.insert(shopFollows).values(followValues);
+
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();
   console.log('Row counts:');
@@ -1350,6 +1447,8 @@ async function main() {
   console.log(
     `  verifications       ${verificationPlan.length} (${verifiedShops} verified, 1 waiting, 1 rejected)`,
   );
+  console.log(`  shop reviews        ${shopReviewCount} (one per fulfilled order per shop)`);
+  console.log(`  shop follows        ${followValues.length}`);
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');
   console.log('  admin        0700000001');

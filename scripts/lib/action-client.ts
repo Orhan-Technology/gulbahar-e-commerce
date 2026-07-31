@@ -128,7 +128,7 @@ export class ActionClient {
     const action = this.actions.get(name);
     if (!action) throw new Error(`no action id for ${name} — load its page first`);
 
-    const response = await fetch(`${BASE}${action.page}`, {
+    const response = await resilientFetch(action.page, {
       method: 'POST',
       headers: { cookie, 'Next-Action': action.id, 'Content-Type': 'text/plain;charset=UTF-8' },
       body: JSON.stringify(args),
@@ -170,13 +170,36 @@ export class ActionClient {
   }
 }
 
+/**
+ * A fetch that survives the dev server restarting under it.
+ *
+ * `next dev` restarts itself when it approaches its memory threshold — an
+ * ordinary event during a check that walks thirty pages — and the in-flight
+ * request dies as `UND_ERR_SOCKET: other side closed`. That surfaces as a bare
+ * "TypeError: fetch failed" with no page named and no assertion attributed,
+ * which reads like a broken check rather than a restarted server. Retrying the
+ * transport, and only the transport, keeps a real failure a real failure.
+ */
+async function resilientFetch(path: string, init: RequestInit): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await fetch(`${BASE}${path}`, init);
+    } catch (error) {
+      lastError = error;
+      await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 export async function html(path: string, cookie?: string): Promise<string> {
-  const response = await fetch(`${BASE}${path}`, { headers: cookie ? { cookie } : {} });
+  const response = await resilientFetch(path, { headers: cookie ? { cookie } : {} });
   return response.text();
 }
 
 export async function status(path: string, cookie?: string): Promise<number> {
-  const response = await fetch(`${BASE}${path}`, {
+  const response = await resilientFetch(path, {
     headers: cookie ? { cookie } : {},
     redirect: 'manual',
   });

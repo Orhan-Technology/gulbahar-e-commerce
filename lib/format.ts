@@ -79,14 +79,31 @@ export function formatOpeningHours(value: string | null | undefined, locale: str
   if (!match) return value;
 
   const [, openHour, openMinute, closeHour, closeMinute] = match;
-  const digits = (input: string) => formatNumber(Number(input), locale);
-  const pad = (input: string) =>
-    new Intl.NumberFormat(intlLocale(locale), {
-      minimumIntegerDigits: 2,
-      useGrouping: false,
-    }).format(Number(input));
+  return `${formatClock(`${openHour}:${openMinute}`, locale)} – ${formatClock(`${closeHour}:${closeMinute}`, locale)}`;
+}
 
-  return `${digits(openHour)}:${pad(openMinute)} – ${digits(closeHour)}:${pad(closeMinute)}`;
+/**
+ * One clock time, e.g. "۸:۰۰" / "8:00", from canonical ASCII "H:MM".
+ *
+ * Split out of formatOpeningHours because the OPEN/CLOSED pill names a single
+ * boundary ("opens at 08:00") and had no way to render it — the alternative was
+ * formatting a fake range and splitting the dash back out, which is the kind of
+ * thing that survives until someone changes the separator.
+ *
+ * The minutes are padded through Intl rather than with String.padStart, so fa
+ * gets «۰۰» and not «00».
+ */
+export function formatClock(value: string, locale: string): string {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(value.trim());
+  if (!match) return value;
+
+  const [, hour, minute] = match;
+  const padded = new Intl.NumberFormat(intlLocale(locale), {
+    minimumIntegerDigits: 2,
+    useGrouping: false,
+  }).format(Number(minute));
+
+  return `${formatNumber(Number(hour), locale)}:${padded}`;
 }
 
 const PERSIAN_DIGITS = '۰۱۲۳۴۵۶۷۸۹';

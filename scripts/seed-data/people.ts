@@ -168,3 +168,48 @@ export const OFFER_NAMES = [
   { fa: 'حراج پایان فصل', en: 'End of Season Sale' },
   { fa: 'تخفیف روز جمعه', en: 'Friday Discount' },
 ];
+
+/**
+ * SHOP reviews (Prompt C8) — about the service, never about the product.
+ *
+ * Kept separate from REVIEWS_FA on purpose: "the fabric is good quality" says
+ * nothing about a shop, and a reviews tab full of product opinions is exactly
+ * the failure that made a second table worth having. Every line here is about
+ * something only the shop controls — the phone, the counter, the packing, the
+ * wait, whether they said the truth about stock.
+ */
+export const SHOP_REVIEWS_FA: Record<number, string[]> = {
+  5: [
+    'تلیفون را زود جواب دادند و سفارش را همان روز آماده کردند.',
+    'دکاندار بسیار مؤدب بود و برای انتخاب وقت گذاشت.',
+    'بسته‌بندی مرتب بود و هیچ چیز کم نبود.',
+    'گفتند دو روز آماده می‌شود، یک روزه آماده شد.',
+    'وقتی رفتم گرفتن، فوراً پیدا کردند و معطل نشدم.',
+    'راست گفتند که کدام رنگ موجود نیست، وقتم را ضایع نکردند.',
+  ],
+  4: [
+    'برخورد خوب داشتند، فقط پیدا کردن دکان کمی وقت گرفت.',
+    'سفارش درست بود، یک روز دیرتر از وعده آماده شد.',
+    'همه چیز خوب بود، بسته‌بندی می‌توانست بهتر باشد.',
+    'راضی هستم. زنگ زدم و با حوصله جواب دادند.',
+  ],
+  3: [
+    'سفارش درست تحویل شد ولی چند بار زنگ زدم تا جواب دادند.',
+    'انتظار در دکان کمی زیاد بود، خود جنس مشکلی نداشت.',
+  ],
+  2: [
+    'وعده کردند صبح آماده است، عصر رفتم هنوز آماده نبود.',
+    'تلیفون را جواب نمی‌دادند و مجبور شدم دو بار بروم.',
+  ],
+  1: ['سفارش را قبول کردند و بعد گفتند موجود نیست. باید از اول می‌گفتند.'],
+};
+
+export const SHOP_REVIEWS_EN: Record<number, string[]> = {
+  5: [
+    'Answered the phone straight away and had the order ready the same day.',
+    'Very helpful at the counter — took the time to explain the options.',
+    'Packed properly and nothing was missing.',
+  ],
+  4: ['Good service, a day later than promised but they called to say so.'],
+  3: ['The order was right, but it took a few calls before anyone picked up.'],
+};

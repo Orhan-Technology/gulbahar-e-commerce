@@ -34,7 +34,17 @@ export const shops = pgTable(
     slug: text('slug').notNull(),
     status: shopStatusEnum('status').notNull().default('pending'),
     name: jsonb('name').$type<LocalizedText>().notNull(),
+    /** One line. This is what a shop CARD shows, so it stays short. */
     description: jsonb('description').$type<LocalizedText>(),
+    /**
+     * The longer story, for the shop page's About tab (Prompt C8).
+     *
+     * Separate from `description` rather than replacing it, because the two are
+     * read in different places at different lengths: a card in a directory can
+     * carry one line, and an About tab that repeats that one line reads as a
+     * page with nothing on it.
+     */
+    story: jsonb('story').$type<LocalizedText>(),
     categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'set null' }),
     floor: integer('floor'),
     unitNumber: text('unit_number'),
@@ -51,6 +61,17 @@ export const shops = pgTable(
      * paperwork, and a shop can be approved and unverified for months.
      */
     verifiedAt: timestampCol('verified_at'),
+    /**
+     * When this tenant took the unit (Prompt C8) — NOT when they joined the
+     * platform, which is what `createdAt` records and which for every seeded
+     * shop is a few weeks ago.
+     *
+     * Stored as a DATE and rendered as a DURATION ("11 years at Gulbahar"),
+     * never as a calendar year. A year number would have to be printed in some
+     * calendar, and fa readers count in Hijri Shamsi while the column holds
+     * Gregorian — an elapsed count of years is the same number in both.
+     */
+    tenantSince: timestampCol('tenant_since'),
     logoPath: text('logo_path'),
     bannerPath: text('banner_path'),
     /** Written by admin on reject; visible to the shopkeeper so they can amend. */

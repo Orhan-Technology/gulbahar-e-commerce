@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ChevronRight, ShieldCheck, Store } from 'lucide-react';
 
+import { FollowedShops } from '@/components/shop/account/followed-shops';
 import { PaymentMethodsCard } from '@/components/shop/account/payment-methods-card';
 import { ProfilePanel } from '@/components/shop/account/profile-panel';
 import { SignOutButton } from '@/components/shop/account/sign-out-button';
@@ -183,6 +184,10 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
           })}
         </ul>
       </section>
+
+      {/* The shops this customer follows (Prompt C8) — absent, not empty, when
+          there are none. */}
+      <FollowedShops userId={session.id} />
 
       {/* Honest about what is not built (Prompt A3): saved instruments are not
           a feature, and the card says so rather than being quietly absent. */}
