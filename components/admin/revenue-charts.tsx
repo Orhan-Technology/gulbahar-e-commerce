@@ -3,7 +3,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
-import { usePrefersReducedMotion } from '@/components/custom/stat-card';
 import { formatCurrency, formatDate, formatMonth } from '@/lib/format';
 import { localeDirection } from '@/lib/i18n/routing';
 
@@ -30,7 +29,6 @@ export function MonthlyRevenueChart({ data }: { data: MonthPoint[] }) {
   const locale = useLocale();
   const t = useTranslations('adminRevenue');
   const isRtl = localeDirection(locale) === 'rtl';
-  const prefersReduced = usePrefersReducedMotion();
 
   if (data.every((point) => point.revenue === 0)) {
     return <p className="py-8 text-center text-sm text-neutral-500">{t('noRevenue')}</p>;
@@ -74,8 +72,8 @@ export function MonthlyRevenueChart({ data }: { data: MonthPoint[] }) {
             dataKey="revenue"
             radius={[4, 4, 0, 0]}
             maxBarSize={34}
-            isAnimationActive={!prefersReduced}
-            animationDuration={280}
+            // Off for the reason spelled out in ResponsivenessChart.
+            isAnimationActive={false}
           >
             {data.map((point) => (
               <Cell

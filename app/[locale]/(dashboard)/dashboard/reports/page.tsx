@@ -24,20 +24,45 @@ import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 import { parseConsoleRange } from '@/lib/console-range';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { RangeControl } from '@/components/console/range-control';
+import { ExportButton } from '@/components/dashboard/reports/export-button';
+import { ReportTabs } from '@/components/dashboard/reports/report-tabs';
+import { ResponsivenessReport } from '@/components/dashboard/reports/responsiveness-report';
+import { StockReport } from '@/components/dashboard/reports/stock-report';
+import {
+  SummaryStrip,
+  SummaryStripSkeleton,
+} from '@/components/dashboard/reports/summary-strip';
+import { TimingHeatmap } from '@/components/dashboard/reports/timing-heatmap';
+import { ViewsWithoutSales } from '@/components/dashboard/reports/views-without-sales';
+import { EXPORTABLE, parseShopReport } from '@/lib/shop-reports';
 import { Link } from '@/lib/i18n/navigation';
 
 
-/** Shop reporting (PRD §6.7). */
+/**
+ * Shop reporting (PRD §6.7, Prompt C10).
+ *
+ * FIVE REPORTS, EACH A URL. The overview is the sales line this page always
+ * was; the other four are the ones that say what to FIX — what people look at
+ * and do not buy, what is about to run out, how fast this shop answers compared
+ * with the mall, and when somebody needs to be at the counter. Seller Central's
+ * value was never its charts.
+ *
+ * Every one of them sits under the SAME summary strip, so a shopkeeper reading
+ * "these forty products got eight hundred views and no sales" has the shop's
+ * own conversion in the same eyeline — and every figure in that strip comes
+ * from one helper, which is the only way C10's "same definitions as everywhere
+ * else" survives a second author.
+ */
 export default async function ShopReportsPage({
   params,
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; report?: string }>;
 }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  const { range: rangeKey } = await searchParams;
+  const { range: rangeKey, report: reportKey } = await searchParams;
   const user = await requireShopkeeper(locale);
   const t = await getTranslations('shopReports');
 
@@ -48,42 +73,85 @@ export default async function ShopReportsPage({
    */
   const range = parseConsoleRange(rangeKey);
   const period: ReportPeriod = range.days;
+  const report = parseShopReport(reportKey);
 
   return (
     <div className="space-y-4 p-4">
-      <ConsolePageHeader title={t('title')} actions={<RangeControl current={range.key} />} />
+      <ConsolePageHeader
+        title={t('title')}
+        actions={
+          <div className="flex items-center gap-2">
+            {EXPORTABLE.includes(report) && <ExportButton report={report} range={range.key} />}
+            <RangeControl current={range.key} />
+          </div>
+        }
+      />
 
-      {/* Suspense per section, so a slow aggregate never blocks the headline
-          numbers (PRD §10.5). */}
-      <Suspense key={`totals-${period}`} fallback={<TotalsSkeleton />}>
-        <Totals shopId={user.shopId} period={period} />
+      <ReportTabs active={report} range={range.key} />
+
+      <Suspense key={`summary-${period}`} fallback={<SummaryStripSkeleton />}>
+        <SummaryStrip shopId={user.shopId} period={period} />
       </Suspense>
 
-      <Suspense key={`sales-${period}`} fallback={<ChartSkeleton />}>
-        <SalesSection shopId={user.shopId} period={period} />
-      </Suspense>
+      {report === 'overview' && (
+        <>
+          {/* Suspense per section, so a slow aggregate never blocks the
+              headline numbers (PRD §10.5). */}
+          <Suspense key={`totals-${period}`} fallback={<TotalsSkeleton />}>
+            <Totals shopId={user.shopId} period={period} />
+          </Suspense>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Suspense key={`status-${period}`} fallback={<ChartSkeleton />}>
-          <StatusSection shopId={user.shopId} period={period} />
-        </Suspense>
+          <Suspense key={`sales-${period}`} fallback={<ChartSkeleton />}>
+            <SalesSection shopId={user.shopId} period={period} />
+          </Suspense>
 
-        <Suspense key={`rating-${period}`} fallback={<ChartSkeleton />}>
-          <RatingSection shopId={user.shopId} period={period} />
-        </Suspense>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Suspense key={`status-${period}`} fallback={<ChartSkeleton />}>
+              <StatusSection shopId={user.shopId} period={period} />
+            </Suspense>
 
-        <Suspense key={`products-${period}`} fallback={<ChartSkeleton />}>
-          <TopProducts shopId={user.shopId} period={period} locale={locale} />
-        </Suspense>
+            <Suspense key={`rating-${period}`} fallback={<ChartSkeleton />}>
+              <RatingSection shopId={user.shopId} period={period} />
+            </Suspense>
 
-        <Suspense key={`promos-${period}`} fallback={<ChartSkeleton />}>
-          <PromotionSection shopId={user.shopId} period={period} locale={locale} />
-        </Suspense>
+            <Suspense key={`products-${period}`} fallback={<ChartSkeleton />}>
+              <TopProducts shopId={user.shopId} period={period} locale={locale} />
+            </Suspense>
 
-        <Suspense fallback={<ChartSkeleton />}>
-          <WishlistSection shopId={user.shopId} locale={locale} />
+            <Suspense key={`promos-${period}`} fallback={<ChartSkeleton />}>
+              <PromotionSection shopId={user.shopId} period={period} locale={locale} />
+            </Suspense>
+
+            <Suspense fallback={<ChartSkeleton />}>
+              <WishlistSection shopId={user.shopId} locale={locale} />
+            </Suspense>
+          </div>
+        </>
+      )}
+
+      {report === 'views' && (
+        <Suspense key={`views-${period}`} fallback={<TableSkeleton />}>
+          <ViewsWithoutSales shopId={user.shopId} period={period} />
         </Suspense>
-      </div>
+      )}
+
+      {report === 'stock' && (
+        <Suspense key={`stock-${period}`} fallback={<TableSkeleton />}>
+          <StockReport shopId={user.shopId} period={period} />
+        </Suspense>
+      )}
+
+      {report === 'responsiveness' && (
+        <Suspense key={`resp-${period}`} fallback={<ChartSkeleton />}>
+          <ResponsivenessReport shopId={user.shopId} period={period} />
+        </Suspense>
+      )}
+
+      {report === 'timing' && (
+        <Suspense key={`timing-${period}`} fallback={<ChartSkeleton />}>
+          <TimingHeatmap shopId={user.shopId} period={period} />
+        </Suspense>
+      )}
     </div>
   );
 }
@@ -294,6 +362,16 @@ function TotalsSkeleton() {
     <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       {Array.from({ length: 4 }, (_, index) => (
         <StatCardSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
+function TableSkeleton() {
+  return (
+    <div className="rounded-card border-border bg-card space-y-2 border p-4">
+      {Array.from({ length: 6 }, (_, index) => (
+        <Skeleton key={index} className="h-10 w-full" />
       ))}
     </div>
   );

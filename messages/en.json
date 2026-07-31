@@ -1747,7 +1747,82 @@
     "noWishlist": "Nobody has saved a product yet.",
     "emptyTitle": "No report for this period yet",
     "emptyBody": "Reports are built from fulfilled orders. After your first sale, daily takings, best sellers and your rating trend appear here.",
-    "emptyAction": "View products"
+    "emptyAction": "View products",
+    "exportCsv": "Export CSV",
+    "tabs": {
+      "label": "Reports",
+      "overview": "Overview",
+      "views": "Views without sales",
+      "stock": "Stock",
+      "responsiveness": "Responsiveness",
+      "timing": "Timing"
+    },
+    "summary": {
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "units": "Units",
+      "aov": "Average order",
+      "conversion": "Conversion"
+    },
+    "views": {
+      "product": "Product",
+      "views": "Views",
+      "orders": "Orders",
+      "conversion": "Conversion",
+      "hint": "Try this first",
+      "hints": {
+        "photos": "Add more photos",
+        "description": "Write a fuller description",
+        "price": "Check the price",
+        "promote": "Listing looks fine — try an offer"
+      },
+      "emptyTitle": "Nothing is being ignored",
+      "emptyBody": "Every product with real traffic in this period is converting. Products with fewer than 20 views are left out — an absence of sales there means nobody has seen it yet, not that something is wrong."
+    },
+    "stock": {
+      "product": "Product",
+      "stock": "In stock",
+      "unitsSold": "Sold in period",
+      "lastSale": "Last sale",
+      "outOfStock": "Out",
+      "daysAgo": "{days} days ago",
+      "neverSold": "Never sold",
+      "emptyTitle": "Nothing is running low",
+      "emptyBody": "Every published product has more than three in stock. This report lists anything at three or fewer, so you can restock before a customer finds an empty shelf."
+    },
+    "responsiveness": {
+      "yourAccept": "Your time to accept",
+      "yourReady": "Your time to ready",
+      "mallAccept": "Mall average to accept",
+      "hours": "{hours} h",
+      "yours": "Your shop",
+      "mallAverage": "Mall average",
+      "chartHeading": "Time to accept, day by day",
+      "noData": "No accepted orders in this period.",
+      "verdict": {
+        "faster": "You accept orders faster than the rest of the mall. Customers notice this more than almost anything else.",
+        "slower": "You are slower to accept than the rest of the mall. An order left waiting is the most common reason a customer cancels.",
+        "similar": "You accept orders at about the same speed as the rest of the mall."
+      },
+      "emptyTitle": "No orders to measure yet",
+      "emptyBody": "Once you have accepted a few orders, this report shows how long customers wait for you compared with the rest of Gulbahar Center. No other shop is ever named."
+    },
+    "timing": {
+      "day": "Day",
+      "busiest": "Your busiest hour is {day} at {hour}:00 — {orders} orders in this period.",
+      "cell": "{day} at {hour}:00 — {orders} orders",
+      "weekdays": {
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
+      },
+      "emptyTitle": "No orders in this period",
+      "emptyBody": "Once orders come in, this grid shows which hours of which days they arrive, so you know when somebody needs to be at the counter."
+    }
   },
   "shopSettings": {
     "title": "Settings",

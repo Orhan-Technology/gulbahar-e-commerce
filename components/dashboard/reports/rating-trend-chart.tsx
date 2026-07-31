@@ -80,6 +80,8 @@ export function RatingTrendChart({ data }: { data: RatingPoint[] }) {
             strokeWidth={2}
             dot={{ r: 3, fill: 'var(--color-primary-600)' }}
             activeDot={{ r: 5 }}
+            // Off for the reason spelled out in ResponsivenessChart.
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>

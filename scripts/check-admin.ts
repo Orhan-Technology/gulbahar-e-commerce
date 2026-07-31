@@ -163,13 +163,24 @@ async function main() {
   const before = new Set(seededTotal.map((row) => row.id));
   report.check('the seed leaves a real history behind', before.size > 0, { rows: before.size });
 
-  const [orphan] = await db.execute<{ n: number }>(raw`
+  /*
+   * An entry whose target has since been DELETED is not a defect — it is the
+   * case the snapshotted label exists for, and a log that lost rows when a shop
+   * was removed would be worthless exactly when it mattered. What must hold is
+   * that such an entry is still READABLE: it names what it was about.
+   */
+  const [unreadable] = await db.execute<{ n: number }>(raw`
     select count(*)::int as n from admin_audit_log
     where target_type = 'shop'
       and target_id is not null
+      and target_label is null
       and not exists (select 1 from shops s where s.id = target_id)
   `);
-  report.check('every shop entry points at a shop that exists', Number(orphan.n) === 0);
+  report.check(
+    'an entry whose shop is gone still names it',
+    Number(unreadable.n) === 0,
+    unreadable,
+  );
 
   // A REAL action, driven over HTTP, then undone.
   const [victim] = await db

@@ -517,6 +517,17 @@ async function main() {
     where event_key in ('shop.approved', 'shop.rejected', 'shop.invited')
       and created_at > now() - interval '15 minutes'
   `;
+  /*
+   * And the AUDIT ROWS this script's own actions wrote (Prompt C9).
+   *
+   * Scoped by the target ids captured above, never by "recent": the seeded
+   * history carries today's timestamps, so a time window would delete the
+   * decisions the audit page exists to show.
+   */
+  await sql`
+    delete from admin_audit_log
+    where target_id in (${pending.id}, ${created.data.shopId}, ${target.id}, ${reported.id})
+  `;
 
   const [restored] = await sql<{ status: string; reason: string | null; pending: number }[]>`
     select s.status, s.rejection_reason as reason,

@@ -55,10 +55,24 @@ export function formatRating(value: number, locale: string): string {
 }
 
 /** Percentage for discount ribbons, e.g. "٪۲۵" / "25%". */
-export function formatPercent(fraction: number, locale: string): string {
+/**
+ * A percentage, e.g. «۱۲٪» / "12%".
+ *
+ * `digits` exists for one specific number: CONVERSION. A storefront converts at
+ * well under one percent, so the default whole-percent rounding renders every
+ * conversion figure in the console as "0%" — which reads as "nothing sells"
+ * rather than as "twenty orders from five thousand views" (Prompt C10). Two
+ * decimals is enough to tell 0.15% from 0.38%, which is the comparison the
+ * views-without-sales report exists to support.
+ */
+export function formatPercent(
+  fraction: number,
+  locale: string,
+  digits = 0,
+): string {
   return new Intl.NumberFormat(intlLocale(locale), {
     style: 'percent',
-    maximumFractionDigits: 0,
+    maximumFractionDigits: digits,
   }).format(fraction);
 }
 

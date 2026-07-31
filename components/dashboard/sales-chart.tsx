@@ -4,7 +4,6 @@ import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 
-import { usePrefersReducedMotion } from '@/components/custom/stat-card';
 import { formatCurrency, formatDate, formatDayMonth, formatNumber } from '@/lib/format';
 import { localeDirection } from '@/lib/i18n/routing';
 
@@ -35,7 +34,6 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
   const locale = useLocale();
   const t = useTranslations('dashboard');
   const isRtl = localeDirection(locale) === 'rtl';
-  const prefersReduced = usePrefersReducedMotion();
 
   // SVG gradient ids are document-global; two charts on one screen would
   // otherwise share — and fight over — a single <linearGradient>.
@@ -119,8 +117,8 @@ export function SalesChart({ data }: { data: SalesPoint[] }) {
               stroke: 'var(--color-background)',
               fill: 'var(--color-primary-600)',
             }}
-            isAnimationActive={!prefersReduced}
-            animationDuration={280}
+            // Off for the reason spelled out in ResponsivenessChart.
+            isAnimationActive={false}
           />
         </AreaChart>
       </ResponsiveContainer>
