@@ -130,6 +130,9 @@ export async function SiteFooter() {
 
         <FooterColumn title={t('footer.shopsHeading')}>
           <FooterLink href="/shops">{t('nav.shops')}</FooterLink>
+          {/* The map is a shopping tool, not a curiosity — it belongs beside
+              the directory rather than buried in an About page (Prompt C11). */}
+          <FooterLink href="/floors">{t('nav.floors')}</FooterLink>
           <FooterLink href="/dashboard">{t('nav.registerShop')}</FooterLink>
           <div className="pt-2">
             <span className="text-foreground block text-sm font-semibold">

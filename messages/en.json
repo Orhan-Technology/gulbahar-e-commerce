@@ -540,7 +540,7 @@
       },
       "ready": {
         "title": "Order ready",
-        "body": "Order {reference} is ready. {fulfillment, select, pickup {You can collect it from {shopName}.} other {A courier will deliver it shortly.}}"
+        "body": "{fulfillment, select, pickup {Order {reference} is ready to collect from {shopName}. Your collection code is {collectionCode} — please come within {holdHours} hours.} other {Order {reference} is ready. A courier will deliver it shortly.}}"
       },
       "fulfilled": {
         "title": "Order delivered",
@@ -549,6 +549,14 @@
       "nudged": {
         "title": "A reminder from mall management",
         "body": "Order {reference} is still unanswered. Please accept or reject it."
+      },
+      "collected": {
+        "title": "Order collected",
+        "body": "Order {reference} has been collected from {shopName}. Thank you — total {total}."
+      },
+      "holdExpired": {
+        "title": "Reservation released",
+        "body": "Your reservation for order {reference} at {shopName} was not collected in time and has been released. You are welcome to order again."
       }
     },
     "shop": {
@@ -695,7 +703,8 @@
     "searchHint4": "Discover new products",
     "liveNow": "Gulbahar Live",
     "myShop": "My shop",
-    "adminPanel": "Admin panel"
+    "adminPanel": "Admin panel",
+    "floors": "Floor map"
   },
   "home": {
     "shopByCategory": "Shop by category",
@@ -903,7 +912,8 @@
       "authorising": "Authorising payment…",
       "approved": "Payment approved"
     },
-    "hesabpay": "HesabPay"
+    "hesabpay": "HesabPay",
+    "pickupHold": "The shop sets your items aside and holds them for {hours} hours. When they are ready you get a short collection code — show it at the counter and there is no delivery fee."
   },
   "confirmation": {
     "title": "Your order is placed!",
@@ -964,6 +974,14 @@
     "rateShops": {
       "title": "How was it?",
       "body": "Tell other customers how this shop handled your order — the call, the wait, the packing. It takes a moment and it is the thing people read before buying from someone new."
+    },
+    "collection": {
+      "title": "Ready to collect",
+      "body": "Show this code at {shop} and they will hand your order over.",
+      "whereLabel": "Where",
+      "hoursLabel": "Mall hours",
+      "where": "Floor {floor} · Unit {unit}",
+      "expires": "Held until {when}. After that the shop may put the items back on the shelf."
     }
   },
   "wishlist": {
@@ -1278,7 +1296,8 @@
       "out_of_stock": "Out of stock",
       "cannot_fulfil": "Cannot fulfil this",
       "customer_unreachable": "Customer unreachable",
-      "price_error": "Price was wrong"
+      "price_error": "Price was wrong",
+      "hold_expired": "Reservation not collected"
     },
     "searchPlaceholder": "Search by order reference, customer phone or product…",
     "slip": {
@@ -1305,6 +1324,41 @@
       "errors": {
         "forbidden": "You are not allowed to do that",
         "invalid_input": "That selection is not valid"
+      }
+    },
+    "collect": {
+      "label": "Collection code",
+      "placeholder": "AC7K4",
+      "submit": "Hand over",
+      "saving": "Checking…",
+      "done": "Order {reference} collected.",
+      "errors": {
+        "forbidden": "Only this shop can do that.",
+        "invalid_input": "Enter the code the customer shows you.",
+        "not_found": "That order is not yours.",
+        "not_a_pickup": "This order is for delivery, not collection.",
+        "not_ready": "Mark the order ready before handing it over.",
+        "code_mismatch": "That code belongs to a different order. Check the customer’s screen.",
+        "transition_not_allowed": "Someone else already completed this order."
+      }
+    },
+    "holds": {
+      "title": "{count} reservations not collected",
+      "body": "The hold window on these has passed. Ring the customer first — releasing puts the items back on the shelf and cancels their order.",
+      "expired": "Expired {when}",
+      "units": "{count} items",
+      "release": "Release",
+      "released": "Released — {count} items back in stock.",
+      "confirmTitle": "Release this reservation?",
+      "confirmBody": "Order {reference} will be cancelled and its items go back on sale. The customer is told. This cannot be undone.",
+      "cancel": "Keep holding",
+      "errors": {
+        "forbidden": "Only this shop can do that.",
+        "invalid_input": "Something was not right. Try again.",
+        "not_found": "That order is not yours.",
+        "not_on_hold": "This order is not on hold.",
+        "not_expired": "The hold window has not passed yet.",
+        "transition_not_allowed": "Someone else already dealt with this order."
       }
     }
   },
@@ -2746,7 +2800,9 @@
       "running": "Resetting…",
       "done": "Demo data reset",
       "failed": "The reset failed"
-    }
+    },
+    "pickupHoldHours": "Reserve & collect hold (hours)",
+    "pickupHoldHoursHint": "How long a shop keeps a reserved order behind the counter before it may put the items back on the shelf."
   },
   "shopQuestions": {
     "title": "Customer questions",
@@ -2967,9 +3023,8 @@
       "verifiedBody": "Gulbahar Center management has confirmed that this is a registered business trading from this unit. It is not a rating and it says nothing about prices or quality.",
       "verifiedOn": "Confirmed {date}",
       "planTitle": "Floor {floor}",
-      "planEntrance": "Entrance",
-      "planStairs": "Stairs",
-      "planHint": "This shop is unit {unit} on floor {floor}. The plan is a guide, not to scale."
+      "planHint": "This shop is unit {unit} on floor {floor}. The plan is a guide, not to scale.",
+      "planLink": "See the whole floor"
     },
     "reviews": {
       "title": "What customers say about this shop",
@@ -3018,7 +3073,20 @@
     },
     "emptyTitle": "No shop has a floor recorded yet",
     "emptyBody": "This view is built from the floor and unit number on each shop. Add them and the plan fills itself in.",
-    "emptyAction": "Open the shop directory"
+    "emptyAction": "Open the shop directory",
+    "unitEditor": {
+      "edit": "Change unit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "unit": "Floor {floor} · Unit {unit}",
+      "moved": "Moved to unit {unit}.",
+      "errors": {
+        "forbidden": "Only mall management can do that.",
+        "invalid_input": "Enter a unit number.",
+        "not_found": "That shop no longer exists.",
+        "unit_taken": "Another shop is already at that unit."
+      }
+    }
   },
   "adminSettlements": {
     "title": "Settlements",
@@ -3063,7 +3131,8 @@
         "reject": "Sent a shop back with changes",
         "status": "Changed a shop’s status",
         "create": "Created a shop",
-        "nudge": "Nudged a shop"
+        "nudge": "Nudged a shop",
+        "unit": "Moved a shop to another unit"
       },
       "verification": {
         "verify": "Verified a shop",
@@ -3099,5 +3168,22 @@
         "locales": "Changed the published languages"
       }
     }
+  },
+  "floors": {
+    "title": "Mall floor map",
+    "subtitle": "Three floors, {shops} shops. Pick a floor, tap a unit.",
+    "floorTab": "Floor {floor}",
+    "allCategories": "Every category",
+    "entrance": "Entrance",
+    "stairs": "Stairs",
+    "vacant": "Unit {unit} — empty",
+    "unitLabel": "Unit {unit}",
+    "legendOpen": "Open now",
+    "legendShop": "Shop",
+    "legendVacant": "Empty unit",
+    "emptyTitle": "Nothing on this floor matches",
+    "emptyBody": "Try another category, or another floor.",
+    "shopsOnFloor": "{count} shops",
+    "viewShop": "Open shop page"
   }
 }

@@ -43,6 +43,8 @@ export type NotificationEventKey =
   | 'campaign.expiring'
   | 'review.received'
   | 'review.responded'
+  | 'order.collected'
+  | 'order.holdExpired'
   | 'order.nudged'
   | 'shop.nudged'
   | 'verification.submitted'

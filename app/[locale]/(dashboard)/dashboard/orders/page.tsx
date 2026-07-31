@@ -244,7 +244,12 @@ async function OrderList({
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <OrderActions orderId={order.id} status={order.status} size="sm" />
+                <OrderActions
+                  orderId={order.id}
+                  status={order.status}
+                  fulfillment={order.fulfillment}
+                  size="sm"
+                />
 
                 {/* Paper, for the person walking to the shelf (Prompt C6). */}
                 <Link

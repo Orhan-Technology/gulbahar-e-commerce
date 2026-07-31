@@ -50,7 +50,11 @@ export default async function ShopOrderPage({
           </h1>
           <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt, locale)}</p>
         </div>
-        <OrderActions orderId={order.id} status={order.status} />
+        <OrderActions
+          orderId={order.id}
+          status={order.status}
+          fulfillment={order.fulfillment}
+        />
       </div>
 
       <section className="rounded-card border-border bg-card border p-4">

@@ -43,7 +43,28 @@ if ! [[ "$CODE" =~ ^[0-9]{6}$ ]]; then
 fi
 
 # 3. CSRF token, saving its cookie into the jar.
-CSRF=$(curl -s -c "$JAR" "$BASE/api/auth/csrf" | python3 -c 'import json,sys; print(json.load(sys.stdin)["csrfToken"])')
+#
+# Retried, because `next dev` restarts itself when it approaches its memory
+# threshold — routine during a check that walks thirty pages — and an in-flight
+# request during that window comes back empty. Without the retry that surfaces
+# as a python JSONDecodeError traceback from inside a shell script, which names
+# neither the server nor the check that was running.
+CSRF=""
+for attempt in 1 2 3 4; do
+  RESPONSE=$(curl -s --max-time 30 -c "$JAR" "$BASE/api/auth/csrf" || true)
+  CSRF=$(printf '%s' "$RESPONSE" | python3 -c 'import json,sys
+try:
+    print(json.load(sys.stdin)["csrfToken"])
+except Exception:
+    pass' 2>/dev/null || true)
+  [ -n "$CSRF" ] && break
+  sleep "$attempt"
+done
+
+if [ -z "$CSRF" ]; then
+  echo "no CSRF token from $BASE — is the dev server up?" >&2
+  exit 1
+fi
 
 # 4. Exchange phone + code for a session. The path carries the PROVIDER ID, which
 #    is "otp" here, not "credentials" — the generic path 302s to

@@ -29,6 +29,7 @@ export type AuditAction =
   | 'shop.status'
   | 'shop.create'
   | 'shop.nudge'
+  | 'shop.unit'
   | 'verification.verify'
   | 'verification.reject'
   | 'verification.claim'

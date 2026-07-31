@@ -30,6 +30,9 @@ export async function orderWithTimeline(orderId: string) {
       discountTotal: orders.discountTotal,
       deliveryFee: orders.deliveryFee,
       total: orders.total,
+      /** Reserve & collect (Prompt C11) — null on every delivery order. */
+      collectionCode: orders.collectionCode,
+      holdExpiresAt: orders.holdExpiresAt,
       createdAt: orders.createdAt,
       customerId: users.id,
       customerName: users.name,

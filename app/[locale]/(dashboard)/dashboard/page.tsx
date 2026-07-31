@@ -5,6 +5,7 @@ import { Eye, ShoppingBag, Star, Wallet } from 'lucide-react';
 
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { ActionQueue } from '@/components/dashboard/action-queue';
+import { ExpiredHolds } from '@/components/dashboard/expired-holds';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
 import { SetupGuide, SetupGuideSkeleton } from '@/components/dashboard/setup-guide';
 import { SalesChart } from '@/components/dashboard/sales-chart';
@@ -54,6 +55,9 @@ export default async function DashboardPage({
   const { range: rangeKey } = await searchParams;
   const user = await requireShopkeeper(locale);
   const range = parseConsoleRange(rangeKey);
+  // Read once on the server and passed down — a client component may not call
+  // `new Date()` during render (React 19 purity, CLAUDE.md).
+  const now = new Date();
 
   return (
     /*
@@ -78,6 +82,14 @@ export default async function DashboardPage({
               returns null once every step is done (Prompt C5). */}
           <Suspense fallback={<SetupGuideSkeleton />}>
             <SetupGuide shopId={user.shopId} />
+          </Suspense>
+
+          {/* Expired reservations sit ABOVE the queue: they are goods sitting
+              in the back that nobody is coming for, and every hour they stay
+              there is stock the shop cannot sell (Prompt C11). Renders nothing
+              when there are none. */}
+          <Suspense fallback={null}>
+            <ExpiredHolds shopId={user.shopId} now={now} />
           </Suspense>
 
           <Suspense fallback={<QueueSkeleton />}>

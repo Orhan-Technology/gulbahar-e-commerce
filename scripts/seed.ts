@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
-import { desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import path from 'node:path';
 
 import { db, sql as pg } from '../lib/db';
@@ -42,6 +42,7 @@ import {
 } from '../lib/db/schema';
 import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { specTemplateFor } from '../lib/product-templates';
+import { generateCollectionCode } from '../lib/collection-code';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
 import { formatCurrency } from '../lib/format';
 import { pickLocale } from '../lib/db/localized';
@@ -1359,6 +1360,134 @@ async function main() {
     }
   }
 
+  // ----------------------------------------------------- reserve & collect
+  /*
+   * Collection codes and hold windows on the seeded pickup orders (Prompt C11).
+   *
+   * Written AFTER the order loop rather than inside it so no random draw moves:
+   * every order reference the runbook and the check scripts name comes out of
+   * that loop, and inserting one `pick()` there renumbers all of them
+   * (CLAUDE.md). The codes are drawn from the same PRNG, so a reset reproduces
+   * them exactly and the runbook can print one.
+   *
+   * Two states, both needed on screen: holds still inside their window — the
+   * customer's code panel and the shopkeeper's counter — and ONE already
+   * expired, which is the only way the release-the-stock moment is
+   * demonstrable without waiting two days.
+   */
+  const readyPickups = await db
+    .select({ id: orders.id, reference: orders.reference })
+    .from(orders)
+    .where(and(eq(orders.status, 'ready'), eq(orders.fulfillment, 'pickup')))
+    .orderBy(orders.reference);
+
+  /*
+   * THE DEMO'S OWN HOLD, staged rather than hoped for.
+   *
+   * The random draw put every ready pickup order on shops and customers the
+   * walkthrough never opens, so the code panel and the counter were both real
+   * and both invisible. This is one order, from the demo CUSTOMER at the demo
+   * SHOP, sitting ready with a live code — so the presenter can show the same
+   * hold from both sides in one breath.
+   *
+   * Its reference is outside the range the loop draws from, so nothing the
+   * runbook names moves (CLAUDE.md).
+   */
+  const demoCustomer = customerRows.find((row) => row.phone === '0700000003')!;
+  const demoShopSlug = shopSeed[0].slug;
+  const demoLines = sellable.filter((product) => product.shopSlug === demoShopSlug).slice(0, 2);
+  const demoSubtotal = demoLines.reduce(
+    (sum, product) => sum + (product.discountPrice ?? product.price),
+    0,
+  );
+  const demoPlacedAt = new Date(NOW.getTime() - 20 * 60 * 60 * 1000);
+
+  const [demoHold] = await db
+    .insert(orders)
+    .values({
+      reference: 'GC-25142',
+      userId: demoCustomer.id,
+      status: 'ready',
+      fulfillment: 'pickup',
+      paymentMethod: 'cod',
+      addressId: null,
+      subtotal: demoSubtotal,
+      discountTotal: 0,
+      deliveryFee: 0,
+      total: demoSubtotal,
+      collectionCode: generateCollectionCode(rand),
+      holdExpiresAt: new Date(NOW.getTime() + 28 * 60 * 60 * 1000),
+      createdAt: demoPlacedAt,
+    })
+    .returning();
+
+  await db.insert(orderItems).values(
+    demoLines.map((product) => ({
+      orderId: demoHold.id,
+      shopId: shopIds.get(demoShopSlug)!,
+      productId: productIds.get(product.slug)!,
+      titleSnapshot: product.title,
+      priceSnapshot: product.discountPrice ?? product.price,
+      quantity: 1,
+    })),
+  );
+
+  await db.insert(orderEvents).values([
+    { orderId: demoHold.id, fromStatus: null, toStatus: 'placed' as const, actorUserId: demoCustomer.id, createdAt: demoPlacedAt },
+    { orderId: demoHold.id, fromStatus: 'placed' as const, toStatus: 'accepted' as const, createdAt: new Date(demoPlacedAt.getTime() + 40 * 60 * 1000) },
+    { orderId: demoHold.id, fromStatus: 'accepted' as const, toStatus: 'ready' as const, createdAt: new Date(demoPlacedAt.getTime() + 5 * 60 * 60 * 1000) },
+  ]);
+
+  /*
+   * And one EXPIRED hold at the same shop, so the release-the-stock moment is
+   * demonstrable without waiting two days for a window to lapse.
+   */
+  const [demoExpired] = await db
+    .select({ id: orders.id, reference: orders.reference })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.status, 'ready'),
+        sql`exists (
+          select 1 from order_items oi join shops s on s.id = oi.shop_id
+          where oi.order_id = orders.id and s.slug = ${demoShopSlug}
+        )`,
+        ne(orders.id, demoHold.id),
+      ),
+    )
+    .limit(1);
+
+  if (demoExpired) {
+    await db
+      .update(orders)
+      .set({
+        fulfillment: 'pickup',
+        // A pickup order has no delivery address and no fee.
+        addressId: null,
+        deliveryFee: 0,
+        collectionCode: generateCollectionCode(rand),
+        holdExpiresAt: new Date(NOW.getTime() - 7 * 60 * 60 * 1000),
+      })
+      .where(eq(orders.id, demoExpired.id));
+  }
+
+  let holdsIssued = demoExpired ? 2 : 1;
+  const expiredHold: string | null = demoExpired?.reference ?? null;
+
+  for (const [index, order] of readyPickups.entries()) {
+    // The randomly-drawn ones are all LIVE: the expired case is staged above on
+    // the demo shop, where somebody will actually look at it.
+    await db
+      .update(orders)
+      .set({
+        collectionCode: generateCollectionCode(rand),
+        holdExpiresAt: new Date(NOW.getTime() + (12 + index * 6) * 60 * 60 * 1000),
+      })
+      .where(eq(orders.id, order.id));
+
+    holdsIssued += 1;
+  }
+
   // ----------------------------------------------- shop reviews and follows
   /*
    * SEEDED LAST, deliberately (Prompt C8).
@@ -1530,6 +1659,9 @@ async function main() {
     `  verifications       ${verificationPlan.length} (${verifiedShops} verified, 1 waiting, 1 rejected)`,
   );
   console.log(`  shop reviews        ${shopReviewCount} (one per fulfilled order per shop)`);
+  console.log(
+    `  collection holds    ${holdsIssued}${expiredHold ? ` (${expiredHold} already expired)` : ''}`,
+  );
   console.log(`  shop follows        ${followValues.length}`);
   console.log(`  audit entries       ${auditRows.length} (derived from seeded decisions)`);
 

@@ -25,6 +25,13 @@ export const ORDER_REJECT_REASONS = [
   'cannot_fulfil',
   'customer_unreachable',
   'price_error',
+  /*
+   * Written by the SYSTEM, not chosen by a shopkeeper (Prompt C11): a
+   * reserve-and-collect hold that nobody came for. It is in this list because
+   * the customer's message and C9's health report both read reasons from here,
+   * and an uncounted rejection reason would quietly understate the rate.
+   */
+  'hold_expired',
 ] as const;
 
 export type OrderRejectReason = (typeof ORDER_REJECT_REASONS)[number];

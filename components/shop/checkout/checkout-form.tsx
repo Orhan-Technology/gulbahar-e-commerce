@@ -42,6 +42,8 @@ export type CheckoutFormProps = {
   addresses: CheckoutAddress[];
   districts: string[];
   pickupShops: CheckoutPickupShop[];
+  /** How long a shop holds a reserve-and-collect order (Prompt C11). */
+  holdHours: number;
   /** Cart total before any delivery fee. */
   cartTotal: number;
   deliveryFee: number;
@@ -63,6 +65,7 @@ export function CheckoutForm({
   addresses,
   districts,
   pickupShops,
+  holdHours,
   cartTotal,
   deliveryFee,
   freeDeliveryThreshold,
@@ -284,6 +287,17 @@ export function CheckoutForm({
           <section className="rounded-card border-border bg-card space-y-2 border p-4">
             <h2 className="text-sm font-bold">{t('pickupHeading')}</h2>
             <p className="text-muted-foreground text-xs">{t('pickupBody')}</p>
+            {/*
+              The PROMISE, stated before they choose (Prompt C11): the shop
+              takes the goods off the shelf and holds them for a stated number
+              of hours, and a code arrives when it is ready. Someone deciding
+              between delivery and a trip up two flights of stairs needs to know
+              both halves of that, not discover the second on the confirmation
+              screen.
+            */}
+            <p className="rounded-control border-primary-200 bg-primary-50 text-primary-900 border p-2.5 text-xs leading-relaxed">
+              {t('pickupHold', { hours: formatNumber(holdHours, locale) })}
+            </p>
             <ul className="space-y-1.5 pt-1">
               {pickupShops.map((shop) => (
                 <li key={shop.shopId} className="flex items-center gap-2 text-sm">

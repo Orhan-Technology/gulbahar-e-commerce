@@ -27,6 +27,7 @@ export const DEFAULT_SETTINGS: Omit<PlatformSettings, 'id' | 'updatedAt'> = {
   supportPhone: '0202201400',
   deliveryFee: 150,
   freeDeliveryThreshold: 20000,
+  pickupHoldHours: 48,
   currencyLabel: { fa: 'افغانی', en: 'AFN' },
   defaultLocale: 'fa',
   // Pashto is structure-only (PRD §11) — offering it in the switcher would send

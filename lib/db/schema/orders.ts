@@ -37,6 +37,19 @@ export const orders = pgTable(
     discountTotal: integer('discount_total').notNull().default(0),
     deliveryFee: integer('delivery_fee').notNull().default(0),
     total: integer('total').notNull(),
+    /**
+     * Reserve & collect (Prompt C11). Both are null until a PICKUP order is
+     * marked ready — there is nothing to collect and nothing to expire before
+     * the goods are actually behind the counter.
+     *
+     * The code is short and unambiguous because it gets read down a phone and
+     * copied onto a paper bag (see lib/collection-code.ts). It is not a secret
+     * and it is not an authorisation: it matches a customer to a parcel, and
+     * the shopkeeper is standing in front of them.
+     */
+    collectionCode: text('collection_code'),
+    /** When an unclaimed hold may be released and the stock put back. */
+    holdExpiresAt: timestampCol('hold_expires_at'),
     createdAt: createdAt(),
   },
   (table) => [

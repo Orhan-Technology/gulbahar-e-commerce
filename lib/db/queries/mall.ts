@@ -284,3 +284,94 @@ export async function shopHealth(days: number): Promise<ShopHealth[]> {
     // Most flags first: a shop failing three ways is the one to call today.
     .sort((a, b) => b.flags.length - a.flags.length);
 }
+
+export type MapUnit = {
+  unit: number;
+  shop: {
+    id: string;
+    slug: string;
+    name: LocalizedText;
+    categorySlug: string | null;
+    categoryName: LocalizedText | null;
+    hours: string | null;
+    logoPath: string | null;
+    productCount: number;
+  } | null;
+};
+
+export type MapFloor = { floor: number; units: MapUnit[] };
+
+/**
+ * The public floor map (Prompt C11).
+ *
+ * A DIFFERENT QUERY FROM `floorOccupancy`, deliberately, even though both walk
+ * the same table. The admin view is about the business — revenue, verification,
+ * pending applications — and a shopper needs none of that and must not see
+ * suspended tenants at all. Sharing one query would mean a `public: boolean`
+ * flag threaded through every field, which is how a suspended shop eventually
+ * appears on a customer's map.
+ *
+ * The vacant units are the SAME derivation as the admin view: gaps inside the
+ * occupied range, never a hard-coded inventory. They are drawn because a plan
+ * with no gaps in it does not read as a building.
+ */
+export async function mallMap(): Promise<MapFloor[]> {
+  const rows = await db.execute(sql`
+    select
+      s.floor::int as floor,
+      s.id::text as id,
+      s.slug as slug,
+      s.name as name,
+      s.unit_number as unit_number,
+      s.hours as hours,
+      s.logo_path as logo_path,
+      c.slug as category_slug,
+      c.name as category_name,
+      (select count(*)::int from products p
+        where p.shop_id = s.id and p.status = 'published') as product_count
+    from shops s
+    left join categories c on c.id = s.category_id
+    where s.floor is not null and s.status = 'approved'
+    order by s.floor asc, s.unit_number asc
+  `);
+
+  const byFloor = new Map<number, MapUnit[]>();
+
+  for (const row of rows as unknown as Array<Record<string, unknown>>) {
+    const floor = Number(row.floor);
+    const unit = Number(row.unit_number);
+    if (Number.isNaN(unit)) continue;
+
+    const list = byFloor.get(floor) ?? [];
+    list.push({
+      unit,
+      shop: {
+        id: String(row.id),
+        slug: String(row.slug),
+        name: row.name as LocalizedText,
+        categorySlug: row.category_slug === null ? null : String(row.category_slug),
+        categoryName: row.category_name === null ? null : (row.category_name as LocalizedText),
+        hours: row.hours === null ? null : String(row.hours),
+        logoPath: row.logo_path === null ? null : String(row.logo_path),
+        productCount: Number(row.product_count),
+      },
+    });
+    byFloor.set(floor, list);
+  }
+
+  return [...byFloor.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([floor, occupied]) => {
+      const held = new Set(occupied.map((entry) => entry.unit));
+      const lowest = Math.min(...held);
+      const highest = Math.max(...held);
+
+      const units: MapUnit[] = [];
+      for (let unit = lowest; unit <= highest; unit += 1) {
+        const match = occupied.find((entry) => entry.unit === unit);
+        units.push(match ?? { unit, shop: null });
+      }
+
+      return { floor, units };
+    });
+}

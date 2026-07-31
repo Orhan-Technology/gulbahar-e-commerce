@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BadgeCheck, CalendarClock, Clock, MapPin, Phone } from 'lucide-react';
 
-import { FloorPlan } from '@/components/shop/shop-page/floor-plan';
+import { ShopFloorMap } from '@/components/shop/shop-page/shop-floor-map';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
 import {
@@ -140,7 +140,13 @@ export async function AboutTab({ shop, now }: { shop: AboutShop; now: Date }) {
         )}
       </div>
 
-      {shop.floor !== null && <FloorPlan floor={shop.floor} unitNumber={shop.unitNumber} />}
+      {/*
+        The REAL floor map now (Prompt C11), not the schematic C8 shipped as a
+        placeholder: same units, same neighbours, the shop's own unit lit up,
+        and every other unit a link. The neighbours were the part the schematic
+        could not honestly draw.
+      */}
+      {shop.floor !== null && <ShopFloorMap floor={shop.floor} unitNumber={shop.unitNumber} />}
     </div>
   );
 }

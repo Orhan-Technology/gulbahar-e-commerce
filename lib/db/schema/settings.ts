@@ -36,6 +36,16 @@ export const platformSettings = pgTable(
     /** Integer afghanis, like every other money column (CLAUDE.md). */
     deliveryFee: integer('delivery_fee').notNull(),
     freeDeliveryThreshold: integer('free_delivery_threshold').notNull(),
+    /**
+     * How long a shop holds a reserve-and-collect order (Prompt C11).
+     *
+     * Settings rather than a constant because it is a MALL POLICY, not a
+     * technical limit: a mall that fills its units may want twenty-four hours,
+     * and the client should be able to say so on screen rather than in a
+     * ticket. Hours, not days — "48 hours" is what the shopkeeper tells the
+     * customer, and expressing it in days would round away the answer.
+     */
+    pickupHoldHours: integer('pickup_hold_hours').notNull().default(48),
     /** What the storefront calls the currency, e.g. "افغانی" / "AFN". */
     currencyLabel: jsonb('currency_label').$type<LocalizedText>().notNull(),
     defaultLocale: localeEnum('default_locale').notNull().default('fa'),

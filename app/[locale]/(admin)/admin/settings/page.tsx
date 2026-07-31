@@ -58,6 +58,7 @@ export default async function AdminSettingsPage({
             hours: settings.hours,
             supportPhone: settings.supportPhone,
             deliveryFee: settings.deliveryFee,
+            pickupHoldHours: settings.pickupHoldHours,
             freeDeliveryThreshold: settings.freeDeliveryThreshold,
             currencyLabel: settings.currencyLabel,
           }}

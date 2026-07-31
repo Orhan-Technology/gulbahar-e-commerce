@@ -4,11 +4,13 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Banknote, MapPin, Smartphone, Store } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
+import { CollectionPanel } from '@/components/shop/account/collection-panel';
 import { RateShopsPrompt } from '@/components/shop/account/rate-shops-prompt';
 import { ReorderButton } from '@/components/shop/account/reorder-button';
 import { requireUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -36,6 +38,8 @@ export default async function OrderDetailPage({
   if (!order || order.customerId !== session.id) notFound();
 
   const shops = [...new Map(order.items.map((item) => [item.shopId, item])).values()];
+  const settings = await siteSettings();
+  const collectFrom = shops[0];
 
   return (
     // The hub layout owns the page frame (Prompt A2).
@@ -47,6 +51,21 @@ export default async function OrderDetailPage({
         </div>
         <ReorderButton reference={order.reference} />
       </div>
+
+      {/*
+        The collection code, ABOVE the timeline (Prompt C11). It is the only
+        thing on this page used standing up, so it comes before the history.
+      */}
+      {order.collectionCode && order.status === 'ready' && collectFrom && (
+        <CollectionPanel
+          code={order.collectionCode}
+          expiresAt={order.holdExpiresAt}
+          shopName={pickLocale(collectFrom.shopName, locale)}
+          floor={collectFrom.shopFloor}
+          unitNumber={collectFrom.shopUnitNumber}
+          mallHours={settings.hours}
+        />
+      )}
 
       <section className="rounded-card border-border bg-card border p-4">
         {/*

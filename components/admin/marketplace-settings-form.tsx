@@ -18,6 +18,7 @@ export type MarketplaceSettings = {
   supportPhone: string;
   deliveryFee: number;
   freeDeliveryThreshold: number;
+  pickupHoldHours: number;
   currencyLabel: { fa: string; en?: string | null };
 };
 
@@ -45,6 +46,7 @@ export function MarketplaceSettingsForm({ settings }: { settings: MarketplaceSet
 
   const [fee, setFee] = React.useState(String(settings.deliveryFee));
   const [threshold, setThreshold] = React.useState(String(settings.freeDeliveryThreshold));
+  const [holdHours, setHoldHours] = React.useState(String(settings.pickupHoldHours));
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,6 +61,7 @@ export function MarketplaceSettingsForm({ settings }: { settings: MarketplaceSet
         supportPhone: text('supportPhone'),
         deliveryFee: Number(text('deliveryFee')),
         freeDeliveryThreshold: Number(text('freeDeliveryThreshold')),
+        pickupHoldHours: Number(text('pickupHoldHours')),
         currencyLabel: { fa: text('currencyFa'), en: text('currencyEn') },
       });
 
@@ -157,6 +160,25 @@ export function MarketplaceSettingsForm({ settings }: { settings: MarketplaceSet
               amount: formatCurrency(Number(threshold) || 0, locale),
             })}
           </p>
+        </div>
+
+        {/* A MALL POLICY, not a technical limit (Prompt C11): how long a shop
+            keeps a reserved order behind the counter. The client should be able
+            to change it on screen rather than in a ticket. */}
+        <div className="space-y-1.5">
+          <Label htmlFor="pickupHoldHours">{t('pickupHoldHours')}</Label>
+          <Input
+            id="pickupHoldHours"
+            name="pickupHoldHours"
+            type="number"
+            min={1}
+            max={336}
+            dir="ltr"
+            value={holdHours}
+            onChange={(event) => setHoldHours(event.target.value)}
+            required
+          />
+          <p className="text-muted-foreground text-xs">{t('pickupHoldHoursHint')}</p>
         </div>
       </div>
 

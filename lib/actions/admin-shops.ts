@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, ne } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { db } from '../db';
@@ -314,4 +314,85 @@ export async function createShopWithOwner(
 
   revalidateStorefront(created.slug);
   return { ok: true, data: { shopId: created.id, slug: created.slug, ownerCreated } };
+}
+
+const unitSchema = z.object({
+  shopId: z.string().uuid(),
+  floor: z.coerce.number().int().min(0).max(10),
+  unitNumber: z.string().trim().min(1).max(20),
+});
+
+/**
+ * Reassigns a tenant to a unit (Prompt C11).
+ *
+ * THE ONE PIECE OF "SHOP CONTENT" ADMIN LEGITIMATELY OWNS, and the exception is
+ * worth stating because this file exists to have no such exception. Floor and
+ * unit are not the shop's description of itself — they are the LANDLORD'S
+ * record of which door the tenant is behind. A shop that could edit its own
+ * unit could move itself onto the floor map into somebody else's doorway, and
+ * the map is the one screen whose whole value is that it is true.
+ *
+ * Everything else in a shop's profile — name, story, hours, phone, prices,
+ * products — still has no writer anywhere in lib/actions/admin-*.ts (PRD §3.1).
+ *
+ * A UNIT MAY NOT BE OCCUPIED TWICE. Two shops on 214 would draw one over the
+ * other on the plan and make "which shop is at 214" unanswerable, so the clash
+ * is refused with the occupant named rather than silently accepted.
+ */
+export async function assignShopUnit(
+  input: z.input<typeof unitSchema>,
+): Promise<AdminActionResult> {
+  const context = await requireAdminContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = unitSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [clash] = await db
+    .select({ id: shops.id, name: shops.name })
+    .from(shops)
+    .where(
+      and(
+        eq(shops.floor, parsed.data.floor),
+        eq(shops.unitNumber, parsed.data.unitNumber),
+        ne(shops.id, parsed.data.shopId),
+        ne(shops.status, 'closed'),
+      ),
+    )
+    .limit(1);
+
+  if (clash) return { ok: false, error: 'unit_taken' };
+
+  const [before] = await db
+    .select({ floor: shops.floor, unitNumber: shops.unitNumber, name: shops.name })
+    .from(shops)
+    .where(eq(shops.id, parsed.data.shopId))
+    .limit(1);
+
+  if (!before) return { ok: false, error: 'not_found' };
+
+  const [updated] = await db
+    .update(shops)
+    .set({ floor: parsed.data.floor, unitNumber: parsed.data.unitNumber })
+    .where(eq(shops.id, parsed.data.shopId))
+    .returning({ slug: shops.slug });
+
+  if (!updated) return { ok: false, error: 'not_found' };
+
+  await recordAdminAction({
+    ...context,
+    action: 'shop.unit',
+    targetType: 'shop',
+    targetId: parsed.data.shopId,
+    targetLabel: before.name.fa,
+    detail: {
+      from: `${before.floor ?? '—'}/${before.unitNumber ?? '—'}`,
+      to: `${parsed.data.floor}/${parsed.data.unitNumber}`,
+    },
+  });
+
+  revalidateStorefront(updated.slug);
+  revalidatePath('/admin/floors');
+  revalidatePath('/floors');
+  return { ok: true };
 }

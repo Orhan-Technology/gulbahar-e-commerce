@@ -7,6 +7,7 @@ import { Check, PackageCheck, ThumbsUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { CollectForm } from '@/components/dashboard/orders/collect-form';
 import { OrderRejectButton } from '@/components/dashboard/orders/order-reject-button';
 import { advanceOrderStatus } from '@/lib/actions/shop-orders';
 
@@ -28,10 +29,20 @@ type Status = 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected';
 export function OrderActions({
   orderId,
   status,
+  fulfillment = 'delivery',
   size = 'default',
 }: {
   orderId: string;
   status: Status;
+  /**
+   * A READY PICKUP ORDER HAS NO "mark fulfilled" BUTTON (Prompt C11).
+   *
+   * It is collected, not delivered, and the transition is the customer reading
+   * out their code — so the control that ends it is the CollectForm, not a
+   * button the shopkeeper can press with nobody standing there. Leaving both on
+   * screen would make the code optional, which is the same as not having one.
+   */
+  fulfillment?: 'delivery' | 'pickup';
   size?: 'sm' | 'default';
 }) {
   const t = useTranslations('shopOrders.actions');
@@ -72,12 +83,14 @@ export function OrderActions({
         </Button>
       )}
 
-      {status === 'ready' && (
+      {status === 'ready' && fulfillment === 'delivery' && (
         <Button size={size} onClick={() => run('fulfilled')} disabled={pending}>
           <Check />
           {t('markFulfilled')}
         </Button>
       )}
+
+      {status === 'ready' && fulfillment === 'pickup' && <CollectForm orderId={orderId} />}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, inArray, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lt, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
 import {
@@ -242,4 +242,69 @@ export async function shopNameFor(shopId: string) {
     .where(eq(shops.id, shopId))
     .limit(1);
   return row ?? null;
+}
+
+/**
+ * Holds nobody came for (Prompt C11).
+ *
+ * Surfaced in the shopkeeper's queue rather than expired by a background job,
+ * and that is deliberate: this build has no scheduler, and a hold that expired
+ * itself would put goods back on the shelf while the customer was walking up
+ * the stairs. The shopkeeper is standing next to the parcel and is the only one
+ * who can see whether it is still there.
+ */
+export async function expiredHolds(shopId: string, now: Date) {
+  const rows = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      collectionCode: orders.collectionCode,
+      holdExpiresAt: orders.holdExpiresAt,
+      total: orders.total,
+      customerName: users.name,
+      customerPhone: users.phone,
+      units: sql<number>`(
+        select coalesce(sum(oi.quantity), 0)::int from order_items oi
+        where oi.order_id = orders.id and oi.shop_id = ${shopId}
+      )`,
+    })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(
+      and(
+        eq(orders.status, 'ready'),
+        eq(orders.fulfillment, 'pickup'),
+        lt(orders.holdExpiresAt, now),
+        sql`exists (select 1 from order_items oi where oi.order_id = orders.id and oi.shop_id = ${shopId})`,
+      ),
+    )
+    .orderBy(asc(orders.holdExpiresAt));
+
+  return rows.map((row) => ({ ...row, units: Number(row.units) }));
+}
+
+/** Holds still inside their window — the counter's "waiting to be collected". */
+export async function activeHolds(shopId: string, now: Date) {
+  const rows = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      collectionCode: orders.collectionCode,
+      holdExpiresAt: orders.holdExpiresAt,
+      customerName: users.name,
+      customerPhone: users.phone,
+    })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(
+      and(
+        eq(orders.status, 'ready'),
+        eq(orders.fulfillment, 'pickup'),
+        gte(orders.holdExpiresAt, now),
+        sql`exists (select 1 from order_items oi where oi.order_id = orders.id and oi.shop_id = ${shopId})`,
+      ),
+    )
+    .orderBy(asc(orders.holdExpiresAt));
+
+  return rows;
 }

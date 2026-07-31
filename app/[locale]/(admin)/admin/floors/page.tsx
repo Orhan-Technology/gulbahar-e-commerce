@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { BadgeCheck, Building2, Store } from 'lucide-react';
 
 import { FloorPlanGrid } from '@/components/admin/floor-plan-grid';
+import { UnitEditor } from '@/components/admin/unit-editor';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { RangeControl } from '@/components/console/range-control';
 import { EmptyState } from '@/components/custom/empty-state';
@@ -10,7 +11,7 @@ import { requireAdmin } from '@/lib/auth/guards';
 import { parseConsoleRange, type ConsoleRangeKey } from '@/lib/console-range';
 import { pickLocale } from '@/lib/db/localized';
 import { floorOccupancy } from '@/lib/db/queries/mall';
-import { formatCurrency, formatNumber, formatUnitNumber } from '@/lib/format';
+import { formatCurrency, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -137,10 +138,14 @@ export default async function AdminFloorsPage({
                       )}
                     </span>
                     <span className="text-muted-foreground block text-xs">
-                      {t('unit', { unit: formatUnitNumber(shop.unitNumber, locale) || '—' })} ·{' '}
                       {t('productCount', { count: formatNumber(shop.productCount, locale) })}
                     </span>
                   </Link>
+
+                  {/* The unit is EDITABLE here and nowhere else (Prompt C11):
+                      the mall assigns doors, and this is the screen that shows
+                      the doors. */}
+                  <UnitEditor shopId={shop.id} floor={floor.floor} unitNumber={shop.unitNumber} />
 
                   <span
                     className={cn(

@@ -62,6 +62,9 @@ const marketplaceSchema = z.object({
   /** Integer afghanis, like every other money value in the system. */
   deliveryFee: z.number().int().min(0).max(10_000),
   freeDeliveryThreshold: z.number().int().min(0).max(1_000_000),
+  // One hour to two weeks. Below an hour is not a hold; above two weeks the
+  // shop is a warehouse (Prompt C11).
+  pickupHoldHours: z.number().int().min(1).max(336),
   currencyLabel: localizedText,
 });
 

@@ -92,6 +92,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
           cartTotal={cart.total}
           deliveryFee={settings.deliveryFee}
           freeDeliveryThreshold={settings.freeDeliveryThreshold}
+          holdHours={settings.pickupHoldHours}
         />
       </div>
     </div>

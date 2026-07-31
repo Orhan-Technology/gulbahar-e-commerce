@@ -7,7 +7,13 @@ import { z } from 'zod';
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { pickLocale } from '../db/localized';
-import { orderEvents, orders, users, type OrderStatus } from '../db/schema';
+import { orderEvents, orderItems, orders, products, users, type OrderStatus } from '../db/schema';
+import { siteSettings } from '../db/queries/settings';
+import {
+  collectionCodeMatches,
+  formatCollectionCode,
+  generateCollectionCode,
+} from '../collection-code';
 import { shopNameFor } from '../db/queries/shop-orders';
 import { formatCurrency } from '../format';
 import { notify, type NotificationEventKey } from '../notify';
@@ -145,9 +151,37 @@ export async function advanceOrderStatus(
     TRANSITIONS[from].includes(to),
   );
 
+  /*
+   * RESERVE & COLLECT (Prompt C11). A pickup order marked ready is a parcel
+   * physically under the counter, so this is the moment it gets a code the
+   * customer can read out and a window after which the shop may put the goods
+   * back on the shelf.
+   *
+   * Read BEFORE the update so the branch is decided from the row rather than
+   * from the caller: `to === 'ready'` alone would issue a code for a delivery
+   * order, which would then appear on a customer's screen next to an address.
+   */
+  const [existing] = await db
+    .select({ fulfillment: orders.fulfillment, collectionCode: orders.collectionCode })
+    .from(orders)
+    .where(eq(orders.id, orderId))
+    .limit(1);
+
+  const issuingHold = to === 'ready' && existing?.fulfillment === 'pickup';
+  const settings = issuingHold ? await siteSettings() : null;
+
+  const holdFields = issuingHold
+    ? {
+        // Kept if it already exists: a second "mark ready" must not change a
+        // code the customer has already been sent.
+        collectionCode: existing?.collectionCode ?? generateCollectionCode(),
+        holdExpiresAt: new Date(Date.now() + (settings?.pickupHoldHours ?? 48) * 3_600_000),
+      }
+    : {};
+
   const [updated] = await db
     .update(orders)
-    .set({ status: to })
+    .set({ status: to, ...holdFields })
     .where(
       and(
         eq(orders.id, orderId),
@@ -164,9 +198,45 @@ export async function advanceOrderStatus(
       fulfillment: orders.fulfillment,
       userId: orders.userId,
       total: orders.total,
+      collectionCode: orders.collectionCode,
+      holdExpiresAt: orders.holdExpiresAt,
     });
 
   if (!updated) return { ok: false, error: 'transition_not_allowed' };
+
+  /*
+   * ACCEPTING A PICKUP ORDER TAKES THE GOODS OFF THE SHELF (Prompt C11).
+   *
+   * That is what "reserve" means, physically: the shopkeeper puts the item
+   * under the counter with the customer's name on it, and it is no longer for
+   * sale to whoever walks in next. Without this the shop can sell the same last
+   * pair of shoes twice and disappoint the person who reserved it — the exact
+   * failure reserve-and-collect exists to prevent.
+   *
+   * Only for PICKUP, and only THIS shop's lines. Delivery orders are not
+   * reserved anywhere in this build; that is a wider gap than C11 and faking it
+   * here would make stock behave differently depending on how someone chose to
+   * receive the same product.
+   *
+   * `releaseExpiredHold` is the exact inverse, and rejecting an accepted pickup
+   * order goes through it too.
+   */
+  if (to === 'accepted' && updated.fulfillment === 'pickup') {
+    const lines = await db
+      .select({ productId: orderItems.productId, quantity: orderItems.quantity })
+      .from(orderItems)
+      .where(and(eq(orderItems.orderId, orderId), eq(orderItems.shopId, context.shopId)));
+
+    for (const line of lines) {
+      if (!line.productId) continue;
+      await db
+        .update(products)
+        // Never below zero: a shop that oversold before accepting should end at
+        // zero rather than at a negative number the stock report cannot show.
+        .set({ stock: sql`greatest(${products.stock} - ${line.quantity}, 0)` })
+        .where(eq(products.id, line.productId));
+    }
+  }
 
   const shop = await shopNameFor(context.shopId);
 
@@ -210,6 +280,9 @@ export async function advanceOrderStatus(
       reason: reasonCode
         ? [rejectReasonText(reasonCode, locale), reason].filter(Boolean).join(' — ')
         : (reason ?? ''),
+      // Empty for delivery, which is what the message template branches on.
+      collectionCode: updated.collectionCode ? formatCollectionCode(updated.collectionCode) : '',
+      holdHours: settings ? String(settings.pickupHoldHours) : '',
     },
   });
 
@@ -223,4 +296,231 @@ export async function advanceOrderStatus(
   revalidatePath(`/account/orders/${updated.reference}`);
 
   return { ok: true, data: { status: to } };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Reserve & collect (Prompt C11)                                             */
+
+/**
+ * The customer arrives, reads out their code, and takes the parcel away.
+ *
+ * A SEPARATE ACTION from `advanceOrderStatus`, not a flag on it, because the
+ * precondition is different in kind: every other transition is the shopkeeper
+ * deciding something, and this one is the shopkeeper CONFIRMING something the
+ * customer brought with them. Folding it in would mean an optional code
+ * parameter that is silently ignored on four of the five transitions.
+ *
+ * The code is checked SERVER-SIDE against the stored one. It is not a secret —
+ * the shopkeeper can already see the order — but a mismatch means the parcel in
+ * their hand belongs to somebody else, which is exactly the mistake worth
+ * catching at a busy counter.
+ */
+const collectSchema = z.object({
+  orderId: z.string().uuid(),
+  code: z.string().trim().min(3).max(12),
+});
+
+export async function collectOrder(
+  input: z.input<typeof collectSchema>,
+): Promise<OrderActionResult<{ reference: string }>> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = collectSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [order] = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      status: orders.status,
+      fulfillment: orders.fulfillment,
+      collectionCode: orders.collectionCode,
+      userId: orders.userId,
+      total: orders.total,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.id, parsed.data.orderId),
+        sql`exists (select 1 from order_items oi where oi.order_id = orders.id and oi.shop_id = ${context.shopId})`,
+      ),
+    )
+    .limit(1);
+
+  if (!order) return { ok: false, error: 'not_found' };
+  if (order.fulfillment !== 'pickup') return { ok: false, error: 'not_a_pickup' };
+  if (order.status !== 'ready') return { ok: false, error: 'not_ready' };
+  if (!collectionCodeMatches(order.collectionCode, parsed.data.code)) {
+    return { ok: false, error: 'code_mismatch' };
+  }
+
+  const [updated] = await db
+    .update(orders)
+    // The hold is over, so the expiry is cleared: an expired-holds queue that
+    // still listed collected orders would be a list of work already done.
+    .set({ status: 'fulfilled', holdExpiresAt: null })
+    .where(and(eq(orders.id, order.id), eq(orders.status, 'ready')))
+    .returning({ id: orders.id });
+
+  if (!updated) return { ok: false, error: 'transition_not_allowed' };
+
+  await db.insert(orderEvents).values({
+    orderId: order.id,
+    fromStatus: 'ready',
+    toStatus: 'fulfilled',
+    actorUserId: context.userId,
+    note: 'collected',
+  });
+
+  const [customer] = await db
+    .select({ locale: users.locale })
+    .from(users)
+    .where(eq(users.id, order.userId))
+    .limit(1);
+
+  const shop = await shopNameFor(context.shopId);
+  const locale = customer?.locale ?? 'fa';
+
+  await notify({
+    eventKey: 'order.collected',
+    recipientUserId: order.userId,
+    recipientRole: 'customer',
+    locale,
+    values: {
+      reference: order.reference,
+      shopName: shop ? pickLocale(shop.name, locale) : '',
+      total: formatCurrency(order.total, locale),
+    },
+  });
+
+  revalidateOrder(order.id, order.reference);
+  return { ok: true, data: { reference: order.reference } };
+}
+
+/**
+ * Releases an unclaimed hold and puts the goods back on the shelf.
+ *
+ * THE STOCK MOVEMENT IS THE POINT. A reserve-and-collect order takes the item
+ * off the shelf the moment the shop accepts it — that is what "reserve" means,
+ * and it is what stops the shop selling the same last pair of shoes twice — so
+ * an unclaimed hold has to give it back or the catalogue slowly starves.
+ *
+ * The order ends REJECTED with an enumerated reason rather than in a new
+ * terminal state: the customer did not collect it, the shop is not at fault,
+ * and 'rejected' already carries a reason the customer is told about. Inventing
+ * an 'expired' status would mean teaching every status filter, chart and
+ * notification template about a sixth value for one case.
+ *
+ * Only after the window has actually passed. A shopkeeper who wants the goods
+ * back sooner can reject the order and say why.
+ */
+export async function releaseExpiredHold(
+  orderId: string,
+): Promise<OrderActionResult<{ restored: number }>> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = z.string().uuid().safeParse(orderId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [order] = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      status: orders.status,
+      fulfillment: orders.fulfillment,
+      holdExpiresAt: orders.holdExpiresAt,
+      userId: orders.userId,
+      total: orders.total,
+    })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.id, parsed.data),
+        sql`exists (select 1 from order_items oi where oi.order_id = orders.id and oi.shop_id = ${context.shopId})`,
+      ),
+    )
+    .limit(1);
+
+  if (!order) return { ok: false, error: 'not_found' };
+  if (order.fulfillment !== 'pickup' || order.status !== 'ready') {
+    return { ok: false, error: 'not_on_hold' };
+  }
+  if (!order.holdExpiresAt || order.holdExpiresAt.getTime() > Date.now()) {
+    return { ok: false, error: 'not_expired' };
+  }
+
+  const restored = await db.transaction(async (tx) => {
+    const [moved] = await tx
+      .update(orders)
+      .set({ status: 'rejected', holdExpiresAt: null, collectionCode: null })
+      .where(and(eq(orders.id, order.id), eq(orders.status, 'ready')))
+      .returning({ id: orders.id });
+
+    if (!moved) return 0;
+
+    // Only THIS shop's lines: a basket that crossed two shops must not put
+    // the other tenant's goods back (PRD §3.1).
+    const lines = await tx
+      .select({ productId: orderItems.productId, quantity: orderItems.quantity })
+      .from(orderItems)
+      .where(and(eq(orderItems.orderId, order.id), eq(orderItems.shopId, context.shopId)));
+
+    let units = 0;
+    for (const line of lines) {
+      if (!line.productId) continue;
+      await tx
+        .update(products)
+        .set({ stock: sql`${products.stock} + ${line.quantity}` })
+        .where(eq(products.id, line.productId));
+      units += line.quantity;
+    }
+
+    await tx.insert(orderEvents).values({
+      orderId: order.id,
+      fromStatus: 'ready',
+      toStatus: 'rejected',
+      actorUserId: context.userId,
+      note: 'reason:hold_expired',
+    });
+
+    return units;
+  });
+
+  if (restored === 0 && order.status !== 'ready') {
+    return { ok: false, error: 'transition_not_allowed' };
+  }
+
+  const [customer] = await db
+    .select({ locale: users.locale })
+    .from(users)
+    .where(eq(users.id, order.userId))
+    .limit(1);
+
+  const shop = await shopNameFor(context.shopId);
+  const locale = customer?.locale ?? 'fa';
+
+  await notify({
+    eventKey: 'order.holdExpired',
+    recipientUserId: order.userId,
+    recipientRole: 'customer',
+    locale,
+    values: {
+      reference: order.reference,
+      shopName: shop ? pickLocale(shop.name, locale) : '',
+    },
+  });
+
+  revalidateOrder(order.id, order.reference);
+  revalidatePath('/dashboard/products');
+  return { ok: true, data: { restored } };
+}
+
+function revalidateOrder(orderId: string, reference: string) {
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/orders');
+  revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath('/account/orders');
+  revalidatePath(`/account/orders/${reference}`);
 }
