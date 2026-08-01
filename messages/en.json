@@ -855,7 +855,12 @@
     "popularTitle": "Popular products",
     "noSuggestions": "No suggestions",
     "seeAllFor": "See all results for \"{term}\"",
-    "shopLabel": "Shop"
+    "shopLabel": "Shop",
+    "recentHeading": "Recent searches",
+    "clearRecent": "Clear",
+    "removeRecent": "Remove “{term}” from recent searches",
+    "trendingHeading": "Trending searches",
+    "refreshTrending": "Refresh"
   },
   "checkout": {
     "title": "Checkout",

@@ -855,7 +855,12 @@
     "popularTitle": "محصولات پرطرفدار",
     "noSuggestions": "پیشنهادی نیست",
     "seeAllFor": "دیدن همه نتایج برای «{term}»",
-    "shopLabel": "دکان"
+    "shopLabel": "دکان",
+    "recentHeading": "جستجوهای اخیر شما",
+    "clearRecent": "پاک کردن",
+    "removeRecent": "برداشتن «{term}» از جستجوهای اخیر",
+    "trendingHeading": "جستجوهای پرطرفدار",
+    "refreshTrending": "تازه‌سازی"
   },
   "checkout": {
     "title": "پرداخت و تحویل",

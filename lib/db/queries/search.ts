@@ -151,3 +151,47 @@ export async function searchSuggestions(term: string, locale: string) {
   ]);
   return { products, shops };
 }
+
+/**
+ * What the mall is searching for (trending).
+ *
+ * GROUPED ON THE NORMALISED FORM but displayed as the most common SPELLING of
+ * that group — so "کفش" and "کفش " are one chip, and the chip reads the way
+ * people actually type it.
+ *
+ * A MINIMUM COUNT, because a "trend" of one is just a person. Below it the list
+ * is a log of individual curiosity rather than an aggregate, which is both less
+ * useful and a small privacy leak on a quiet site.
+ *
+ * Scoped to the reader's LOCALE: a Dari search and an English one are different
+ * strings for the same intent, and offering «بوت» to an English reader is a dead
+ * end for them.
+ */
+export async function trendingSearches(
+  locale: string,
+  options: { days?: number; limit?: number; minCount?: number } = {},
+) {
+  const { days = 30, limit = 24, minCount = 2 } = options;
+  const since = new Date(Date.now() - days * 86_400_000).toISOString();
+
+  const rows = await db.execute(sql`
+    select
+      -- The spelling used most often for this normalised term.
+      (array_agg(term order by length(term) asc))[1] as label,
+      normalized,
+      count(*)::int as total
+    from search_queries
+    where created_at >= ${since}::timestamptz
+      and locale = ${locale}
+    group by normalized
+    having count(*) >= ${minCount}
+    order by count(*) desc, normalized asc
+    limit ${limit}
+  `);
+
+  return (rows as unknown as Array<Record<string, unknown>>).map((row) => ({
+    label: String(row.label),
+    normalized: String(row.normalized),
+    total: Number(row.total),
+  }));
+}

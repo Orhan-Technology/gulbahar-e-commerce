@@ -2,8 +2,11 @@
 
 import { z } from 'zod';
 
+import { db } from '../db';
 import { pickLocale } from '../db/localized';
-import { searchSuggestions } from '../db/queries/search';
+import { searchSuggestions, trendingSearches } from '../db/queries/search';
+import { searchQueries } from '../db/schema';
+import { MAX_SEARCH_TERM, normalizeSearchTerm } from '../search-terms';
 
 /**
  * Type-ahead suggestions for the header (PRD §5.2): top 5 products plus 2 shops.
@@ -47,4 +50,46 @@ export async function fetchSuggestions(term: string, locale: string): Promise<Su
       imagePath: shop.logoPath,
     })),
   ];
+}
+
+/**
+ * Records a search, and returns the trending list.
+ *
+ * ONE ROUND TRIP for both, because they always happen together: the panel opens,
+ * the reader searches, and the next time it opens the chips should already
+ * reflect it. Two actions would mean two waterfalls for one interaction.
+ *
+ * Called when a search is SUBMITTED, never on keystroke — a log of every
+ * prefix somebody typed would make "کفش" outrank the thing they were actually
+ * looking for, and would record hesitation rather than intent.
+ */
+const logSchema = z.object({
+  term: z.string().trim().min(2).max(MAX_SEARCH_TERM),
+  locale: z.enum(['fa', 'en', 'ps']),
+});
+
+export async function recordSearch(term: string, locale: string): Promise<void> {
+  const parsed = logSchema.safeParse({ term, locale });
+  if (!parsed.success) return;
+
+  try {
+    await db.insert(searchQueries).values({
+      term: parsed.data.term,
+      normalized: normalizeSearchTerm(parsed.data.term),
+      locale: parsed.data.locale,
+    });
+  } catch (error) {
+    // A search that succeeded must not fail because its analytics row did.
+    console.error('[search] failed to record', error);
+  }
+}
+
+export type TrendingTerm = { label: string; total: number };
+
+export async function fetchTrending(locale: string): Promise<TrendingTerm[]> {
+  const parsed = z.enum(['fa', 'en', 'ps']).safeParse(locale);
+  if (!parsed.success) return [];
+
+  const rows = await trendingSearches(parsed.data);
+  return rows.map((row) => ({ label: row.label, total: row.total }));
 }

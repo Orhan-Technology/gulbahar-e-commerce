@@ -22,6 +22,7 @@ import {
   reviewResponses,
   reviews,
   adminAuditLog,
+  searchQueries,
   shopFollows,
   shopReviewRows,
   shopMembers,
@@ -1746,6 +1747,62 @@ async function main() {
 
   await db.insert(adminAuditLog).values(auditRows);
 
+  // --------------------------------------------------------- search history
+  /*
+   * What the mall has been searching for (the header's trending chips).
+   *
+   * TERMS DRAWN FROM THE CATALOGUE, not invented: every one is a category name
+   * or a word out of a real product title, so every chip returns results when
+   * it is clicked. A trending list whose chips lead to "nothing found" is worse
+   * than no trending list — it is the one control on the page that promises the
+   * catalogue is bigger than it is.
+   *
+   * The distribution is deliberately long-tailed. Uniform counts would put the
+   * `having count(*) >= 2` floor either under everything or over everything,
+   * and the ordering the chips are picked by would be meaningless.
+   */
+  const searchSeeds: Array<{ fa: string; en: string; weight: number }> = [
+    { fa: 'موبایل', en: 'mobile', weight: 34 },
+    { fa: 'آیفون', en: 'iphone', weight: 28 },
+    { fa: 'کفش', en: 'shoes', weight: 25 },
+    { fa: 'تلویزیون', en: 'tv', weight: 21 },
+    { fa: 'عطر', en: 'perfume', weight: 19 },
+    { fa: 'سامسونگ', en: 'samsung', weight: 17 },
+    { fa: 'ساعت', en: 'watch', weight: 15 },
+    { fa: 'هدفون', en: 'headphones', weight: 13 },
+    { fa: 'لباس زنانه', en: 'dress', weight: 12 },
+    { fa: 'یخچال', en: 'fridge', weight: 10 },
+    { fa: 'طلا', en: 'gold', weight: 9 },
+    { fa: 'بکس مکتب', en: 'school bag', weight: 8 },
+    { fa: 'پاور بانک', en: 'power bank', weight: 7 },
+    { fa: 'اسباب‌بازی', en: 'toys', weight: 6 },
+    { fa: 'قرطاسیه', en: 'stationery', weight: 5 },
+    { fa: 'خشکبار', en: 'dried fruit', weight: 4 },
+    { fa: 'کریم', en: 'cream', weight: 3 },
+    { fa: 'توپ کرکت', en: 'cricket ball', weight: 2 },
+  ];
+
+  const searchRows: Array<typeof searchQueries.$inferInsert> = [];
+  for (const entry of searchSeeds) {
+    for (const [locale, term] of [
+      ['fa', entry.fa],
+      ['en', entry.en],
+    ] as const) {
+      // English is the minority language here, so it carries a third of the
+      // volume — enough to clear the floor, not enough to look invented.
+      const count = locale === 'fa' ? entry.weight : Math.max(2, Math.round(entry.weight / 3));
+      for (let index = 0; index < count; index += 1) {
+        searchRows.push({
+          term,
+          normalized: term.trim().replace(/\s+/g, ' ').toLocaleLowerCase(),
+          locale,
+          createdAt: daysAgo(intBetween(0, 27), 8, 21),
+        });
+      }
+    }
+  }
+  await db.insert(searchQueries).values(searchRows);
+
   // ------------------------------------------------------------------ summary
   const counts = await rowCounts();
   console.log('Row counts:');
@@ -1772,6 +1829,9 @@ async function main() {
     `  collection holds    ${holdsIssued}${expiredHold ? ` (${expiredHold} already expired)` : ''}`,
   );
   console.log(`  shop follows        ${followValues.length}`);
+  console.log(
+    `  search history      ${searchRows.length} queries across ${searchSeeds.length} terms`,
+  );
   console.log(`  audit entries       ${auditRows.length} (derived from seeded decisions)`);
 
   console.log('\nDemo sign-in numbers (any 6-digit code from the notification log):');
