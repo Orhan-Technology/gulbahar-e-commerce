@@ -166,8 +166,19 @@ export default async function ProductPage({
           */}
           <div id="pdp-top" aria-hidden className="h-0" />
 
+          {/*
+            CAPPED, and not because the column is narrow — it is 840px wide on a
+            desktop and the gallery used to fill it. A product photo that large
+            leaves the zoom lens nothing to magnify: the master is 1600², so at
+            840 on screen there is 1.9× of real detail behind the glass, and the
+            lens shows an upscale. At ~560 it is 2.9×, which is the magnification
+            the reference design gets — and it is also the size a product gallery
+            normally is, with the page's own width going to the copy beside it.
+          */}
           <Suspense fallback={<ImageGallerySkeleton />}>
-            <ImageGallery images={galleryImages} title={title} aspect="square" rail="side" />
+            <div className="max-w-[660px]">
+              <ImageGallery images={galleryImages} title={title} aspect="square" rail="side" />
+            </div>
           </Suspense>
         </div>
 

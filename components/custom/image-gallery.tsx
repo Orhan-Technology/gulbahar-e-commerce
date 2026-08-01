@@ -33,12 +33,31 @@ export interface ImageGalleryProps {
   rail?: 'below' | 'side';
 }
 
+/** The stored master's edge, from scripts/seed-images.ts. */
+const MASTER_PX = 1600;
+
 /**
- * Product image gallery with a thumbnail rail and tap-to-zoom (PRD §5.2, §10.4).
+ * Product image gallery with a thumbnail rail, a hover magnifier and
+ * tap-to-zoom (PRD §5.2, §10.4).
  *
  * The rail is a horizontal scroller that inherits document direction, so in Dari
  * it scrolls from the right. Explicit aspect boxes mean no layout shift while
  * images decode (PRD §9.3).
+ *
+ * THE MAGNIFIER pairs a lens on the photo with a panel beside it, which is the
+ * only arrangement that answers "which part am I looking at" — a panel with no
+ * lens leaves the reader hunting, and a lens that magnifies in place covers the
+ * thing it is describing.
+ *
+ * It is worth stating why this is right here and wrong on a product CARD, where
+ * the same gesture was removed: on a card the magnification was INCIDENTAL, it
+ * fired while the eye was travelling and moved the target. Here it is
+ * DELIBERATE — the reader has arrived, and is pointing at the detail they want.
+ *
+ * POINTER POSITION IS WRITTEN STRAIGHT TO THE DOM, not through state. A
+ * mousemove handler that calls setState re-renders the whole gallery on every
+ * pixel of travel, and the panel visibly lags the cursor. Only open/closed is
+ * state.
  */
 export function ImageGallery({
   images,
@@ -51,7 +70,54 @@ export function ImageGallery({
   const locale = useLocale();
   const [active, setActive] = React.useState(0);
   const [zoomed, setZoomed] = React.useState(false);
+  const [magnifying, setMagnifying] = React.useState(false);
   const strip = React.useRef<HTMLDivElement>(null);
+  const stage = React.useRef<HTMLButtonElement>(null);
+  const lens = React.useRef<HTMLSpanElement>(null);
+  const panel = React.useRef<HTMLSpanElement>(null);
+
+  /**
+   * Moves the lens and the panel to follow the pointer.
+   *
+   * The panel shows the master at its natural size, so the magnification is
+   * whatever the master divided by the rendered image happens to be — 1600 over
+   * ~570 on a desktop, about 2.8×. Deriving it rather than hard-coding a factor
+   * means a narrower viewport magnifies less and never invents detail that is
+   * not in the file.
+   *
+   * The lens is the panel scaled DOWN by that same factor, which is what makes
+   * the rectangle on the photo correspond to the panel's contents rather than
+   * merely gesturing at them.
+   */
+  const track = React.useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    const box = stage.current;
+    const glass = lens.current;
+    const view = panel.current;
+    if (!box || !glass || !view) return;
+
+    const rect = box.getBoundingClientRect();
+    if (rect.width === 0) return;
+
+    const zoom = MASTER_PX / rect.width;
+    const lensW = view.offsetWidth / zoom;
+    const lensH = view.offsetHeight / zoom;
+
+    // Clamped so the lens never hangs off the photo — the panel cannot show
+    // anything outside the image, so a lens that could would be lying.
+    const x = Math.min(Math.max(event.clientX - rect.left - lensW / 2, 0), rect.width - lensW);
+    const y = Math.min(Math.max(event.clientY - rect.top - lensH / 2, 0), rect.height - lensH);
+
+    glass.style.width = `${lensW}px`;
+    glass.style.height = `${lensH}px`;
+    // `left`, not an inset property: this is a pixel offset from the box's own
+    // left edge in both directions, and `start` would flip it under RTL and
+    // send the lens the wrong way.
+    glass.style.left = `${x}px`;
+    glass.style.top = `${y}px`;
+
+    view.style.backgroundSize = `${MASTER_PX}px ${MASTER_PX}px`;
+    view.style.backgroundPosition = `-${x * zoom}px -${y * zoom}px`;
+  }, []);
 
   const aspectClass = aspect === 'square' ? 'aspect-square' : 'aspect-[4/5]';
   const current = images[active];
@@ -74,10 +140,39 @@ export function ImageGallery({
   return (
     <div
       className={cn(
+        // `relative` so the magnifier panel can be positioned against the whole
+        // gallery — rail included — rather than against the photo alone.
+        'relative',
         side ? 'flex flex-col gap-3 sm:flex-row-reverse sm:gap-4' : 'space-y-3',
         className,
       )}
     >
+      {/*
+        The magnifier panel, beside the gallery.
+
+        `start-full` puts it past the gallery's inline END, so it opens to the
+        left in Dari and to the right in English without a direction check —
+        the same reason the rest of this file uses logical properties.
+
+        It DOES cover the buy column while open, which is deliberate and is what
+        the reference does: at the moment someone is inspecting the stitching,
+        the price is not what they are reading. It disappears the instant the
+        pointer leaves.
+
+        `background-image` rather than an <img>: the panel shows the MASTER at
+        its natural size, and routing that through next/image would hand back a
+        resized derivative — the one thing this panel must not have.
+      */}
+      <span
+        ref={panel}
+        aria-hidden
+        style={{ backgroundImage: `url(${current.path})` }}
+        className={cn(
+          'rounded-card border-border shadow-overlay pointer-events-none absolute top-0 z-30 hidden',
+          'start-full ms-4 aspect-square w-[min(34rem,42vw)] border bg-neutral-100 bg-no-repeat',
+          magnifying && 'lg:block',
+        )}
+      />
       {/*
         Two presentations of the same images.
 
@@ -142,20 +237,35 @@ export function ImageGallery({
       </div>
 
       <button
+        ref={stage}
         type="button"
         onClick={() => setZoomed(true)}
+        /*
+         * Pointer events, not `:hover`, because the panel has to know WHERE the
+         * pointer is. A touch device fires none of these — `onMouseEnter` does
+         * not exist for a tap — so the magnifier is simply absent there and the
+         * click still opens the full-view dialog, which is the phone's answer.
+         */
+        onMouseEnter={() => setMagnifying(true)}
+        onMouseLeave={() => setMagnifying(false)}
+        onMouseMove={track}
         aria-label={t('zoomImage')}
         className={cn(
           aspectClass,
           'group rounded-card border-border relative hidden w-full overflow-hidden border bg-neutral-100 sm:block',
           side && 'sm:flex-1',
+          magnifying && 'cursor-crosshair',
         )}
       >
         <Image
           src={current.path}
           alt={current.alt ?? title}
           fill
-          sizes="(max-width: 768px) 100vw, 520px"
+          // 640, matching the capped gallery (~570 plus headroom for a wider
+          // viewport). The magnifier does NOT read this image — it loads the
+          // stored master directly — so asking next/image for a huge derivative
+          // here would buy nothing and cost every visitor who never hovers.
+          sizes="(max-width: 768px) 100vw, 640px"
           priority
           placeholder={current.blurDataUrl ? 'blur' : 'empty'}
           blurDataURL={current.blurDataUrl ?? undefined}
@@ -164,7 +274,26 @@ export function ImageGallery({
         {images.length > 1 && (
           <CountChip current={active + 1} total={images.length} locale={locale} />
         )}
-        <span className="rounded-pill bg-card/90 text-foreground shadow-card absolute end-3 bottom-3 flex h-9 w-9 items-center justify-center backdrop-blur transition-opacity duration-150">
+        {/*
+          The lens. `hidden` rather than unmounted so its size survives between
+          moves — remounting it on every enter made the first frame land at 0×0
+          and the rectangle visibly grew into place.
+        */}
+        <span
+          ref={lens}
+          aria-hidden
+          className={cn(
+            'pointer-events-none absolute z-10 border border-primary/70 bg-primary/10',
+            !magnifying && 'hidden',
+          )}
+        />
+
+        <span
+          className={cn(
+            'rounded-pill bg-card/90 text-foreground shadow-card absolute end-3 bottom-3 flex h-9 w-9 items-center justify-center backdrop-blur transition-opacity duration-150',
+            magnifying && 'opacity-0',
+          )}
+        >
           <ZoomIn className="h-4 w-4" aria-hidden />
         </span>
       </button>

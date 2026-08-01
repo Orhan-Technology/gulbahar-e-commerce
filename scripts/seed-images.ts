@@ -86,47 +86,74 @@ type PhotoMap = {
  */
 const PHOTO_CACHE_DIR = path.join(process.cwd(), 'content', 'seed', 'photo-cache');
 
+/** The square master every derived image is cut from — and what the zoom reads. */
+export const MASTER_SIZE = 1600;
+
 /**
  * `fm=jpg` is load-bearing: without it the CDN content-negotiates and a Node
  * fetch can be handed AVIF, which round-trips through sharp fine today but
  * makes the cache format depend on what Unsplash felt like serving.
+ *
+ * `w=2400`, not 1600, because the crop is SQUARE and the constraint is the
+ * SHORT edge. Unsplash sizes by width, so a 3:2 landscape at `w=1600` arrives
+ * 1600×1067 — and the old 1200² crop was quietly upscaling it by 12%. At
+ * `w=2400` the short edge clears 1600 on every seeded photo.
  */
 function photoUrl(id: string): string {
-  return `https://images.unsplash.com/${id}?fm=jpg&w=1600&q=80&fit=max`;
+  return `https://images.unsplash.com/${id}?fm=jpg&w=2400&q=80&fit=max`;
 }
 
 /**
- * Returns the cached original for a photo id, fetching it on a cache miss.
+ * Returns the 1600² MASTER for a photo id, fetching on a cache miss.
+ *
+ * THE CACHE HOLDS THE PROCESSED SQUARE, not the raw download, and that is what
+ * keeps it committable. Fetching at `w=2400` to clear the short edge means the
+ * raw files are 0.7–3.4MB each; ninety of those is most of a hundred megabytes
+ * in the repository. The attention crop is deterministic, so caching its OUTPUT
+ * loses nothing — a reset still runs entirely offline, and every derived image
+ * is cut from this one square.
+ *
  * Returns null when the photo is unreachable — the caller falls back to SVG.
  */
 async function resolvePhoto(id: string): Promise<Buffer | null> {
   const cached = path.join(PHOTO_CACHE_DIR, `${id}.jpg`);
   try {
-    return await readFile(cached);
+    const master = await readFile(cached);
+    const meta = await sharp(master).metadata();
+    // A cache file from before the master was squared: re-fetch rather than
+    // upscale it, which is the bug this change exists to fix.
+    if (meta.width === MASTER_SIZE && meta.height === MASTER_SIZE) return master;
   } catch {
     // cache miss — fall through to the network
   }
   try {
     const response = await fetch(photoUrl(id), { signal: AbortSignal.timeout(30_000) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const buffer = Buffer.from(await response.arrayBuffer());
+    const raw = Buffer.from(await response.arrayBuffer());
     // Refuse to cache an error page: a jpeg this small is not a photo.
-    if (buffer.length < 10_000) throw new Error(`suspiciously small (${buffer.length}B)`);
+    if (raw.length < 10_000) throw new Error(`suspiciously small (${raw.length}B)`);
+
+    const master = await sharp(raw)
+      .resize(MASTER_SIZE, MASTER_SIZE, { fit: 'cover', position: sharp.strategy.attention })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer();
+
     await mkdir(PHOTO_CACHE_DIR, { recursive: true });
-    await writeFile(cached, buffer);
-    return buffer;
+    await writeFile(cached, master);
+    return master;
   } catch (error) {
     console.warn(`  ⚠ photo ${id} unavailable (${(error as Error).message}) — SVG fallback`);
     return null;
   }
 }
 
-/** Attention-weighted square crop — the product's primary image. */
+/**
+ * The product's primary image. The master is ALREADY the attention-weighted
+ * square, so this is a re-encode rather than a second crop — cropping twice
+ * would move the subject a little further off centre each time.
+ */
 async function squareCrop(photo: Buffer): Promise<Buffer> {
-  return sharp(photo)
-    .resize(1200, 1200, { fit: 'cover', position: sharp.strategy.attention })
-    .jpeg({ quality: 88 })
-    .toBuffer();
+  return sharp(photo).jpeg({ quality: 88 }).toBuffer();
 }
 
 /**
@@ -135,9 +162,17 @@ async function squareCrop(photo: Buffer): Promise<Buffer> {
  * while framing it noticeably tighter than angle 0.
  */
 async function zoomCrop(photo: Buffer): Promise<Buffer> {
+  /*
+   * A centred 77% window of the master, enlarged back to full size — so angle 1
+   * is framed ~1.3× tighter than angle 0 without ever resolving above the
+   * master. The old version resized UP to 1560² first and then extracted, which
+   * upscaled every pixel it kept.
+   */
+  const window = Math.round(MASTER_SIZE * 0.77);
+  const inset = Math.round((MASTER_SIZE - window) / 2);
   return sharp(photo)
-    .resize(1560, 1560, { fit: 'cover', position: sharp.strategy.attention })
-    .extract({ left: 180, top: 180, width: 1200, height: 1200 })
+    .extract({ left: inset, top: inset, width: window, height: window })
+    .resize(MASTER_SIZE, MASTER_SIZE)
     .jpeg({ quality: 88 })
     .toBuffer();
 }
@@ -383,7 +418,7 @@ async function main() {
       const image = await storeImage(buffer, {
         folder: 'seed',
         basename: seedBasename(product.slug, angleIndex),
-        maxWidth: 1200,
+        maxWidth: MASTER_SIZE,
       });
       stored.push({ ...image, blur: await blurPlaceholder(buffer) });
     }
