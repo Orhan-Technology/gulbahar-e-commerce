@@ -168,7 +168,7 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       // The category is the one fact that tells an approver what they are
       // approving without opening it.
       subtitle: row.category_name ? pickLocale(row.category_name, locale) : '',
-      href: `/admin/shops/${row.slug}`,
+      href: `/admin/shops/${row.id}`,
       at: new Date(row.created_at),
       monogram: initial(row.name),
     })),

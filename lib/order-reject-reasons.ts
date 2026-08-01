@@ -20,22 +20,40 @@
  * against the same list on the server (CLAUDE.md).
  */
 
+/**
+ * What a SHOPKEEPER may choose when turning an order away.
+ *
+ * This is the list the picker maps over, so anything added here appears as a
+ * button on the reject dialog and needs a string under BOTH
+ * `shopOrders.rejectReasons` and `shopOrders.actions.rejectReasons`.
+ */
 export const ORDER_REJECT_REASONS = [
   'out_of_stock',
   'cannot_fulfil',
   'customer_unreachable',
   'price_error',
-  /*
-   * Written by the SYSTEM, not chosen by a shopkeeper (Prompt C11): a
-   * reserve-and-collect hold that nobody came for. It is in this list because
-   * the customer's message and C9's health report both read reasons from here,
-   * and an uncounted rejection reason would quietly understate the rate.
-   */
-  'hold_expired',
 ] as const;
 
-export type OrderRejectReason = (typeof ORDER_REJECT_REASONS)[number];
+/**
+ * Reasons the SYSTEM writes, which a shopkeeper must never be offered.
+ *
+ * `hold_expired` is a reserve-and-collect hold nobody came for (Prompt C11).
+ * Putting it in the list above — which is what I did first — offered "Reservation
+ * not collected" as a reason for rejecting a fresh order, and crashed the reject
+ * dialog on every render because the picker's own namespace had no string for
+ * it. It still belongs in the union: the action validates against it, the event
+ * note carries it, and C9's health report counts it, so an omission here would
+ * quietly understate a shop's rejection rate.
+ */
+export const SYSTEM_REJECT_REASONS = ['hold_expired'] as const;
+
+export const ALL_REJECT_REASONS = [
+  ...ORDER_REJECT_REASONS,
+  ...SYSTEM_REJECT_REASONS,
+] as const;
+
+export type OrderRejectReason = (typeof ALL_REJECT_REASONS)[number];
 
 export function isOrderRejectReason(value: string | undefined): value is OrderRejectReason {
-  return ORDER_REJECT_REASONS.includes(value as OrderRejectReason);
+  return ALL_REJECT_REASONS.includes(value as OrderRejectReason);
 }

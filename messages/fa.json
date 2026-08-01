@@ -1282,7 +1282,8 @@
         "out_of_stock": "موجود نیست",
         "cannot_fulfil": "امکان آماده‌سازی نیست",
         "customer_unreachable": "مشتری در دسترس نبود",
-        "price_error": "قیمت اشتباه بود"
+        "price_error": "قیمت اشتباه بود",
+        "hold_expired": "نگه‌داری گرفته نشد"
       }
     },
     "filteredBy": "فیلتر شده:",

@@ -111,7 +111,7 @@ export async function PlatformHealth({ range }: { range?: ConsoleRange }) {
             {leaders.map((shop, index) => (
               <li key={shop.id}>
                 <Link
-                  href={`/admin/shops/${shop.slug}`}
+                  href={`/admin/shops/${shop.id}`}
                   className={cn(
                     pressable,
                     'rounded-control flex items-center gap-3 p-2 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-50',

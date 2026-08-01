@@ -123,10 +123,28 @@ async function main() {
   const revenuePage = await html('/fa/admin/revenue', admin);
   const faDigits = (value: number) =>
     new Intl.NumberFormat('fa-AF').format(value).replace(/‎/g, '');
+
+  /*
+   * THIS MONTH's placement revenue, which is what the headline card actually
+   * displays. It used to assert the LIFETIME total, which the page renders only
+   * inside the card's hint — and only when there is no previous month to
+   * compare against, because the hint is a ternary that otherwise reads "vs
+   * last month". The two figures coincided for as long as every seeded campaign
+   * sat inside the trailing twelve months, then diverged the moment the clock
+   * crossed into a new month and ؋۷۵٬۰۰۰ of the oldest campaigns aged out. A
+   * check that passes only until the 1st is a check that fails for a reason
+   * that has nothing to do with the code.
+   */
+  const [monthRow] = await sql<{ total: number }[]>`
+    select coalesce(sum(price_paid), 0)::int as total
+    from campaigns
+    where status in ('approved', 'active', 'ended')
+      and starts_at >= date_trunc('month', now())
+  `;
   check(
-    'the headline total appears on the page in Persian digits',
-    revenuePage.includes(faDigits(totals.total)),
-    faDigits(totals.total),
+    "this month's placement revenue appears on the page in Persian digits",
+    revenuePage.includes(faDigits(monthRow.total)),
+    faDigits(monthRow.total),
   );
 
   /* ---------------------------------------------------------------------- */

@@ -30,14 +30,22 @@ export type AdminActionResult<T = undefined> =
   ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
 
 
-/** Storefront surfaces that change the instant a shop's status does. */
-function revalidateStorefront(slug: string) {
+/**
+ * Storefront surfaces that change the instant a shop's status does.
+ *
+ * The admin detail route is `/admin/shops/[id]` and takes a UUID, while the
+ * public one is `/shops/[slug]`. Revalidating the admin path with the slug —
+ * which this did — matches no route at all, so the screen an admin is looking
+ * at when they press approve was the one page that did not refresh.
+ */
+function revalidateStorefront(slug: string, shopId?: string) {
   revalidatePath('/');
   revalidatePath('/shops');
   revalidatePath(`/shops/${slug}`);
   revalidatePath('/products');
+  revalidatePath('/floors');
   revalidatePath('/admin/shops');
-  revalidatePath(`/admin/shops/${slug}`);
+  if (shopId) revalidatePath(`/admin/shops/${shopId}`);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -79,7 +87,7 @@ export async function approveShop(shopId: string): Promise<AdminActionResult> {
     targetLabel: updated.name.fa,
   });
 
-  revalidateStorefront(updated.slug);
+  revalidateStorefront(updated.slug, updated.id);
   return { ok: true };
 }
 
@@ -139,7 +147,7 @@ export async function rejectShop(input: z.input<typeof rejectSchema>): Promise<A
     reason: parsed.data.reason,
   });
 
-  revalidateStorefront(updated.slug);
+  revalidateStorefront(updated.slug, updated.id);
   return { ok: true };
 }
 
@@ -183,7 +191,7 @@ export async function setShopStatus(
     detail: { from: before?.status ?? null, to: parsed.data.status },
   });
 
-  revalidateStorefront(updated.slug);
+  revalidateStorefront(updated.slug, parsed.data.shopId);
   return { ok: true };
 }
 
@@ -312,7 +320,7 @@ export async function createShopWithOwner(
     detail: { owner: data.ownerName, phone: data.ownerPhone, ownerCreated: String(ownerCreated) },
   });
 
-  revalidateStorefront(created.slug);
+  revalidateStorefront(created.slug, created.id);
   return { ok: true, data: { shopId: created.id, slug: created.slug, ownerCreated } };
 }
 
@@ -391,7 +399,7 @@ export async function assignShopUnit(
     },
   });
 
-  revalidateStorefront(updated.slug);
+  revalidateStorefront(updated.slug, parsed.data.shopId);
   revalidatePath('/admin/floors');
   revalidatePath('/floors');
   return { ok: true };

@@ -129,6 +129,20 @@ export async function adminShopDirectory(filters: AdminShopFilters) {
  * review screen showing only the profile would make approval a rubber stamp.
  */
 export async function adminShopReview(shopId: string) {
+  /*
+   * `shops.id` is a uuid column, so ANY non-uuid string reaching it is not a
+   * miss — it is a Postgres type error, surfacing as an unreadable "Failed
+   * query" with no hint that the input was the problem. A slug is the thing
+   * that actually turns up here: the route is `[id]`, the public one is
+   * `[slug]`, and a link built with the wrong one has slipped in twice now.
+   *
+   * Returning null lets the page 404, which is the honest answer for an
+   * address that names no shop.
+   */
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shopId)) {
+    return null;
+  }
+
   const [shop] = await db
     .select({
       id: shops.id,

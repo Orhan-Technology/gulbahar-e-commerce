@@ -92,12 +92,29 @@ export async function ProductGrid({
          * Passed IN rather than overlaid on top. The media panel scales on
          * hover, and a heart positioned over the card from outside stays where
          * it was while the panel grows away from underneath it.
+         *
+         * THE `key` ON EACH SLOT IS LOAD-BEARING, and it looks redundant —
+         * neither element is in a list here. Both are CLIENT elements created
+         * in a SERVER component and handed to a client component as props, so
+         * they cross the RSC boundary through the flight stream with `key:
+         * null`; ProductCard then renders them as siblings, React reconciles
+         * that as an array of keyless children, and every card logs "Each child
+         * in a list should have a unique key". It only fires when BOTH slots
+         * are filled, which is why it showed up on rails (quickAdd) and not in
+         * the listing grid — and it names ProductCard as the culprit while
+         * pointing at a line in this file.
          */
         wishlistSlot={
-          <WishlistButton productId={item.id} initialSaved={savedIds?.has(item.id) ?? false} />
+          <WishlistButton
+            key="wishlist"
+            productId={item.id}
+            initialSaved={savedIds?.has(item.id) ?? false}
+          />
         }
         quickAddSlot={
-          quickAdd ? <QuickAddButton productId={item.id} disabled={item.stock <= 0} /> : undefined
+          quickAdd ? (
+            <QuickAddButton key="quick-add" productId={item.id} disabled={item.stock <= 0} />
+          ) : undefined
         }
       />
     </div>

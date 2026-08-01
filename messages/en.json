@@ -1282,7 +1282,8 @@
         "out_of_stock": "Out of stock",
         "cannot_fulfil": "Cannot fulfil this",
         "customer_unreachable": "Customer unreachable",
-        "price_error": "Price was wrong"
+        "price_error": "Price was wrong",
+        "hold_expired": "Reservation not collected"
       }
     },
     "filteredBy": "Filtered:",

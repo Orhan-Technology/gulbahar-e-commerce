@@ -17,7 +17,7 @@ import {
 import { shopNameFor } from '../db/queries/shop-orders';
 import { formatCurrency } from '../format';
 import { notify, type NotificationEventKey } from '../notify';
-import { ORDER_REJECT_REASONS, type OrderRejectReason } from '../order-reject-reasons';
+import { ALL_REJECT_REASONS, type OrderRejectReason } from '../order-reject-reasons';
 import faMessages from '../../messages/fa.json';
 import enMessages from '../../messages/en.json';
 
@@ -78,7 +78,9 @@ const inputSchema = z.object({
    * C9's shop-health view counts. "We cannot fulfil this" with no reason at all
    * is what makes a marketplace feel arbitrary.
    */
-  reasonCode: z.enum(ORDER_REJECT_REASONS).optional(),
+  // Accepts the system reasons too — `hold_expired` is written by
+  // releaseExpiredHold, not chosen in the dialog.
+  reasonCode: z.enum(ALL_REJECT_REASONS).optional(),
   reason: z.string().trim().min(3).max(300).optional(),
 });
 
