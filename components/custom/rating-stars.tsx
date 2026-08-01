@@ -43,21 +43,20 @@ export interface RatingStarsProps {
  * the inline start, so it grows right-to-left in Dari and left-to-right in
  * English without duplicating markup (PRD §10.3).
  *
- * BOTH LAYERS ARE SOLID FILLS WITH `stroke-0`, and that is not a style
- * preference — do not "fix" it back to outlines (Prompt C1).
+ * THE EMPTY TRACK IS AN AMBER OUTLINE, the filled part a solid amber fill.
  *
- * lucide's <Star> is a STROKED OUTLINE by default. Drawing the empty track as
- * an outline and the filled part as a solid meant the silhouette CHANGED
- * halfway across the row: at 14px on a product card a 4.3 read as three solid
- * amber stars beside two thin scratchy wireframes, which looks like a rendering
- * fault rather than an unearned portion. With both layers solid the shape is
- * constant and the rating is one silhouette in two tones — which is what every
- * catalogue that does this well draws, and what makes the clip-by-width overlay
- * legible at small sizes.
+ * This reverses C1, which made the empty track a solid grey silhouette, and the
+ * distinction between the two is the whole point — so read this before changing
+ * it back either way. What C1 removed was a GREY wireframe: at 14px, solid
+ * amber stars beside thin neutral outlines read as damage, because the empty
+ * ones looked like a different component that had failed to load. What is here
+ * now is the same hue throughout — an unfilled star is visibly the same star,
+ * just not earned — which is the treatment the client asked for and the one
+ * most catalogues use.
  *
- * `stroke-0` matters as much as the fill: a leftover stroke adds a rim that
- * thins the form and reintroduces the outline at exactly the sizes where it
- * hurts most.
+ * The clip-by-width overlay is unchanged and still does the fractional fill, so
+ * a 4.3 shows four solid stars and a fifth filled 30% of the way across its
+ * outline.
  */
 export function RatingStars({
   value,
@@ -92,7 +91,11 @@ export function RatingStars({
         {/* Empty track */}
         <span className="inline-flex" aria-hidden>
           {Array.from({ length: 5 }, (_, index) => (
-            <Star key={index} className={cn(SIZES[size], 'fill-neutral-200 stroke-0')} />
+            <Star
+              key={index}
+              className={cn(SIZES[size], 'fill-none stroke-accent-warm')}
+              strokeWidth={1.5}
+            />
           ))}
         </span>
 
@@ -104,14 +107,18 @@ export function RatingStars({
         >
           <span className="inline-flex">
             {Array.from({ length: 5 }, (_, index) => (
-              <Star key={index} className={cn(SIZES[size], 'fill-accent-warm stroke-0')} />
+              <Star
+                key={index}
+                className={cn(SIZES[size], 'fill-accent-warm stroke-accent-warm')}
+                strokeWidth={1.5}
+              />
             ))}
           </span>
         </span>
       </span>
 
       {count !== undefined && count > 0 && (
-        <span className="text-muted-foreground text-xs">({formatNumber(count, locale)})</span>
+        <span className="text-muted-foreground text-xs">{formatNumber(count, locale)}</span>
       )}
     </span>
   );
@@ -165,7 +172,9 @@ export function RatingStarsInput({
               className={cn(
                 SIZES[size],
                 'transition-colors duration-150',
-                active ? 'fill-accent-warm stroke-0' : 'fill-neutral-200 stroke-0',
+                // Same two states as the display row, so the composer and the
+                // rating it produces look like the same thing.
+                active ? 'fill-accent-warm stroke-accent-warm' : 'fill-none stroke-accent-warm',
               )}
             />
             <span className="sr-only">{t('starsCount', { count: star })}</span>

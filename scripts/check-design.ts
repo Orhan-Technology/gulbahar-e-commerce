@@ -301,7 +301,20 @@ async function main() {
   }
 
   const listing = await html('/fa/products');
-  check('no "(0)" rating anywhere', !/\(\s*[۰0]\s*\)/.test(visibleText(listing)));
+  /*
+   * An unrated product renders NO rating row at all — a row of empty stars is
+   * the single most common way a young catalogue talks itself down.
+   *
+   * Asserted on the star group's own aria-label rather than on the visible
+   * text, which is where the count used to be wrapped in parentheses: the
+   * count is now bare (matching the reference design), so the old
+   * `no "(0)"` grep could never match again and was quietly passing on
+   * everything.
+   */
+  const zeroRatings = [...listing.matchAll(/role="img" aria-label="([^"]*)"/g)]
+    .map((match) => match[1])
+    .filter((label) => /(^|\s)[۰0](\s|٫|$)/.test(label.replace(/از\s*[۵5]/, '')));
+  check('no rating row reports zero', zeroRatings.length === 0, zeroRatings);
 
   /* ---------------------------------------------------------------------- */
   section('Density');

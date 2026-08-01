@@ -138,7 +138,10 @@ export function HeaderSearch({
              * field is the most-used control on the header; it should look like
              * somewhere to type, not like a decorated pill.
              */
-            'rounded-pill border-border focus-within:border-primary-400 bg-card flex items-center gap-2 border p-1.5 ps-4 transition-colors duration-150 hover:border-neutral-300',
+            // The FOCUS INDICATOR lives on the capsule, so it follows the pill
+            // rather than the rectangle of the field inside it.
+            'rounded-pill border-border bg-card flex items-center gap-2 border p-1.5 ps-4 transition-[border-color,box-shadow] duration-150 hover:border-neutral-300',
+            'focus-within:border-primary focus-within:ring-primary-100 focus-within:ring-2',
         )}
       >
         {variant === 'pill' ? (
@@ -175,9 +178,21 @@ export function HeaderSearch({
             role="combobox"
             className={cn(
               variant === 'pill'
-                ? // The capsule owns the border, background and focus ring, so the
-                  // field itself has to surrender all three or they double up.
-                  'h-9 w-full border-none bg-transparent px-0 shadow-none focus-visible:ring-0'
+                ? /*
+                   * The capsule owns the border, background and focus ring, so
+                   * the field surrenders all three.
+                   *
+                   * `ring-offset-0` IS REQUIRED and `ring-0` alone is not
+                   * enough: Tailwind computes the ring's spread as ring width
+                   * PLUS offset width, so `ring-0` inherited alongside the base
+                   * Input's `ring-offset-2` still painted a 2px ring in the ring
+                   * COLOUR. Inside a pill, that drew a 12px-radius rounded
+                   * rectangle whose corners were the only part not hidden by the
+                   * capsule — two stray blue arcs floating beside the button.
+                   * twMerge cannot catch it either: `ring-0` and `ring-offset-2`
+                   * are different utility groups, so it has nothing to collapse.
+                   */
+                  'h-9 w-full border-none bg-transparent px-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0'
                 : 'ps-9',
             )}
           />
