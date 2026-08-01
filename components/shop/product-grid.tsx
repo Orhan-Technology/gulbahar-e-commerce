@@ -85,13 +85,10 @@ export async function ProductGrid({
         stock={item.stock}
         isSponsored={item.sponsored}
         priority={priority && index < 4}
-        // Outermost cards grow inwards so the pop-out is never clipped by the
-        // page edge.
-        edge={index === 0 ? 'start' : index === items.length - 1 ? 'end' : undefined}
         /*
-         * Passed IN rather than overlaid on top. The media panel scales on
-         * hover, and a heart positioned over the card from outside stays where
-         * it was while the panel grows away from underneath it.
+         * Passed IN rather than overlaid on top: the card owns where these sit,
+         * the caller owns what they do — the heart needs the viewer's saved
+         * state and the cart button needs an action and a toast.
          *
          * THE `key` ON EACH SLOT IS LOAD-BEARING, and it looks redundant —
          * neither element is in a list here. Both are CLIENT elements created

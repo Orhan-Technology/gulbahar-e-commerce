@@ -287,8 +287,8 @@ const DECORATIVE = /hover|reveal|carousel|marquee|decorative|pulse|caret/;
  * The marker is looked for in a small WINDOW around the duration, not on the
  * same line. A Tailwind class list built with cn() routinely spans four or
  * five lines, and the duration and the `group-hover:` that justifies it land
- * on different ones — which flagged the product card's pop-out as a slow
- * feedback transition when it is the clearest decorative animation we have.
+ * on different ones — which once flagged the product card's hover as a slow
+ * feedback transition when it was the clearest decorative animation we had.
  *
  * Two lines either side covers a class list without reaching into the next
  * statement, so the looser budget still has to be claimed by something

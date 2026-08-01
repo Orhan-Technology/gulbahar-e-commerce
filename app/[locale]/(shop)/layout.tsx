@@ -71,12 +71,12 @@ export default async function ShopLayout({
         {/*
           pb-20 on mobile clears the fixed bottom tab bar.
 
-          `overflow-x-clip` contains the product cards' hover pop-out. A card at
-          the end of a row scales past the page gutter, and without this the
-          document grows a horizontal scrollbar that appears and disappears as
-          the pointer moves — the page visibly twitching under the cursor.
-          `clip` rather than `hidden` deliberately: `hidden` would make this a
-          scroll container and break the header's `position: sticky`.
+          `overflow-x-clip` was added to contain the product cards' hover
+          pop-out, which is gone — but it stays, because the rails still bleed
+          to the screen edge with `-mx-4` and a stray horizontal scrollbar on a
+          phone is the same twitch by another route. `clip` rather than
+          `hidden` deliberately: `hidden` would make this a scroll container
+          and break the header's `position: sticky`.
         */}
         <main className="flex-1 overflow-x-clip pb-20 md:pb-0">{children}</main>
 

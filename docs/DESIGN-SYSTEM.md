@@ -83,7 +83,7 @@ never from reaching for another size.
 | --- | --- | --- |
 | Flat | `border` only | Anything sitting on the page: panels, list rows, the facet rail |
 | Card | `shadow-card` | A card that lifts off a tinted surface, or a sticky header once scrolled |
-| Overlay | `shadow-overlay` | Only things that float over content: dialogs, sheets, popovers, the product card's hover pop-out |
+| Overlay | `shadow-overlay` | Only things that float over content: dialogs, sheets, popovers, the product card's hover lift |
 
 `--shadow-*` is reset to `initial`, so there is no third shadow to reach for.
 `shadow-xs`…`shadow-xl` are aliases onto these two so vendored shadcn markup

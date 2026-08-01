@@ -59,22 +59,11 @@ export interface ProductCardProps {
    * A quick add-to-cart control, rendered inside the media panel at the
    * opposite corner from the heart.
    *
-   * Passed in for the same reason the heart is: the panel scales on hover, and
-   * a control positioned over the card from outside stays put while the panel
-   * grows away from underneath it.
+   * Passed in for the same reason the heart is: the caller owns what the
+   * control DOES — adding to a cart needs an action and a toast — while the
+   * card owns where it sits.
    */
   quickAddSlot?: React.ReactNode;
-  /**
-   * Where the hover pop-out grows FROM.
-   *
-   * A centred origin is right for a card with neighbours on both sides, but a
-   * card at the end of a row grows straight into the page gutter and gets
-   * clipped. Anchoring the outermost cards to their outer edge makes them
-   * expand inwards instead, so the whole panel stays on screen. Physical
-   * left/right chosen per direction — `transform-origin` has no logical
-   * keyword, so this follows the same `ltr:`/`rtl:` pattern the gradients use.
-   */
-  edge?: 'start' | 'end';
 }
 
 /**
@@ -85,23 +74,17 @@ export interface ProductCardProps {
  * resting shadow. At five cards to a row a bordered box drew a grid of frames
  * that competed with the photography; the photos do the separating instead.
  *
- * THE HOVER is the reference design's signature move, and the one thing that
- * makes a dense grid feel alive: pointing at a card enlarges its media panel
- * to 1.4× and lifts it over its neighbours. Three details make it work rather
- * than merely happen:
+ * THE HOVER IS A LIFT, NOT A MAGNIFICATION. The media panel used to scale to
+ * 1.4× and rise over its neighbours, which was the reference design's signature
+ * move and was removed on request: enlarging the photo under the pointer moves
+ * the thing you are aiming at, covers the two cards beside it, and on a dense
+ * grid makes browsing feel unsteady. What is left is a shadow — the card reads
+ * as raised without anything moving.
  *
- *   - The PANEL scales, not the whole card. The title and price stay where
- *     they are at their own size, so a row does not visibly reflow and the
- *     text under the neighbouring cards stays readable.
- *   - `hover:z-30` is on the card ROOT, not the panel. A `position: relative`
- *     element with `z-index: auto` does not create a stacking context, so a
- *     z-index set on the panel would be resolved against the grid and lose to
- *     any card later in DOM order — the effect would work on the last card in
- *     a row and be silently painted over on every other one.
- *   - It is `sm:` and up only. Below that the grid is a horizontal scroller,
- *     where a scaled child is both clipped by the overflow and added to the
- *     scrollable width. Tailwind v4 also wraps `hover:` in `(hover: hover)`,
- *     so a touch device never fires it in the first place.
+ * Nothing else needs to defend itself now that the panel holds still: no
+ * transform origin per position in the row, no z-index lift to escape the
+ * stacking context scaling created, and no page-level overflow containment for
+ * a card growing past the gutter.
  *
  * The image box has explicit dimensions so there is zero layout shift between
  * skeleton and content (PRD §9.3).
@@ -125,7 +108,6 @@ export function ProductCard({
   hideWishlist = false,
   wishlistSlot,
   quickAddSlot,
-  edge,
 }: ProductCardProps) {
   const locale = useLocale();
   const t = useTranslations('product');
@@ -157,35 +139,22 @@ export function ProductCard({
 
   return (
     /*
-     * `pressable` on the ROOT, not on the media panel: the panel already owns a
-     * `scale` for its hover pop-out, and two rules animating one property on one
-     * element means whichever wins the cascade silently cancels the other. The
-     * card gives as a whole, which is also what a native list does.
+     * `pressable` on the ROOT rather than the media panel: the card gives as a
+     * whole when pressed, which is what a native list does.
      */
-    <div className={cn('pressable group relative flex flex-col gap-3 hover:z-30', className)}>
+    <div className={cn('pressable group relative flex flex-col gap-3', className)}>
       {/*
-        `duration-[420ms]` is inside the 500ms decorative budget, not the
-        300ms feedback one: nothing is waiting on a hover, and the unhurried
-        settle is the whole character of the gesture (PRD §10.6, revised).
+        200ms, inside the feedback budget: with nothing moving, a slow shadow
+        is just a shadow arriving late.
 
-        `sm:group-hover:z-20` is not decoration. Scaling gives the panel a
-        stacking context of its own, which would trap the heart inside it
-        BELOW the stretched link — leaving the wishlist button unclickable
-        for exactly as long as the pointer is on the card.
+        `sm:` and up only, as before — Tailwind v4 wraps `hover:` in
+        `(hover: hover)`, so a touch device never fires it anyway.
       */}
       <div
         className={cn(
           'rounded-media relative aspect-square overflow-hidden bg-neutral-100',
-          edge === 'start'
-            ? 'ltr:origin-left rtl:origin-right'
-            : edge === 'end'
-              ? 'ltr:origin-right rtl:origin-left'
-              : 'origin-center',
-          // `scale`, not `transform`: Tailwind v4 compiles scale-* to the
-          // standalone `scale` property, so a transition list naming only
-          // `transform` animates nothing and the panel snaps to full size.
-          'transition-[scale,box-shadow] duration-[420ms] ease-[var(--ease-settle)]',
-          'sm:group-hover:shadow-overlay sm:group-hover:z-20 sm:group-hover:scale-[1.4]',
+          'transition-[box-shadow] duration-200 ease-out',
+          'sm:group-hover:shadow-overlay',
         )}
       >
         {imagePath ? (
@@ -193,8 +162,9 @@ export function ProductCard({
             src={imagePath}
             alt={title}
             fill
-            // The panel grows to 1.4x on hover, so ask for the larger source
-            // up front rather than letting a 240px image be scaled up.
+            // Comfortably above the panel's rendered width at each breakpoint:
+            // the card is the densest photography on the site and a source cut
+            // too fine shows it first.
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 340px"
             priority={priority}
             // Desaturate AND dim. Opacity alone made a bright photo look like a

@@ -97,7 +97,7 @@ export function RecentlyViewedRail({
     <section className="space-y-3">
       <h2 className="text-foreground text-xl font-bold">{heading}</h2>
       <Rail label={heading}>
-        {cards.map((card, index) => (
+        {cards.map((card) => (
           <div key={card.id} className="relative">
             <ProductCard
               slug={card.slug}
@@ -110,9 +110,16 @@ export function RecentlyViewedRail({
               reviewCount={card.reviewCount}
               imagePath={card.imagePath}
               stock={card.stock}
-              edge={index === 0 ? 'start' : index === cards.length - 1 ? 'end' : undefined}
-              wishlistSlot={<WishlistButton productId={card.id} initialSaved={card.saved} />}
-              quickAddSlot={<QuickAddButton productId={card.id} disabled={card.stock <= 0} />}
+              // Keyed for the same reason ProductGrid's are: both are client
+              // elements created here and passed to a client component as
+              // props, so they cross the RSC boundary with `key: null` and
+              // React reconciles them as a keyless array (CLAUDE.md).
+              wishlistSlot={
+                <WishlistButton key="wishlist" productId={card.id} initialSaved={card.saved} />
+              }
+              quickAddSlot={
+                <QuickAddButton key="quick-add" productId={card.id} disabled={card.stock <= 0} />
+              }
             />
           </div>
         ))}
