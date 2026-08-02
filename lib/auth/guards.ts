@@ -47,14 +47,23 @@ export async function requireRole(locale: string, role: UserRole): Promise<Sessi
  * (dashboard) requires a shopkeeper WITH a shop.
  *
  * A shopkeeper account with no shop_members row has nothing to manage, so it is
- * sent to registration instead of an empty dashboard. Admins are allowed
- * through for support purposes but carry no shopId, so every query still scopes
- * to whichever shop they are inspecting.
+ * sent to registration instead of an empty dashboard.
+ *
+ * An admin is sent to their OWN console rather than to registration. The
+ * previous branch let admins through "for support purposes", but an admin
+ * carries no shopId, so they fell into the `!user.shopId` redirect and landed
+ * on /dashboard/register-shop — which `registerShop` refuses for admins. It
+ * was a dead end dressed as an affordance. Real support access means acting as
+ * a named shop, which is a scoped feature this build does not have; until it
+ * does, saying so with a redirect beats a loop.
  */
 export async function requireShopkeeper(locale: string): Promise<SessionUser & { shopId: string }> {
   const user = await requireUser(locale);
 
-  if (user.role !== 'shopkeeper' && user.role !== 'admin') {
+  if (user.role === 'admin') {
+    redirect({ href: '/admin', locale });
+  }
+  if (user.role !== 'shopkeeper') {
     redirect({ href: '/', locale });
   }
   if (!user.shopId) {
