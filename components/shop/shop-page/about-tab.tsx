@@ -1,16 +1,11 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { BadgeCheck, CalendarClock, Clock, MapPin, Phone } from 'lucide-react';
+import { BadgeCheck, CalendarClock, MapPin, Phone } from 'lucide-react';
 
 import { ShopFloorMap } from '@/components/shop/shop-page/shop-floor-map';
+import { WeeklyHours } from '@/components/shop/shop-page/weekly-hours';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
-import {
-  formatDate,
-  formatNumber,
-  formatOpeningHours,
-  formatPhone,
-  formatUnitNumber,
-} from '@/lib/format';
+import { formatDate, formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
 
 export type AboutShop = {
   name: LocalizedText;
@@ -49,14 +44,13 @@ export async function AboutTab({ shop, now }: { shop: AboutShop; now: Date }) {
     ? Math.max(1, Math.floor((now.getTime() - shop.tenantSince.getTime()) / 31_557_600_000))
     : null;
 
+  /*
+   * HOURS ARE NOT IN THIS GRID ANY MORE. They used to be one fact card showing
+   * the usual range, which is exactly the rendering that hid a Friday closure —
+   * the whole week now has its own block below, and a single line here would
+   * either repeat it or contradict it.
+   */
   const facts = [
-    shop.hours && {
-      key: 'hours',
-      icon: Clock,
-      label: t('hoursLabel'),
-      value: formatOpeningHours(shop.hours, locale),
-      dir: undefined,
-    },
     shop.phone && {
       key: 'phone',
       icon: Phone,
@@ -83,7 +77,7 @@ export async function AboutTab({ shop, now }: { shop: AboutShop; now: Date }) {
     },
   ].filter(Boolean) as Array<{
     key: string;
-    icon: typeof Clock;
+    icon: typeof Phone;
     label: string;
     value: string;
     dir?: 'ltr';
@@ -106,6 +100,9 @@ export async function AboutTab({ shop, now }: { shop: AboutShop; now: Date }) {
             <p className="text-muted-foreground text-sm">{t('noStory')}</p>
           )}
         </section>
+
+        {/* The full weekly schedule, with today marked (Prompt: per-day hours). */}
+        <WeeklyHours hours={shop.hours} now={now} />
 
         <dl className="grid gap-3 sm:grid-cols-2">
           {facts.map((fact) => (

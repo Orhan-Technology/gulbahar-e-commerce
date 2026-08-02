@@ -152,7 +152,9 @@ async function ProductsTab({
   const t = await getTranslations('shop');
 
   const [facets, tree, inShopCategories] = await Promise.all([
-    filterFacets(locale),
+    // Scoped to this shop: without it the brand facet would list all
+    // twenty-eight brands in the mall on a page selling five products.
+    filterFacets(locale, { query, scope: { shopIds: [shopId] } }),
     categoryTree(locale),
     shopCategories(shopId),
   ]);

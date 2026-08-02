@@ -187,7 +187,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
       {/* The shops this customer follows (Prompt C8) — absent, not empty, when
           there are none. */}
-      <FollowedShops userId={session.id} />
+      <FollowedShops userId={session.id} now={new Date()} />
 
       {/* Honest about what is not built (Prompt A3): saved instruments are not
           a feature, and the card says so rather than being quietly absent. */}
@@ -249,7 +249,10 @@ function WorkspaceCard({
         <span className="text-primary-800 text-sm font-bold">{title}</span>
         <span className="text-primary-700 text-xs">{hint}</span>
       </span>
-      <ChevronRight className="text-primary-400 ms-auto h-4 w-4 shrink-0 rtl:rotate-180" aria-hidden />
+      <ChevronRight
+        className="text-primary-400 ms-auto h-4 w-4 shrink-0 rtl:rotate-180"
+        aria-hidden
+      />
     </Link>
   );
 }

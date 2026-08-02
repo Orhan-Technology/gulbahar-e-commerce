@@ -44,6 +44,12 @@ export default async function ShopsPage({
 
   const tree = await categoryTree(locale);
 
+  /* The clock is read ONCE, here, and handed down — the same rule the shop page
+     follows. Reading it inside each card would let two vacation-mode chips on
+     one screen disagree, and a clock read during a component's render is a React
+     19 purity violation (CLAUDE.md). */
+  const now = new Date();
+
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-4 sm:py-6">
       <Suspense fallback={<HeaderSkeleton />}>
@@ -55,7 +61,7 @@ export default async function ShopsPage({
       <ShopCategoryChips categories={tree} active={category} />
 
       <Suspense fallback={<ShopGridSkeleton />}>
-        <Directory locale={locale} q={q} category={category} />
+        <Directory locale={locale} q={q} category={category} now={now} />
       </Suspense>
     </div>
   );
@@ -86,10 +92,12 @@ async function Directory({
   locale,
   q,
   category,
+  now,
 }: {
   locale: string;
   q?: string;
   category?: string;
+  now: Date;
 }) {
   const t = await getTranslations('shops');
   const term = q?.trim();
@@ -107,7 +115,7 @@ async function Directory({
         />
       );
     }
-    return <ShopGrid items={results} />;
+    return <ShopGrid items={results} now={now} />;
   }
 
   const categoryRow = category ? await categoryBySlug(category) : null;
@@ -151,11 +159,12 @@ async function Directory({
           <ShopGrid
             items={promoted.map((shop) => ({ ...shop, sponsored: true }))}
             columns="featured"
+            now={now}
           />
         </section>
       )}
 
-      <ShopGrid items={rest} />
+      <ShopGrid items={rest} now={now} />
     </div>
   );
 }

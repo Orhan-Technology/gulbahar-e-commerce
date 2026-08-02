@@ -1,13 +1,13 @@
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { MapPin, Store } from 'lucide-react';
+import { CalendarClock, MapPin, Store } from 'lucide-react';
 
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { VerifiedBadge } from '@/components/shop/verified-badge';
-import { formatNumber, formatRating, formatUnitNumber } from '@/lib/format';
+import { formatDate, formatNumber, formatRating, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -30,6 +30,15 @@ export interface ShopCardProps {
    * into a client component, and a Date does not survive that boundary intact.
    */
   verifiedAt?: string | null;
+  /**
+   * Vacation mode: the ISO date trading resumes, or null (lib/pause.ts).
+   *
+   * A STRING for the same reason `verifiedAt` is one — a Date does not survive
+   * the crossing into a client component intact. The caller decides whether the
+   * shop is actually paused (`pauseState()` with a server clock) and passes null
+   * when it is not, so this component never reads the clock during render.
+   */
+  pausedUntil?: string | null;
   /**
    * `card` is the banner-and-logo tile. `row` is the mall directory's compact
    * form — a monogram disc beside the name and one line of metadata — which is
@@ -58,6 +67,7 @@ export function ShopCard({
   unitNumber,
   logoPath,
   bannerPath,
+  pausedUntil,
   isSponsored = false,
   layout = 'card',
   className,
@@ -67,6 +77,19 @@ export function ShopCard({
   const common = useTranslations('common');
 
   const hasLocation = floor !== null && floor !== undefined;
+
+  /*
+   * A WARM chip, never a red one. The shop is there, its catalogue is intact and
+   * the tenant is back on a named day — a danger colour on a directory card
+   * would read as "something is wrong with this shop", which is the one thing
+   * vacation mode is designed not to say.
+   */
+  const pausedChip = pausedUntil ? (
+    <span className="rounded-pill bg-warning-bg text-warning-fg text-2xs inline-flex shrink-0 items-center gap-1 px-2 py-0.5 font-medium">
+      <CalendarClock className="h-3 w-3" aria-hidden />
+      {t('pausedBadge', { date: formatDate(pausedUntil, locale, 'medium') })}
+    </span>
+  ) : null;
 
   if (layout === 'row') {
     return (
@@ -92,9 +115,14 @@ export function ShopCard({
           <span className="flex items-center gap-2">
             <span className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150">
               {name}
-              <VerifiedBadge verifiedAt={verifiedAt ?? null} size="sm" className="ms-1 align-middle" />
+              <VerifiedBadge
+                verifiedAt={verifiedAt ?? null}
+                size="sm"
+                className="ms-1 align-middle"
+              />
             </span>
             {isSponsored && <SponsoredBadge tone="inline" />}
+            {pausedChip}
           </span>
 
           {/*
@@ -195,8 +223,10 @@ export function ShopCard({
           so it should read as a label on the card rather than as one more
           sentence competing with the rating and the product count.
         */}
+        {pausedChip && <div className="mt-2">{pausedChip}</div>}
+
         {hasLocation && (
-          <span className="rounded-pill mt-2 inline-flex items-center gap-1 bg-neutral-100 px-2 py-1 text-2xs font-medium text-neutral-600">
+          <span className="rounded-pill text-2xs mt-2 inline-flex items-center gap-1 bg-neutral-100 px-2 py-1 font-medium text-neutral-600">
             <MapPin className="h-3 w-3" aria-hidden />
             {t('floorUnit', {
               floor: formatNumber(floor, locale),

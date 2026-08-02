@@ -36,6 +36,7 @@ export async function OpenPill({
 }) {
   const locale = await getLocale();
   const t = await getTranslations('shop.openState');
+  const tDays = await getTranslations('shopProfile.hoursEditor.days');
 
   const shop = openState(shopHours, now);
   const mall = openState(mallHours, now);
@@ -58,7 +59,7 @@ export async function OpenPill({
     <span
       data-open={open ? 'true' : 'false'}
       className={cn(
-        'rounded-pill inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-card backdrop-blur-sm',
+        'rounded-pill shadow-card inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold backdrop-blur-sm',
         open
           ? closingSoon
             ? 'bg-accent-warm/95 text-neutral-900'
@@ -69,9 +70,21 @@ export async function OpenPill({
     >
       <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden />
       {label}
+      {/*
+        NAMING THE DAY when the boundary is not today's. `openState` sets
+        `nextOpenDay` only when the shop is shut for the whole of the current
+        day — the Friday case — and "opens at ۸:۰۰" beside a Friday closure
+        reads as "in a couple of hours" to the one person it is meant to stop
+        walking over.
+      */}
       {!open && (
         <span className="font-normal opacity-80">
-          {t('opensAt', { time: formatClock(shop.boundary, locale) })}
+          {shop.nextOpenDay
+            ? t('opensOnDay', {
+                day: tDays(shop.nextOpenDay),
+                time: formatClock(shop.boundary, locale),
+              })
+            : t('opensAt', { time: formatClock(shop.boundary, locale) })}
         </span>
       )}
     </span>
