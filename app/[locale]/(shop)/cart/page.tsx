@@ -157,7 +157,7 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
         </div>
 
         {/* Order summary */}
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className="lg:sticky lg:top-[var(--sticky-offset)] lg:self-start">
           <div className="rounded-card border-border bg-card shadow-card space-y-3 border p-4">
             <h2 className="text-base font-bold">{t('summary')}</h2>
 

@@ -45,7 +45,7 @@ export default async function AccountHubLayout({
     <div className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
       <div className="lg:grid lg:grid-cols-[13rem_minmax(0,1fr)] lg:items-start lg:gap-6 xl:grid-cols-[13rem_minmax(0,1fr)_17rem]">
         {/* Sticky under the site header, which is 4rem tall. */}
-        <div className="lg:sticky lg:top-20">
+        <div className="lg:sticky lg:top-[var(--sticky-offset)]">
           <AccountNav counts={counts} />
         </div>
 

@@ -131,7 +131,21 @@ async function main() {
   report.check('sections run gallery → … → rails', order.join(' → ') === expected.join(' → '), order);
   report.check('the comparison and the Q&A stream in between', rich.includes('id="compare-heading"') && rich.includes('id="questions"'));
 
-  report.check('the buy box is sticky and condensable', rich.includes('lg:sticky lg:top-24'));
+  /*
+   * Anchored on the column's own marker, not on its Tailwind class list. The
+   * old assertion matched the literal `lg:sticky lg:top-24`, so moving the
+   * offset into a shared custom property — after all three sticky panels were
+   * found tucked UNDER a header that had grown — failed a check about
+   * stickiness for a reason that had nothing to do with it.
+   */
+  report.check(
+    'the buy box is sticky, and its offset comes from the shared token',
+    rich.includes('data-buy-column') && rich.includes('lg:top-[var(--sticky-offset)]'),
+  );
+  report.check(
+    'and it renders uncondensed at the top of the page',
+    rich.includes('data-condensed="false"'),
+  );
   report.check('the rating links to the reviews it summarises', rich.includes('href="#reviews"'));
   report.check('brand and model print under the title', /Apple\s*·/.test(rich));
 

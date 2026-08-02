@@ -25,9 +25,19 @@ import { cn } from '@/lib/utils';
  * The collapse animates `grid-template-rows` and opacity together in 200ms,
  * which is the reference's timing and inside our 300ms feedback budget.
  *
- * REDUCED MOTION drops both behaviours, not just the animation: the column
- * becomes a plain static block. A sticky element that jumps between two layouts
- * with no transition is worse than one that does not move at all.
+ * REDUCED MOTION REMOVES THE ANIMATION, NOT THE FEATURE — and it used to do
+ * the opposite. Asking for less motion turned off the stickiness AND the
+ * condensed identity line, so a reader with "reduce animation" set (which is a
+ * single switch in GNOME, and on by default in plenty of setups) got a plain
+ * block that scrolled away and never said which product they were looking at.
+ * That is not a motion preference being honoured, it is a feature being
+ * withdrawn from the people most likely to want a stable target. The panel now
+ * sticks and condenses for everyone; only the 200ms transition is dropped, so
+ * the switch is instant rather than absent.
+ *
+ * CONDENSING IS GATED ON `lg` because that is where the column is sticky.
+ * Below it the box scrolls away like any other block, and collapsing its
+ * contents on the way past would hide the price of a product still on screen.
  *
  * STICKY, NOT FIXED — and it ends where its grid does, which is above the
  * footer, so it can never cover it.
@@ -68,30 +78,48 @@ export function BuyColumn({
 }) {
   const prefersReduced = usePrefersReducedMotion();
   const [condensed, setCondensed] = React.useState(false);
+  const [wide, setWide] = React.useState(false);
+
+  // Matches the `lg:` breakpoint the sticky positioning is gated on, so the
+  // two cannot disagree about when this column is a sidebar.
+  React.useEffect(() => {
+    const query = window.matchMedia('(min-width: 1024px)');
+    const sync = () => setWide(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, []);
 
   React.useEffect(() => {
     const node = document.getElementById(anchorId);
-    if (!node || prefersReduced) return;
+    if (!node || !wide) return;
 
     /*
      * A sentinel at the TOP of the column rather than a scroll listener: the
      * observer fires twice per crossing instead of on every frame, and it needs
      * no reading of layout during a scroll.
      *
-     * `rootMargin` pulls the trigger line down to just under the sticky site
-     * header, so the switch happens when the title actually disappears behind
-     * it rather than at the viewport edge.
+     * `rootMargin` pulls the trigger line down to where the column comes to
+     * rest, so the switch happens exactly as the title disappears behind the
+     * header rather than at the viewport edge. Read from the SAME custom
+     * property the sticky offset uses — a hard-coded 96px here was how the
+     * trigger and the resting position drifted apart in the first place.
      */
+    const offset =
+      Number.parseFloat(
+        getComputedStyle(document.documentElement).getPropertyValue('--sticky-offset'),
+      ) * 16 || 120;
+
     const observer = new IntersectionObserver(
       ([entry]) => setCondensed(!entry.isIntersecting && entry.boundingClientRect.top < 0),
-      { rootMargin: '-96px 0px 0px 0px', threshold: 0 },
+      { rootMargin: `-${Math.round(offset)}px 0px 0px 0px`, threshold: 0 },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, [anchorId, prefersReduced]);
+  }, [anchorId, wide]);
 
-  const collapsed = condensed && !prefersReduced;
+  const collapsed = condensed && wide;
 
   return (
     /*
@@ -100,9 +128,13 @@ export function BuyColumn({
      * nothing above the button. The spacing lives INSIDE each collapsible
      * instead, where it collapses along with the content.
      */
-    <div className={cn(className, !prefersReduced && 'lg:sticky lg:top-24')}>
+    <div
+      data-buy-column
+      data-condensed={collapsed ? 'true' : 'false'}
+      className={cn(className, 'lg:sticky lg:top-[var(--sticky-offset)]')}
+    >
       {/* The condensed identity line — absent from the flow until it is needed. */}
-      <Collapsible open={collapsed}>
+      <Collapsible open={collapsed} instant={prefersReduced}>
         <div className="rounded-card border-border bg-card flex items-center gap-3 border p-3">
           <span className="rounded-control relative h-12 w-12 shrink-0 overflow-hidden bg-neutral-100">
             {thumbnail && (
@@ -116,7 +148,7 @@ export function BuyColumn({
         </div>
       </Collapsible>
 
-      <Collapsible open={!collapsed}>
+      <Collapsible open={!collapsed} instant={prefersReduced}>
         <div className="space-y-5">
           {header}
           {shop}
@@ -127,7 +159,7 @@ export function BuyColumn({
 
       {children}
 
-      <Collapsible open={!collapsed}>
+      <Collapsible open={!collapsed} instant={prefersReduced}>
         <div className="space-y-5">{extras}</div>
       </Collapsible>
     </div>
@@ -141,11 +173,21 @@ export function BuyColumn({
  * intrinsic height without measuring it, and the inner `overflow-hidden` is what
  * makes the zero-height state actually clip.
  */
-function Collapsible({ open, children }: { open: boolean; children: React.ReactNode }) {
+function Collapsible({
+  open,
+  instant,
+  children,
+}: {
+  open: boolean;
+  /** Reduced motion: switch states with no transition, but still switch. */
+  instant?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div
       className={cn(
-        'grid transition-[grid-template-rows,opacity] duration-200 ease-out',
+        'grid',
+        !instant && 'transition-[grid-template-rows,opacity] duration-200 ease-out',
         open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0',
       )}
       aria-hidden={!open}

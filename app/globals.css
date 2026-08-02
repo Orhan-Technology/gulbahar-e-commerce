@@ -298,6 +298,22 @@
   --container-page: 87.5rem;
 
   /* ----------------------------------------------------------------
+   * STICKY OFFSET — one number, because there were three.
+   *
+   * The site header is sticky and 107px tall at `lg`. Every sticky panel
+   * beneath it — the buy box, the account nav, the cart summary — was
+   * carrying its own guess (96px, 80px, 80px), so all three slid UNDER
+   * the header by between 11 and 27 pixels. Nobody had changed them; the
+   * header simply grew a second row and the guesses stayed put.
+   *
+   * 7.5rem is the header plus a 13px gap. Anything that sticks below the
+   * header uses `lg:top-[var(--sticky-offset)]` and nothing else, and the
+   * buy column's IntersectionObserver reads the same value so its trigger
+   * line and its resting position cannot drift apart.
+   * ---------------------------------------------------------------- */
+  --sticky-offset: 7.5rem;
+
+  /* ----------------------------------------------------------------
    * ELEVATION — exactly two levels. The --shadow-* reset removed
    * Tailwind's scale; xs/sm/md/lg/xl are aliases onto our two, so even
    * third-party component code cannot introduce a third.
