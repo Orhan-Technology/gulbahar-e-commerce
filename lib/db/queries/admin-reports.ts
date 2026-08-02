@@ -32,7 +32,7 @@ export async function platformTotals(days: PlatformPeriod) {
   const rows = await db.execute(sql`
     select
       coalesce(sum(o.total) filter (where o.status = 'fulfilled'), 0)::int as gmv,
-      count(*) filter (where o.status <> 'rejected')::int as order_count,
+      count(*) filter (where o.status not in ('rejected', 'cancelled'))::int as order_count,
       count(*) filter (where o.status = 'fulfilled')::int as fulfilled_count,
       count(*) filter (where o.status = 'rejected')::int as rejected_count,
       count(distinct o.user_id)::int as buyers,
@@ -61,7 +61,7 @@ export async function platformSeries(days: PlatformPeriod) {
     totals as (
       select o.created_at::date as day,
              sum(o.total) filter (where o.status = 'fulfilled')::int as gmv,
-             count(*) filter (where o.status <> 'rejected')::int as order_count
+             count(*) filter (where o.status not in ('rejected', 'cancelled'))::int as order_count
       from orders o
       where o.created_at >= ${since(days)}::timestamptz
       group by 1
@@ -108,11 +108,14 @@ export async function topShops(days: PlatformPeriod, limit = 8) {
       s.name as name,
       -- ONE PREDICATE PER METRIC (Prompt C2), applied per column rather than
       -- to the whole query: revenue is FULFILLED money, order_count is business
-      -- received. Sharing one <> 'rejected' between them made this column sum to
+      -- received. Sharing one status test between them made this column sum to
       -- more than the GMV tile above it, which is the drift C2 exists to stop.
+      -- "Business received" excludes cancelled as well as rejected: an order
+      -- withdrawn before it changed hands is not business the shop received,
+      -- and its stock went back on the shelf.
       coalesce(sum(oi.price_snapshot * oi.quantity)
         filter (where o.status = 'fulfilled'), 0)::int as revenue,
-      count(distinct o.id) filter (where o.status <> 'rejected')::int as order_count
+      count(distinct o.id) filter (where o.status not in ('rejected', 'cancelled'))::int as order_count
     from order_items oi
     join orders o on o.id = oi.order_id
     join shops s on s.id = oi.shop_id

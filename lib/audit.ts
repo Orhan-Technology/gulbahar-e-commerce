@@ -30,6 +30,8 @@ export type AuditAction =
   | 'shop.create'
   | 'shop.nudge'
   | 'shop.unit'
+  /** The mall ending an order it is hosting — see lib/actions/admin-orders.ts. */
+  | 'order.cancel'
   | 'verification.verify'
   | 'verification.reject'
   | 'verification.claim'

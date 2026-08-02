@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopReview } from '@/lib/db/queries/admin';
+import { latestShopStatusReason } from '@/lib/db/queries/audit';
 import { formatDate, formatNumber, formatOpeningHours, formatPhone, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -49,6 +50,8 @@ export default async function AdminShopReviewPage({
 
   const shop = await adminShopReview(id);
   if (!shop) notFound();
+
+  const statusReason = await latestShopStatusReason(shop.id);
 
   const published = shop.catalogue.filter((item) => item.status === 'published').length;
   const withoutImages = shop.catalogue.filter((item) => item.imageCount === 0).length;
@@ -120,6 +123,46 @@ export default async function AdminShopReviewPage({
         <section className="rounded-card border-danger-border bg-danger-bg space-y-1 border p-4">
           <p className="text-danger text-sm font-bold">{t('lastRejection')}</p>
           <p className="text-danger/90 text-sm">{shop.rejectionReason}</p>
+        </section>
+      )}
+
+      {/*
+        WHY THIS SHOP IS SUSPENDED OR CLOSED, read back from the audit log.
+        Deliberately not from `shops.rejectionReason`: that column belongs to
+        the registration conversation and is cleared on approval, so a
+        suspension written into it would read to a trading tenant as a rejected
+        application and would vanish the next time anyone reinstated them.
+        The log is append-only, so the note survives the reinstatement — which
+        is the point of asking for it.
+      */}
+      {statusReason && shop.status !== 'approved' && shop.status !== 'pending' && (
+        <section className="rounded-card border-border bg-card space-y-1 border p-4">
+          <p className="text-sm font-bold">
+            {shop.status === 'closed' ? t('closureReason') : t('suspensionReason')}
+          </p>
+          <p className="text-sm">«{statusReason.reason}»</p>
+          <p className="text-muted-foreground text-xs">
+            {t('decidedBy', {
+              actor: statusReason.actorName,
+              date: formatDate(statusReason.createdAt, locale),
+            })}
+          </p>
+        </section>
+      )}
+
+      {/*
+        Vacation mode. The SHOPKEEPER set this, and admin can only read it —
+        without it on the review screen a manager looking at a quiet shop has no
+        way to tell "shut for Eid, back on the 14th" from "stopped trading".
+      */}
+      {shop.paused && shop.pausedUntil && (
+        <section className="rounded-card border-border bg-card space-y-1 border p-4">
+          <p className="text-sm font-bold">
+            {t('pausedUntil', { date: formatDate(shop.pausedUntil, locale, 'medium') })}
+          </p>
+          {shop.pauseNote && (
+            <p className="text-muted-foreground text-sm">{pickLocale(shop.pauseNote, locale)}</p>
+          )}
         </section>
       )}
 

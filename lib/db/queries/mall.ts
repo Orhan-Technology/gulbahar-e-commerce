@@ -155,6 +155,24 @@ export type ShopHealth = {
   ratingEarlier: number | null;
   publishedProducts: number;
   ordersInWindow: number;
+  /**
+   * Vacation mode, set by the SHOPKEEPER (`shops.pausedUntil`).
+   *
+   * Carried here so the health row can say so before the admin picks up the
+   * phone. Every flag on this list is "you are costing the mall customers"; a
+   * shop that announced it would be shut for a week is not neglecting anything,
+   * and a nudge about slow acceptance is the landlord not having read their
+   * own notice board.
+   */
+  pausedUntil: Date | null;
+  /**
+   * Whether the pause is in force RIGHT NOW.
+   *
+   * Compared in SQL rather than in the component: a React 19 component may not
+   * call `Date.now()` during render, server or not, and the lint rule enforces
+   * it. The clock read belongs to the query (CLAUDE.md).
+   */
+  paused: boolean;
 };
 
 /** Above this a shop is keeping customers waiting rather than trading. */
@@ -204,6 +222,8 @@ export async function shopHealth(days: number): Promise<ShopHealth[]> {
       s.floor::int as floor,
       s.unit_number as unit_number,
       s.verified_at as verified_at,
+      s.paused_until as paused_until,
+      (s.paused_until is not null and s.paused_until > now()) as paused,
       (select count(*)::int from products p
         where p.shop_id = s.id and p.status = 'published') as published_products,
       coalesce((select count(*)::int from window_orders w where w.shop_id = s.id), 0)
@@ -278,6 +298,8 @@ export async function shopHealth(days: number): Promise<ShopHealth[]> {
         ratingEarlier,
         publishedProducts,
         ordersInWindow,
+        pausedUntil: row.paused_until ? new Date(String(row.paused_until)) : null,
+        paused: row.paused === true,
       };
     })
     .filter((shop) => shop.flags.length > 0)

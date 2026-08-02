@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Plus, Users } from 'lucide-react';
 
 import { CreateShopDialog } from '@/components/admin/create-shop-dialog';
+import { ListCapNotice } from '@/components/admin/list-cap-notice';
 import { UserRowActions } from '@/components/admin/user-row-actions';
 import { EmptyState } from '@/components/custom/empty-state';
 import { SearchBox } from '@/components/custom/search-box';
@@ -17,6 +18,10 @@ import { formatDate, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 type Query = { role?: 'customer' | 'shopkeeper' | 'admin'; q?: string };
+
+/** Matches the query's own default. Beyond this the caption says so and the
+ *  search box above is the way to narrow — see components/admin/list-cap-notice. */
+const ROW_LIMIT = 200;
 
 /** User management (PRD §7.5). */
 export default async function AdminUsersPage({
@@ -110,19 +115,24 @@ async function UserList({
   selfId: string;
 }) {
   const t = await getTranslations('adminUsers');
-  const rows = await adminUsers({ role: query.role, search: query.q });
+  // One over the cap, purely so the caption below can be honest about it: the
+  // list took the newest 200 and rendered them as if that were everybody.
+  const fetched = await adminUsers({ role: query.role, search: query.q, limit: ROW_LIMIT + 1 });
+  const rows = fetched.slice(0, ROW_LIMIT);
+  const hasMore = fetched.length > ROW_LIMIT;
 
   if (rows.length === 0) {
     return (
       <EmptyState
         illustration={<Users className="h-7 w-7" />}
-        title={t('emptyTitle')}
-        description={t('emptyBody')}
+        title={query.q ? t('emptySearchTitle') : t('emptyTitle')}
+        description={query.q ? t('emptySearchBody', { term: query.q }) : t('emptyBody')}
       />
     );
   }
 
   return (
+    <div className="space-y-3">
     <div className="rounded-card border-border bg-card overflow-x-auto border">
       <table className="w-full min-w-2xl text-sm">
         <thead>
@@ -207,6 +217,9 @@ async function UserList({
           ))}
         </tbody>
       </table>
+    </div>
+
+    <ListCapNotice shown={rows.length} hasMore={hasMore} />
     </div>
   );
 }

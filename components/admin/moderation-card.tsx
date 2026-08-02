@@ -10,7 +10,7 @@ import { RatingStars } from '@/components/custom/rating-stars';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { moderateReview } from '@/lib/actions/admin-catalogue';
-import { formatDate, formatPhone } from '@/lib/format';
+import { formatDate, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 export type ModerationRow = {
@@ -26,6 +26,21 @@ export type ModerationRow = {
   shopName: string;
   shopSlug: string;
   responseBody: string | null;
+  /**
+   * The category the shop picked when it reported, and its free-text note.
+   *
+   * Null when the report cannot be tied to THIS review with certainty — the
+   * schema records neither reporter nor reason on `reviews`, and the only trace
+   * is the notification `flagReview()` sends, which carries the product title
+   * but not the review id. See lib/db/queries/admin.ts for the exact rule.
+   * Blank beats a guess on a decision that removes somebody's words.
+   */
+  reportReason: string | null;
+  reportNote: string | null;
+  reportedAt: string | null;
+  /** The author's standing: reviews of theirs still up, and ones already taken down. */
+  authorVisibleReviews: number;
+  authorRemovedReviews: number;
 };
 
 /**
@@ -34,6 +49,16 @@ export type ModerationRow = {
  * "Remove or uphold" is not decidable from a body of text alone, so the card shows
  * the rating, the product, the shop, and the shop's reply if there is one — the
  * reply is often the reason a shop reported the review in the first place.
+ *
+ * IT NOW SHOWS WHY IT WAS REPORTED. The card used to present the review and two
+ * buttons and nothing else, so the admin had to infer from the text whether the
+ * shop meant "this is abusive" or "this person never bought from us" — two
+ * complaints with opposite correct answers. The reporter is always the shop
+ * named on the row: a customer cannot report a review, only a shop can.
+ *
+ * And when the reason cannot be recovered, the AUTHOR'S RECORD is shown
+ * instead, so the decision is never made on the text alone: one removal among
+ * forty reviews is a bad night, three among four is a pattern.
  *
  * Both outcomes are recorded as a status change; neither rewrites the review. Admin
  * decides visibility, never wording.
@@ -97,7 +122,42 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
         </Badge>
       </div>
 
+      {/*
+        The complaint, above the text it is about. Reading the review first and
+        the charge afterwards is how an admin ends up deciding whether they
+        personally like the review.
+      */}
+      {review.reportReason && (
+        <div className="rounded-control border-warning-border bg-warning-bg border-s-2 p-3">
+          <p className="text-warning-fg text-xs font-bold">
+            {t('reportedFor', { reason: t(`reportReasons.${review.reportReason}` as never) })}
+          </p>
+          <p className="text-warning-fg/80 mt-1 text-xs">
+            {t('reportedBy', {
+              shop: review.shopName,
+              date: review.reportedAt ? formatDate(review.reportedAt, locale) : '—',
+            })}
+          </p>
+          {review.reportNote && <p className="mt-1 text-sm">«{review.reportNote}»</p>}
+        </div>
+      )}
+
       {review.body && <p className="text-sm leading-relaxed">{review.body}</p>}
+
+      {/*
+        The author's record. Always present, and the ONLY context there is when
+        the report reason could not be recovered — which is the honest fallback
+        rather than a blank card with two buttons on it.
+      */}
+      <p className="text-muted-foreground text-xs">
+        {t('authorRecord', {
+          visible: formatNumber(review.authorVisibleReviews, locale),
+          removed: formatNumber(review.authorRemovedReviews, locale),
+        })}
+        {review.status === 'reported' && !review.reportReason && (
+          <span className="text-muted-foreground"> · {t('noReasonRecorded')}</span>
+        )}
+      </p>
 
       {/* The shop's reply — frequently the context that decides the call. */}
       {review.responseBody && (

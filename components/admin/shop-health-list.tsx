@@ -5,7 +5,7 @@ import { NudgeShopButton } from '@/components/admin/nudge-shop-button';
 import { EmptyState } from '@/components/custom/empty-state';
 import { pickLocale } from '@/lib/db/localized';
 import { shopHealth, type HealthFlag } from '@/lib/db/queries/mall';
-import { formatNumber, formatPercent, formatRating, formatUnitNumber } from '@/lib/format';
+import { formatDate, formatNumber, formatPercent, formatRating, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -100,10 +100,24 @@ export async function ShopHealthList({ days }: { days: number }) {
               )}
             </div>
 
-            {/* The landlord's move: they cannot fix the shop's queue for them
-                — that would put management inside a tenant's transaction
-                (PRD §3.1) — but they can make sure the tenant knows. */}
-            <NudgeShopButton shopId={shop.id} flag={shop.flags[0]} />
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              {/*
+                VACATION MODE, ANNOUNCED BEFORE THE PHONE CALL. The shopkeeper
+                set `pausedUntil` themselves; a nudge about slow acceptance to a
+                tenant who told the mall they would be shut is the landlord not
+                having read their own notice board.
+              */}
+              {shop.paused && shop.pausedUntil && (
+                <span className="rounded-control bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-700">
+                  {t('pausedUntil', { date: formatDate(shop.pausedUntil, locale, 'medium') })}
+                </span>
+              )}
+
+              {/* The landlord's move: they cannot fix the shop's queue for them
+                  — that would put management inside a tenant's transaction
+                  (PRD §3.1) — but they can make sure the tenant knows. */}
+              <NudgeShopButton shopId={shop.id} flags={shop.flags} />
+            </div>
           </div>
 
           <ul className="space-y-1.5">

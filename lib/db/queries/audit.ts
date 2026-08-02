@@ -51,6 +51,41 @@ export async function auditEntries(filters: AuditFilters = {}) {
   };
 }
 
+/**
+ * The reason behind a shop's CURRENT status (PRD §7.1).
+ *
+ * Suspension and closure record their reason on the audit row rather than on
+ * `shops.rejectionReason` — that column belongs to the registration
+ * conversation and is cleared on approval (see lib/actions/admin-shops.ts). So
+ * the review screen reads it back from the log, which is also what makes the
+ * previous suspension still readable after a reinstatement.
+ *
+ * Newest `shop.status` row only: the reason for the state the shop is in now,
+ * not a history. Returns null when the last transition carried none — which is
+ * every row written before the reason became mandatory.
+ */
+export async function latestShopStatusReason(shopId: string) {
+  const [row] = await db
+    .select({
+      reason: adminAuditLog.reason,
+      actorName: adminAuditLog.actorName,
+      createdAt: adminAuditLog.createdAt,
+      detail: adminAuditLog.detail,
+    })
+    .from(adminAuditLog)
+    .where(and(eq(adminAuditLog.action, 'shop.status'), eq(adminAuditLog.targetId, shopId)))
+    .orderBy(desc(adminAuditLog.createdAt))
+    .limit(1);
+
+  if (!row?.reason) return null;
+  return {
+    reason: row.reason,
+    actorName: row.actorName,
+    createdAt: row.createdAt,
+    to: (row.detail?.to as string | undefined) ?? null,
+  };
+}
+
 /** The filter chips: which target types actually appear, and how often. */
 export async function auditTargetCounts() {
   const rows = await db
@@ -60,6 +95,24 @@ export async function auditTargetCounts() {
     .orderBy(desc(sql`count(*)`));
 
   return rows.map((row) => ({ ...row, total: Number(row.total) }));
+}
+
+/**
+ * The log as a flat list, for the CSV export (app/api/reports/admin).
+ *
+ * A separate function from `auditEntries` rather than a bigger `limit` on it:
+ * that one is capped at 200 because it backs a paged screen, and quietly
+ * raising the cap for one caller is how a page ends up rendering two thousand
+ * rows. An export has a different contract — one file, ordered oldest-last,
+ * with a ceiling that is about file size rather than about scrolling.
+ */
+export async function auditExportRows(targetType: string | undefined, limit = 5000) {
+  return db
+    .select()
+    .from(adminAuditLog)
+    .where(targetType ? eq(adminAuditLog.targetType, targetType) : undefined)
+    .orderBy(desc(adminAuditLog.createdAt))
+    .limit(Math.min(limit, 20_000));
 }
 
 /** How busy the console has been — the header line on /admin/audit. */

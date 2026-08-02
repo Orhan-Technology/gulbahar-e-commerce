@@ -196,7 +196,7 @@ async function main() {
     select id, slug from shops where status = 'approved' and slug <> ${pending.slug} limit 1
   `;
   const suspended = await client.call(admin, 'setShopStatus', [
-    { shopId: live.id, status: 'suspended' },
+    { shopId: live.id, status: 'suspended', reason: 'بررسی شکایت‌های پی‌درپی مشتریان' },
   ]);
   check('suspend succeeds', suspended?.ok === true, suspended);
   check(
@@ -379,7 +379,9 @@ async function main() {
     where p.status = 'published' and s.status = 'approved'
     limit 1
   `;
-  const unpublished = await client.call(admin, 'unpublishProduct', [target.id]);
+  const unpublished = await client.call(admin, 'unpublishProduct', [
+    { productId: target.id, reason: 'تصویر محصول با توضیحات آن یکی نیست' },
+  ]);
   check('unpublish succeeds', unpublished?.ok === true, unpublished);
   check(
     'the product leaves the storefront',
@@ -395,7 +397,9 @@ async function main() {
     unpublishedRow,
   );
 
-  const again = await client.call(admin, 'unpublishProduct', [target.id]);
+  const again = await client.call(admin, 'unpublishProduct', [
+    { productId: target.id, reason: 'تصویر محصول با توضیحات آن یکی نیست' },
+  ]);
   check('unpublishing an unpublished product is refused', again?.error === 'not_published', again);
 
   // The shop can put it back — proving admin did not lock them out.
@@ -407,7 +411,9 @@ async function main() {
     where u.phone = ${SHOPKEEPER} and p.status = 'published'
     limit 1
   `;
-  await client.call(admin, 'unpublishProduct', [ownedTarget.id]);
+  await client.call(admin, 'unpublishProduct', [
+    { productId: ownedTarget.id, reason: 'تصویر محصول با توضیحات آن یکی نیست' },
+  ]);
   const shopClient = await ActionClient.create(['/fa/dashboard/products'], shopkeeper);
   const republished = await shopClient.call(shopkeeper, 'bulkSetProductStatus', [
     [ownedTarget.id],

@@ -154,6 +154,66 @@ export async function revenueByMonth(months = 6) {
   }));
 }
 
+/**
+ * This month so far, against the SAME STRETCH of last month (Prompt C2).
+ *
+ * The headline used to compare the calendar month to date against the whole of
+ * the previous month, which on the 2nd of a month is one day of trading against
+ * thirty and reads «؋۰ · −۱۰۰٪» on a business that is doing fine. That is not a
+ * small presentational flaw: it is the first number on the screen the console
+ * exists to sell, and it is wrong for the first week of every month.
+ *
+ * So the baseline is truncated to the same day-of-month boundary. `dayOfMonth`
+ * comes back with it so the caption can say what the comparison actually is
+ * rather than leaving "vs last month" to imply a full month.
+ *
+ * `partial` is false on the last day of a month, where month-to-date IS the
+ * month and the honest caption is the plain one.
+ */
+export async function revenueMonthToDate() {
+  const rows = await db.execute(sql`
+    with bounds as (
+      select
+        date_trunc('month', now()) as month_start,
+        date_trunc('month', now()) - interval '1 month' as prev_start,
+        -- The same elapsed stretch, measured from each month's own first day, so
+        -- a 31-day month compared with a 30-day one still lines up day for day.
+        now() - date_trunc('month', now()) as elapsed,
+        extract(day from now())::int as day_of_month,
+        extract(day from (date_trunc('month', now()) + interval '1 month' - interval '1 day'))::int as days_in_month
+    )
+    select
+      b.day_of_month,
+      b.days_in_month,
+      (select coalesce(sum(c.price_paid), 0)::int from campaigns c
+        where ${SOLD} and c.starts_at >= b.month_start) as current,
+      (select coalesce(sum(c.price_paid), 0)::int from campaigns c
+        where ${SOLD} and c.starts_at >= b.prev_start
+          and c.starts_at < b.prev_start + b.elapsed) as previous,
+      (select coalesce(sum(c.price_paid), 0)::int from campaigns c
+        where ${SOLD} and c.starts_at >= b.prev_start
+          and c.starts_at < b.month_start) as previous_full
+    from bounds b
+  `);
+
+  const [row] = rows as unknown as Array<Record<string, unknown>>;
+  const current = Number(row?.current ?? 0);
+  const previous = Number(row?.previous ?? 0);
+  const dayOfMonth = Number(row?.day_of_month ?? 1);
+  const daysInMonth = Number(row?.days_in_month ?? 30);
+
+  return {
+    current,
+    previous,
+    previousFullMonth: Number(row?.previous_full ?? 0),
+    dayOfMonth,
+    partial: dayOfMonth < daysInMonth,
+    // Null rather than −100% or Infinity when there is no baseline to divide by
+    // — the same rule StatCard applies everywhere else.
+    delta: previous > 0 ? (current - previous) / previous : null,
+  };
+}
+
 /** Every campaign with its shop, slot, window and price — the revenue table. */
 export async function campaignLedger(
   status?: 'requested' | 'approved' | 'active' | 'rejected' | 'ended',

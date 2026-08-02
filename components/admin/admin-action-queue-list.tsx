@@ -29,6 +29,8 @@ export type AdminQueueRow = {
   /** Ids for the two row types that decide in place since C4. */
   reviewId?: string;
   orderId?: string;
+  /** The human reference (GC-…), so the cancel dialog can name the order. */
+  orderReference?: string;
   /** Verification rows link to the queue, where the documents are (C7). */
   verificationId?: string;
   monogram: string;
@@ -194,9 +196,16 @@ export function AdminActionQueueList({
                       />
                     )}
 
-                    {/* The row stays: the order is still unanswered, and what
-                        changed is that the shopkeeper has been told. */}
-                    {row.orderId && <InlineNudgeShop orderId={row.orderId} />}
+                    {/* A nudge leaves the row: the order is still unanswered,
+                        and what changed is that the shopkeeper has been told.
+                        A cancellation collapses it, because it is resolved. */}
+                    {row.orderId && (
+                      <InlineNudgeShop
+                        orderId={row.orderId}
+                        reference={row.orderReference ?? ''}
+                        onCancelled={() => dismiss(row.key)}
+                      />
+                    )}
                   </div>
 
                   {/* A row with no inline decision is a link, and says so. */}

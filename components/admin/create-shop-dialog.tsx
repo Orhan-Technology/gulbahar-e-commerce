@@ -25,6 +25,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createShopWithOwner } from '@/lib/actions/admin-shops';
+// Persian digits, not `\D`: JS classes are ASCII-only, so an ASCII
+// sanitiser deletes «۵۰۰» keystroke by keystroke and the field a Dari
+// admin types into stays empty. One shared helper, lib/digits.ts.
+import { digitsOnly } from '@/lib/digits';
 
 export type CreateShopCategory = { id: string; label: string };
 
@@ -155,7 +159,7 @@ export function CreateShopDialog({
                 inputMode="numeric"
                 dir="ltr"
                 value={form.floor}
-                onChange={(event) => set('floor', event.target.value.replace(/\D/g, ''))}
+                onChange={(event) => set('floor', digitsOnly(event.target.value))}
               />
             </div>
             <div className="space-y-1.5">
@@ -189,7 +193,7 @@ export function CreateShopDialog({
                   placeholder="07XXXXXXXX"
                   value={form.ownerPhone}
                   onChange={(event) =>
-                    set('ownerPhone', event.target.value.replace(/\D/g, '').slice(0, 10))
+                    set('ownerPhone', digitsOnly(event.target.value, 10))
                   }
                 />
               </div>

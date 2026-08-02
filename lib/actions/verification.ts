@@ -13,6 +13,7 @@ import {
   shopVerificationDocuments,
   shopVerifications,
   shops,
+  users,
   type VerificationDocumentKind,
 } from '../db/schema';
 import { notify } from '../notify';
@@ -209,9 +210,13 @@ export async function decideVerification(
       .where(eq(shops.id, record.shopId));
   });
 
+  // The owner's own language, joined here rather than assumed — this wrote the
+  // verdict in Dari whoever the owner was, the one notification in the codebase
+  // that did not ask (CLAUDE.md).
   const [owner] = await db
-    .select({ userId: shopMembers.userId })
+    .select({ userId: shopMembers.userId, locale: users.locale })
     .from(shopMembers)
+    .innerJoin(users, eq(users.id, shopMembers.userId))
     .where(and(eq(shopMembers.shopId, record.shopId), eq(shopMembers.role, 'owner')))
     .limit(1);
 
@@ -220,7 +225,7 @@ export async function decideVerification(
     channel: 'inapp',
     recipientUserId: owner?.userId ?? null,
     recipientRole: 'shopkeeper',
-    locale: 'fa',
+    locale: owner?.locale ?? 'fa',
     values: { reason: reason ?? '' },
   });
 

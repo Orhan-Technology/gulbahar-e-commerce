@@ -81,6 +81,9 @@ export async function AdminActionQueue({ entries }: { entries: AdminQueueEntry[]
         return {
           ...base,
           orderId: entry.id,
+          // The queue's title for this row IS the reference (see the query), so
+          // the cancel dialog can name the order without a second lookup.
+          orderReference: entry.title,
           // Past the shared 48-hour threshold by definition (lib/queue-sla.ts),
           // so it is late rather than merely old.
           tone: 'danger' as const,

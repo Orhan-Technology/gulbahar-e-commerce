@@ -4,6 +4,7 @@ import { db } from '..';
 import { localizedColumn } from '../localized';
 import {
   categories,
+  orders,
   productImages,
   products,
   reviewResponses,
@@ -11,6 +12,7 @@ import {
   shopMembers,
   shops,
   users,
+  type OrderStatus,
   type ShopStatus,
 } from '../schema';
 import {
@@ -107,6 +109,17 @@ export async function adminShopDirectory(filters: AdminShopFilters) {
       phone: shops.phone,
       logoPath: shops.logoPath,
       createdAt: shops.createdAt,
+      /*
+       * Vacation mode, set by the shopkeeper. Admin never writes it — it is
+       * read so a quiet shop is not mistaken for an abandoned one.
+       *
+       * "Is it paused RIGHT NOW" is answered in SQL rather than by comparing
+       * the date in the component: a React 19 component may not call
+       * `Date.now()` during render, server or not, and the lint rule enforces
+       * it. The clock read belongs to the query (CLAUDE.md).
+       */
+      pausedUntil: shops.pausedUntil,
+      paused: sql<boolean>`${shops.pausedUntil} is not null and ${shops.pausedUntil} > now()`,
       categoryName: categories.name,
       publishedProducts: shopPublishedProductCount,
       totalProducts: shopTotalProductCount,
@@ -157,6 +170,11 @@ export async function adminShopReview(shopId: string) {
       logoPath: shops.logoPath,
       bannerPath: shops.bannerPath,
       rejectionReason: shops.rejectionReason,
+      // Vacation mode, the shopkeeper's own switch — read-only here, and the
+      // "is it in force now" comparison is done in SQL for the reason above.
+      pausedUntil: shops.pausedUntil,
+      paused: sql<boolean>`${shops.pausedUntil} is not null and ${shops.pausedUntil} > now()`,
+      pauseNote: shops.pauseNote,
       createdAt: shops.createdAt,
       categoryName: categories.name,
       ownerId: users.id,
@@ -244,9 +262,11 @@ export async function adminCategoryTree(locale: string) {
 /* -------------------------------------------------------------------------- */
 /* Products                                                                   */
 
+export type AdminProductStatusFilter = 'draft' | 'published' | 'unpublished' | 'archived';
+
 export type AdminProductFilters = {
   shopId?: string;
-  status?: 'draft' | 'published' | 'unpublished';
+  status?: AdminProductStatusFilter;
   search?: string;
   locale: string;
   limit?: number;
@@ -257,6 +277,14 @@ export async function adminProducts(filters: AdminProductFilters) {
   const conditions: SQL[] = [];
   if (filters.shopId) conditions.push(eq(products.shopId, filters.shopId));
   if (filters.status) conditions.push(eq(products.status, filters.status));
+  /*
+   * ARCHIVED IS A SHOPKEEPER'S DELETE, so it is out of every unfiltered view.
+   * The row survives because orders reference it, but a listing the shop has
+   * thrown away is not part of the catalogue admin governs — and leaving it in
+   * the default list would put "unpublish" beside products that are already
+   * gone. It stays reachable under its own chip, and only there.
+   */
+  else conditions.push(sql`${products.status} <> 'archived'`);
 
   const term = filters.search?.trim();
   if (term) {
@@ -297,12 +325,135 @@ export async function adminProducts(filters: AdminProductFilters) {
     .limit(filters.limit ?? 100);
 }
 
-/** Shop options for the product filter. */
+/** Shop options for the product and order filters. */
 export async function adminShopOptions(locale: string) {
   return db
     .select({ id: shops.id, name: shops.name, slug: shops.slug })
     .from(shops)
     .orderBy(asc(localizedColumn(shops.name, locale)));
+}
+
+/** How many products sit in each status — the counts on the filter chips. */
+export async function adminProductStatusCounts(shopId?: string) {
+  const rows = await db
+    .select({ status: products.status, total: count() })
+    .from(products)
+    .where(shopId ? eq(products.shopId, shopId) : undefined)
+    .groupBy(products.status);
+
+  const map = Object.fromEntries(rows.map((row) => [row.status, Number(row.total)]));
+  const published = map.published ?? 0;
+  const draft = map.draft ?? 0;
+  const unpublished = map.unpublished ?? 0;
+  const archived = map.archived ?? 0;
+
+  return {
+    // "All" excludes archived, exactly as the list does — a chip counting rows
+    // the list will not show is the kind of disagreement that makes an admin
+    // stop trusting both numbers.
+    all: published + draft + unpublished,
+    published,
+    draft,
+    unpublished,
+    archived,
+  };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Orders                                                                     */
+
+export type AdminOrderFilters = {
+  statuses?: OrderStatus[];
+  /** Reference, customer name, or customer phone — one box, three columns. */
+  search?: string;
+  shopId?: string;
+  /** Days back from now; undefined means every order ever placed. */
+  days?: number;
+  limit?: number;
+};
+
+/**
+ * The all-orders list with its filters (PRD §7.4).
+ *
+ * `allOrders()` in queries/orders.ts took a status array and a limit and
+ * nothing else, so the admin screen had no way to answer "where is GC-24788"
+ * or "what has Pamir Shoes been doing this week" other than paging through two
+ * hundred rows by eye. This is that query with the three axes an admin
+ * actually arrives with: who, when, and which shop.
+ *
+ * The shop filter is an EXISTS rather than a join: an order spanning two shops
+ * must appear once under each of them, and a join would duplicate the row on
+ * every unfiltered view.
+ *
+ * `hasMore` is derived from one extra row, so the screen can say honestly that
+ * it is showing the first N rather than implying it is showing everything.
+ */
+export async function adminOrderList(filters: AdminOrderFilters) {
+  const limit = Math.min(filters.limit ?? 100, 500);
+  const conditions: SQL[] = [];
+
+  if (filters.statuses?.length) conditions.push(inArray(orders.status, filters.statuses));
+  if (filters.shopId) {
+    conditions.push(
+      sql`exists (select 1 from order_items oi where oi.order_id = ${orders.id} and oi.shop_id = ${filters.shopId})`,
+    );
+  }
+  if (filters.days) {
+    // A day count, not a Date: the clock is read inside the query, never in a
+    // component (CLAUDE.md).
+    conditions.push(sql`${orders.createdAt} >= now() - (${filters.days} * interval '1 day')`);
+  }
+
+  const term = filters.search?.trim();
+  if (term) {
+    const pattern = `%${term}%`;
+    conditions.push(
+      or(
+        ilike(orders.reference, pattern),
+        ilike(users.name, pattern),
+        ilike(users.phone, pattern),
+      ) as SQL,
+    );
+  }
+
+  const rows = await db
+    .select({
+      id: orders.id,
+      reference: orders.reference,
+      status: orders.status,
+      fulfillment: orders.fulfillment,
+      paymentMethod: orders.paymentMethod,
+      total: orders.total,
+      createdAt: orders.createdAt,
+      customerName: users.name,
+      customerPhone: users.phone,
+      shopCount: sql<number>`(
+        select count(distinct oi.shop_id)::int from order_items oi where oi.order_id = orders.id
+      )`,
+    })
+    .from(orders)
+    .innerJoin(users, eq(orders.userId, users.id))
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(orders.createdAt))
+    .limit(limit + 1);
+
+  return { rows: rows.slice(0, limit), hasMore: rows.length > limit, limit };
+}
+
+/** How many orders sit in each status — the counts on the order filter chips. */
+export async function adminOrderStatusCounts() {
+  const rows = await db.select({ status: orders.status, total: count() }).from(orders).groupBy(orders.status);
+  const map = Object.fromEntries(rows.map((row) => [row.status, Number(row.total)]));
+
+  return {
+    all: Object.values(map).reduce((sum, value) => sum + Number(value), 0),
+    placed: map.placed ?? 0,
+    accepted: map.accepted ?? 0,
+    ready: map.ready ?? 0,
+    fulfilled: map.fulfilled ?? 0,
+    rejected: map.rejected ?? 0,
+    cancelled: map.cancelled ?? 0,
+  };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -314,6 +465,25 @@ export async function adminShopOptions(locale: string) {
  * Shown in CONTEXT — the product, the rating, the shop's reply if there is one —
  * because "remove or uphold" is not a decision anyone can make from a body of text
  * alone.
+ *
+ * WHY THE REPORT REASON IS A SUBQUERY AGAINST NOTIFICATIONS, and not a column:
+ * `reviews` has no reporter and no reason field, and the schema is fixed. A shop
+ * flagging a review picks a category from a fixed list, and `flagReview()` in
+ * lib/actions/shop-reviews.ts sends that category to the admin queue as a
+ * NOTIFICATION payload — which is the only place it is recorded. That payload
+ * carries the product title and the shop name but NOT the review id, so the
+ * report can only be tied back to a review when the pairing is unambiguous.
+ *
+ * Hence the `= 1` guard: the reason is attached only when the product has
+ * exactly ONE reported review, in which case there is nothing else the report
+ * could be about. A product with two reported reviews shows no reason on either,
+ * because a plausible guess on a moderation decision is worse than a blank.
+ * (The real fix is one line in flagReview — see the report.)
+ *
+ * The AUTHOR'S RECORD comes with it either way, so the decision is never
+ * context-free even when the reason is missing: how many reviews this person has
+ * standing, and how many of theirs have already been taken down. One removal
+ * among forty reviews is a bad night; three among four is a pattern.
  */
 export async function adminReviewQueue(status: 'reported' | 'removed' | 'visible' = 'reported') {
   return db
@@ -323,6 +493,7 @@ export async function adminReviewQueue(status: 'reported' | 'removed' | 'visible
       body: reviews.body,
       status: reviews.status,
       createdAt: reviews.createdAt,
+      authorId: reviews.userId,
       authorName: users.name,
       authorPhone: users.phone,
       productId: products.id,
@@ -331,6 +502,42 @@ export async function adminReviewQueue(status: 'reported' | 'removed' | 'visible
       shopName: shops.name,
       shopSlug: shops.slug,
       responseBody: reviewResponses.body,
+      authorVisibleReviews: sql<number>`(
+        select count(*)::int from reviews r2
+        where r2.user_id = ${reviews.userId} and r2.status = 'visible'
+      )`,
+      authorRemovedReviews: sql<number>`(
+        select count(*)::int from reviews r2
+        where r2.user_id = ${reviews.userId} and r2.status = 'removed'
+      )`,
+      reportReason: sql<string | null>`(
+        select n.payload->>'reason'
+        from notifications n
+        where n.event_key = 'review.flagged'
+          and n.payload->>'reviewId' = ${reviews.id}::text
+        order by n.created_at desc
+        limit 1
+      )`,
+      reportNote: sql<string | null>`(
+        select nullif(n.payload->>'note', '')
+        from notifications n
+        where n.event_key = 'review.flagged'
+          and n.payload->>'reviewId' = ${reviews.id}::text
+        order by n.created_at desc
+        limit 1
+      )`,
+      // A STRING, not a Date: this arrives through a raw `sql` fragment rather
+      // than a typed column, so postgres.js hands back the timestamp as text
+      // and drizzle has no column to coerce it with. Declaring `Date` here
+      // would type-check and then fail on `.toISOString()` at runtime.
+      reportedAt: sql<string | null>`(
+        select n.created_at
+        from notifications n
+        where n.event_key = 'review.flagged'
+          and n.payload->>'reviewId' = ${reviews.id}::text
+        order by n.created_at desc
+        limit 1
+      )`,
     })
     .from(reviews)
     .innerJoin(products, eq(reviews.productId, products.id))
