@@ -1,4 +1,14 @@
-import { index, integer, pgTable, primaryKey, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import {
+  check,
+  index,
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { orderItems } from './orders';
 import { products } from './products';
@@ -37,6 +47,37 @@ export const reviews = pgTable(
     uniqueIndex('reviews_order_item_key').on(table.orderItemId),
     index('reviews_product_status_idx').on(table.productId, table.status),
     index('reviews_user_idx').on(table.userId),
+    check('reviews_rating_range', sql`${table.rating} between 1 and 5`),
+  ],
+);
+
+/**
+ * "Was this review helpful?" — one vote per person per review.
+ *
+ * A real table rather than a counter column because the button has to render
+ * as ALREADY PRESSED when the same reader comes back, and because a bare
+ * counter can be incremented twice by the same thumb. The composite primary
+ * key is the whole enforcement mechanism, exactly as `reviews_order_item_key`
+ * is for verified purchase.
+ *
+ * Only helpful votes are recorded — there is no downvote. On a marketplace
+ * where a shop's rating is its livelihood, a downvote button is a brigading
+ * tool, and Amazon removed theirs for the same reason.
+ */
+export const reviewVotes = pgTable(
+  'review_votes',
+  {
+    reviewId: uuid('review_id')
+      .notNull()
+      .references(() => reviews.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.reviewId, table.userId] }),
+    index('review_votes_review_idx').on(table.reviewId),
   ],
 );
 

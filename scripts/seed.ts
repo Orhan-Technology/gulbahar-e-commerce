@@ -45,6 +45,7 @@ import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { specTemplateFor } from '../lib/product-templates';
 import { generateCollectionCode } from '../lib/collection-code';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
+import faMessages from '../messages/fa.json';
 import { formatCurrency } from '../lib/format';
 import { pickLocale } from '../lib/db/localized';
 import {
@@ -428,6 +429,17 @@ async function main() {
          * permanently at zero and made the storefront's in-stock filter a no-op.
          * The action queue is the dashboard centrepiece (PRD §6.1), so it needs a
          * real example of every row type it can show.
+         *
+         * STOCK HERE MEANS AVAILABLE NOW, not the shelf total. Live checkout
+         * reserves stock at placement and gives it back on reject/cancel/hold
+         * expiry, so the units held by the seeded in-flight orders below have
+         * already been taken off these numbers — which is why the seed does NOT
+         * decrement again for them. Three seeded products have in-flight orders
+         * larger than their remaining stock, so a decrementing pass would drive
+         * them negative and trip `products_stock_non_negative`. The consequence
+         * to expect, and it is the correct one: cancelling a seeded in-flight
+         * order raises that product's stock, because the goods go back on the
+         * shelf.
          */
         stock: soldOutSlugs.has(product.slug) ? 0 : product.stock,
         ...productDetail(product, detailSeed[product.slug]),
@@ -711,7 +723,13 @@ async function main() {
   const REVIEW_TARGET = 90;
   const reviewable = sample(fulfilledItems, Math.min(REVIEW_TARGET * 2, fulfilledItems.length));
   const seenPair = new Set<string>();
-  const createdReviews: Array<{ id: string; shopSlug: string; rating: number }> = [];
+  const createdReviews: Array<{
+    id: string;
+    shopSlug: string;
+    rating: number;
+    productSlug: string;
+    createdAt: Date;
+  }> = [];
 
   for (const item of reviewable) {
     if (createdReviews.length >= REVIEW_TARGET) break;
@@ -749,7 +767,13 @@ async function main() {
       })
       .returning();
 
-    createdReviews.push({ id: row.id, shopSlug: item.shopSlug, rating });
+    createdReviews.push({
+      id: row.id,
+      shopSlug: item.shopSlug,
+      rating,
+      productSlug: item.productSlug,
+      createdAt: row.createdAt,
+    });
   }
 
   /*
@@ -765,6 +789,49 @@ async function main() {
   for (const review of reportable) {
     await db.update(reviews).set({ status: 'reported' }).where(eq(reviews.id, review.id));
   }
+
+  /*
+   * The report NOTIFICATION, not just the flag.
+   *
+   * Setting `status = 'reported'` alone reproduces the row but not the act: a
+   * real report is a shopkeeper choosing a category and admin reading it, and
+   * the moderation queue recovers that category from this notification's
+   * payload. Seeding the status without it left the demo's queue showing two
+   * reported reviews with no stated reason — the one screen whose entire job is
+   * judging a reason.
+   *
+   * Written straight into the array the notification section inserts later,
+   * and it consumes NO random draws, so every order reference the runbook names
+   * is unchanged.
+   */
+  const seededReportReasons = ['not_a_customer', 'offensive'] as const;
+  const flagReasonLabels = faMessages.shopReviews.flagReasons as Record<string, string>;
+  const flaggedReports = reportable.map((review, index) => {
+    const reasonKey = seededReportReasons[index % seededReportReasons.length];
+    const values = {
+      shopName: shopSeed.find((shop) => shop.slug === review.shopSlug)?.name.fa ?? '',
+      productTitle: productBySlug.get(review.productSlug)?.title.fa ?? '',
+      reason: flagReasonLabels[reasonKey],
+      note: '',
+      reviewId: review.id,
+    };
+    const rendered = renderTemplate('review.flagged', 'fa', values);
+    return {
+      eventKey: 'review.flagged' as const,
+      recipientUserId: null,
+      recipientRole: 'admin' as const,
+      channel: 'inapp' as const,
+      locale: 'fa' as const,
+      title: rendered.title,
+      body: rendered.body,
+      payload: values,
+      read: false,
+      // A shop reports a review shortly after reading it, not months later.
+      createdAt: new Date(
+        Math.min(review.createdAt.getTime() + 3 * 60 * 60 * 1000, NOW.getTime() - 20 * 60 * 1000),
+      ),
+    };
+  });
 
   // Ten shopkeeper responses (PRD §9.4). Never on a reported review.
   const reportedIds = new Set(reportable.map((review) => review.id));
@@ -1218,6 +1285,9 @@ async function main() {
       ),
     });
   }
+
+  // The two seeded review reports, built back where the reviews were flagged.
+  notificationValues.push(...flaggedReports);
 
   await db.insert(notifications).values(notificationValues);
 
