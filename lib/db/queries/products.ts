@@ -1,7 +1,8 @@
 import { and, asc, avg, count, desc, eq, gte, inArray, lte, ne, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
-import { localizedColumn, searchKey, searchKeyForInput } from '../localized';
+import { localizedColumn, searchKeyForInput } from '../localized';
+import { productSearchMatch, productSearchRelevance } from './search';
 import {
   firstProductImagePath,
   productRatingAvg,
@@ -33,6 +34,14 @@ export type ProductListFilters = {
   /** Includes descendants when the category is a parent. */
   includeChildCategories?: boolean;
   shopIds?: string[];
+  /**
+   * Brand names, matched exactly (PRD §5.1).
+   *
+   * `products.brand` is a plain text column, not localized: a brand is a proper
+   * noun and «سامسونگ» and "Samsung" are the same manufacturer, so the seed
+   * stores one spelling and the facet lists what the catalogue actually holds.
+   */
+  brands?: string[];
   priceMin?: number;
   priceMax?: number;
   minRating?: number;
@@ -88,8 +97,17 @@ export type ProductListItem = {
 
 const DEFAULT_PAGE_SIZE = 24;
 
-/** Shared with lib/db/queries/search.ts — the same term must match the same rows. */
-const SIMILARITY_THRESHOLD = 0.12;
+/**
+ * Discount as a fraction of the original price, 0 when there is none.
+ *
+ * Exactly the number the red ribbon on a card shows, so the "biggest discount"
+ * sort and the badge can never disagree about which product is the better deal.
+ */
+export const discountFraction = sql<number>`case
+  when ${products.discountPrice} is not null and ${products.discountPrice} < ${products.price}
+  then (${products.price} - ${products.discountPrice})::float8 / ${products.price}
+  else 0
+end`;
 
 /**
  * Public product listing (PRD §5.1).
@@ -107,6 +125,7 @@ export async function productList(filters: ProductListFilters) {
     categoryId,
     includeChildCategories = true,
     shopIds,
+    brands,
     priceMin,
     priceMax,
     minRating,
@@ -133,6 +152,7 @@ export async function productList(filters: ProductListFilters) {
     }
   }
   if (shopIds?.length) conditions.push(inArray(products.shopId, shopIds));
+  if (brands?.length) conditions.push(inArray(products.brand, brands));
   // Filter on the effective (post-discount) price, which is what the customer
   // sees on the card — filtering on `price` would hide discounted items.
   const effectivePrice = sql<number>`coalesce(${products.discountPrice}, ${products.price})`;
@@ -146,22 +166,17 @@ export async function productList(filters: ProductListFilters) {
   }
 
   /*
-   * Term matching, identical to lib/db/queries/search.ts: a substring match OR
-   * a fuzzy one. The ILIKE arm matters because trigram similarity is
-   * length-sensitive — "a54" against a long title scores low even though it is
-   * an exact substring.
+   * Term matching is SHARED with lib/db/queries/search.ts, not reimplemented:
+   * the header suggestions, the results grid and the paid-slot eligibility test
+   * all have to agree about what a term matches, and three copies of a
+   * predicate is how they stop agreeing. It spans title, category, shop name
+   * and brand — see productSearchMatch for why title alone was not enough.
    */
   const term = search?.trim();
   const needle = term ? searchKeyForInput(term) : null;
-  const similarity = needle
-    ? sql<number>`similarity(${searchKey(products.title)}, ${needle})`
-    : null;
+  const similarity = needle ? productSearchRelevance(needle) : null;
 
-  if (needle && similarity) {
-    conditions.push(
-      sql`(${searchKey(products.title)} like '%' || ${needle} || '%' or ${similarity} > ${SIMILARITY_THRESHOLD})`,
-    );
-  }
+  if (needle) conditions.push(productSearchMatch(needle));
 
   const where = and(...conditions);
 
@@ -191,6 +206,13 @@ export async function productList(filters: ProductListFilters) {
     price_desc: [desc(effectivePrice)],
     // Paid placement never buys a better score, so rating sort is purely organic.
     rating: [desc(ratingExpr), desc(reviewCountExpr)],
+    /*
+     * PERCENTAGE off, not afghanis off. A 5,000 afghani saving on a 58,000
+     * afghani phone is a worse deal than 300 off a 990 afghani pencil case, and
+     * sorting by the absolute amount would put every expensive product on top
+     * of the offers page whatever its discount actually was.
+     */
+    discount: [desc(discountFraction), desc(ratingExpr)],
   }[sort];
 
   const rows = await db

@@ -1,6 +1,6 @@
 import { PageSkeleton } from '@/components/custom/page-skeleton';
 
-/** Route-level loading state (PRD §10.5). */
+/** Route-level loading state (PRD §10.5). Scoped by `(index)` — see products/. */
 export default function Loading() {
   return <PageSkeleton variant="grid" rows={4} />;
 }

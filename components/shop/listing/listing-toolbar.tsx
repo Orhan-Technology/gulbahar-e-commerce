@@ -32,12 +32,19 @@ import { cn } from '@/lib/utils';
  * STICKY under the header. A shopper twelve rows into a grid who wants to
  * re-sort should not have to scroll back to the top to do it — and on a phone,
  * where the filter button lives here too, that scroll is most of the screen.
- * `top-16` clears the site header, which is `h-16` and sticky itself.
+ *
+ * The offset is `--sticky-offset` and nothing else. `top-16` was a guess at a
+ * header that has not been 64px tall for a long time — it is 107px at `lg` —
+ * so the bar slid 43 pixels underneath it on every scroll. Exactly the drift
+ * CLAUDE.md records for the buy column, the account nav and the cart summary,
+ * caught a fourth time; the property is now responsive so this one declaration
+ * is right at every width.
  */
 export function ListingToolbar({
   total,
   facets,
   sortKey = 'sort',
+  defaultSort = 'popularity',
 }: {
   /** Result count for this query — the number the sheet's button promises. */
   total: number;
@@ -45,6 +52,12 @@ export function ListingToolbar({
   facets?: FacetOptions;
   /** Some surfaces sort on their own key; search uses `sort` like the rest. */
   sortKey?: string;
+  /**
+   * The order the grid is in when the URL names none. Selecting it clears the
+   * key rather than writing it, so a surface's own default stays a default
+   * instead of becoming a filter the shopper has to undo.
+   */
+  defaultSort?: string;
 }) {
   const t = useTranslations('listing');
   const tFilters = useTranslations('filters');
@@ -54,11 +67,11 @@ export function ListingToolbar({
   const params = useSearchParams();
 
   const active = activeFilterCount(params);
-  const current = params.get(sortKey) ?? 'popularity';
+  const current = params.get(sortKey) ?? defaultSort;
 
   function setSort(value: string) {
     const next = new URLSearchParams(params.toString());
-    if (value === 'popularity') next.delete(sortKey);
+    if (value === defaultSort) next.delete(sortKey);
     else next.set(sortKey, value);
     next.delete('page');
     const query = next.toString();
@@ -66,7 +79,7 @@ export function ListingToolbar({
   }
 
   return (
-    <div className="bg-background/95 sticky top-16 z-20 -mx-4 flex flex-wrap items-center gap-3 px-4 py-3 backdrop-blur-md sm:-mx-1 sm:px-1">
+    <div className="bg-background/95 sticky top-[var(--sticky-offset)] z-20 -mx-4 flex flex-wrap items-center gap-3 px-4 py-3 backdrop-blur-md sm:-mx-1 sm:px-1">
       <p className="text-muted-foreground text-sm">
         {t('resultCount', {
           // `n` pluralises, `count` renders — see lib/db/queries/dashboard.ts.

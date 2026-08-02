@@ -31,7 +31,12 @@ export default async function ProductsPage({
   const query = await searchParams;
   const t = await getTranslations('products');
 
-  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  // `query` goes in so every facet option can carry the count it would return —
+  // computed with its own axis excluded, see filterFacets.
+  const [facets, tree] = await Promise.all([
+    filterFacets(locale, { query }),
+    categoryTree(locale),
+  ]);
   const facetOptions = { ...facets, categories: tree };
 
   return (

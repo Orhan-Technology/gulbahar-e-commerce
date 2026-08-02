@@ -79,7 +79,18 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
         <p className="text-muted-foreground text-sm">{t('compareHint')}</p>
       </div>
 
-      <div className="scrollbar-none snap-x overflow-x-auto pb-2">
+      {/*
+        NO SCROLL SNAP on this scroller, and that is a fix rather than an
+        omission. Only the product columns carried `snap-start`, so offset 0 —
+        where the sticky row-label column sits — was not a snap position at all;
+        Chrome snapped to the first one that was, could not reach it, and
+        clamped to the maximum scroll instead. The table therefore OPENED fully
+        scrolled: the "this product" column landed underneath the sticky label
+        column and read as "one 13 128GB … 000 AFN", clipped mid-word, on first
+        paint. A table is read row by row rather than card by card, so snapping
+        earned nothing here in the first place.
+      */}
+      <div className="scrollbar-none overflow-x-auto pb-2">
         <table className="w-full min-w-3xl border-separate border-spacing-0 text-sm">
           <caption className="sr-only">{t('compareHeading')}</caption>
           <thead>
@@ -87,13 +98,9 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
               {/* The row-label column is empty in the header and sticky at the
                   inline start, so a spec name stays readable while the columns
                   scroll past it. */}
-              <th className="bg-background sticky start-0 z-10 w-28 p-2 text-start sm:w-40" />
+              <th className="bg-background border-border sticky start-0 z-10 w-28 border-e p-2 text-start sm:w-40" />
               {columns.map((column) => (
-                <th
-                  key={column.id}
-                  scope="col"
-                  className="w-56 min-w-56 snap-start p-2 align-top font-normal"
-                >
+                <th key={column.id} scope="col" className="w-56 min-w-56 p-2 align-top font-normal">
                   <Link href={`/products/${column.slug}`} className="group block space-y-2">
                     <span className="rounded-card border-border relative block aspect-square w-full overflow-hidden border bg-neutral-100">
                       {column.imagePath && (
@@ -150,7 +157,7 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
               <tr key={key}>
                 <th
                   scope="row"
-                  className="bg-background border-border sticky start-0 z-10 border-t p-2 text-start text-xs font-normal text-neutral-500"
+                  className="bg-background border-border sticky start-0 z-10 border-t border-e p-2 text-start text-xs font-normal text-neutral-500"
                 >
                   {current.labels[key] ?? key}
                 </th>

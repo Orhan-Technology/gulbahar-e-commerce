@@ -21,6 +21,7 @@ import type { PromotionSlotKey } from '@/lib/db/schema';
 /** The query keys every listing surface reads. */
 export type ListingSearchParams = {
   category?: string;
+  brand?: string | string[];
   shop?: string | string[];
   priceMin?: string;
   priceMax?: string;
@@ -33,6 +34,18 @@ export type ListingSearchParams = {
 };
 
 const PAGE_SIZE = 24;
+
+/**
+ * THREE columns beside the filter rail, not four.
+ *
+ * Every listing surface is `max-w-6xl` with a 240px rail, so the grid always
+ * has about 888px whatever the window does. Four columns cut each card to
+ * ~204px — narrower than a phone card — and, because the counts these pages
+ * return are small (nine on /offers, five or six on a shop page), a fourth
+ * column is also what stranded a single card alone on a row of its own. Three
+ * gives ~280px cards and packs the real result counts exactly.
+ */
+const LISTING_COLUMNS = 'lg:grid-cols-3';
 
 /**
  * The listing (PRD §5.1).
@@ -61,7 +74,9 @@ export async function ProductListing({
   facets,
   scope = {},
   promotedSlot,
+  defaultSort = 'popularity',
   emptyHref,
+  emptyExtra,
 }: {
   query: ListingSearchParams;
   locale: string;
@@ -74,16 +89,33 @@ export async function ProductListing({
     search?: string;
   };
   promotedSlot?: PromotionSlotKey;
+  /**
+   * The order used when the URL names none — the offers page opens on biggest
+   * discount. The toolbar shows it as selected, so the control never claims an
+   * order the grid is not in.
+   */
+  defaultSort?: ProductSort;
   /** Where "clear filters" goes from the empty state. */
   emptyHref: string;
+  /**
+   * Rendered UNDER the empty state, and only then.
+   *
+   * A dead end is the one place a listing owes the reader somewhere to go, and
+   * what that is depends on the surface — on /search it is the categories and
+   * shops that DO match the term. Passing the element rather than a flag keeps
+   * the recovery queries out of the happy path entirely: React never renders
+   * this node when there are results, so its awaits never run.
+   */
+  emptyExtra?: React.ReactNode;
 }) {
   const t = await getTranslations('listing');
 
-  const sort: ProductSort = isProductSort(query.sort) ? query.sort : 'popularity';
+  const sort: ProductSort = isProductSort(query.sort) ? query.sort : defaultSort;
   const page = Math.max(1, Number(query.page ?? 1) || 1);
 
   const facetShopSlugs = Array.isArray(query.shop) ? query.shop : query.shop ? [query.shop] : [];
   const facetShopIds = scope.shopIds ? [] : await shopIdsBySlug(facetShopSlugs);
+  const brands = Array.isArray(query.brand) ? query.brand : query.brand ? [query.brand] : [];
 
   const [result, promoted, user] = await Promise.all([
     productList({
@@ -92,6 +124,7 @@ export async function ProductListing({
       // A surface-level scope always wins over the facet: a shop page filtered
       // by "shop" could otherwise list another tenant's products.
       shopIds: scope.shopIds ?? (facetShopIds.length > 0 ? facetShopIds : undefined),
+      brands: brands.length > 0 ? brands : undefined,
       search: scope.search ?? query.q,
       priceMin: query.priceMin ? Number(query.priceMin) : undefined,
       priceMax: query.priceMax ? Number(query.priceMax) : undefined,
@@ -168,6 +201,7 @@ export async function ProductListing({
             href: narrowed ? emptyHref : '/products',
           }}
         />
+        {emptyExtra}
       </div>
     );
   }
@@ -176,7 +210,7 @@ export async function ProductListing({
 
   return (
     <div className="space-y-4">
-      <ListingToolbar total={result.total} facets={facets} />
+      <ListingToolbar total={result.total} facets={facets} defaultSort={defaultSort} />
 
       <AppliedFilters labels={labels} />
 
@@ -189,12 +223,18 @@ export async function ProductListing({
           <ProductGrid
             items={promoted.map((item) => ({ ...item, sponsored: true }))}
             savedIds={saved}
+            className={LISTING_COLUMNS}
             priority
           />
         </section>
       )}
 
-      <ProductGrid items={organic} savedIds={saved} priority={promoted.length === 0} />
+      <ProductGrid
+        items={organic}
+        savedIds={saved}
+        className={LISTING_COLUMNS}
+        priority={promoted.length === 0}
+      />
 
       <LoadMore
         page={result.page}
@@ -213,7 +253,7 @@ export function ProductListingSkeleton() {
         <Skeleton className="h-4 w-32" />
         <Skeleton className="h-9 w-40" />
       </div>
-      <ProductGridSkeleton count={12} />
+      <ProductGridSkeleton count={12} className={LISTING_COLUMNS} />
     </div>
   );
 }

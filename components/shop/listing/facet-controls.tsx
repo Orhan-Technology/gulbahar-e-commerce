@@ -14,7 +14,8 @@ import { Label } from '@/components/ui/label';
 import { activeFilterCount, PRESERVED_KEYS, PRICE_BANDS } from '@/lib/listing';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
-import { formatCurrency } from '@/lib/format';
+import { digitsOnly } from '@/lib/digits';
+import { formatCurrency, formatNumber } from '@/lib/format';
 import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -25,8 +26,20 @@ export type FacetOptions = {
     name: LocalizedText;
     children: Array<{ slug: string; name: LocalizedText }>;
   }>;
+  /** Brands the catalogue actually holds, most-stocked first. */
+  brands?: Array<{ value: string; count: number }>;
   priceMin: number;
   priceMax: number;
+  /**
+   * How many results each option would return, per axis, keyed by the value the
+   * URL carries. Absent when the surface could not describe its own scope — see
+   * filterFacets — and every count then simply does not render.
+   */
+  counts?: {
+    categories: Record<string, number>;
+    shops: Record<string, number>;
+    brands: Record<string, number>;
+  };
   /**
    * Hides the axis a surface is already scoped to. A shop page filtering by
    * shop, or a category page filtering by category, is a control that can only
@@ -34,6 +47,9 @@ export type FacetOptions = {
    */
   hide?: Array<'category' | 'shop'>;
 };
+
+/** Brands beyond this fold behind "show all" — the tail is a long one. */
+const BRANDS_VISIBLE = 6;
 
 /**
  * The facet controls (PRD §5.1, Baymard-informed).
@@ -53,7 +69,15 @@ export type FacetOptions = {
  * re-rendered. Staging changes locally would mean either a second count
  * endpoint or a button that promises a number nobody has computed.
  */
-export function FacetControls({ shops, categories, priceMin, priceMax, hide = [] }: FacetOptions) {
+export function FacetControls({
+  shops,
+  categories,
+  brands = [],
+  priceMin,
+  priceMax,
+  counts,
+  hide = [],
+}: FacetOptions) {
   const t = useTranslations('filters');
   const locale = useLocale();
   const router = useRouter();
@@ -64,8 +88,10 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
   // keystroke; committed on blur or Enter.
   const [minInput, setMinInput] = React.useState(params.get('priceMin') ?? '');
   const [maxInput, setMaxInput] = React.useState(params.get('priceMax') ?? '');
+  const [allBrands, setAllBrands] = React.useState(false);
 
   const selectedShops = params.getAll('shop');
+  const selectedBrands = params.getAll('brand');
   const selectedCategory = params.get('category') ?? '';
   const minRating = Number(params.get('minRating') ?? 0);
   const inStock = params.get('inStock') === '1';
@@ -98,6 +124,31 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
   const showCategories = !hide.includes('category') && categories.length > 0;
   const showShops = !hide.includes('shop') && shops.length > 0;
 
+  /*
+   * ABSENT FROM THE MAP MEANS ZERO, not "unknown".
+   *
+   * The count queries group over matching rows, so an option with no results
+   * has no row at all. Reading the map directly therefore made every excluded
+   * option look uncounted — the shop rail listed all ten tenants unnumbered on
+   * a search that only two of them answered, which is the exact false
+   * impression the counts exist to remove. `counts` being undefined is the only
+   * real unknown, and that is the whole-object check.
+   */
+  const countOf = (axis: 'categories' | 'shops' | 'brands', key: string) =>
+    counts ? (counts[axis][key] ?? 0) : undefined;
+
+  /*
+   * A ticked option NEVER disappears, however its count reads. Hiding the
+   * control that produced the current result set leaves a shopper who narrowed
+   * too far with no way back except the chips — and on a phone the chips are on
+   * the screen behind this sheet.
+   */
+  const listedBrands = brands.filter(
+    (brand) => selectedBrands.includes(brand.value) || (countOf('brands', brand.value) ?? 1) > 0,
+  );
+  const visibleBrands = allBrands ? listedBrands : listedBrands.slice(0, BRANDS_VISIBLE);
+  const showBrands = visibleBrands.length > 0;
+
   return (
     <div className="space-y-6">
       {activeCount > 0 && (
@@ -114,6 +165,8 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
               <li key={parent.slug}>
                 <FacetButton
                   active={selectedCategory === parent.slug}
+                  count={countOf('categories', parent.slug)}
+                  locale={locale}
                   onClick={() =>
                     update((next) => {
                       if (selectedCategory === parent.slug) next.delete('category');
@@ -131,6 +184,8 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
                         <FacetButton
                           small
                           active={selectedCategory === child.slug}
+                          count={countOf('categories', child.slug)}
+                          locale={locale}
                           onClick={() =>
                             update((next) => {
                               if (selectedCategory === child.slug) next.delete('category');
@@ -147,6 +202,68 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
               </li>
             ))}
           </ul>
+        </FacetGroup>
+      )}
+
+      {/*
+        BRAND sits directly under category, above price. It is the axis a
+        shopper reaches for second — «سامسونگ یا شیائومی» is a decision they
+        arrive with, whereas a price band is one they discover — and the column
+        it was missing from was the one place the buy box already advertised it.
+      */}
+      {showBrands && (
+        <FacetGroup title={t('brand')}>
+          <ul className="space-y-1.5">
+            {visibleBrands.map((brand) => {
+              const total = countOf('brands', brand.value);
+              const empty = total === 0;
+              return (
+                <li key={brand.value} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`brand-${brand.value}`}
+                    checked={selectedBrands.includes(brand.value)}
+                    disabled={empty && !selectedBrands.includes(brand.value)}
+                    onCheckedChange={(checked) =>
+                      update((next) => {
+                        const current = next.getAll('brand').filter((value) => value !== brand.value);
+                        next.delete('brand');
+                        for (const value of current) next.append('brand', value);
+                        if (checked) next.append('brand', brand.value);
+                      })
+                    }
+                  />
+                  <Label
+                    htmlFor={`brand-${brand.value}`}
+                    className={cn(
+                      'flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-sm font-normal',
+                      empty && 'text-muted-foreground cursor-not-allowed',
+                    )}
+                  >
+                    {/* A brand is a proper noun in both languages, so it is one
+                        string in the column and reads left-to-right either way. */}
+                    <span className="truncate" dir="ltr">
+                      {brand.value}
+                    </span>
+                    <FacetCount value={total} locale={locale} />
+                  </Label>
+                </li>
+              );
+            })}
+          </ul>
+
+          {listedBrands.length > BRANDS_VISIBLE && (
+            <button
+              type="button"
+              onClick={() => setAllBrands((open) => !open)}
+              className="text-primary text-xs font-semibold hover:underline"
+            >
+              {allBrands
+                ? t('showLess')
+                : t('showAllBrands', {
+                    count: formatNumber(listedBrands.length, locale),
+                  })}
+            </button>
+          )}
         </FacetGroup>
       )}
 
@@ -206,10 +323,18 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
           script — and leaving these to inherit put the caret and the thousands
           on the wrong side of the field.
         */}
+        {/*
+          `digitsOnly` rather than a `\D` strip: JS `\D` is ASCII-only, so it
+          DELETES «۵۰۰» keystroke by keystroke and the field stays empty for
+          anyone on a Persian keyboard — which is everyone this filter is
+          primarily for. The hint directly above these inputs renders its bounds
+          in Persian numerals, so the control was rejecting the very script it
+          had just used to describe itself.
+        */}
         <div className="flex items-center gap-2" dir="ltr">
           <Input
             value={minInput}
-            onChange={(event) => setMinInput(event.target.value.replace(/\D/g, ''))}
+            onChange={(event) => setMinInput(digitsOnly(event.target.value))}
             onBlur={() =>
               update((next) => (minInput ? next.set('priceMin', minInput) : next.delete('priceMin')))
             }
@@ -224,7 +349,7 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
           <span className="text-muted-foreground">—</span>
           <Input
             value={maxInput}
-            onChange={(event) => setMaxInput(event.target.value.replace(/\D/g, ''))}
+            onChange={(event) => setMaxInput(digitsOnly(event.target.value))}
             onBlur={() =>
               update((next) => (maxInput ? next.set('priceMax', maxInput) : next.delete('priceMax')))
             }
@@ -294,25 +419,37 @@ export function FacetControls({ shops, categories, priceMin, priceMax, hide = []
       {showShops && (
         <FacetGroup title={t('shop')}>
           <ul className="max-h-56 space-y-1.5 overflow-y-auto pe-1">
-            {shops.map((shop) => (
-              <li key={shop.id} className="flex items-center gap-2">
-                <Checkbox
-                  id={`shop-${shop.slug}`}
-                  checked={selectedShops.includes(shop.slug)}
-                  onCheckedChange={(checked) =>
-                    update((next) => {
-                      const current = next.getAll('shop').filter((value) => value !== shop.slug);
-                      next.delete('shop');
-                      for (const value of current) next.append('shop', value);
-                      if (checked) next.append('shop', shop.slug);
-                    })
-                  }
-                />
-                <Label htmlFor={`shop-${shop.slug}`} className="cursor-pointer text-sm font-normal">
-                  {pickLocale(shop.name, locale)}
-                </Label>
-              </li>
-            ))}
+            {shops
+              .filter(
+                (shop) =>
+                  selectedShops.includes(shop.slug) || (countOf('shops', shop.slug) ?? 1) > 0,
+              )
+              .map((shop) => {
+                const total = countOf('shops', shop.slug);
+                return (
+                  <li key={shop.id} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`shop-${shop.slug}`}
+                      checked={selectedShops.includes(shop.slug)}
+                      onCheckedChange={(checked) =>
+                        update((next) => {
+                          const current = next.getAll('shop').filter((value) => value !== shop.slug);
+                          next.delete('shop');
+                          for (const value of current) next.append('shop', value);
+                          if (checked) next.append('shop', shop.slug);
+                        })
+                      }
+                    />
+                    <Label
+                      htmlFor={`shop-${shop.slug}`}
+                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-sm font-normal"
+                    >
+                      <span className="truncate">{pickLocale(shop.name, locale)}</span>
+                      <FacetCount value={total} locale={locale} />
+                    </Label>
+                  </li>
+                );
+              })}
           </ul>
         </FacetGroup>
       )}
@@ -330,29 +467,56 @@ function FacetGroup({ title, children }: { title: string; children: React.ReactN
   );
 }
 
+/**
+ * The number beside an option.
+ *
+ * Renders NOTHING when the surface could not compute counts, rather than a
+ * placeholder or a zero — an invented number on a filter is the one kind of
+ * wrong that costs a shopper a click every time.
+ */
+function FacetCount({ value, locale }: { value: number | undefined; locale: string }) {
+  if (value === undefined) return null;
+  return (
+    <span className="text-2xs shrink-0 text-neutral-500 tabular-nums">
+      {formatNumber(value, locale)}
+    </span>
+  );
+}
+
 function FacetButton({
   active,
   small,
+  count,
+  locale,
   onClick,
   children,
 }: {
   active: boolean;
   small?: boolean;
+  count?: number;
+  locale: string;
   onClick: () => void;
   children: React.ReactNode;
 }) {
+  // Dimmed and inert rather than removed: a taxonomy with holes in it reads as
+  // a bug, and the reader loses the map of what the mall sells.
+  const empty = count === 0 && !active;
+
   return (
     <button
       type="button"
       onClick={onClick}
+      disabled={empty}
       className={cn(
         pressable,
-        'rounded-control w-full px-2 text-start transition-[background-color,color,scale] duration-150 ease-out hover:bg-neutral-100',
+        'rounded-control flex w-full items-center gap-1.5 px-2 text-start transition-[background-color,color,scale] duration-150 ease-out hover:bg-neutral-100',
         small ? 'py-1 text-xs' : 'py-1.5 text-sm',
         active && 'bg-primary-50 text-primary font-semibold',
+        empty && 'text-muted-foreground cursor-not-allowed hover:bg-transparent',
       )}
     >
-      {children}
+      <span className="min-w-0 flex-1 truncate">{children}</span>
+      <FacetCount value={count} locale={locale} />
     </button>
   );
 }

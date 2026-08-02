@@ -28,6 +28,16 @@ import { Link } from '@/lib/i18n/navigation';
  * A category has an image when one has been set and falls back to its icon on a
  * tinted disc. Both are round tiles of the same size, so a mixed row still reads
  * as one rhythm rather than as some tiles being broken.
+ *
+ * THE EMPTY CATEGORY IS DESIGNED, not left to degrade. «خوراکه» has no published
+ * products — its only shop is the pending one held back for the live approval
+ * moment — so it has no derived photograph either, and it was rendering as a
+ * near-white circle with a 24px icon lost in the middle of it and no count
+ * underneath: three signals of breakage where the truth is simply "not yet".
+ * It now gets a filled disc, an icon sized to the tile, and a label that says
+ * so. Hiding it instead would be the other defensible answer, but the tile is
+ * how the mall's taxonomy is read and a taxonomy with a hole in it teaches the
+ * shopper something false.
  */
 const ICONS: Record<string, LucideIcon> = {
   electronics: Smartphone,
@@ -55,6 +65,7 @@ export async function CategoryTiles() {
       <Rail label={t('shopByCategory')} size="tile">
         {tree.map((category) => {
           const Icon = ICONS[category.slug] ?? Sparkles;
+          const stocked = category.productCount > 0;
           return (
             <Link
               key={category.id}
@@ -71,8 +82,14 @@ export async function CategoryTiles() {
                     className="object-cover"
                   />
                 ) : (
-                  <span className="bg-primary-50 text-primary flex h-full w-full items-center justify-center">
-                    <Icon className="h-6 w-6" aria-hidden />
+                  /*
+                   * The icon is sized as a FRACTION of the tile, not at a fixed
+                   * 24px. These discs are ~140px wide at desktop, and a 24px
+                   * mark in the middle of one is why this tile read as empty
+                   * next to eight photographs.
+                   */
+                  <span className="bg-primary-100 text-primary-600 ring-primary-200 flex h-full w-full items-center justify-center ring-1 ring-inset">
+                    <Icon className="h-[38%] w-[38%]" aria-hidden />
                   </span>
                 )}
               </span>
@@ -82,18 +99,17 @@ export async function CategoryTiles() {
               </span>
 
               {/*
-               * Hidden at zero rather than rendered as a bare "٠". The food
-               * category legitimately has none — its only shop is the pending
-               * one held back for the live approval moment — and a lone zero
-               * under a tile reads as a broken counter, not as "nothing yet".
+               * Never a bare "٠" — a lone zero under a tile reads as a broken
+               * counter rather than as "nothing yet". The two states are
+               * different sentences, and both are true.
                */}
-              {category.productCount > 0 && (
-                <span className="text-2xs -mt-1 text-neutral-500">
-                  {tCategories('productCount', {
-                    count: formatNumber(category.productCount, locale),
-                  })}
-                </span>
-              )}
+              <span className="text-2xs -mt-1 text-neutral-500">
+                {stocked
+                  ? tCategories('productCount', {
+                      count: formatNumber(category.productCount, locale),
+                    })
+                  : tCategories('comingSoon')}
+              </span>
             </Link>
           );
         })}

@@ -465,6 +465,33 @@
   }
 }
 
+/* ------------------------------------------------------------------
+ * STICKY OFFSET, continued — the header is not one height.
+ *
+ * @theme cannot hold a media query, so the token above is the `lg`
+ * value and these step it DOWN to match the header at the two widths
+ * where it is smaller: the department nav row is `lg:flex` (107px → 75px)
+ * and the search pill is `sm:block` (75px → 61px). Each value is the
+ * measured header plus the same ~12px breathing gap.
+ *
+ * This matters because the listing toolbar is the first panel that
+ * sticks on a PHONE, where the filter button lives in it. The three
+ * older panels are `lg:sticky` and so only ever see 7.5rem — including
+ * the buy column's IntersectionObserver, which reads this property and
+ * runs only at `lg`.
+ * ------------------------------------------------------------------ */
+@media (width < 64rem) {
+  :root {
+    --sticky-offset: 5.5rem;
+  }
+}
+
+@media (width < 40rem) {
+  :root {
+    --sticky-offset: 4.5rem;
+  }
+}
+
 @layer base {
   :root {
     /* Font stack is swapped per-locale; see the html[lang] rules below. */

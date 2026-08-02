@@ -21,7 +21,7 @@ const schema = z.object({
 });
 
 export type Suggestion = {
-  kind: 'product' | 'shop';
+  kind: 'product' | 'shop' | 'category';
   slug: string;
   label: string;
   sublabel: string;
@@ -32,9 +32,25 @@ export async function fetchSuggestions(term: string, locale: string): Promise<Su
   const parsed = schema.safeParse({ term, locale });
   if (!parsed.success) return [];
 
-  const { products, shops } = await searchSuggestions(parsed.data.term, parsed.data.locale);
+  const { products, shops, categories } = await searchSuggestions(
+    parsed.data.term,
+    parsed.data.locale,
+  );
 
   return [
+    /*
+     * CATEGORIES FIRST, and only ever two. An aisle word is the commonest thing
+     * typed into a marketplace search and the aisle is the fastest correct
+     * answer to it — but it is also the least specific one, so it never gets
+     * more than the top of the list.
+     */
+    ...categories.map((category): Suggestion => ({
+      kind: 'category',
+      slug: category.slug,
+      label: pickLocale(category.name, parsed.data.locale),
+      sublabel: '',
+      imagePath: null,
+    })),
     ...products.map((product): Suggestion => ({
       kind: 'product',
       slug: product.slug,

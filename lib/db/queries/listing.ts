@@ -1,7 +1,7 @@
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, isNotNull, lte, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
-import { localizedColumn, searchKey, searchKeyForInput } from '../localized';
+import { localizedColumn, searchKeyForInput } from '../localized';
 import {
   campaigns,
   categories,
@@ -11,14 +11,127 @@ import {
   type PromotionSlotKey,
 } from '../schema';
 import { firstProductImagePath, productRatingAvg, productReviewCount } from './fragments';
+import { productSearchMatch } from './search';
 
 /**
  * Facets and promoted slots for the listing pages (PRD §5.1).
  */
 
-/** Options the filter rail needs: every approved shop plus real price bounds. */
-export async function filterFacets(locale: string) {
-  const [shopRows, boundsRows] = await Promise.all([
+/** The URL state a listing reads, as it arrives from `searchParams`. */
+export type FacetQuery = {
+  category?: string;
+  brand?: string | string[];
+  shop?: string | string[];
+  priceMin?: string;
+  priceMax?: string;
+  minRating?: string;
+  inStock?: string;
+  onOffer?: string;
+  q?: string;
+};
+
+/** What the SURFACE is, as opposed to how the shopper has narrowed it. */
+export type FacetScope = {
+  categoryId?: string;
+  shopIds?: string[];
+  search?: string;
+  onOfferOnly?: boolean;
+};
+
+/** Per-option result counts, keyed the way the URL keys them. */
+export type FacetCounts = {
+  categories: Record<string, number>;
+  shops: Record<string, number>;
+  brands: Record<string, number>;
+};
+
+const asArray = (value: string | string[] | undefined): string[] =>
+  Array.isArray(value) ? value : value ? [value] : [];
+
+/**
+ * Everything narrowing the listing EXCEPT one axis.
+ *
+ * Excluding the axis being counted is what makes the numbers useful rather than
+ * tautological: with "Samsung" ticked, a Samsung count computed under the brand
+ * filter would read "Samsung (12), Xiaomi (0), LG (0)" and the facet would look
+ * broken. Counting each option as if it were the only choice on its own axis is
+ * how every faceted catalogue does it, and it answers the question the shopper
+ * is actually asking — "what happens if I tick this instead".
+ */
+function facetConditions(
+  query: FacetQuery,
+  scope: FacetScope,
+  exclude: 'category' | 'shop' | 'brand' | null,
+): SQL[] {
+  const conditions: SQL[] = [eq(products.status, 'published'), eq(shops.status, 'approved')];
+
+  if (scope.categoryId) {
+    conditions.push(
+      sql`(${products.categoryId} = ${scope.categoryId} or ${products.categoryId} in (
+        select id from ${categories} where parent_id = ${scope.categoryId}
+      ))`,
+    );
+  }
+  if (scope.shopIds?.length) conditions.push(inArray(products.shopId, scope.shopIds));
+  if (scope.search) conditions.push(productSearchMatch(searchKeyForInput(scope.search)));
+  if (query.q && !scope.search) conditions.push(productSearchMatch(searchKeyForInput(query.q)));
+
+  if (exclude !== 'category' && query.category) {
+    conditions.push(
+      sql`${products.categoryId} in (
+        select id from categories where slug = ${query.category}
+           or parent_id = (select id from categories where slug = ${query.category})
+      )`,
+    );
+  }
+
+  const shopSlugs = asArray(query.shop);
+  if (exclude !== 'shop' && shopSlugs.length > 0 && !scope.shopIds?.length) {
+    conditions.push(inArray(shops.slug, shopSlugs));
+  }
+
+  const brands = asArray(query.brand);
+  if (exclude !== 'brand' && brands.length > 0) conditions.push(inArray(products.brand, brands));
+
+  const effectivePrice = sql<number>`coalesce(${products.discountPrice}, ${products.price})`;
+  if (query.priceMin) conditions.push(gte(effectivePrice, Number(query.priceMin)));
+  if (query.priceMax) conditions.push(lte(effectivePrice, Number(query.priceMax)));
+  if (query.minRating) conditions.push(gte(productRatingAvg, Number(query.minRating)));
+  if (query.inStock === '1') conditions.push(sql`${products.stock} > 0`);
+  if (scope.onOfferOnly || query.onOffer === '1') {
+    conditions.push(
+      sql`${products.discountPrice} is not null and ${products.discountPrice} < ${products.price}`,
+    );
+  }
+
+  return conditions;
+}
+
+/**
+ * Options the filter rail needs: shops, brands, real price bounds — and, when
+ * the caller says what it is looking at, how many results each option would
+ * return.
+ *
+ * `options` is what turns the counts on. A surface that cannot describe its own
+ * scope gets the option lists and no numbers, which is the honest degradation:
+ * a count computed against the whole catalogue on a page showing one shop is
+ * worse than no count at all.
+ *
+ * The rating filter is applied through the correlated `productRatingAvg`
+ * fragment rather than a GROUP BY … HAVING, so every count here is a plain
+ * aggregate over the same predicate the grid uses.
+ */
+export async function filterFacets(
+  locale: string,
+  options?: { query?: FacetQuery; scope?: FacetScope },
+) {
+  const query = options?.query ?? {};
+  const scope = options?.scope ?? {};
+  const counted = options !== undefined;
+
+  const brandBase = and(...facetConditions(query, scope, 'brand'));
+
+  const [shopRows, boundsRows, brandRows] = await Promise.all([
     db
       .select({ id: shops.id, name: shops.name, slug: shops.slug })
       .from(shops)
@@ -34,13 +147,72 @@ export async function filterFacets(locale: string) {
       .from(products)
       .innerJoin(shops, eq(products.shopId, shops.id))
       .where(and(eq(products.status, 'published'), eq(shops.status, 'approved'))),
+    db
+      .select({ value: products.brand, total: sql<number>`count(*)::int` })
+      .from(products)
+      .innerJoin(shops, eq(products.shopId, shops.id))
+      .where(and(brandBase, isNotNull(products.brand)))
+      .groupBy(products.brand)
+      .orderBy(desc(sql`count(*)`), asc(products.brand)),
   ]);
 
-  return {
+  const brands = brandRows.map((row) => ({
+    value: String(row.value),
+    count: Number(row.total),
+  }));
+
+  const base = {
     shops: shopRows,
+    brands,
     priceMin: Number(boundsRows[0]?.min ?? 0),
     priceMax: Number(boundsRows[0]?.max ?? 0),
   };
+
+  /*
+   * A caller that cannot describe its scope gets NO BRAND FACET, not an
+   * uncounted one. Every other axis degrades harmlessly — a shop or a category
+   * the surface does not hold is still a real place to go — but a brand list is
+   * meaningless without a scope: on a shoe shop it offered all twenty-eight
+   * brands in the mall, twenty-seven of which lead to an empty grid.
+   */
+  if (!counted) return { ...base, brands: [], counts: undefined };
+
+  const [categoryRows, shopCountRows] = await Promise.all([
+    db
+      .select({
+        leaf: categories.slug,
+        root: sql<string | null>`(select p.slug from categories p where p.id = ${categories.parentId})`,
+        total: sql<number>`count(*)::int`,
+      })
+      .from(products)
+      .innerJoin(shops, eq(products.shopId, shops.id))
+      .innerJoin(categories, eq(products.categoryId, categories.id))
+      .where(and(...facetConditions(query, scope, 'category')))
+      .groupBy(categories.slug, categories.parentId),
+    db
+      .select({ slug: shops.slug, total: sql<number>`count(*)::int` })
+      .from(products)
+      .innerJoin(shops, eq(products.shopId, shops.id))
+      .where(and(...facetConditions(query, scope, 'shop')))
+      .groupBy(shops.slug),
+  ]);
+
+  const categoryCounts: Record<string, number> = {};
+  for (const row of categoryRows) {
+    const total = Number(row.total);
+    categoryCounts[row.leaf] = (categoryCounts[row.leaf] ?? 0) + total;
+    // A root's count is its own products plus every leaf beneath it — the same
+    // self-or-child rule the listing itself filters by.
+    if (row.root) categoryCounts[row.root] = (categoryCounts[row.root] ?? 0) + total;
+  }
+
+  const counts: FacetCounts = {
+    categories: categoryCounts,
+    shops: Object.fromEntries(shopCountRows.map((row) => [row.slug, Number(row.total)])),
+    brands: Object.fromEntries(brands.map((row) => [row.value, row.count])),
+  };
+
+  return { ...base, counts };
 }
 
 export type PromotedProduct = {
@@ -127,10 +299,11 @@ export async function promotedProductsForSlot(
         eq(shops.status, 'approved'),
         options.categoryId ? eq(products.categoryId, options.categoryId) : sql`true`,
         options.excludeProductId ? sql`${products.id} <> ${options.excludeProductId}` : sql`true`,
-        needle
-          ? sql`(${searchKey(products.title)} like '%' || ${needle} || '%'
-                 or similarity(${searchKey(products.title)}, ${needle}) > 0.12)`
-          : sql`true`,
+        // Literally the organic predicate, imported rather than restated. When
+        // the two were separate copies this one still matched titles only, so
+        // widening organic search to category and shop names would silently
+        // have let a paid slot outlive the eligibility rule it is bound by.
+        needle ? productSearchMatch(needle) : sql`true`,
       ),
     )
     .orderBy(asc(campaigns.startsAt));
@@ -227,9 +400,10 @@ export async function publicShopProducts(
         eq(products.status, 'published'),
         eq(shops.status, 'approved'),
         options.categoryId ? eq(products.categoryId, options.categoryId) : sql`true`,
-        term
-          ? sql`${searchKey(products.title)} like '%' || ${searchKeyForInput(term)} || '%'`
-          : sql`true`,
+        // Same predicate as the mall-wide search, so «موبایل» typed into a
+        // shop's own box finds that shop's phones instead of nothing — a
+        // category word is no less likely here than on /search.
+        term ? productSearchMatch(searchKeyForInput(term)) : sql`true`,
       ),
     )
     .orderBy(desc(products.viewCount), desc(products.createdAt));

@@ -25,7 +25,21 @@
  * option: it is the one sort that is never what a shopper wants and always what
  * a listing defaults to by accident.
  */
-export const PRODUCT_SORTS = ['popularity', 'newest', 'price_asc', 'price_desc', 'rating'] as const;
+export const PRODUCT_SORTS = [
+  'popularity',
+  'newest',
+  'price_asc',
+  'price_desc',
+  'rating',
+  /*
+   * Biggest percentage off. It reads as an offers-page control and it is, but
+   * it belongs to the shared vocabulary for the same reason every other sort
+   * does: a shopper who found it there will look for it on a category page, and
+   * a sort that exists on one listing and not another is the drift this file
+   * exists to prevent.
+   */
+  'discount',
+] as const;
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
 export const isProductSort = (value: unknown): value is ProductSort =>
@@ -34,6 +48,7 @@ export const isProductSort = (value: unknown): value is ProductSort =>
 /** Query keys that narrow a result set. Order is the order chips appear in. */
 export const FILTER_KEYS = [
   'category',
+  'brand',
   'shop',
   'priceMin',
   'priceMax',
