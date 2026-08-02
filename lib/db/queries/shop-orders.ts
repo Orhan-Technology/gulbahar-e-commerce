@@ -135,6 +135,10 @@ export async function shopOrderCounts(shopId: string) {
       ready: sql<number>`count(distinct ${orders.id}) filter (where ${orders.status} = 'ready')::int`,
       fulfilled: sql<number>`count(distinct ${orders.id}) filter (where ${orders.status} = 'fulfilled')::int`,
       rejected: sql<number>`count(distinct ${orders.id}) filter (where ${orders.status} = 'rejected')::int`,
+      // Counted apart from rejected: one is the shop refusing at the door, the
+      // other is an accepted order ended afterwards, and a chip that merged them
+      // would hide which of the two a shop actually does.
+      cancelled: sql<number>`count(distinct ${orders.id}) filter (where ${orders.status} = 'cancelled')::int`,
       actionable: sql<number>`count(distinct ${orders.id}) filter (where ${orders.status} in ('placed','accepted','ready'))::int`,
     })
     .from(orderItems)
@@ -149,6 +153,7 @@ export async function shopOrderCounts(shopId: string) {
       ready: 0,
       fulfilled: 0,
       rejected: 0,
+      cancelled: 0,
       actionable: 0,
     }
   );
@@ -175,10 +180,24 @@ export async function shopOrderDetail(shopId: string, orderId: string) {
       customerName: users.name,
       customerPhone: users.phone,
       customerLocale: users.locale,
-      addressLabel: addresses.label,
-      addressDistrict: addresses.district,
-      addressStreet: addresses.streetDetails,
-      addressPhone: addresses.phone,
+      /*
+       * The snapshot written at placement, falling back to the joined row for
+       * orders older than the column. The shopkeeper holding the parcel is the
+       * person a deleted address hurts most — see lib/db/queries/orders.ts for
+       * why this is coalesced in the query rather than in each page.
+       */
+      addressLabel: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'label', ${addresses.label})`,
+      addressDistrict: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'district', ${addresses.district})`,
+      addressStreet: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'street', ${addresses.streetDetails})`,
+      addressPhone: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'phone', ${addresses.phone})`,
       shopCount: orderShopCount,
     })
     .from(orders)

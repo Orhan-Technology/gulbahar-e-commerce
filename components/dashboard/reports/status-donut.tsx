@@ -23,6 +23,17 @@ const COLOURS: Record<string, string> = {
   ready: 'var(--color-primary-700)',
   fulfilled: 'var(--color-success)',
   rejected: 'var(--color-danger)',
+  /*
+   * Muted rather than red. A rejection is the shop refusing at the door and
+   * belongs beside the other things that went wrong; a cancellation is often
+   * the customer changing their mind, and colouring it as a failure would put
+   * the shop's own dashboard in the business of blaming them for it.
+   *
+   * Deliberately typed Record<string, string> rather than Record<OrderStatus,
+   * string>, which is why the missing key was silent: a cancelled slice
+   * rendered with no colour at all until this line existed.
+   */
+  cancelled: 'var(--color-muted-foreground)',
 };
 
 export function StatusDonut({ data }: { data: StatusSlice[] }) {

@@ -11,6 +11,7 @@ import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { shopOrderDetail } from '@/lib/db/queries/shop-orders';
 import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
+import { parseReasonNote } from '@/lib/order-reject-reasons';
 import { Link } from '@/lib/i18n/navigation';
 
 /** Shopkeeper order detail (PRD §6.3). */
@@ -188,19 +189,28 @@ export default async function ShopOrderPage({
       <section className="rounded-card border-border bg-card space-y-3 border p-4">
         <h2 className="text-sm font-bold">{t('historyHeading')}</h2>
         <ol className="space-y-3">
-          {order.events.map((event) => (
-            <li key={event.id} className="flex gap-3">
-              <span className="bg-primary-100 mt-1.5 h-2 w-2 shrink-0 rounded-full" aria-hidden />
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{t(`status.${event.toStatus}`)}</p>
-                <p className="text-muted-foreground text-xs">
-                  {formatDateTime(event.createdAt, locale)}
-                  {event.actorName ? ` · ${event.actorName}` : ''}
-                </p>
-                {event.note && <p className="mt-1 text-xs">{event.note}</p>}
-              </div>
-            </li>
-          ))}
+          {order.events.map((event) => {
+            // `reason:<code>` is storage, not prose — resolved to the sentence
+            // the customer was sent (lib/order-reject-reasons.ts).
+            const reason = parseReasonNote(event.note);
+            const words = [reason.code ? t(`rejectReasons.${reason.code}`) : null, reason.text]
+              .filter(Boolean)
+              .join(' — ');
+
+            return (
+              <li key={event.id} className="flex gap-3">
+                <span className="bg-primary-100 mt-1.5 h-2 w-2 shrink-0 rounded-full" aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{t(`status.${event.toStatus}`)}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {formatDateTime(event.createdAt, locale)}
+                    {event.actorName ? ` · ${event.actorName}` : ''}
+                  </p>
+                  {words && <p className="mt-1 text-xs">{words}</p>}
+                </div>
+              </li>
+            );
+          })}
         </ol>
       </section>
     </div>

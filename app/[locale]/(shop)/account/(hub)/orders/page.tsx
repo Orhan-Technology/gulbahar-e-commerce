@@ -23,6 +23,16 @@ const BUCKETS = {
   active: ['placed', 'accepted', 'ready'],
   fulfilled: ['fulfilled'],
   rejected: ['rejected'],
+  /*
+   * ITS OWN BUCKET, not folded in with rejected. They are different events with
+   * different words: rejected is the shop refusing, cancelled is somebody —
+   * usually the customer themselves — ending it. A chip that merged them would
+   * tell a customer the shop turned down the order they cancelled.
+   *
+   * The chip only renders when the count is non-zero (see `chips` below), so
+   * most accounts never see a fourth one.
+   */
+  cancelled: ['cancelled'],
 } as const;
 
 /** Order history (PRD §5.4). */

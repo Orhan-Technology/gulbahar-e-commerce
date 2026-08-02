@@ -6,11 +6,19 @@ import { EmptyState } from '@/components/custom/empty-state';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { Button } from '@/components/ui/button';
 import { CartLineControls } from '@/components/shop/cart/cart-line-controls';
+import { FreeDeliveryBar } from '@/components/shop/cart/free-delivery-bar';
 import { getCart } from '@/lib/cart';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { pickLocale } from '@/lib/db/localized';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+
+/**
+ * At or below this many units left, the line says so. Owned by this server
+ * file rather than exported from a `'use client'` module, where it would cross
+ * the RSC boundary as a client reference and arrive as undefined (CLAUDE.md).
+ */
+const LOW_STOCK = 5;
 
 /**
  * Cart (PRD §5.3). Grouped by shop, because a Gulbahar basket routinely spans
@@ -109,8 +117,20 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
                         size="sm"
                       />
 
-                      {line.stock <= 0 && (
+                      {line.stock <= 0 ? (
                         <p className="text-danger text-xs font-medium">{t('lineOutOfStock')}</p>
+                      ) : (
+                        /*
+                         * Stock is reserved at checkout now (lib/actions/checkout.ts),
+                         * so a thin shelf is something the customer needs to know
+                         * HERE — at the last step it stops being a warning and
+                         * becomes a refusal.
+                         */
+                        line.stock <= LOW_STOCK && (
+                          <p className="text-warning-fg text-xs font-medium">
+                            {t('lineLowStock', { count: formatNumber(line.stock, locale) })}
+                          </p>
+                        )
                       )}
 
                       <CartLineControls
@@ -189,14 +209,20 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
 
             <p className="text-muted-foreground text-xs">{t('deliveryAtCheckout')}</p>
 
-            {freeDeliveryGap > 0 && (
-              <p className="rounded-control bg-primary-50 text-primary-800 px-3 py-2 text-xs">
-                {t('freeDeliveryHint', {
-                  amount: formatCurrency(freeDeliveryGap, locale),
-                  fee: formatCurrency(settings.deliveryFee, locale),
-                })}
-              </p>
-            )}
+            {/* Distance to free delivery, as a bar rather than a sentence —
+                the same control the checkout screen shows (PRD §8.1). */}
+            <FreeDeliveryBar
+              percent={(cart.total / Math.max(1, settings.freeDeliveryThreshold)) * 100}
+              reached={freeDeliveryGap <= 0}
+              message={
+                freeDeliveryGap > 0
+                  ? t('freeDeliveryHint', {
+                      amount: formatCurrency(freeDeliveryGap, locale),
+                      fee: formatCurrency(settings.deliveryFee, locale),
+                    })
+                  : t('freeDeliveryReached')
+              }
+            />
 
             <Button asChild size="lg" className="w-full">
               <Link href="/checkout">{t('checkout')}</Link>

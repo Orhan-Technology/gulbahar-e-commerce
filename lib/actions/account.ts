@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { requestEmailVerification, verifyEmailCode } from '../auth/email';
@@ -70,10 +70,32 @@ export async function deleteAddress(id: string): Promise<AccountResult> {
   if (!parsed.success) return { ok: false, error: 'invalid_input' };
 
   /*
-   * orders.address_id is ON DELETE SET NULL, so removing an address does not
-   * delete order history — the order keeps its snapshot of where it went via the
-   * events chain, and the row simply loses its link.
+   * NOT WHILE AN ORDER IS ON ITS WAY THERE.
+   *
+   * orders.address_id is ON DELETE SET NULL, and orders now carry an
+   * `address_snapshot` written at placement (lib/actions/checkout.ts), so
+   * history survives this either way — the previous comment here claimed the
+   * events chain covered it, which it never did.
+   *
+   * The reason to refuse is the LIVE order: a courier is going to that address
+   * today, and a customer tidying their address book should not be the reason a
+   * shopkeeper has to ring them to ask where the parcel goes. Once the order is
+   * fulfilled, rejected or cancelled the address is free to delete.
    */
+  const [inFlight] = await db
+    .select({ id: orders.id })
+    .from(orders)
+    .where(
+      and(
+        eq(orders.addressId, parsed.data),
+        eq(orders.userId, user.id),
+        inArray(orders.status, ['placed', 'accepted', 'ready']),
+      ),
+    )
+    .limit(1);
+
+  if (inFlight) return { ok: false, error: 'address_in_use' };
+
   await db
     .delete(addresses)
     .where(and(eq(addresses.id, parsed.data), eq(addresses.userId, user.id)));

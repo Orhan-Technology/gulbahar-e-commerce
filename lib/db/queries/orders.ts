@@ -37,10 +37,28 @@ export async function orderWithTimeline(orderId: string) {
       customerId: users.id,
       customerName: users.name,
       customerPhone: users.phone,
-      addressLabel: addresses.label,
-      addressDistrict: addresses.district,
-      addressStreet: addresses.streetDetails,
-      addressPhone: addresses.phone,
+      /*
+       * THE SNAPSHOT FIRST, the joined row only as a fallback.
+       *
+       * orders.address_id is ON DELETE SET NULL and the customer may tidy their
+       * address book while an order is still in flight, so the join alone
+       * renders a delivery order with no destination. Coalesced HERE rather
+       * than in each page, so every reader — customer tracking, admin detail,
+       * anything added later — prefers the same value without having to know
+       * the column exists. Older orders have no snapshot and fall through.
+       */
+      addressLabel: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'label', ${addresses.label})`,
+      addressDistrict: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'district', ${addresses.district})`,
+      addressStreet: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'street', ${addresses.streetDetails})`,
+      addressPhone: sql<
+        string | null
+      >`coalesce(${orders.addressSnapshot}->>'phone', ${addresses.phone})`,
     })
     .from(orders)
     .innerJoin(users, eq(orders.userId, users.id))

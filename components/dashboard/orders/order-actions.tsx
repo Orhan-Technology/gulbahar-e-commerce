@@ -8,10 +8,11 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { CollectForm } from '@/components/dashboard/orders/collect-form';
+import { OrderCancelButton } from '@/components/dashboard/orders/order-cancel-button';
 import { OrderRejectButton } from '@/components/dashboard/orders/order-reject-button';
 import { advanceOrderStatus } from '@/lib/actions/shop-orders';
 
-type Status = 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected';
+type Status = 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected' | 'cancelled';
 
 /**
  * The accept / reject / ready / fulfilled controls on the ORDER screen
@@ -62,7 +63,7 @@ export function OrderActions({
     });
   }
 
-  if (status === 'fulfilled' || status === 'rejected') return null;
+  if (status === 'fulfilled' || status === 'rejected' || status === 'cancelled') return null;
 
   return (
     <div className="flex flex-wrap gap-2">
@@ -72,6 +73,7 @@ export function OrderActions({
             <ThumbsUp />
             {t('accept')}
           </Button>
+          {/* At the door it is a REJECTION — nothing was promised yet. */}
           <OrderRejectButton orderId={orderId} size={size} />
         </>
       )}
@@ -91,6 +93,16 @@ export function OrderActions({
       )}
 
       {status === 'ready' && fulfillment === 'pickup' && <CollectForm orderId={orderId} />}
+
+      {/*
+        After acceptance the only way out is a CANCELLATION, which is a
+        different word and a different reason list because the customer has
+        already been told the order is coming (PRD §13.2). Without it an order
+        the shop can no longer fulfil had nowhere to go but a false "delivered".
+      */}
+      {(status === 'accepted' || status === 'ready') && (
+        <OrderCancelButton orderId={orderId} size={size} />
+      )}
     </div>
   );
 }

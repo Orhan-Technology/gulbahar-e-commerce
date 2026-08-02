@@ -1,11 +1,34 @@
 import { useTranslations } from 'next-intl';
-import { Check, PackageCheck, ShoppingBag, ThumbsUp, X } from 'lucide-react';
+import { Check, CircleSlash, PackageCheck, ShoppingBag, ThumbsUp, X } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 /** Matches the order status enum in CLAUDE.md and PRD §13.2. */
-export type OrderStatus = 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected';
+export type OrderStatus =
+  | 'placed'
+  | 'accepted'
+  | 'ready'
+  | 'fulfilled'
+  | 'rejected'
+  | 'cancelled';
+
+/**
+ * The two ways an order ends without goods changing hands.
+ *
+ * SEPARATE STATES WITH SEPARATE WORDS, deliberately. "Rejected" is the shop
+ * saying no at the door; "cancelled" is an order that was already under way
+ * being ended — by the customer, by the shop, or by the mall. Collapsing them
+ * would tell a customer who cancelled their own order that the shop refused it.
+ *
+ * Cancelled is rendered NEUTRAL rather than in danger red: for the person most
+ * likely to be reading it, it is the outcome they asked for, and a red alarm on
+ * your own decision reads as an error you have to go and fix.
+ */
+const TERMINAL = {
+  rejected: { Icon: X, tone: 'danger' },
+  cancelled: { Icon: CircleSlash, tone: 'neutral' },
+} as const;
 
 /** The happy path. `rejected` is terminal and rendered separately. */
 const STEPS = [
@@ -52,20 +75,32 @@ export function OrderStatusTimeline({
 }: OrderStatusTimelineProps) {
   const t = useTranslations('order.status');
 
-  if (status === 'rejected') {
+  if (status === 'rejected' || status === 'cancelled') {
+    const { Icon, tone } = TERMINAL[status];
+    const danger = tone === 'danger';
     return (
       <div
         className={cn(
-          'rounded-card border-danger-border bg-danger-bg flex items-center gap-3 border p-3',
+          'rounded-card flex items-center gap-3 border p-3',
+          danger ? 'border-danger-border bg-danger-bg' : 'border-border bg-neutral-50',
           className,
         )}
       >
-        <span className="rounded-pill bg-danger text-danger-fg flex h-9 w-9 shrink-0 items-center justify-center">
-          <X className="h-5 w-5" aria-hidden />
+        <span
+          className={cn(
+            'rounded-pill flex h-9 w-9 shrink-0 items-center justify-center',
+            danger ? 'bg-danger text-danger-fg' : 'bg-neutral-200 text-neutral-700',
+          )}
+        >
+          <Icon className="h-5 w-5" aria-hidden />
         </span>
         <div>
-          <p className="text-danger text-sm font-semibold">{t('rejected')}</p>
-          <p className="text-danger/80 text-xs">{t('rejectedHint')}</p>
+          <p className={cn('text-sm font-semibold', danger ? 'text-danger' : 'text-foreground')}>
+            {t(status)}
+          </p>
+          <p className={cn('text-xs', danger ? 'text-danger/80' : 'text-muted-foreground')}>
+            {t(`${status}Hint`)}
+          </p>
         </div>
       </div>
     );

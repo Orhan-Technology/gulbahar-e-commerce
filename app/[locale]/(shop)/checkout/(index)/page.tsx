@@ -5,6 +5,7 @@ import { ShoppingCart } from 'lucide-react';
 import { EmptyState } from '@/components/custom/empty-state';
 import { SignInForm } from '@/components/auth/sign-in-form';
 import { CheckoutForm } from '@/components/shop/checkout/checkout-form';
+import { CheckoutItems } from '@/components/shop/checkout/checkout-items';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { currentUser } from '@/lib/auth/guards';
 import { getCart } from '@/lib/cart';
@@ -93,6 +94,14 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
           deliveryFee={settings.deliveryFee}
           freeDeliveryThreshold={settings.freeDeliveryThreshold}
           holdHours={settings.pickupHoldHours}
+          shopCount={cart.groups.length}
+          /*
+           * Rendered HERE, on the server, and handed down as a node: the basket
+           * needs a database read and localized titles, neither of which belongs
+           * in a client component. It sits directly above the totals, so the
+           * last thing read before paying is what is being paid for.
+           */
+          itemsSummary={<CheckoutItems groups={cart.groups} locale={locale} />}
         />
       </div>
     </div>
