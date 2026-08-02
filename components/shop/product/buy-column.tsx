@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 
 import { usePrefersReducedMotion } from '@/components/custom/stat-card';
+import { ShareButton } from '@/components/shop/product/share-button';
 import { cn } from '@/lib/utils';
 
 /**
@@ -155,12 +156,24 @@ export function BuyColumn({
         </div>
       </Collapsible>
 
-
-
       {children}
 
       <Collapsible open={!collapsed} instant={prefersReduced}>
-        <div className="space-y-5">{extras}</div>
+        <div className="space-y-5">
+          {/*
+            SHARE SITS WITH THE PURCHASE CONTROLS, under the price and the
+            add-to-cart row, because that is the moment someone decides to ask
+            a second person before buying. It collapses with the rest of the
+            secondary block: a reader who has scrolled past the top of the page
+            is reading, not forwarding.
+
+            The title comes from this component rather than from a prop on the
+            page — it already has it for the condensed identity line, so the
+            control needs nothing wired through.
+          */}
+          <ShareButton title={title} className="w-full" />
+          {extras}
+        </div>
       </Collapsible>
     </div>
   );

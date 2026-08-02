@@ -5,6 +5,7 @@ import { ShopCard } from '@/components/custom/shop-card';
 import { pickLocale } from '@/lib/db/localized';
 import { followedShops } from '@/lib/db/queries/shop-page';
 import { Link } from '@/lib/i18n/navigation';
+import { pauseState } from '@/lib/pause';
 
 /**
  * The shops this customer follows, on the account hub (Prompt C8).
@@ -18,7 +19,7 @@ import { Link } from '@/lib/i18n/navigation';
  * is optional, and a "you follow no shops" panel on every visit would be a
  * standing reproach for not using a feature.
  */
-export async function FollowedShops({ userId }: { userId: string }) {
+export async function FollowedShops({ userId, now }: { userId: string; now: Date }) {
   const locale = await getLocale();
   const t = await getTranslations('account.following');
 
@@ -32,27 +33,40 @@ export async function FollowedShops({ userId }: { userId: string }) {
           <Heart className="text-primary h-4 w-4" aria-hidden />
           {t('title')}
         </h2>
-        <Link href="/shops" className="text-primary text-xs font-medium hover:underline">
-          {t('browse')}
+        {/* Into the section, not out to the directory. The hub's job here is to
+            say the relationship exists; what the shops have been DOING is a
+            page of its own, and that page is what makes following worth
+            pressing. */}
+        <Link
+          href="/account/following"
+          className="text-primary text-xs font-medium hover:underline"
+        >
+          {t('seeAll')}
         </Link>
       </div>
 
       <ul className="grid gap-2 sm:grid-cols-2">
-        {shops.map((shop) => (
-          <li key={shop.id}>
-            <ShopCard
-              slug={shop.slug}
-              name={pickLocale(shop.name, locale)}
-              productCount={shop.productCount}
-              floor={shop.floor}
-              unitNumber={shop.unitNumber}
-              logoPath={shop.logoPath}
-              bannerPath={shop.bannerPath}
-              verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null}
-              layout="row"
-            />
-          </li>
-        ))}
+        {shops.map((shop) => {
+          // Decided on the server; the card never reads a clock (CLAUDE.md).
+          const paused = pauseState(shop.pausedUntil, now);
+
+          return (
+            <li key={shop.id}>
+              <ShopCard
+                slug={shop.slug}
+                name={pickLocale(shop.name, locale)}
+                productCount={shop.productCount}
+                floor={shop.floor}
+                unitNumber={shop.unitNumber}
+                logoPath={shop.logoPath}
+                bannerPath={shop.bannerPath}
+                verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null}
+                pausedUntil={paused?.paused ? paused.until.toISOString() : null}
+                layout="row"
+              />
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

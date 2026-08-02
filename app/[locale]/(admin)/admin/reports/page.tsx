@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Receipt, ShoppingBag, Store, Users, Wallet } from 'lucide-react';
 
+import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import { StatusDonut } from '@/components/dashboard/reports/status-donut';
 import { SalesChart } from '@/components/dashboard/sales-chart';
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
@@ -45,7 +46,17 @@ export default async function AdminReportsPage({
 
   return (
     <div className="space-y-4 p-6">
-      <ConsolePageHeader title={t('title')} actions={<RangeControl current={range.key} />} />
+      <ConsolePageHeader
+        title={t('title')}
+        actions={
+          <>
+            {/* The export mirrors the CURRENT range, so the file is the screen
+                rather than a differently-scoped set of numbers. */}
+            <ExportCsvLink report="platform" params={{ range: range.key }} />
+            <RangeControl current={range.key} />
+          </>
+        }
+      />
 
       <Suspense key={`totals-${period}`} fallback={<TotalsSkeleton />}>
         <Totals period={period} locale={locale} />

@@ -4,6 +4,7 @@ import { and, desc, eq, gt, isNull, sql } from 'drizzle-orm';
 import { db } from '../db';
 import { otpCodes, users, type DbLocale, type User } from '../db/schema';
 import { notify } from '../notify';
+import { checkRateLimit } from './rate-limit';
 
 /**
  * Phone + OTP sign-in (PRD §5.7, §12.2).
@@ -41,7 +42,25 @@ function safeEqualHex(a: string, b: string): boolean {
 }
 
 export type RequestOtpResult =
-  { ok: true; expiresAt: Date; phone: string } | { ok: false; error: 'invalid_phone' };
+  | { ok: true; expiresAt: Date; phone: string }
+  | { ok: false; error: 'invalid_phone' | 'too_many_requests' };
+
+/**
+ * Code requests per phone, and per phone per hour.
+ *
+ * Unlimited requests are three problems at once, and only the third is visible
+ * today: every request supersedes the previous code, so a loop against someone
+ * else's number locks that person out of signing in; every request writes a
+ * notification row; and the day `notify()` is pointed at a real SMS gateway
+ * instead of the in-app log, every request costs money.
+ *
+ * Generous enough that a customer who mistypes their number, retries, and asks
+ * for a resend twice never meets it.
+ */
+const OTP_MAX_PER_WINDOW = 5;
+const OTP_WINDOW_MS = 15 * 60 * 1000;
+const OTP_MAX_PER_HOUR = 10;
+const OTP_HOUR_MS = 60 * 60 * 1000;
 
 /**
  * Issues a code for a phone number and writes it to the notification log.
@@ -53,6 +72,18 @@ export type RequestOtpResult =
 export async function requestOtp(rawPhone: string): Promise<RequestOtpResult> {
   const phone = normalizePhone(rawPhone);
   if (!PHONE_PATTERN.test(phone)) return { ok: false, error: 'invalid_phone' };
+
+  /*
+   * Checked AFTER the phone is validated and normalized, so the bucket key is
+   * the same string regardless of how the caller spelled the number, and
+   * garbage input cannot fill the map with keys.
+   */
+  if (
+    !checkRateLimit(`otp:req:${phone}`, OTP_MAX_PER_WINDOW, OTP_WINDOW_MS) ||
+    !checkRateLimit(`otp:req:hour:${phone}`, OTP_MAX_PER_HOUR, OTP_HOUR_MS)
+  ) {
+    return { ok: false, error: 'too_many_requests' };
+  }
 
   const code = String(randomInt(0, 1_000_000)).padStart(6, '0');
   const expiresAt = new Date(Date.now() + CODE_TTL_MS);

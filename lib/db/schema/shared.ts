@@ -32,11 +32,31 @@ export const shopStatusEnum = pgEnum('shop_status', ['pending', 'approved', 'sus
 
 export const shopMemberRoleEnum = pgEnum('shop_member_role', ['owner', 'staff']);
 
-export const productStatusEnum = pgEnum('product_status', ['draft', 'published', 'unpublished']);
+/**
+ * `archived` is the shopkeeper's delete. A product that has ever been ordered
+ * cannot be removed — order_items reference it and the history has to keep
+ * naming what was bought — so "delete" hides it from every surface instead,
+ * including the shop's own catalogue list, which is what the shopkeeper
+ * actually means by the word.
+ */
+export const productStatusEnum = pgEnum('product_status', [
+  'draft',
+  'published',
+  'unpublished',
+  'archived',
+]);
 
 /**
  * placed → accepted → ready → fulfilled; rejected is terminal from placed
  * (CLAUDE.md, PRD §13.2).
+ *
+ * `cancelled` is the escape hatch the other five statuses did not have: a
+ * customer changing their mind before the shop has committed, a shop that
+ * accepted and then broke the item, an admin ending an order that has been
+ * stalled for a week. It is distinct from `rejected` on purpose — rejected is
+ * the shop refusing at the door and carries a reason from the shop's fixed
+ * list, while cancelled can be initiated by any of the three parties and
+ * records who did it in the event chain.
  */
 export const orderStatusEnum = pgEnum('order_status', [
   'placed',
@@ -44,6 +64,7 @@ export const orderStatusEnum = pgEnum('order_status', [
   'ready',
   'fulfilled',
   'rejected',
+  'cancelled',
 ]);
 
 export const fulfillmentEnum = pgEnum('fulfillment_method', ['delivery', 'pickup']);

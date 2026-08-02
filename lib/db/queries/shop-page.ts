@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, ne, sql } from 'drizzle-orm';
 
 import { db } from '..';
 import {
@@ -250,6 +250,10 @@ export async function followedShops(userId: string) {
       floor: shops.floor,
       unitNumber: shops.unitNumber,
       verifiedAt: shops.verifiedAt,
+      /** Vacation mode, so a followed shop that is shut says so here too. */
+      pausedUntil: shops.pausedUntil,
+      /** When this customer started following — the "new since" line below. */
+      followedAt: shopFollows.createdAt,
       productCount: sql<number>`(
         select count(*)::int from products p
         where p.shop_id = shops.id and p.status = 'published'
@@ -259,6 +263,104 @@ export async function followedShops(userId: string) {
     .innerJoin(shops, eq(shopFollows.shopId, shops.id))
     .where(and(eq(shopFollows.userId, userId), ne(shops.status, 'closed')))
     .orderBy(desc(shopFollows.createdAt));
+}
+
+/** Where the feed stops for one shop — enough to be a row, not a catalogue. */
+const FOLLOW_FEED_PER_SHOP = 4;
+
+/**
+ * What following a shop actually GETS you (Prompt: follow is a dead loop).
+ *
+ * Following was a button with nothing behind it: a row in a table, a count on a
+ * hero, and no surface anywhere that answered "so what". This is the answer —
+ * for each followed shop, what it has added and what it is discounting right
+ * now, which is the only reason a customer would have pressed the button.
+ *
+ * `since` is the FOLLOW date, so "new" means new to this reader rather than new
+ * in absolute terms. A shop that has not listed anything in six months should
+ * not look busy to someone who followed it yesterday, and a shop that added
+ * three products the day after they followed should.
+ *
+ * The products are fetched for every followed shop in ONE query and grouped in
+ * JS rather than with a lateral join per shop. The bound is the number of shops
+ * a person follows — single digits — and the catalogue behind each is small, so
+ * the cost of the simple version is a rounding error and it stays readable.
+ *
+ * `now` is a parameter for the same reason it is everywhere else: this is read
+ * during render and React 19 forbids a clock read there (CLAUDE.md).
+ */
+export async function followedShopsFeed(userId: string, now: Date) {
+  const followed = await followedShops(userId);
+  if (followed.length === 0) return [];
+
+  const shopIds = followed.map((shop) => shop.id);
+
+  const [latest, liveOffers] = await Promise.all([
+    db
+      .select({
+        shopId: products.shopId,
+        id: products.id,
+        slug: products.slug,
+        title: products.title,
+        price: products.price,
+        discountPrice: products.discountPrice,
+        stock: products.stock,
+        createdAt: products.createdAt,
+        shopName: shops.name,
+        shopFloor: shops.floor,
+        imagePath: sql<string | null>`(
+          select pi.path from ${productImages} pi
+          where pi.product_id = products.id
+          order by pi.sort asc limit 1
+        )`,
+        rating: sql<number>`coalesce((
+          select avg(r.rating)::float8 from reviews r
+          where r.product_id = products.id and r.status = 'visible'
+        ), 0)`,
+        reviewCount: sql<number>`(
+          select count(*)::int from reviews r
+          where r.product_id = products.id and r.status = 'visible'
+        )`,
+      })
+      .from(products)
+      .innerJoin(shops, eq(products.shopId, shops.id))
+      // 'published' excludes drafts, unpublished AND archived — a shopkeeper's
+      // delete must never reach a storefront surface.
+      .where(and(inArray(products.shopId, shopIds), eq(products.status, 'published')))
+      .orderBy(desc(products.createdAt)),
+
+    db
+      .select({
+        shopId: offers.shopId,
+        id: offers.id,
+        name: offers.name,
+        type: offers.type,
+        value: offers.value,
+        endsAt: offers.endsAt,
+      })
+      .from(offers)
+      .where(
+        and(
+          inArray(offers.shopId, shopIds),
+          eq(offers.active, true),
+          lte(offers.startsAt, now),
+          gte(offers.endsAt, now),
+        ),
+      )
+      .orderBy(asc(offers.endsAt)),
+  ]);
+
+  return followed.map((shop) => {
+    const shopProducts = latest.filter((row) => row.shopId === shop.id);
+    return {
+      ...shop,
+      products: shopProducts.slice(0, FOLLOW_FEED_PER_SHOP),
+      /* Counted over the WHOLE catalogue, not the four rendered: "۲ محصول تازه"
+         under a row of four is a contradiction the reader has to resolve. */
+      newSinceFollow: shopProducts.filter((row) => row.createdAt > shop.followedAt).length,
+      offers: liveOffers.filter((row) => row.shopId === shop.id),
+    };
+  });
 }
 
 /**

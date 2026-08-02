@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { setRequestLocale, getTranslations } from 'next-intl/server';
 
-import { OffersStrip, OffersStripSkeleton } from '@/components/shop/home/offers-strip';
+import { OfferShowcase, OfferShowcaseSkeleton } from '@/components/shop/home/offer-showcase';
 import { FacetControls } from '@/components/shop/listing/facet-controls';
 import {
   ProductListing,
@@ -27,7 +27,12 @@ export default async function OffersPage({
   const query = await searchParams;
   const t = await getTranslations('offers');
 
-  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  const [facets, tree] = await Promise.all([
+    // Permanently on offer, so the counts have to be too — otherwise the brand
+    // rail would advertise brands that carry no discount at all.
+    filterFacets(locale, { query, scope: { onOfferOnly: true } }),
+    categoryTree(locale),
+  ]);
   const facetOptions = { ...facets, categories: tree };
 
   return (
@@ -37,8 +42,8 @@ export default async function OffersPage({
         <p className="text-muted-foreground mt-1 text-sm">{t('subtitle')}</p>
       </div>
 
-      <Suspense fallback={<OffersStripSkeleton />}>
-        <OffersStrip />
+      <Suspense fallback={<OfferShowcaseSkeleton />}>
+        <OfferShowcase />
       </Suspense>
 
       {/*
@@ -46,6 +51,11 @@ export default async function OffersPage({
         scoped to `onOffer`. It used to be a bare twenty-four-card grid with no
         sort and no filters — on the one page where "cheapest first" is the
         obvious next thing a shopper wants.
+
+        Its DEFAULT ORDER is biggest discount rather than popularity: on a page
+        whose subject is the discount, "most viewed" answers a question nobody
+        came here to ask. The sort control still owns it — the URL wins — so the
+        default is a starting point, not a lock.
       */}
       <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">
@@ -57,6 +67,7 @@ export default async function OffersPage({
               query={{ ...query, onOffer: '1' }}
               locale={locale}
               facets={facetOptions}
+              defaultSort="discount"
               emptyHref="/offers"
             />
           </Suspense>

@@ -69,6 +69,8 @@ export function notificationHref(
     case 'order.fulfilled':
     case 'order.collected':
     case 'order.holdExpired':
+    case 'order.cancelled':
+    case 'order.cancelledByMall':
       // The customer's own tracking page; a shopkeeper reading the same event
       // wants their queue, where the row is actionable.
       if (role === 'customer') return reference ? `/account/orders/${reference}` : '/account/orders';
@@ -76,11 +78,24 @@ export function notificationHref(
 
     case 'order.newForShop':
     case 'order.nudged':
+    // A cancellation the shop needs to see before it walks to the shelf.
+    case 'order.cancelledForShop':
+    case 'order.cancelledByMallForShop':
       return '/dashboard/orders';
 
     case 'review.received':
     case 'review.responded':
       return role === 'shopkeeper' ? '/dashboard/reviews' : '/account/reviews';
+
+    // The author's own copy of a removal. Their review list is where the
+    // decision is visible; the product page no longer shows the review at all.
+    case 'review.removed':
+      return '/account/reviews';
+
+    // Lands the admin on the queue it belongs in; the shop that raised it can
+    // still see the review on its own list.
+    case 'review.flagged':
+      return role === 'admin' ? '/admin/reviews?status=reported' : '/dashboard/reviews';
 
     case 'question.asked':
       return '/dashboard/questions';
@@ -98,7 +113,21 @@ export function notificationHref(
     case 'shop.rejected':
     case 'shop.invited':
     case 'shop.nudged':
+    case 'shop.nudgedIssues':
+    case 'shop.suspended':
+    case 'shop.closed':
       return '/dashboard';
+
+    // Straight to the catalogue, where the listing now sits under a status the
+    // shopkeeper can act on.
+    case 'shop.productUnpublished':
+      return '/dashboard/products';
+
+    // The applicant's own confirmation: back to the application, which is where
+    // an amendment would be made while it waits.
+    case 'shop.applicationReceived':
+    case 'shop.resubmitted':
+      return '/dashboard/register-shop';
 
     case 'verification.submitted':
       return '/admin/verifications';

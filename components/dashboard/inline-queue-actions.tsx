@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { answerQuestion } from '@/lib/actions/questions';
 import { respondToReview } from '@/lib/actions/shop-reviews';
 import { setProductStock } from '@/lib/actions/shop-products';
+import { digitsOnly } from '@/lib/digits';
 
 /**
  * The inline controls that let EVERY queue row be finished without leaving the
@@ -179,7 +180,7 @@ export function InlineStockUpdate({
       className="flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault();
-        const stock = Number(value.replace(/\D/g, ''));
+        const stock = Number(digitsOnly(value));
         if (!Number.isInteger(stock) || stock <= 0) return;
 
         startTransition(async () => {
@@ -201,7 +202,7 @@ export function InlineStockUpdate({
       <Input
         id={`stock-${productId}`}
         value={value}
-        onChange={(event) => setValue(event.target.value.replace(/\D/g, ''))}
+        onChange={(event) => setValue(digitsOnly(event.target.value))}
         inputMode="numeric"
         dir="ltr"
         className="h-8 w-20"

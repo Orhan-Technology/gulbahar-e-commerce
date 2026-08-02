@@ -41,6 +41,10 @@ export async function shopDirectory(filters: ShopDirectoryFilters) {
       logoPath: shops.logoPath,
       bannerPath: shops.bannerPath,
       verifiedAt: shops.verifiedAt,
+      // Vacation mode, so a directory card can say the shop is not taking
+      // orders today rather than sending someone to a page that cannot sell.
+      // Read here, interpreted by pauseState() with a `now` from the server.
+      pausedUntil: shops.pausedUntil,
       rating: shopRatingAvg,
       reviewCount: shopReviewCount,
       productCount: shopPublishedProductCount,
@@ -82,6 +86,10 @@ export async function shopDetail(slug: string) {
       // Denormalised, so the badge costs no join on a page that is read far
       // more often than the verification record is written (Prompt C7).
       verifiedAt: shops.verifiedAt,
+      /** Vacation mode (lib/pause.ts) — null means trading. */
+      pausedUntil: shops.pausedUntil,
+      /** The shopkeeper's own words about the pause, when they wrote any. */
+      pauseNote: shops.pauseNote,
       rejectionReason: shops.rejectionReason,
       createdAt: shops.createdAt,
       rating: shopRatingAvg,
@@ -101,6 +109,29 @@ export async function shopDetail(slug: string) {
     reviewCount: Number(row.reviewCount),
     productCount: Number(row.productCount),
   };
+}
+
+/**
+ * Just the vacation-mode columns for one shop.
+ *
+ * Its own query because the PRODUCT page needs them and `productDetail` does
+ * not select them: a product's buy controls have to refuse an order while the
+ * shop that sells it is shut, and that is a fact about the shop, not the
+ * product. Two columns on an indexed primary key is cheaper than widening a
+ * query that every product page already runs for a different purpose.
+ *
+ * Returns null for an unknown shop; the caller then simply has no pause to
+ * apply, which is the correct behaviour on a page that has already resolved a
+ * published product.
+ */
+export async function shopPause(shopId: string) {
+  const [row] = await db
+    .select({ pausedUntil: shops.pausedUntil, pauseNote: shops.pauseNote })
+    .from(shops)
+    .where(eq(shops.id, shopId))
+    .limit(1);
+
+  return row ?? null;
 }
 
 export async function shopById(shopId: string) {

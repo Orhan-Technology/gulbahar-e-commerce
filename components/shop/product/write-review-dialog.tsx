@@ -25,6 +25,21 @@ export type WriteReviewDialogProps = {
   productSlug: string;
   /** Present when the customer already reviewed this product — offers an edit. */
   existing?: { rating: number; body: string | null } | null;
+  /**
+   * Trigger sizing, for the places this composer is offered from.
+   *
+   * On the product page the button is the section's primary action and takes
+   * the default size. In the order page's per-item prompt it sits at the end of
+   * a compact row beside a thumbnail, where a full-height default button makes
+   * every row twice as tall as it needs to be.
+   */
+  size?: 'default' | 'sm';
+  /**
+   * Trigger emphasis. Solid where writing a review is the section's own call to
+   * action; outline in the order page's per-item prompt, where three stacked
+   * solid buttons in one card shout over the order they are about.
+   */
+  variant?: 'default' | 'outline';
 };
 
 /**
@@ -34,7 +49,12 @@ export type WriteReviewDialogProps = {
  * purchase of this product, so the dialog's presence is itself the signal that
  * the review will be accepted. The action re-checks regardless.
  */
-export function WriteReviewDialog({ productSlug, existing }: WriteReviewDialogProps) {
+export function WriteReviewDialog({
+  productSlug,
+  existing,
+  size = 'default',
+  variant,
+}: WriteReviewDialogProps) {
   const t = useTranslations('product.reviewForm');
   const router = useRouter();
 
@@ -62,7 +82,7 @@ export function WriteReviewDialog({ productSlug, existing }: WriteReviewDialogPr
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={existing ? 'outline' : 'default'}>
+        <Button variant={variant ?? (existing ? 'outline' : 'default')} size={size}>
           <PenLine />
           {existing ? t('editTitle') : t('writeTitle')}
         </Button>

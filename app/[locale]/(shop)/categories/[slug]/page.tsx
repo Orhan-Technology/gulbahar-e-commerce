@@ -44,7 +44,12 @@ export default async function CategoryPage({
   const category = await categoryBySlug(slug);
   if (!category) notFound();
 
-  const [facets, tree] = await Promise.all([filterFacets(locale), categoryTree(locale)]);
+  const [facets, tree] = await Promise.all([
+    // Scoped to this category so the brand and shop counts describe what is on
+    // the page rather than what is in the mall.
+    filterFacets(locale, { query, scope: { categoryId: category.id } }),
+    categoryTree(locale),
+  ]);
 
   /*
    * The page may be a parent or one of its children, and the tiles belong to

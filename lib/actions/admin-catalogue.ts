@@ -16,8 +16,9 @@ import {
   shops,
   users,
 } from '../db/schema';
+import { pickLocale } from '../db/localized';
 import { shopOwnerAndStaff } from '../db/queries/admin';
-import { notify } from '../notify';
+import { notify, notifyMany } from '../notify';
 import { requireAdminContext } from '../admin-context';
 import { recordAdminAction } from '../audit';
 
@@ -39,6 +40,21 @@ export type AdminActionResult<T = undefined> =
 /* -------------------------------------------------------------------------- */
 /* Products — unpublish only                                                  */
 
+const unpublishSchema = z.object({
+  productId: z.string().uuid(),
+  /*
+   * REQUIRED, at the same ten-character floor as a shop rejection. This action
+   * used to take an id and nothing else: a tenant's listing left the storefront
+   * with no reason stored, no message sent and an audit line that said only
+   * that it had happened. The shopkeeper's first knowledge of it was a customer
+   * asking where the product went — which is the same failure the console
+   * fixed everywhere else and had left standing here.
+   */
+  reason: z.string().trim().min(10, { message: 'reason_too_short' }).max(500),
+});
+
+export type UnpublishProductInput = z.input<typeof unpublishSchema>;
+
 /**
  * Takes a product off the storefront (PRD §7.2).
  *
@@ -48,29 +64,61 @@ export type AdminActionResult<T = undefined> =
  * admin lock a shop out of its own catalogue, which PRD §3.1 does not allow.
  *
  * Only a PUBLISHED product can be taken down, so the action cannot quietly reverse
- * a shop's own draft decision.
+ * a shop's own draft decision — and an ARCHIVED product, which is a shopkeeper's
+ * delete, is not reachable from here at all.
+ *
+ * Still no editor, anywhere: the reason is written into `unpublishReason`, which
+ * is admin's note ABOUT the listing, never a word of the listing itself
+ * (PRD §3.1).
  */
-export async function unpublishProduct(productId: string): Promise<AdminActionResult> {
+export async function unpublishProduct(
+  input: UnpublishProductInput,
+): Promise<AdminActionResult> {
   const context = await requireAdminContext();
   if (!context) return { ok: false, error: 'forbidden' };
 
-  const parsed = z.string().uuid().safeParse(productId);
-  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+  const parsed = unpublishSchema.safeParse(input);
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message;
+    return { ok: false, error: message === 'reason_too_short' ? message : 'invalid_input' };
+  }
 
   const [updated] = await db
     .update(products)
-    .set({ status: 'unpublished' })
-    .where(and(eq(products.id, parsed.data), eq(products.status, 'published')))
-    .returning({ slug: products.slug, title: products.title });
+    .set({ status: 'unpublished', unpublishReason: parsed.data.reason })
+    .where(and(eq(products.id, parsed.data.productId), eq(products.status, 'published')))
+    .returning({
+      slug: products.slug,
+      title: products.title,
+      shopId: products.shopId,
+    });
 
   if (!updated) return { ok: false, error: 'not_published' };
+
+  // Everyone at the shop, each in their own language — a staff member standing
+  // at the counter is as likely to be asked about it as the owner.
+  const members = await shopOwnerAndStaff(updated.shopId);
+  await notifyMany(
+    members.map((member) => ({
+      eventKey: 'shop.productUnpublished' as const,
+      channel: 'inapp' as const,
+      recipientUserId: member.id,
+      recipientRole: 'shopkeeper' as const,
+      locale: member.locale,
+      values: {
+        productTitle: pickLocale(updated.title, member.locale),
+        reason: parsed.data.reason,
+      },
+    })),
+  );
 
   await recordAdminAction({
     ...context,
     action: 'product.unpublish',
     targetType: 'product',
-    targetId: parsed.data,
+    targetId: parsed.data.productId,
     targetLabel: updated.title.fa,
+    reason: parsed.data.reason,
   });
 
   revalidatePath('/admin/products');
@@ -308,7 +356,7 @@ export async function moderateReview(
     .update(reviews)
     .set({ status: parsed.data.decision === 'remove' ? 'removed' : 'visible' })
     .where(eq(reviews.id, parsed.data.reviewId))
-    .returning({ productId: reviews.productId });
+    .returning({ productId: reviews.productId, authorId: reviews.userId });
 
   if (!updated) return { ok: false, error: 'not_found' };
 
@@ -317,6 +365,36 @@ export async function moderateReview(
     .from(products)
     .where(eq(products.id, updated.productId))
     .limit(1);
+
+  /*
+   * THE AUTHOR IS TOLD WHEN THEIR REVIEW COMES DOWN, in their own language.
+   *
+   * Removal was the one moderation outcome that happened entirely behind the
+   * person it happened to: they wrote something, it disappeared from the
+   * product page, and nothing anywhere said so. Upholding needs no message —
+   * from the author's side nothing changed, and "your review was reported and
+   * we kept it" only tells them somebody complained.
+   */
+  if (parsed.data.decision === 'remove') {
+    const [author] = await db
+      .select({ locale: users.locale })
+      .from(users)
+      .where(eq(users.id, updated.authorId))
+      .limit(1);
+
+    const authorLocale = author?.locale ?? 'fa';
+
+    await notify({
+      eventKey: 'review.removed',
+      channel: 'inapp',
+      recipientUserId: updated.authorId,
+      recipientRole: 'customer',
+      locale: authorLocale,
+      values: {
+        productTitle: product ? pickLocale(product.title, authorLocale) : '',
+      },
+    });
+  }
 
   await recordAdminAction({
     ...context,
@@ -414,9 +492,13 @@ export async function nudgeShopAboutOrder(orderId: string): Promise<AdminActionR
     return { ok: false, error: 'not_pending' };
   }
 
+  // The OWNER's locale, joined here rather than assumed. This read the shop
+  // owner's id and then wrote the message in Dari regardless of who they were
+  // — the one notification in the codebase that did not ask (CLAUDE.md).
   const [owner] = await db
-    .select({ userId: shopMembers.userId })
+    .select({ userId: shopMembers.userId, locale: users.locale })
     .from(shopMembers)
+    .innerJoin(users, eq(users.id, shopMembers.userId))
     .where(and(eq(shopMembers.shopId, order.shopId), eq(shopMembers.role, 'owner')))
     .limit(1);
 
@@ -425,7 +507,7 @@ export async function nudgeShopAboutOrder(orderId: string): Promise<AdminActionR
     channel: 'inapp',
     recipientUserId: owner?.userId ?? null,
     recipientRole: 'shopkeeper',
-    locale: 'fa',
+    locale: owner?.locale ?? 'fa',
     values: { reference: order.reference },
   });
 
@@ -550,15 +632,26 @@ export async function setUserRole(
  * shopkeeper can act on this afternoon. The caller passes the flag, the
  * shopkeeper reads it in their own language.
  */
+const HEALTH_FLAGS = [
+  'slow_acceptance',
+  'high_rejection',
+  'falling_rating',
+  'no_products',
+  'verification_expired',
+] as const;
+
 const nudgeSchema = z.object({
   shopId: z.string().uuid(),
-  flag: z.enum([
-    'slow_acceptance',
-    'high_rejection',
-    'falling_rating',
-    'no_products',
-    'verification_expired',
-  ]),
+  /*
+   * ALL of the shop's flags, not the worst one.
+   *
+   * The button used to send `flags[0]`, so a tenant with a slow queue, a high
+   * rejection rate and expired papers was told about exactly one of the three
+   * and the admin had no way to send the rest — the message was a summary of a
+   * list the sender could see and the recipient could not. Capped at the five
+   * that exist, because a longer list is a bug rather than a shop.
+   */
+  flags: z.array(z.enum(HEALTH_FLAGS)).min(1).max(HEALTH_FLAGS.length),
 });
 
 export async function nudgeShopAboutHealth(
@@ -582,11 +675,17 @@ export async function nudgeShopAboutHealth(
   const owners = members.filter((member) => member.role === 'owner');
   if (owners.length === 0) return { ok: false, error: 'no_owner' };
 
+  // De-duplicated and put back into the canonical order, so the sentence reads
+  // the same way twice and a caller repeating a flag cannot repeat it in the
+  // message.
+  const flags = HEALTH_FLAGS.filter((flag) => parsed.data.flags.includes(flag));
+
   for (const owner of owners) {
     // The issue text is resolved in the OWNER's language, the same substitution
     // notify() makes — ps falls back to Dari (PRD §11).
+    const locale = owner.locale === 'ps' ? 'fa' : owner.locale;
     const t = await getTranslations({
-      locale: owner.locale === 'ps' ? 'fa' : owner.locale,
+      locale,
       // NOT `…health.nudge`: that key is already the button's label, and a
       // messages key may be a string OR a namespace, never both — the object
       // silently wins and every t('nudge') renders the raw key (CLAUDE.md).
@@ -594,12 +693,24 @@ export async function nudgeShopAboutHealth(
     });
 
     await notify({
-      eventKey: 'shop.nudged',
+      /*
+       * A SEPARATE TEMPLATE for more than one issue. The original reads "has
+       * noticed SOMETHING customers see on your shop", which is a sentence
+       * about one problem; handing it three made the mall sound as if it could
+       * not count.
+       */
+      eventKey: flags.length > 1 ? 'shop.nudgedIssues' : 'shop.nudged',
       channel: 'inapp',
       recipientUserId: owner.id,
       recipientRole: 'shopkeeper',
       locale: owner.locale,
-      values: { issue: t(parsed.data.flag) },
+      /*
+       * Joined with a SPACE, not a list separator. Each `nudgeIssues` string is
+       * a complete sentence ending in a full stop — the template continues
+       * straight after `{issue}` with "Please take a look" — so `formatList`
+       * put a comma after a full stop and produced ".، ".
+       */
+      values: { issue: flags.map((flag) => t(flag)).join(' ') },
     });
   }
 
@@ -609,7 +720,7 @@ export async function nudgeShopAboutHealth(
     targetType: 'shop',
     targetId: shop.id,
     targetLabel: shop.name.fa,
-    detail: { flag: parsed.data.flag },
+    detail: { flags: flags.join(',') },
   });
 
   revalidatePath('/admin/shops');

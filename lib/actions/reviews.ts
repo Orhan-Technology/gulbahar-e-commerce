@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
-import { products, reviews, shopMembers } from '../db/schema';
+import { products, reviewVotes, reviews, shopMembers } from '../db/schema';
 import { pickLocale } from '../db/localized';
 import { reviewableOrderItem, userReviewForProduct } from '../db/queries/reviews';
 import { notify } from '../notify';
@@ -96,6 +96,71 @@ export async function submitReview(input: {
 
   revalidatePath(`/products/${parsed.data.productSlug}`);
   return { ok: true, mode: 'created' };
+}
+
+export type HelpfulResult =
+  | { ok: true; helpful: boolean }
+  | { ok: false; error: 'requires_auth' | 'invalid_input' | 'not_found' | 'own_review' };
+
+/**
+ * "Was this helpful?" — one vote per person per review, no downvote.
+ *
+ * TAKES THE DESIRED STATE rather than toggling, the same way setShopFollow does:
+ * a double tap on a mall's wifi otherwise lands as two toggles and the button
+ * ends up disagreeing with the database about which way round they finished.
+ *
+ * The composite primary key is the real enforcement, so the insert is an
+ * `onConflictDoNothing` — a second vote from the same thumb is not an error, it
+ * is a no-op that already has the outcome the caller asked for. The catch below
+ * covers the same collision arriving as a raised error rather than a swallowed
+ * one; note that drizzle wraps driver errors in DrizzleQueryError, whose own
+ * `code` is undefined — the PostgresError carrying SQLSTATE 23505 is at
+ * `.cause` (CLAUDE.md), and checking the wrapper would make this dead code.
+ *
+ * NOBODY VOTES FOR THEMSELVES. It is enforced in the WHERE clause that resolves
+ * the review, not by a check beforehand, so a forged review id cannot route
+ * around it.
+ */
+export async function setReviewHelpful(reviewId: string, helpful: boolean): Promise<HelpfulResult> {
+  const user = await currentUser();
+  if (!user?.id) return { ok: false, error: 'requires_auth' };
+
+  const parsed = z.string().uuid().safeParse(reviewId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [review] = await db
+    .select({ id: reviews.id, authorId: reviews.userId, productId: reviews.productId })
+    .from(reviews)
+    .where(and(eq(reviews.id, parsed.data), eq(reviews.status, 'visible')))
+    .limit(1);
+
+  if (!review) return { ok: false, error: 'not_found' };
+  if (review.authorId === user.id) return { ok: false, error: 'own_review' };
+
+  try {
+    if (helpful) {
+      await db
+        .insert(reviewVotes)
+        .values({ reviewId: review.id, userId: user.id })
+        .onConflictDoNothing();
+    } else {
+      await db
+        .delete(reviewVotes)
+        .where(and(eq(reviewVotes.reviewId, review.id), eq(reviewVotes.userId, user.id)));
+    }
+  } catch (error) {
+    const cause = (error as { cause?: { code?: string } }).cause;
+    if (cause?.code !== '23505') throw error;
+  }
+
+  const [product] = await db
+    .select({ slug: products.slug })
+    .from(products)
+    .where(eq(products.id, review.productId))
+    .limit(1);
+
+  if (product) revalidatePath(`/products/${product.slug}`);
+  return { ok: true, helpful };
 }
 
 /**

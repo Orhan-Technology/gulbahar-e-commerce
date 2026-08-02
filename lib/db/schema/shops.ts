@@ -76,6 +76,24 @@ export const shops = pgTable(
     bannerPath: text('banner_path'),
     /** Written by admin on reject; visible to the shopkeeper so they can amend. */
     rejectionReason: text('rejection_reason'),
+    /**
+     * Vacation mode (Etsy's word for it). A shop that is shut for Eid, for a
+     * restocking trip to Dubai, or because the owner is ill needs to stop
+     * taking orders WITHOUT unpublishing its catalogue one product at a time
+     * and losing every listing's position.
+     *
+     * A paused shop stays browsable and its products keep their pages — the
+     * buy button becomes a "back on <date>" note instead. That is the honest
+     * version: the shop is real and still there, it just cannot take an order
+     * today. Null means trading.
+     *
+     * `pausedUntil` is a real date rather than a boolean so the storefront can
+     * say WHEN, and so a shopkeeper who forgets to come back is not invisible
+     * forever — the dashboard nags once the date passes.
+     */
+    pausedUntil: timestampCol('paused_until'),
+    /** Optional line shown to customers while paused, in the shop's own words. */
+    pauseNote: jsonb('pause_note').$type<LocalizedText>(),
     createdAt: createdAt(),
   },
   (table) => [

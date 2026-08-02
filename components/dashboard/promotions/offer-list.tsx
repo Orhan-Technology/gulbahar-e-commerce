@@ -26,6 +26,24 @@ export type OfferRow = {
   startsAt: string;
   endsAt: string;
   phase: 'active' | 'scheduled' | 'expired';
+  /**
+   * How the offer actually did — every figure PRE-FORMATTED on the server, the
+   * same division of labour the action queue uses. The client formats no money
+   * and no numbers, so Persian digits and the ؋ prefix cannot drift between this
+   * panel and the rest of the dashboard.
+   */
+  performance: OfferPerformanceView;
+};
+
+export type OfferPerformanceView = {
+  /** Nothing to show yet, with the reason already translated. */
+  note: string | null;
+  units: string;
+  revenue: string;
+  baselineUnits: string;
+  baselineRevenue: string;
+  /** "compared with the ۷ days before" — the window, stated. */
+  windowLabel: string;
 };
 
 /**
@@ -165,6 +183,58 @@ function OfferCard({
         {offer.phase === 'active' && <OfferCountdown endsAt={offer.endsAt} />}
         {offer.phase === 'scheduled' && <Badge variant="secondary">{t('notStarted')}</Badge>}
       </div>
+
+      <OfferPerformanceBlock performance={offer.performance} />
     </li>
+  );
+}
+
+/**
+ * What the offer sold, beside what the same stretch of time sold before it.
+ *
+ * TWO COLUMNS AND A CAPTION, no lift percentage. The caption says these are
+ * fulfilled orders in the window and that the shop is being shown a comparison,
+ * not an attribution — a "+34%" here would be read as "the discount earned
+ * this", which nothing in the data supports. The honest empty state is a
+ * sentence, not two zeros in a grid: zeros look like a broken readout.
+ */
+function OfferPerformanceBlock({ performance }: { performance: OfferPerformanceView }) {
+  const t = useTranslations('shopPromotions.offers.performance');
+
+  if (performance.note) {
+    return (
+      <p className="rounded-control text-muted-foreground bg-neutral-50 px-3 py-2 text-xs">
+        {performance.note}
+      </p>
+    );
+  }
+
+  return (
+    <div className="rounded-control space-y-1.5 bg-neutral-50 p-3">
+      <p className="text-2xs font-bold text-neutral-500">{t('heading')}</p>
+
+      <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
+        <div>
+          <dt className="text-muted-foreground">{t('duringUnits')}</dt>
+          <dd className="font-bold tabular-nums">{performance.units}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">{t('duringRevenue')}</dt>
+          <dd className="font-bold tabular-nums">{performance.revenue}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">{t('beforeUnits')}</dt>
+          <dd className="tabular-nums">{performance.baselineUnits}</dd>
+        </div>
+        <div>
+          <dt className="text-muted-foreground">{t('beforeRevenue')}</dt>
+          <dd className="tabular-nums">{performance.baselineRevenue}</dd>
+        </div>
+      </dl>
+
+      <p className="text-2xs text-neutral-500">{performance.windowLabel}</p>
+      {/* Say out loud what this is not. */}
+      <p className="text-2xs text-neutral-400">{t('caveat')}</p>
+    </div>
   );
 }

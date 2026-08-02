@@ -18,7 +18,13 @@ export type ShopProductFilters = {
   shopId: string;
   locale: string;
   search?: string;
-  status?: 'draft' | 'published' | 'unpublished';
+  /**
+   * `archived` is reachable only by asking for it (Prompt: archived products
+   * excluded by default with a filter chip to see them). Everything else — the
+   * default view, the stock filters, the search — hides it, because the point of
+   * archiving is that the row stops being in the way.
+   */
+  status?: 'draft' | 'published' | 'unpublished' | 'archived';
   categoryId?: string;
   /** 'out' = zero stock, 'low' = 1..5 — the two states worth acting on. */
   stock?: 'out' | 'low';
@@ -37,6 +43,9 @@ export async function shopCatalogue(filters: ShopProductFilters) {
   const conditions: SQL[] = [eq(products.shopId, filters.shopId)];
 
   if (filters.status) conditions.push(eq(products.status, filters.status));
+  // No status asked for means "my catalogue", and an archived product is not in
+  // it — that is the whole difference between archiving and unpublishing.
+  else conditions.push(sql`${products.status} <> 'archived'`);
   if (filters.categoryId) conditions.push(eq(products.categoryId, filters.categoryId));
   if (filters.stock === 'out') conditions.push(sql`${products.stock} <= 0`);
   if (filters.stock === 'low') {
@@ -63,6 +72,15 @@ export async function shopCatalogue(filters: ShopProductFilters) {
       discountPrice: products.discountPrice,
       stock: products.stock,
       status: products.status,
+      /**
+       * ADMIN's note on why this product was taken down (PRD §3.1).
+       *
+       * Read-only here and written nowhere in this file: admin may unpublish but
+       * never edit shop content, and the shop may not edit admin's reason. It is
+       * carried onto the list row because an unpublished product with no stated
+       * cause is a shopkeeper guessing what to fix.
+       */
+      unpublishReason: products.unpublishReason,
       viewCount: products.viewCount,
       createdAt: products.createdAt,
       categoryId: products.categoryId,
@@ -126,13 +144,20 @@ export async function shopCatalogueCounts(shopId: string) {
       low: sql<number>`count(*) filter (where ${products.stock} > 0 and ${products.stock} <= ${LOW_STOCK_THRESHOLD})::int`,
     })
     .from(products)
-    .where(eq(products.shopId, shopId));
+    // Archived rows are out of the stock warnings too: "3 out of stock" that
+    // counts products nobody can buy any more is a badge that never clears.
+    .where(and(eq(products.shopId, shopId), sql`${products.status} <> 'archived'`));
+
+  const archived = byStatus.archived ?? 0;
 
   return {
-    all: Object.values(byStatus).reduce((sum, value) => sum + value, 0),
+    // `all` is the ALL chip, and it shows what the list shows — archived rows
+    // are excluded from both or the badge disagrees with the rows beneath it.
+    all: Object.values(byStatus).reduce((sum, value) => sum + value, 0) - archived,
     draft: byStatus.draft ?? 0,
     published: byStatus.published ?? 0,
     unpublished: byStatus.unpublished ?? 0,
+    archived,
     outOfStock: Number(stockRow?.out ?? 0),
     lowStock: Number(stockRow?.low ?? 0),
   };

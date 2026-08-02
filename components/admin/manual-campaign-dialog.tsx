@@ -27,6 +27,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { createCampaignForShop } from '@/lib/actions/admin-promotions';
+// Persian digits, not `\D`: JS classes are ASCII-only, so an ASCII
+// sanitiser deletes «۵۰۰» keystroke by keystroke and the field a Dari
+// admin types into stays empty. One shared helper, lib/digits.ts.
+import { digitsOnly } from '@/lib/digits';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { CAMPAIGN_WEEK_OPTIONS } from '@/lib/promotions';
 
@@ -240,7 +244,7 @@ export function ManualCampaignDialog({
               dir="ltr"
               placeholder={String(listPrice)}
               value={priceOverride}
-              onChange={(event) => setPriceOverride(event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => setPriceOverride(digitsOnly(event.target.value))}
             />
             <p className="text-muted-foreground text-xs">
               {t('priceHint', { list: formatCurrency(listPrice, locale) })}

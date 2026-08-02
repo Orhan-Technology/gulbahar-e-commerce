@@ -1,4 +1,6 @@
+import { sql } from 'drizzle-orm';
 import {
+  check,
   date,
   index,
   integer,
@@ -84,6 +86,16 @@ export const products = pgTable(
     brand: text('brand'),
     model: text('model'),
     status: productStatusEnum('status').notNull().default('draft'),
+    /**
+     * Why mall management took this product off the storefront (PRD §3.1).
+     *
+     * Admin may unpublish but never edit, and until now the unpublish was
+     * SILENT — the shopkeeper watched a product vanish with no explanation.
+     * The console requires a reason on every other decision it makes; this is
+     * the column that lets it require one here too, and the text is shown to
+     * the shop verbatim, exactly like `shops.rejectionReason`.
+     */
+    unpublishReason: text('unpublish_reason'),
     /** Seeded view counter backing the dashboard's top-products table (PRD §6.1). */
     viewCount: integer('view_count').notNull().default(0),
     createdAt: createdAt(),
@@ -95,6 +107,20 @@ export const products = pgTable(
     index('products_shop_status_idx').on(table.shopId, table.status),
     index('products_category_status_idx').on(table.categoryId, table.status),
     index('products_brand_idx').on(table.brand),
+    /*
+     * The Zod schemas at the action boundary already say all three of these.
+     * They are repeated here so they hold for writers that do not go through an
+     * action — the import script, a seed, an admin at a psql prompt — which is
+     * what turns action validation into defence in depth rather than the only
+     * defence. `greatest(stock - qty, 0)` clamps elsewhere in the codebase
+     * exist because this constraint did not.
+     */
+    check('products_price_positive', sql`${table.price} > 0`),
+    check('products_stock_non_negative', sql`${table.stock} >= 0`),
+    check(
+      'products_discount_below_price',
+      sql`${table.discountPrice} is null or (${table.discountPrice} > 0 and ${table.discountPrice} < ${table.price})`,
+    ),
   ],
 );
 

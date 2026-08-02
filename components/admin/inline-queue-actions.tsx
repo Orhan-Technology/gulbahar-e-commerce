@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { BellRing, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { CancelOrderDialog } from '@/components/admin/cancel-order-dialog';
 import { Button } from '@/components/ui/button';
 import { moderateReview, nudgeShopAboutOrder } from '@/lib/actions/admin-catalogue';
 
@@ -74,40 +75,67 @@ export function InlineReviewModeration({
 }
 
 /**
- * Nudge the shop sitting on an order.
+ * Nudge the shop sitting on an order — or end it.
  *
  * NOT "accept on their behalf". Mall management does not reach inside a
- * tenant's transaction (PRD §3.1) — it makes sure the tenant knows. The row
- * stays in the queue afterwards, because the order is still unanswered; what
- * changed is that the shopkeeper has been told.
+ * tenant's transaction (PRD §3.1) — it makes sure the tenant knows, and if
+ * nobody ever answers, it can declare the transaction over. The row stays after
+ * a nudge, because the order is still unanswered; what changed is that the
+ * shopkeeper has been told.
  */
-export function InlineNudgeShop({ orderId }: { orderId: string }) {
+export function InlineNudgeShop({
+  orderId,
+  reference,
+  onCancelled,
+}: {
+  orderId: string;
+  reference: string;
+  onCancelled: () => void;
+}) {
   const t = useTranslations('adminOverview.queue');
   const router = useRouter();
   const [sent, setSent] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
 
   return (
-    <Button
-      type="button"
-      size="sm"
-      variant="outline"
-      disabled={pending || sent}
-      onClick={() =>
-        startTransition(async () => {
-          const result = await nudgeShopAboutOrder(orderId);
-          if (!result.ok) {
-            toast.error(t(`errors.${result.error}` as never));
-            return;
-          }
-          setSent(true);
-          toast.success(t('nudged'));
-          router.refresh();
-        })
-      }
-    >
-      <BellRing />
-      {sent ? t('nudgedShort') : t('nudge')}
-    </Button>
+    <div className="flex flex-wrap gap-2">
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={pending || sent}
+        onClick={() =>
+          startTransition(async () => {
+            const result = await nudgeShopAboutOrder(orderId);
+            if (!result.ok) {
+              toast.error(t(`errors.${result.error}` as never));
+              return;
+            }
+            setSent(true);
+            toast.success(t('nudged'));
+            router.refresh();
+          })
+        }
+      >
+        <BellRing />
+        {sent ? t('nudgedShort') : t('nudge')}
+      </Button>
+
+      {/*
+        THE SECOND HALF OF THE LEVER. Nudging was the only thing this row could
+        do, so an order a shop had abandoned could be chased forever and never
+        ended — the queue's one entry that could not be cleared by acting on it.
+        Cancelling is a platform decision rather than a fulfilment one, so it
+        belongs to the mall and takes a written reason; the row collapses
+        because the order really is resolved.
+      */}
+      <CancelOrderDialog
+        orderId={orderId}
+        reference={reference}
+        variant="ghost"
+        size="sm"
+        onCancelled={onCancelled}
+      />
+    </div>
   );
 }

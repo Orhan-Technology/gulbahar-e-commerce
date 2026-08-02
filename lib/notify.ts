@@ -40,12 +40,47 @@ export type NotificationEventKey =
   | 'order.newForShop'
   | 'order.accepted'
   | 'order.rejected'
+  /* Ended after it was placed, by the customer, the shop or the mall — not the
+     same event as a rejection, and not the same sentence (PRD §13.2). */
+  | 'order.cancelled'
+  | 'order.cancelledForShop'
+  /*
+   * The MALL ending an order, which is a different sentence from either of the
+   * two above and needs its own pair: neither party chose this, and both have
+   * to be told who did and why. Reusing `order.cancelled` would have the
+   * customer read that the shop cancelled on them.
+   */
+  | 'order.cancelledByMall'
+  | 'order.cancelledByMallForShop'
   | 'order.ready'
   | 'order.fulfilled'
   | 'shop.submitted'
+  /*
+   * The APPLICANT's copy of `shop.submitted`, which is addressed to the admin
+   * queue. Two keys rather than one message with two recipients: the wording is
+   * different ("we have your application" vs "a shop has applied") and each is
+   * written in a different person's language.
+   */
+  | 'shop.applicationReceived'
+  | 'shop.resubmitted'
   | 'shop.approved'
   | 'shop.rejected'
   | 'shop.invited'
+  /*
+   * Mall decisions a tenant has to be told about (PRD §7.1, §7.2).
+   *
+   * Suspension, closure and an unpublished listing all used to happen in
+   * silence: the shop simply vanished from the storefront and the shopkeeper
+   * found out from a customer. Each carries the admin's written reason, which
+   * is why the actions that send them now require one.
+   */
+  | 'shop.suspended'
+  | 'shop.closed'
+  | 'shop.productUnpublished'
+  /** A shop reported a review; carries the category the shopkeeper picked. */
+  | 'review.flagged'
+  /** The AUTHOR's copy of a moderation decision — see review.flagged above. */
+  | 'review.removed'
   | 'campaign.requested'
   | 'campaign.approved'
   | 'campaign.rejected'
@@ -56,6 +91,13 @@ export type NotificationEventKey =
   | 'order.holdExpired'
   | 'order.nudged'
   | 'shop.nudged'
+  /*
+   * The same nudge carrying MORE THAN ONE issue. A separate key rather than a
+   * plural inside `shop.nudged`, because the difference is the opening clause —
+   * "has noticed something" against "has noticed a few things" — and ICU plural
+   * syntax wrapped around a whole sentence is unreadable in both languages.
+   */
+  | 'shop.nudgedIssues'
   | 'verification.submitted'
   | 'verification.approved'
   | 'verification.rejected'

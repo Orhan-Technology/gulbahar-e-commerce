@@ -11,6 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateSlot } from '@/lib/actions/admin-promotions';
+// Persian digits, not `\D`: JS classes are ASCII-only, so an ASCII
+// sanitiser deletes «۵۰۰» keystroke by keystroke and the field a Dari
+// admin types into stays empty. One shared helper, lib/digits.ts.
+import { digitsOnly } from '@/lib/digits';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 
 export type SlotRow = {
@@ -107,7 +111,7 @@ function SlotCard({ slot, locale }: { slot: SlotRow; locale: string }) {
               dir="ltr"
               className="h-9 w-20"
               value={capacity}
-              onChange={(event) => setCapacity(event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => setCapacity(digitsOnly(event.target.value))}
             />
           </div>
           <div className="space-y-1">
@@ -120,7 +124,7 @@ function SlotCard({ slot, locale }: { slot: SlotRow; locale: string }) {
               dir="ltr"
               className="h-9 w-28"
               value={price}
-              onChange={(event) => setPrice(event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => setPrice(digitsOnly(event.target.value))}
             />
           </div>
           <div className="flex items-end gap-1">

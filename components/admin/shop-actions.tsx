@@ -21,13 +21,22 @@ import { approveShop, rejectShop, setShopStatus } from '@/lib/actions/admin-shop
 
 type ShopStatus = 'pending' | 'approved' | 'suspended' | 'closed';
 
+/** The floor the server enforces on every one of these reasons. */
+const MIN_REASON = 10;
+
 /**
  * Approve / reject / suspend / close (PRD §7.1).
  *
  * Approve is one tap because it is the reversible, expected outcome. Everything
  * that harms a tenant — rejection, suspension, closure — goes through a confirm
- * step, and rejection additionally requires a written reason, because the
- * shopkeeper has to know what to amend before resubmitting (PRD §13.1).
+ * step AND a written reason.
+ *
+ * Suspension and closure used to be a bare "are you sure". Those are the two
+ * decisions that stop a trading tenant earning the moment they land, and they
+ * were the only ones on this surface that asked the admin for nothing and told
+ * the shopkeeper nothing. The dialog now looks like the rejection dialog on
+ * purpose: same shape, same floor, same promise that the text reaches the owner
+ * as written.
  */
 export function ShopActions({
   shopId,
@@ -159,8 +168,17 @@ export function ShopActions({
         </DialogContent>
       </Dialog>
 
-      {/* Suspend / close — both take a shop off the storefront, so both confirm. */}
-      <Dialog open={confirming !== null} onOpenChange={(open) => !open && setConfirming(null)}>
+      {/* Suspend / close — both take a shop off the storefront, so both confirm
+          and both state why, in a sentence the owner receives verbatim. */}
+      <Dialog
+        open={confirming !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirming(null);
+            setReason('');
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
@@ -171,15 +189,32 @@ export function ShopActions({
             </DialogDescription>
           </DialogHeader>
 
+          <div className="space-y-1.5">
+            <Label htmlFor={`status-reason-${shopId}`}>
+              {confirming === 'closed' ? t('closeReasonLabel') : t('suspendReasonLabel')}
+            </Label>
+            <Textarea
+              id={`status-reason-${shopId}`}
+              rows={4}
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder={
+                confirming === 'closed' ? t('closeReasonPlaceholder') : t('suspendReasonPlaceholder')
+              }
+            />
+            <p className="text-muted-foreground text-xs">{t('statusReasonNote')}</p>
+          </div>
+
           <DialogFooter>
             <Button variant="ghost" onClick={() => setConfirming(null)} disabled={pending}>
               {t('cancel')}
             </Button>
             <Button
               variant="destructive"
-              disabled={pending}
+              disabled={pending || reason.trim().length < MIN_REASON}
               onClick={() =>
-                confirming && run(confirming, () => setShopStatus({ shopId, status: confirming }))
+                confirming &&
+                run(confirming, () => setShopStatus({ shopId, status: confirming, reason }))
               }
             >
               {pending ? t('working') : t('confirm')}

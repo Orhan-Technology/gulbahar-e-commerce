@@ -165,8 +165,21 @@ async function main() {
   /* --------------------------------------------------------------- rails */
   report.section('Rails are relevant, deduplicated and never stubs');
 
+  /*
+   * Sliced from the FIRST RAIL HEADING, not from the questions section.
+   *
+   * Both the comparison table and the rails stream, and streamed content is
+   * appended to the document in RESOLUTION order rather than in the order it is
+   * finally displayed — so slicing at `id="questions"` swept up the comparison
+   * table too. That put four extra products into "the rails", including the
+   * current one, which the comparison table carries ON PURPOSE as its "this
+   * product" column. The check was reading a different component than the one
+   * it names.
+   */
   const railHrefs = (document: string) => {
-    const railStart = document.search(/id="questions"/);
+    const railStart = document.search(
+      /class="[^"]*text-foreground text-xl font-bold[^"]*">(?:بیشتر از این دکان|More from this shop)/,
+    );
     const tail = railStart >= 0 ? document.slice(railStart) : document;
     return [...tail.matchAll(/href="\/fa\/products\/([a-z0-9-]+)"/g)].map((match) => match[1]);
   };

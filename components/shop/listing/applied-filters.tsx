@@ -60,6 +60,22 @@ export function AppliedFilters({ labels }: { labels: FilterLabels }) {
     });
   }
 
+  // A brand is its own label — no lookup table, because the URL already carries
+  // the display string rather than a slug.
+  for (const brand of params.getAll('brand')) {
+    chips.push({
+      id: `brand-${brand}`,
+      label: brand,
+      remove: () => {
+        const next = new URLSearchParams(params.toString());
+        const rest = next.getAll('brand').filter((value) => value !== brand);
+        next.delete('brand');
+        for (const value of rest) next.append('brand', value);
+        go(next);
+      },
+    });
+  }
+
   for (const slug of params.getAll('shop')) {
     chips.push({
       id: `shop-${slug}`,

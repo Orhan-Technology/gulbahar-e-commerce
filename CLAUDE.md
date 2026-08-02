@@ -81,6 +81,8 @@ Renders correctly in fa (RTL) and en (LTR) · skeleton + empty + error states pr
 
 A page whose whole body waits on one query needs a route-level `loading.tsx`, not an internal Suspense boundary — there is nothing to stream around, so without one the browser shows the PREVIOUS page until the server answers.
 
+…but a `loading.tsx` applies to its segment AND EVERY SEGMENT NESTED UNDER IT, and a route that streams has already committed HTTP 200 before the page body runs. Put one at `products/` and every `products/[slug]` that calls `notFound()` becomes a SOFT 404: the not-found body renders, the status line says 200, and a crawler indexes a missing or unpublished product as a real page. It also silently breaks any check that asserts a guard by status code — which is how it was caught, `check:product` reporting `a pending shop's product 404s ← 200`. A listing route with a dynamic child therefore keeps its loading state in an `(index)` ROUTE GROUP (`products/(index)/loading.tsx`): route groups add no URL segment, so the path is unchanged, and the boundary scopes to the listing alone. `categories/` shipped with this bug from the start and nothing noticed for nine phases.
+
 Two rules for the check scripts themselves, both learned the hard way:
 
 - An assertion must not depend on "the newest row" when the script also creates rows. check-phase8 picked the newest notification to test clear-read with, which was sometimes the one a later section asserted on; the failure moved depending on insert order.

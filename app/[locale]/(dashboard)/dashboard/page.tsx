@@ -7,6 +7,7 @@ import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { ActionQueue } from '@/components/dashboard/action-queue';
 import { ExpiredHolds } from '@/components/dashboard/expired-holds';
 import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
+import { LiveRefresh } from '@/components/dashboard/live-refresh';
 import { SetupGuide, SetupGuideSkeleton } from '@/components/dashboard/setup-guide';
 import { SalesChart } from '@/components/dashboard/sales-chart';
 import { pressable } from '@/components/motion/pressable';
@@ -71,6 +72,18 @@ export default async function DashboardPage({
      * four tiles.
      */
     <div className="mx-auto max-w-[100rem] space-y-5 p-4 md:p-6">
+      {/*
+        THE HOME SCREEN POLLS TOO (Prompt: the queue never refreshes).
+        LiveRefresh was mounted on the orders pages only, so the one screen a
+        shopkeeper actually leaves open behind the counter was the one that went
+        stale — a new order sat unseen in a queue whose whole promise is that it
+        is current, and the bell in the layout above never moved either.
+        `router.refresh()` re-renders the layout as well as the page, so the
+        badge and the queue advance together. Visibility-aware, like the
+        original: a tab nobody is looking at asks the database nothing.
+      */}
+      <LiveRefresh />
+
       <ConsolePageHeader
         title={<DashboardGreeting name={user.name ?? ''} />}
         actions={<RangeControl current={range.key} />}
@@ -309,7 +322,14 @@ async function TopSellers({
         {stats.topProducts.map((product, index) => (
           <li key={product.id}>
             <Link
-              href={`/dashboard/products?q=${encodeURIComponent(product.slug)}`}
+              /*
+               * STRAIGHT TO THE PRODUCT, not to a search for its slug. The row
+               * used to link to `?q=<slug>`, and the catalogue search matches
+               * TITLES — so every Dari-slugged product (which is all of them,
+               * since slugs come from the Dari title) landed the shopkeeper on
+               * "no results" for their own best seller.
+               */
+              href={`/dashboard/products/${product.id}`}
               className={cn(
                 pressable,
                 'rounded-control flex items-center gap-3 p-2 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-50',

@@ -15,7 +15,10 @@ import { cn } from '@/lib/utils';
 export type SelectableOrder = {
   id: string;
   reference: string;
-  status: 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected';
+  // Every value of the order status enum. `cancelled` is never selectable —
+  // the bar only offers accept and mark-ready — but the list it renders
+  // includes terminal orders, so the type has to admit them.
+  status: 'placed' | 'accepted' | 'ready' | 'fulfilled' | 'rejected' | 'cancelled';
   /**
    * The row itself, rendered on the SERVER and passed as a node.
    *

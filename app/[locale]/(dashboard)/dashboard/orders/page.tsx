@@ -28,6 +28,9 @@ const STATUS_BADGE: Record<
   ready: 'default',
   fulfilled: 'success',
   rejected: 'destructive',
+  // Not destructive: an order the customer withdrew, or one the shop ended for
+  // a stated reason, is not an alarm on this screen — it is closed business.
+  cancelled: 'secondary',
 };
 
 /** Shopkeeper order list (PRD §6.3). */
@@ -92,6 +95,12 @@ export default async function ShopOrdersPage({
       href: '/dashboard/orders?status=rejected',
       count: counts.rejected,
       active: query.status === 'rejected',
+    },
+    {
+      key: 'cancelled',
+      href: '/dashboard/orders?status=cancelled',
+      count: counts.cancelled,
+      active: query.status === 'cancelled',
     },
   ];
 

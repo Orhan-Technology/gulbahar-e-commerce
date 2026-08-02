@@ -205,29 +205,56 @@ export async function addToCart(
   await writeCookieCart(lines);
 }
 
-export async function setCartQuantity(productId: string, quantity: number): Promise<void> {
+/**
+ * Sets a line's quantity, clamped to what the shop actually has.
+ *
+ * THE SAME CEILING `addCartItem` APPLIES AT ADD TIME. It was missing here, so a
+ * stepper could take a line to 99 of a product with three in stock — and since
+ * checkout now reserves stock with a conditional decrement, that basket cannot
+ * be placed at all: the customer meets a hard "not enough" at the last step
+ * instead of a quiet clamp at the moment they asked for too many.
+ *
+ * Returns the quantity actually applied, so the caller can say so.
+ */
+export async function setCartQuantity(productId: string, quantity: number): Promise<number> {
   const user = await currentUser();
   const safeQuantity = Math.floor(quantity);
 
   if (safeQuantity <= 0) {
     await removeFromCart(productId);
-    return;
+    return 0;
   }
 
-  const clamped = Math.min(99, safeQuantity);
+  const [product] = await db
+    .select({ stock: products.stock })
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1);
+
+  // An unknown product keeps the 99 ceiling: it is dropped from the hydrated
+  // cart anyway (keepBuyableLines), and clamping it to zero here would delete a
+  // line for a product that is merely not published yet.
+  const ceiling = product ? Math.max(0, product.stock) : 99;
+  const clamped = Math.min(99, safeQuantity, ceiling);
+
+  if (clamped <= 0) {
+    await removeFromCart(productId);
+    return 0;
+  }
 
   if (user?.id) {
     await db
       .update(cartItems)
       .set({ quantity: clamped, updatedAt: new Date() })
       .where(and(eq(cartItems.userId, user.id), eq(cartItems.productId, productId)));
-    return;
+    return clamped;
   }
 
   const lines = await readCookieCart();
   const existing = lines.find((line) => line.productId === productId);
   if (existing) existing.quantity = clamped;
   await writeCookieCart(lines);
+  return clamped;
 }
 
 export async function removeFromCart(productId: string): Promise<void> {

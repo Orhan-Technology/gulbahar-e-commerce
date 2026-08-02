@@ -1,4 +1,5 @@
-import { index, integer, jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { check, index, integer, jsonb, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 
 import { products } from './products';
 import {
@@ -11,6 +12,18 @@ import {
 } from './shared';
 import { shops } from './shops';
 import { addresses, users } from './users';
+
+/**
+ * Delivery destination as it stood at placement. Free-form rather than a
+ * foreign key precisely because it must survive the address row being edited
+ * or deleted.
+ */
+export type OrderAddressSnapshot = {
+  label?: string | null;
+  district: string;
+  street: string;
+  phone: string;
+};
 
 /**
  * An order may span shops (PRD §14) — the cart is multi-shop and grouped by
@@ -33,6 +46,23 @@ export const orders = pgTable(
     paymentMethod: paymentMethodEnum('payment_method').notNull(),
     /** Null for pickup orders. */
     addressId: uuid('address_id').references(() => addresses.id, { onDelete: 'set null' }),
+    /**
+     * Where the order was actually going, copied at placement.
+     *
+     * `addressId` is `set null` on delete and a customer may tidy their address
+     * book at any time — including while an accepted order is still out for
+     * delivery. Without this column that deletion erases the destination of a
+     * live order, and the events chain cannot stand in for it because it never
+     * carried an address. Same reasoning as the title and price snapshots on
+     * order_items: history has to keep saying what was true when it happened.
+     */
+    addressSnapshot: jsonb('address_snapshot').$type<OrderAddressSnapshot>(),
+    /**
+     * Client-generated, unique. A double-tapped "place order", or a retry after
+     * a network timeout on a request that actually committed, arrives with the
+     * same key and returns the ORIGINAL order rather than writing a second one.
+     */
+    idempotencyKey: text('idempotency_key'),
     subtotal: integer('subtotal').notNull(),
     discountTotal: integer('discount_total').notNull().default(0),
     deliveryFee: integer('delivery_fee').notNull().default(0),
@@ -54,9 +84,11 @@ export const orders = pgTable(
   },
   (table) => [
     uniqueIndex('orders_reference_key').on(table.reference),
+    uniqueIndex('orders_idempotency_key').on(table.idempotencyKey),
     index('orders_user_idx').on(table.userId),
     index('orders_status_idx').on(table.status),
     index('orders_created_idx').on(table.createdAt),
+    check('orders_totals_non_negative', sql`${table.total} >= 0 and ${table.subtotal} >= 0`),
   ],
 );
 
@@ -86,6 +118,7 @@ export const orderItems = pgTable(
     // A shopkeeper only ever sees their own shop's items (PRD §3.1).
     index('order_items_shop_idx').on(table.shopId),
     index('order_items_product_idx').on(table.productId),
+    check('order_items_quantity_positive', sql`${table.quantity} > 0`),
   ],
 );
 

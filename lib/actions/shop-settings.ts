@@ -7,9 +7,10 @@ import { z } from 'zod';
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { pickLocale } from '../db/localized';
-import { shopMembers, users } from '../db/schema';
+import { shopMembers, shops, users } from '../db/schema';
 import { shopNameFor } from '../db/queries/shop-orders';
 import { notify } from '../notify';
+import { MAX_PAUSE_DAYS } from '../pause';
 
 /**
  * Shop settings: staff and language (PRD §6.8).
@@ -153,6 +154,114 @@ export async function removeStaff(userId: string): Promise<SettingsResult> {
   if (!removed) return { ok: false, error: 'not_found' };
 
   revalidatePath('/dashboard/settings');
+  return { ok: true };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vacation mode                                                              */
+
+/**
+ * Ownership in the WHERE clause, the same idiom as every other shop write
+ * (lib/actions/shop-products.ts): the shop id comes from the session and is part
+ * of the predicate that finds the row, so a forged id cannot reach another
+ * tenant's shop. Distinct from `requireOwner` above, which additionally reads
+ * the membership row — staff answer the phone and lock up, and closing for the
+ * week is within that.
+ */
+async function requireShopContext() {
+  const user = await currentUser();
+  if (!user?.id || !user.shopId || user.role !== 'shopkeeper') return null;
+  return { userId: user.id, shopId: user.shopId };
+}
+
+/**
+ * The date arrives as `YYYY-MM-DD` from an `<input type="date">` and means "I am
+ * back ON that day", so the pause runs to the END of the day BEFORE it — in the
+ * MALL's timezone, not the server's. Kabul is +04:30, and a half-hour offset is
+ * exactly what a hand-rolled hours calculation gets wrong (lib/opening.ts).
+ */
+function endOfMallDay(date: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  const parsed = new Date(`${date}T23:59:59.999+04:30`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+const pauseSchema = z.object({
+  /** Last day the shop stays shut, inclusive. */
+  until: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, { message: 'bad_pause_date' }),
+  /** Optional line customers read on the shop page, in the shop's own words. */
+  noteFa: z.string().trim().max(200).optional().nullable(),
+  noteEn: z.string().trim().max(200).optional().nullable(),
+});
+
+export type PauseShopInput = z.input<typeof pauseSchema>;
+
+/**
+ * Closes the shop until a date (Prompt: vacation mode).
+ *
+ * A PAST DATE IS REFUSED rather than accepted-and-ignored. Storing one would
+ * write a pause that is already over, the banner would appear and vanish on the
+ * next render, and the shopkeeper would be left believing their shop was shut
+ * while it kept taking orders — the single worst outcome this feature can
+ * produce, and the reason it is a validation error with its own message.
+ */
+export async function pauseShop(input: PauseShopInput): Promise<SettingsResult<{ until: string }>> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = pauseSchema.safeParse(input);
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message;
+    return { ok: false, error: message === 'bad_pause_date' ? message : 'invalid_input' };
+  }
+
+  const until = endOfMallDay(parsed.data.until);
+  if (!until) return { ok: false, error: 'bad_pause_date' };
+
+  const now = new Date();
+  if (until.getTime() <= now.getTime()) return { ok: false, error: 'pause_date_past' };
+  if (until.getTime() - now.getTime() > MAX_PAUSE_DAYS * 86_400_000) {
+    return { ok: false, error: 'pause_too_far' };
+  }
+
+  const noteFa = parsed.data.noteFa?.trim();
+  const [updated] = await db
+    .update(shops)
+    .set({
+      pausedUntil: until,
+      // No Dari line means no note at all: an en-only note would render as an
+      // empty string to the readers who are the default audience.
+      pauseNote: noteFa ? { fa: noteFa, en: parsed.data.noteEn?.trim() || null, ps: null } : null,
+    })
+    .where(eq(shops.id, context.shopId))
+    .returning({ slug: shops.slug });
+
+  if (!updated) return { ok: false, error: 'not_found' };
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/settings');
+  revalidatePath(`/shops/${updated.slug}`);
+  revalidatePath('/shops');
+  return { ok: true, data: { until: until.toISOString() } };
+}
+
+/** Back to trading, now — and it also clears the note, which was about the gap. */
+export async function resumeShop(): Promise<SettingsResult> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const [updated] = await db
+    .update(shops)
+    .set({ pausedUntil: null, pauseNote: null })
+    .where(eq(shops.id, context.shopId))
+    .returning({ slug: shops.slug });
+
+  if (!updated) return { ok: false, error: 'not_found' };
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/settings');
+  revalidatePath(`/shops/${updated.slug}`);
+  revalidatePath('/shops');
   return { ok: true };
 }
 

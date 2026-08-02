@@ -151,20 +151,54 @@ export async function rejectShop(input: z.input<typeof rejectSchema>): Promise<A
   return { ok: true };
 }
 
-const statusSchema = z.object({
-  shopId: z.string().uuid(),
-  status: z.enum(['suspended', 'closed', 'approved']),
-});
+const statusSchema = z
+  .object({
+    shopId: z.string().uuid(),
+    status: z.enum(['suspended', 'closed', 'approved']),
+    /*
+     * REQUIRED to suspend or close, optional to reinstate.
+     *
+     * Approve and reject have always demanded one; suspension and closure —
+     * the two decisions that take a trading tenant off the storefront and cost
+     * them money from that second — took none at all, and the audit line read
+     * "approved → suspended" with nothing after it. Ten characters is the same
+     * floor as a rejection, and the same sentence reaches the shopkeeper.
+     *
+     * Reinstating needs no defence, so it does not ask for one.
+     */
+    reason: z.string().trim().max(500).optional().nullable(),
+  })
+  .refine(
+    (value) => value.status === 'approved' || (value.reason?.trim().length ?? 0) >= 10,
+    { message: 'reason_too_short', path: ['reason'] },
+  );
 
-/** Suspend, close, or reinstate any shop (PRD §7.1). */
-export async function setShopStatus(
-  input: z.input<typeof statusSchema>,
-): Promise<AdminActionResult> {
+export type SetShopStatusInput = z.input<typeof statusSchema>;
+
+/**
+ * Suspend, close, or reinstate any shop (PRD §7.1).
+ *
+ * WHERE THE REASON IS STORED, and why not on the shop row: `shops.rejectionReason`
+ * belongs to the REGISTRATION conversation. It is what the applicant is shown
+ * while their application waits, `approveShop` clears it, and the onboarding
+ * screen renders it as "amend this and resubmit". A suspension note written
+ * into that column would appear to a trading tenant as a rejected application
+ * and would be wiped the next time anyone reinstated them — so the reason lives
+ * in the AUDIT ROW, which is append-only, carries the actor and the timestamp,
+ * and keeps every suspension in the shop's history rather than only the last.
+ * The review screen reads it back through `latestShopStatusReason()`.
+ */
+export async function setShopStatus(input: SetShopStatusInput): Promise<AdminActionResult> {
   const context = await requireAdminContext();
   if (!context) return { ok: false, error: 'forbidden' };
 
   const parsed = statusSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+  if (!parsed.success) {
+    const message = parsed.error.issues[0]?.message;
+    return { ok: false, error: message === 'reason_too_short' ? message : 'invalid_input' };
+  }
+
+  const reason = parsed.data.reason?.trim() || null;
 
   // `from` is read before the write so the audit line can say what changed:
   // "approved → suspended" is the fact, "suspended" alone is half of it.
@@ -178,9 +212,32 @@ export async function setShopStatus(
     .update(shops)
     .set({ status: parsed.data.status })
     .where(eq(shops.id, parsed.data.shopId))
-    .returning({ slug: shops.slug });
+    .returning({ slug: shops.slug, name: shops.name });
 
   if (!updated) return { ok: false, error: 'not_found' };
+
+  // The tenant hears it from the mall, not from a customer who found the page
+  // missing. Owners only: closing a shop is a conversation with whoever holds
+  // the lease.
+  if (parsed.data.status !== 'approved') {
+    const members = await shopOwnerAndStaff(parsed.data.shopId);
+    await notifyMany(
+      members
+        .filter((member) => member.role === 'owner')
+        .map((member) => ({
+          eventKey: (parsed.data.status === 'closed' ? 'shop.closed' : 'shop.suspended') as
+            | 'shop.closed'
+            | 'shop.suspended',
+          recipientUserId: member.id,
+          recipientRole: 'shopkeeper' as const,
+          locale: member.locale,
+          values: {
+            shopName: pickLocale(updated.name, member.locale),
+            reason: reason ?? '',
+          },
+        })),
+    );
+  }
 
   await recordAdminAction({
     ...context,
@@ -188,6 +245,7 @@ export async function setShopStatus(
     targetType: 'shop',
     targetId: parsed.data.shopId,
     targetLabel: before?.name.fa ?? updated.slug,
+    reason,
     detail: { from: before?.status ?? null, to: parsed.data.status },
   });
 

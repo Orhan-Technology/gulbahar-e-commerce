@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ScrollText } from 'lucide-react';
 
+import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { EmptyState } from '@/components/custom/empty-state';
 import { requireAdmin } from '@/lib/auth/guards';
@@ -39,9 +40,11 @@ const TONE: Record<string, string> = {
  * demand a written reason from the admin, and this is where that text stops
  * being a one-time notification and becomes something anyone can go back to.
  *
- * READ-ONLY, with no export and no delete. A log the people it logs can edit is
- * decoration, and there is no code path anywhere in this build that updates or
- * removes a row from it.
+ * READ-ONLY AND APPEND-ONLY: a log the people it logs can edit is decoration,
+ * and there is no code path anywhere in this build that updates or removes a
+ * row from it. It IS downloadable, which is not a contradiction — a record
+ * nobody can take out of the building is a record only its owner can produce,
+ * and reading is exactly the right permission to have on it.
  */
 export default async function AdminAuditPage({
   params,
@@ -82,6 +85,9 @@ export default async function AdminAuditPage({
           days: formatNumber(ACTIVITY_DAYS, locale),
           actors: formatNumber(activity.actors, locale),
         })}
+        actions={
+          total > 0 ? <ExportCsvLink report="audit" params={{ type: query.type }} /> : undefined
+        }
       />
 
       {total > 0 && (

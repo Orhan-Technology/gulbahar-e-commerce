@@ -135,19 +135,24 @@ export async function ProductGrid({
 export function ProductGridSkeleton({
   count = 8,
   layout = 'grid',
+  /** Must carry the same column override the real grid gets, or the row count
+      changes the moment the cards arrive and the page jumps. */
+  className,
 }: {
   count?: number;
   layout?: 'grid' | 'row';
+  className?: string;
 }) {
   return (
     <div
-      className={
+      className={cn(
         layout === 'row'
           ? // Matches the rail's own card widths exactly, so nothing shifts
             // sideways when the real cards arrive.
             '-mx-4 flex scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [&>*]:w-[44%] [&>*]:shrink-0 sm:[&>*]:w-[30%] lg:[&>*]:w-[18.5%]'
-          : 'grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4'
-      }
+          : 'grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4',
+        className,
+      )}
     >
       {Array.from({ length: count }, (_, index) => (
         <div key={index}>

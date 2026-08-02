@@ -84,7 +84,12 @@
         "requires_auth": "Please sign in",
         "hidden": "This item is hidden",
         "already_answered": "Already answered"
-      }
+      },
+      "toDeliver": "Deliver order {reference}",
+      "toCollect": "Waiting for the customer — {reference}",
+      "toCollectSub": "Held until {date}",
+      "handedOver": "Handed over",
+      "handedOverToast": "Order {reference} handed over"
     },
     "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
@@ -452,6 +457,41 @@
       "moreFromShop": "More from this shop",
       "similar": "Similar products",
       "recentlyViewed": "Recently viewed"
+    },
+    "reviewFilter": {
+      "barLabel": "Show {star}-star reviews ({count})",
+      "showing": "{star}-star reviews — {count}",
+      "clear": "Clear filter",
+      "emptyTitle": "No {star}-star reviews yet",
+      "emptyBody": "Nobody has given this product that rating. See all reviews instead."
+    },
+    "reviewSort": {
+      "label": "Sort reviews",
+      "recent": "Most recent",
+      "helpful": "Most helpful",
+      "highest": "Highest rated",
+      "lowest": "Lowest rated"
+    },
+    "helpful": {
+      "prompt": "Helpful",
+      "voted": "Helpful",
+      "countOnly": "{count} found this helpful",
+      "signInToVote": "Sign in to mark reviews helpful",
+      "failed": "Your vote was not saved. Try again."
+    },
+    "share": {
+      "label": "Share",
+      "copied": "Product link copied — paste it into WhatsApp or anywhere else.",
+      "copiedShort": "Copied",
+      "failed": "Could not copy the link. Take it from the address bar."
+    },
+    "paused": {
+      "title": "This shop is not taking orders until {date}",
+      "body": "The shopkeeper is away. The product stays where it is and you can order it again after that date — until then you can save it.",
+      "button": "Not taking orders"
+    },
+    "errors": {
+      "shop_paused": "This shop is not taking orders right now."
     }
   },
   "shop": {
@@ -469,8 +509,10 @@
       "open": "Open now",
       "closingSoon": "Closing in {minutes} min",
       "closed": "Closed",
-      "opensAt": "· opens {time}"
-    }
+      "opensAt": "· opens {time}",
+      "opensOnDay": "· opens {day} at {time}"
+    },
+    "pausedBadge": "No orders until {date}"
   },
   "cart": {
     "increaseQuantity": "Increase quantity",
@@ -495,7 +537,19 @@
     "continueShopping": "Continue shopping",
     "remove": "Remove",
     "removed": "Removed from cart",
-    "undo": "Undo"
+    "undo": "Undo",
+    "freeDeliveryReached": "Delivery on this order is free.",
+    "lineLowStock": "Only {count} left",
+    "clampedToStock": "Only {count} were available, so the quantity was set to that.",
+    "saveForLater": "Save for later",
+    "savedForLater": "Moved to your wishlist",
+    "saveErrors": {
+      "requires_auth": "Sign in to save this item",
+      "invalid_input": "That item could not be saved"
+    },
+    "errors": {
+      "shop_paused": "This shop is not taking orders right now."
+    }
   },
   "promotions": {
     "sponsored": "Sponsored"
@@ -507,7 +561,9 @@
       "ready": "Ready",
       "fulfilled": "Fulfilled",
       "rejected": "Rejected",
-      "rejectedHint": "The shop rejected this order and it was cancelled."
+      "rejectedHint": "The shop could not take this order, and the items went back on the shelf.",
+      "cancelled": "Cancelled",
+      "cancelledHint": "This order was cancelled before it changed hands, and the items went back on the shelf."
     }
   },
   "notifications": {
@@ -557,6 +613,22 @@
       "holdExpired": {
         "title": "Reservation released",
         "body": "Your reservation for order {reference} at {shopName} was not collected in time and has been released. You are welcome to order again."
+      },
+      "cancelled": {
+        "title": "Order cancelled",
+        "body": "Order {reference} has been cancelled. Reason: {reason}"
+      },
+      "cancelledForShop": {
+        "title": "An order was cancelled",
+        "body": "Order {reference} at {shopName} was cancelled. Reason: {reason} — its items are back in your stock."
+      },
+      "cancelledByMall": {
+        "title": "Your order was cancelled",
+        "body": "Order {reference}, worth {total}, was ended by mall management. Reason: {reason}"
+      },
+      "cancelledByMallForShop": {
+        "title": "An order was cancelled by the mall",
+        "body": "Order {reference} was ended by mall management. Reason: {reason} — its items have gone back into your stock."
       }
     },
     "shop": {
@@ -579,6 +651,30 @@
       "nudged": {
         "title": "A note from mall management",
         "body": "Gulbahar Center management has noticed something customers see on your shop: {issue} Please take a look when you can."
+      },
+      "applicationReceived": {
+        "title": "We have your shop application",
+        "body": "Your application to open “{shopName}” at Gulbahar has been received. We will message this number once mall management has reviewed it."
+      },
+      "resubmitted": {
+        "title": "We have your updated application",
+        "body": "The updated application for “{shopName}” has been received and is back in the queue for mall management to review."
+      },
+      "suspended": {
+        "title": "Your shop has been suspended",
+        "body": "{shopName} has been taken off the storefront until further notice. Reason: {reason}"
+      },
+      "closed": {
+        "title": "Your shop has been closed",
+        "body": "{shopName} has been taken off the storefront. Reason: {reason} — your past order history is kept."
+      },
+      "productUnpublished": {
+        "title": "A product was removed from the storefront",
+        "body": "“{productTitle}” was taken off the storefront by mall management. Reason: {reason} — you can publish it again once it is amended."
+      },
+      "nudgedIssues": {
+        "title": "A note from mall management",
+        "body": "Gulbahar Center management has noticed a few things customers see on your shop: {issue} Please take a look when you can."
       }
     },
     "campaign": {
@@ -607,6 +703,14 @@
       "responded": {
         "title": "Shop replied",
         "body": "{shopName} replied to your review of \"{productTitle}\"."
+      },
+      "flagged": {
+        "title": "Review reported by {shopName}",
+        "body": "{shopName} reported a review on “{productTitle}”. Reason: {reason}. {note}"
+      },
+      "removed": {
+        "title": "Your review was removed",
+        "body": "The review you wrote for “{productTitle}” was removed from the storefront after moderation."
       }
     },
     "user": {
@@ -670,7 +774,8 @@
       "expired": "That code has expired",
       "too_many_attempts": "Too many attempts — request a new code",
       "mismatch": "That code is incorrect",
-      "invalid_credentials": "That email or password is incorrect"
+      "invalid_credentials": "That email or password is incorrect",
+      "too_many_requests": "Too many code requests. Wait a few minutes and try again."
     },
     "signInToSave": "Sign in to save items",
     "signIn": "Sign in",
@@ -752,7 +857,8 @@
     "biggestFirst": "Biggest discounts first",
     "emptyTitle": "No offers right now",
     "emptyBody": "New offers are added regularly.",
-    "browseAll": "Browse all products"
+    "browseAll": "Browse all products",
+    "endingSoonest": "Ends first"
   },
   "footer": {
     "tagline": "Gulbahar Center's marketplace online — real shops, delivered in Kabul.",
@@ -815,11 +921,15 @@
     "under": "Under {amount}",
     "over": "Over {amount}",
     "ratingChip": "{rating} stars and up",
-    "removeFilter": "Remove this filter"
+    "removeFilter": "Remove this filter",
+    "brand": "Brand",
+    "showAllBrands": "Show all {count} brands",
+    "showLess": "Show less"
   },
   "categories": {
     "title": "Categories",
-    "productCount": "{count} products"
+    "productCount": "{count} products",
+    "comingSoon": "Coming soon"
   },
   "shops": {
     "title": "Shops at Gulbahar Center",
@@ -860,7 +970,13 @@
     "clearRecent": "Clear",
     "removeRecent": "Remove “{term}” from recent searches",
     "trendingHeading": "Trending searches",
-    "refreshTrending": "Refresh"
+    "refreshTrending": "Refresh",
+    "categoryLabel": "Category",
+    "nearMatchesFor": "No exact match for \"{term}\" — showing the closest results.",
+    "didYouMean": "Did you mean <link>{term}</link>?",
+    "tryCategories": "Try these categories",
+    "tryShops": "Try these shops",
+    "categoryHasCount": "{count} products"
   },
   "checkout": {
     "title": "Checkout",
@@ -905,7 +1021,9 @@
       "address_required": "Choose a delivery address",
       "invalid_address": "That address is not valid",
       "invalid_input": "Some details are missing",
-      "invalid_phone": "That phone number is not valid"
+      "invalid_phone": "That phone number is not valid",
+      "insufficient_stock": "Some items are no longer available in that quantity",
+      "shop_paused": "{shops} is not taking orders right now. Remove that shop's items from your basket and try again."
     },
     "hesabpaySheet": {
       "title": "HesabPay",
@@ -918,7 +1036,18 @@
       "approved": "Payment approved"
     },
     "hesabpay": "HesabPay",
-    "pickupHold": "The shop sets your items aside and holds them for {hours} hours. When they are ready you get a short collection code — show it at the counter and there is no delivery fee."
+    "pickupHold": "The shop sets your items aside and holds them for {hours} hours. When they are ready you get a short collection code — show it at the counter and there is no delivery fee.",
+    "itemsHeading": "Your items",
+    "itemCount": "{count} items",
+    "parts": "{count} separate parcels",
+    "lineQuantity": "Qty {count}",
+    "freeDeliveryGap": "Add {amount} more and delivery is free (currently {fee}).",
+    "freeDeliveryReached": "Delivery on this order is free.",
+    "multiShopDelivery": "This basket comes from {count} shops, so it arrives in {count} separate deliveries.",
+    "multiShopPickup": "This basket comes from {count} shops — collect each parcel from its own shop.",
+    "onlyLeft": "only {count} available",
+    "soldOut": "sold out",
+    "editCart": "Edit cart"
   },
   "confirmation": {
     "title": "Your order is placed!",
@@ -971,7 +1100,8 @@
       "all": "All",
       "active": "In progress",
       "fulfilled": "Delivered",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
     },
     "shopCount": "{n, plural, one {# shop} other {{count} shops}}",
     "emptyFilteredTitle": "No orders in this state",
@@ -987,6 +1117,27 @@
       "hoursLabel": "Mall hours",
       "where": "Floor {floor} · Unit {unit}",
       "expires": "Held until {when}. After that the shop may put the items back on the shelf."
+    },
+    "cancel": {
+      "action": "Cancel order",
+      "title": "Cancel this order?",
+      "body": "The order will be cancelled and the shop told straight away. This cannot be undone — to buy again you would build the basket from scratch.",
+      "keep": "Keep the order",
+      "confirm": "Yes, cancel it",
+      "cancelling": "Cancelling…",
+      "done": "Order cancelled",
+      "tooLateHint": "The shop has accepted this order, so it can no longer be cancelled here. Call the shop directly if you still need to stop it.",
+      "errors": {
+        "requires_auth": "Sign in to cancel an order",
+        "invalid_input": "Something was not right with that request",
+        "not_found": "That order was not found",
+        "too_late": "The shop has just accepted this order — call them to stop it.",
+        "forbidden": "You are not allowed to do that"
+      }
+    },
+    "rateItems": {
+      "title": "How were the things you bought?",
+      "body": "The next buyer reads your review on that product's own page. One review per item."
     }
   },
   "wishlist": {
@@ -1051,7 +1202,9 @@
       "reauth_required": "Your current password or a code to your phone is required to change it",
       "not_found": "Not found",
       "unknown_product": "That product no longer exists",
-      "not_purchased": "You can review an item once you have bought it"
+      "not_purchased": "You can review an item once you have bought it",
+      "address_in_use": "A live order is on its way to this address — you can delete it once that order is done.",
+      "too_many_requests": "Too many code requests. Wait a few minutes and try again."
     },
     "myShopTitle": "My shop",
     "myShopHint": "Manage your products, orders and promotions",
@@ -1131,6 +1284,10 @@
       "support": {
         "title": "Support",
         "body": "Contact Gulbahar Center and get help with an order"
+      },
+      "following": {
+        "title": "Shops you follow",
+        "body": "New products and live offers from the shops you follow"
       }
     },
     "panel": {
@@ -1184,7 +1341,13 @@
     },
     "following": {
       "title": "Shops you follow",
-      "browse": "Browse shops"
+      "browse": "Browse shops",
+      "seeAll": "See all",
+      "emptyTitle": "You are not following any shops yet",
+      "emptyBody": "Follow the shops you like and their new products and offers collect here.",
+      "newSince": "{count} new",
+      "noProducts": "This shop has no live products right now.",
+      "visitShop": "See everything from {shop}"
     }
   },
   "dashboardNav": {
@@ -1211,7 +1374,13 @@
       "closed": "Closed"
     },
     "pendingOrders": "{n, plural, one {# order awaiting acceptance} other {{count} orders awaiting acceptance}}",
-    "questions": "Questions"
+    "questions": "Questions",
+    "help": {
+      "heading": "Help and mall management",
+      "body": "If something goes wrong with your shop or an order, call the Gulbahar management office.",
+      "callOffice": "Call the management office",
+      "address": "Management office: {address}"
+    }
   },
   "shopOrders": {
     "title": "Orders",
@@ -1232,14 +1401,16 @@
       "accepted": "Accepted",
       "ready": "Ready",
       "fulfilled": "Fulfilled",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
     },
     "status": {
       "placed": "Awaiting acceptance",
       "accepted": "Accepted",
       "ready": "Ready",
       "fulfilled": "Fulfilled",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
     },
     "empty": {
       "actionable": "Nothing left to do",
@@ -1247,7 +1418,8 @@
       "accepted": "No accepted orders",
       "ready": "No orders ready",
       "fulfilled": "No fulfilled orders yet",
-      "rejected": "No rejected orders"
+      "rejected": "No rejected orders",
+      "cancelled": "No cancelled orders"
     },
     "fulfillment": {
       "delivery": "Delivery",
@@ -1274,7 +1446,8 @@
         "accepted": "Order accepted and the customer notified",
         "ready": "Order marked ready",
         "fulfilled": "Order marked fulfilled",
-        "rejected": "Order rejected and the reason sent to the customer"
+        "rejected": "Order rejected and the reason sent to the customer",
+        "cancelled": "Order cancelled and the customer told"
       },
       "errors": {
         "forbidden": "You are not allowed to do that",
@@ -1288,8 +1461,16 @@
         "cannot_fulfil": "Cannot fulfil this",
         "customer_unreachable": "Customer unreachable",
         "price_error": "Price was wrong",
-        "hold_expired": "Reservation not collected"
-      }
+        "hold_expired": "Reservation not collected",
+        "customer_request": "At the customer's request",
+        "customer_cancelled": "The customer cancelled the order"
+      },
+      "cancelOrder": "Cancel order",
+      "cancelTitle": "Cancel this order",
+      "cancelBody": "You already accepted this order. Cancelling puts the items back in stock and tells the customer straight away.",
+      "cancelReasonLabel": "Reason for cancelling",
+      "confirmCancel": "Cancel order",
+      "cancelling": "Cancelling…"
     },
     "filteredBy": "Filtered:",
     "clearFilter": "Clear filter",
@@ -1303,7 +1484,9 @@
       "cannot_fulfil": "Cannot fulfil this",
       "customer_unreachable": "Customer unreachable",
       "price_error": "Price was wrong",
-      "hold_expired": "Reservation not collected"
+      "hold_expired": "Reservation not collected",
+      "customer_request": "At the customer's request",
+      "customer_cancelled": "The customer cancelled the order"
     },
     "searchPlaceholder": "Search by order reference, customer phone or product…",
     "slip": {
@@ -1402,12 +1585,14 @@
       "draft": "Draft",
       "unpublished": "Unpublished",
       "outOfStock": "Out of stock",
-      "lowStock": "Low stock"
+      "lowStock": "Low stock",
+      "archived": "Archive"
     },
     "status": {
       "draft": "Draft",
       "published": "Published",
-      "unpublished": "Unpublished"
+      "unpublished": "Unpublished",
+      "archived": "Archived"
     },
     "errors": {
       "forbidden": "You are not allowed to do that",
@@ -1468,7 +1653,8 @@
       "statusNow": {
         "draft": "Currently: draft",
         "published": "Currently: published",
-        "unpublished": "Currently: unpublished"
+        "unpublished": "Currently: unpublished",
+        "archived": "Status: archived"
       },
       "errors": {
         "forbidden": "You are not allowed to do that",
@@ -1505,7 +1691,17 @@
       "addFeature": "Add a feature",
       "moveUp": "Move up",
       "moveDown": "Move down",
-      "removeRow": "Remove row"
+      "removeRow": "Remove row",
+      "archivedHeading": "This product is archived",
+      "archivedBody": "While it is archived it cannot be edited and does not appear in your product list. Restore it first to carry on.",
+      "unpublishedHeading": "Mall management has taken this product off the storefront",
+      "unpublishedHint": "Once you have fixed it, you can publish it again yourself.",
+      "fieldErrors": {
+        "fa_required": "A Dari product name is required",
+        "price_positive": "Enter a price — it has to be more than zero",
+        "discount_below_price": "The discounted price has to be lower than the normal price",
+        "invalid_input": "That value is not valid"
+      }
     },
     "importWizard": {
       "step1": "1 — File",
@@ -1555,7 +1751,29 @@
       },
       "ruleSpecs": "Spec columns are optional: spec_<key>_fa and spec_<key>_en, for example spec_storage_fa."
     },
-    "emptyImport": "or import your whole list from a CSV"
+    "emptyImport": "or import your whole list from a CSV",
+    "unpublishReasonLabel": "Mall management's reason:",
+    "archive": {
+      "action": "Delete",
+      "confirmTitle": "Delete this product?",
+      "confirmBody": "“{title}” will be removed from your product list and from every shopping page.",
+      "reversibleNote": "The product is hidden, not erased — past orders have to keep naming what was sold. You can bring it back from the archive at any time.",
+      "cancel": "Cancel",
+      "confirm": "Yes, delete it",
+      "archiving": "Deleting…",
+      "archived": "Product archived",
+      "restore": "Restore",
+      "restoring": "Restoring…",
+      "restored": "Product restored — it is now unpublished",
+      "emptyTitle": "The archive is empty",
+      "emptyBody": "You have not deleted any products. Anything you delete stays here and can be brought back.",
+      "backToCatalogue": "Back to products",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "not_found": "That product was not found",
+        "invalid_input": "That request was not valid"
+      }
+    }
   },
   "shopPromotions": {
     "title": "Promotions",
@@ -1591,6 +1809,17 @@
         "products_required": "Choose at least one product",
         "products_not_yours": "One of the chosen products is not from your shop",
         "end_after_start": "The end date must come after the start date"
+      },
+      "performance": {
+        "heading": "Sales while this offer ran",
+        "duringUnits": "Units sold",
+        "duringRevenue": "Revenue",
+        "beforeUnits": "Before the offer",
+        "beforeRevenue": "Revenue before",
+        "window": "vs the same {n, plural, one {day} other {{days} days}} before it started",
+        "caveat": "Fulfilled orders only. This is what sold during the window, not a measure of what the discount caused.",
+        "noData": "No fulfilled orders in either period yet, so there is nothing to compare.",
+        "notStarted": "This offer has not started — its sales will appear here once it does."
       }
     },
     "offerForm": {
@@ -1732,7 +1961,23 @@
       "not_found": "That review was not found",
       "too_short": "The reply must be at least three characters",
       "already_answered": "This review has already been answered",
-      "already_flagged": "This review has already been reported"
+      "already_flagged": "This review has already been reported",
+      "reason_required": "Choose a reason first"
+    },
+    "flagTitle": "Report this review to mall management",
+    "flagBody": "The review stays visible and its rating still counts. Mall management will look at it and decide.",
+    "flagReasonLabel": "Reason for reporting",
+    "flagReasonPlaceholder": "Choose a reason",
+    "flagNoteLabel": "Anything else (optional)",
+    "flagNotePlaceholder": "If there is something management should know, write it here",
+    "flagSubmit": "Send report",
+    "flagReasons": {
+      "offensive": "Abusive or offensive language",
+      "spam": "Advertising or off-topic",
+      "not_a_customer": "This person did not buy from us",
+      "wrong_product": "It is about a different product",
+      "personal_info": "It contains a phone number or personal details",
+      "other": "Another reason"
     }
   },
   "shopProfile": {
@@ -1782,6 +2027,35 @@
       "no_file": "No image selected",
       "too_large": "That image is over 8MB",
       "unsupported_format": "That image format is not supported"
+    },
+    "fieldErrors": {
+      "fa_required": "A Dari shop name is required",
+      "bad_phone": "The mobile number must start with 07 and be ten digits",
+      "bad_hours": "The opening hours are incomplete — set both the opening and closing time",
+      "invalid_input": "That value is not valid"
+    },
+    "hoursEditor": {
+      "usualLabel": "Usual hours",
+      "usualHint": "These hours apply every day except the ones you set separately below.",
+      "opensAt": "Opens at",
+      "closesAt": "Closes at",
+      "exceptionsLabel": "Days that differ",
+      "exceptionsHint": "Friday, or any other day with different hours or when the shop is closed.",
+      "modeLabel": "{day} hours",
+      "modeUsual": "Same as usual",
+      "modeCustom": "Different hours",
+      "modeClosed": "Closed",
+      "opensAtDay": "{day} opening time",
+      "closesAtDay": "{day} closing time",
+      "days": {
+        "sat": "Saturday",
+        "sun": "Sunday",
+        "mon": "Monday",
+        "tue": "Tuesday",
+        "wed": "Wednesday",
+        "thu": "Thursday",
+        "fri": "Friday"
+      }
     }
   },
   "shopReports": {
@@ -1936,6 +2210,37 @@
         "requires_auth": "Sign in first",
         "invalid_input": "That input is not valid"
       }
+    },
+    "vacation": {
+      "heading": "Close the shop temporarily",
+      "hint": "Travelling, ill, or closed for Eid? Shut the shop until a date you choose. Your products and shop page stay exactly as they are — only ordering stops.",
+      "untilLabel": "Day you are back",
+      "noteLabel": "Note for customers (optional)",
+      "noteEnLabel": "The same note in English (optional)",
+      "notePlaceholder": "e.g. Away in Dubai buying stock",
+      "pause": "Close the shop",
+      "update": "Change the date",
+      "saving": "Saving…",
+      "resumeNow": "Open now",
+      "resuming": "Opening…",
+      "resumed": "Your shop is open again",
+      "paused": "Your shop is closed until the date you set",
+      "currentlyPaused": "The shop is closed until {date}.",
+      "customerNote": "Customers see on your shop page when you are back, and the buy button is switched off until then.",
+      "change": "Change",
+      "confirmOpen": "Yes, I'm open",
+      "bannerPaused": "Your shop is closed — until {date}",
+      "bannerPausedBody": "Customers can see your page but cannot place orders.",
+      "bannerOverdue": "Your closure ended on {date}",
+      "bannerOverdueBody": "The shop is taking orders again. Confirm to clear this message.",
+      "errors": {
+        "forbidden": "You are not allowed to do that",
+        "invalid_input": "That request was not valid",
+        "bad_pause_date": "Choose the day you are back",
+        "pause_date_past": "The day you are back has to be in the future",
+        "pause_too_far": "A shop cannot be closed for more than six months",
+        "not_found": "Shop not found"
+      }
     }
   },
   "shopRegistration": {
@@ -1974,6 +2279,12 @@
       "admin_cannot_register": "A management account cannot register a shop",
       "staff_cannot_register": "Only the shop owner can amend the application",
       "already_approved": "Your shop is already approved — edit it from the shop profile page"
+    },
+    "fieldErrors": {
+      "name_required": "Enter the shop name (at least two characters)",
+      "bad_phone": "The mobile number must start with 07 and be ten digits",
+      "bad_hours": "The opening hours are incomplete — set both the opening and closing time",
+      "invalid_input": "That value is not valid"
     }
   },
   "adminNav": {
@@ -2134,7 +2445,12 @@
         "not_found": "That shop was not found",
         "not_approvable": "This shop is not in a state that can be approved",
         "reason_too_short": "The reason must be at least ten characters"
-      }
+      },
+      "suspendReasonLabel": "Reason for suspending",
+      "closeReasonLabel": "Reason for closing",
+      "suspendReasonPlaceholder": "e.g. Repeated complaints that goods do not match their photos.",
+      "closeReasonPlaceholder": "e.g. The unit's lease ended and was not renewed.",
+      "statusReasonNote": "This text is sent to the shop owner exactly as written, and stays in the decision log."
     },
     "create": {
       "title": "Create a shop for a tenant",
@@ -2198,8 +2514,17 @@
         "invalid_input": "Something was not right. Try again.",
         "not_found": "This shop is no longer available.",
         "no_owner": "This shop has no owner to notify."
-      }
-    }
+      },
+      "nudgeAll": "Send all issues",
+      "pausedUntil": "On holiday until {date}"
+    },
+    "searchPlaceholder": "Search by shop name",
+    "emptySearchTitle": "Nothing found",
+    "emptySearchBody": "No shop matched “{term}”. Try another name.",
+    "pausedUntil": "On holiday until {date}",
+    "suspensionReason": "Reason for suspension",
+    "closureReason": "Reason for closure",
+    "decidedBy": "{actor} · {date}"
   },
   "adminCategories": {
     "title": "Categories",
@@ -2270,7 +2595,8 @@
       "all": "All",
       "published": "Published",
       "draft": "Draft",
-      "unpublished": "Unpublished"
+      "unpublished": "Unpublished",
+      "archived": "Deleted by shop"
     },
     "allShops": "All shops",
     "emptyTitle": "No products match this filter",
@@ -2287,8 +2613,15 @@
     "errors": {
       "forbidden": "You are not allowed to do that",
       "invalid_input": "That input is not valid",
-      "not_published": "That product is not published"
-    }
+      "not_published": "That product is not published",
+      "reason_too_short": "The reason must be at least ten characters."
+    },
+    "searchPlaceholder": "Search by product name",
+    "emptySearchTitle": "Nothing found",
+    "emptySearchBody": "No product matched “{term}”. Try another name.",
+    "reasonLabel": "Reason for removing",
+    "reasonPlaceholder": "e.g. The product photo does not match what the description says.",
+    "reasonNote": "This text is sent to the shop and appears beside the product in the shop's own list."
   },
   "adminReviews": {
     "title": "Review moderation",
@@ -2311,6 +2644,18 @@
       "forbidden": "You are not allowed to do that",
       "invalid_input": "That input is not valid",
       "not_found": "That review was not found"
+    },
+    "reportedFor": "Reported for: {reason}",
+    "reportedBy": "Reported by {shop} · {date}",
+    "authorRecord": "This account has {visible} visible reviews, and {removed} of theirs have been removed.",
+    "noReasonRecorded": "no reason recorded for this review",
+    "reportReasons": {
+      "offensive": "Offensive language",
+      "spam": "Spam or repeated text",
+      "not_a_customer": "Author never bought from this shop",
+      "wrong_product": "About a different product",
+      "personal_info": "Reveals personal information",
+      "other": "Other reason"
     }
   },
   "adminPromotions": {
@@ -2488,7 +2833,9 @@
     "shopCount": "{count} shops",
     "reachSummary": "{impressions} impressions · {clicks} clicks · {ctr}",
     "guardrailLabel": "Guardrail",
-    "guardrailBody": "A paid placement never changes organic ranking — a shop can buy the top spot, not a better score. Every paid result carries a Sponsored marker."
+    "guardrailBody": "A paid placement never changes organic ranking — a shop can buy the top spot, not a better score. Every paid result carries a Sponsored marker.",
+    "monthToDateLabel": "Placement revenue, month to date",
+    "vsSamePeriodLastMonth": "vs the first {days} days of last month"
   },
   "adminReports": {
     "title": "Platform reports",
@@ -2520,14 +2867,16 @@
       "accepted": "Accepted",
       "ready": "Ready",
       "fulfilled": "Fulfilled",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
     },
     "status": {
       "placed": "Awaiting acceptance",
       "accepted": "Accepted",
       "ready": "Ready",
       "fulfilled": "Fulfilled",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
     },
     "fulfillment": {
       "delivery": "Delivery",
@@ -2554,7 +2903,35 @@
     "total": "Total",
     "customerHeading": "Customer",
     "historyHeading": "History",
-    "systemActor": "System"
+    "systemActor": "System",
+    "searchPlaceholder": "Search by order number, customer name or phone",
+    "allShops": "All shops",
+    "emptySearchTitle": "Nothing found",
+    "emptySearchBody": "No order matched “{term}”. Try an order number, a customer name or a phone number.",
+    "cancelledHint": "This order was ended before handover and its items went back to the shop's stock.",
+    "windows": {
+      "all": "All time",
+      "days": "Last {count} days"
+    },
+    "cancel": {
+      "action": "Cancel order",
+      "title": "Cancel order {reference}",
+      "body": "The order ends and its items go back to the shop's stock. Both the customer and every shop on this order receive your reason, each in their own language.",
+      "reasonLabel": "Reason for cancelling",
+      "reasonPlaceholder": "e.g. The shop did not respond for three days and the customer asked for the order to be ended.",
+      "reasonNote": "This text is sent to the customer and the shop exactly as written, and recorded in the decision log.",
+      "keep": "Leave it open",
+      "confirm": "Cancel order",
+      "working": "Working…",
+      "done": "Order {reference} was cancelled",
+      "errors": {
+        "forbidden": "Only mall management can do this.",
+        "invalid_input": "That input was not valid. Try again.",
+        "not_found": "That order was not found.",
+        "not_cancellable": "This order has already ended and can no longer be cancelled.",
+        "reason_too_short": "The reason must be at least ten characters."
+      }
+    }
   },
   "adminUsers": {
     "title": "Users",
@@ -2607,7 +2984,9 @@
     "confirmRole": "Change role",
     "roleChanged": "Account role changed",
     "activityOrders": "{n, plural, one {# order} other {{count} orders}}",
-    "activityReviews": "{n, plural, one {# review} other {{count} reviews}}"
+    "activityReviews": "{n, plural, one {# review} other {{count} reviews}}",
+    "emptySearchTitle": "Nothing found",
+    "emptySearchBody": "No account matched “{term}”. Try another name or phone number."
   },
   "demoLog": {
     "open": "Message log",
@@ -2737,7 +3116,8 @@
       "newest": "Newest",
       "price_asc": "Price: low to high",
       "price_desc": "Price: high to low",
-      "rating": "Best rated"
+      "rating": "Best rated",
+      "discount": "Biggest discount"
     },
     "showResults": "{n, plural, one {Show # product} other {Show {count} products}}",
     "loadMore": "{n, plural, one {# more product} other {{count} more products}}",
@@ -2876,6 +3256,18 @@
       "7d": "7 days",
       "30d": "30 days",
       "90d": "90 days"
+    },
+    "cap": {
+      "body": "Showing the first {count} rows only. Narrow the search or filters to see the rest."
+    },
+    "export": {
+      "csv": "Download CSV",
+      "sectionDaily": "Daily",
+      "sectionStatusMix": "Order statuses",
+      "sectionShops": "Shops",
+      "sectionCategories": "Categories",
+      "sectionLedger": "Sold placements",
+      "sectionInventory": "Slot capacity"
     }
   },
   "shopVerification": {
@@ -3057,6 +3449,17 @@
         "not_purchased": "You can review a shop after it has fulfilled an order for you.",
         "not_found": "This shop is no longer available."
       }
+    },
+    "followExplainer": "Follow this shop and its new products and offers collect in <link>Shops you follow</link>.",
+    "paused": {
+      "title": "This shop is away until {date}",
+      "body": "The shop and everything in it stays exactly where it is; it simply cannot take an order until then. You can still browse, save products and follow the shop.",
+      "pill": "Away until {date}"
+    },
+    "hours": {
+      "title": "Opening hours",
+      "today": "Today",
+      "closed": "Closed"
     }
   },
   "adminFloors": {
@@ -3172,6 +3575,9 @@
       "settings": {
         "update": "Changed marketplace settings",
         "locales": "Changed the published languages"
+      },
+      "order": {
+        "cancel": "Cancelled an order"
       }
     }
   },

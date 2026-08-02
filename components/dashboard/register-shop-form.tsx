@@ -17,7 +17,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { FieldError } from '@/components/custom/field-error';
 import { registerShop } from '@/lib/actions/shop-registration';
+import { digitsOnly } from '@/lib/digits';
 import { formatOpeningHours } from '@/lib/format';
 import { useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
 
@@ -61,8 +63,26 @@ export function RegisterShopForm({
   const [values, setValues] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
 
-  const set = <K extends keyof RegistrationValues>(key: K, value: RegistrationValues[K]) =>
+  /*
+   * Field-level errors, with the toast kept as the secondary signal (Prompt:
+   * errors have no field-level surface). This form is the FIRST thing a new
+   * tenant does on the platform, often on a phone at a counter — a red toast
+   * naming no field is how an application gets abandoned.
+   */
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+
+  const set = <K extends keyof RegistrationValues>(key: K, value: RegistrationValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
+    setFieldErrors((current) => {
+      if (!(key in current)) return current;
+      const next = { ...current };
+      delete next[key as string];
+      return next;
+    });
+  };
+
+  const fieldError = (field: string) =>
+    fieldErrors[field] ? t(`fieldErrors.${fieldErrors[field]}` as never) : null;
 
   const hoursMatch = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(values.hours);
   const pad = (value: string) => value.padStart(2, '0');
@@ -74,6 +94,15 @@ export function RegisterShopForm({
   }
 
   function submit() {
+    const local: Record<string, string> = {};
+    if (values.nameFa.trim().length < 2) local.nameFa = 'name_required';
+    if (values.phone && !/^07\d{8}$/.test(values.phone)) local.phone = 'bad_phone';
+    if (Object.keys(local).length > 0) {
+      setFieldErrors(local);
+      toast.error(t(`errors.${Object.values(local)[0]}` as never));
+      return;
+    }
+
     startTransition(async () => {
       const result = await registerShop({
         nameFa: values.nameFa,
@@ -87,10 +116,12 @@ export function RegisterShopForm({
       });
 
       if (!result.ok) {
+        setFieldErrors(result.fields ?? {});
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
 
+      setFieldErrors({});
       toast.success(result.data.resubmitted ? t('resubmitted') : t('submitted'));
       /*
        * The session carries shopId, so a brand-new shop needs the JWT refreshed
@@ -126,7 +157,10 @@ export function RegisterShopForm({
               value={values.nameFa}
               onChange={(event) => set('nameFa', event.target.value)}
               required
+              aria-invalid={fieldError('nameFa') !== null}
+              aria-describedby={fieldError('nameFa') ? 'reg-name-fa-error' : undefined}
             />
+            <FieldError id="reg-name-fa-error" message={fieldError('nameFa')} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="reg-name-en">{t('nameEn')}</Label>
@@ -181,8 +215,11 @@ export function RegisterShopForm({
               inputMode="numeric"
               dir="ltr"
               value={values.floor}
-              onChange={(event) => set('floor', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('floor', digitsOnly(event.target.value))}
+              aria-invalid={fieldError('floor') !== null}
+              aria-describedby={fieldError('floor') ? 'reg-floor-error' : undefined}
             />
+            <FieldError id="reg-floor-error" message={fieldError('floor')} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="reg-unit">{t('unit')}</Label>
@@ -201,8 +238,11 @@ export function RegisterShopForm({
               dir="ltr"
               placeholder="07XXXXXXXX"
               value={values.phone}
-              onChange={(event) => set('phone', event.target.value.replace(/\D/g, '').slice(0, 10))}
+              onChange={(event) => set('phone', digitsOnly(event.target.value, 10))}
+              aria-invalid={fieldError('phone') !== null}
+              aria-describedby={fieldError('phone') ? 'reg-phone-error' : undefined}
             />
+            <FieldError id="reg-phone-error" message={fieldError('phone')} />
           </div>
         </div>
 
@@ -227,6 +267,7 @@ export function RegisterShopForm({
               onChange={(event) => setHours(open, event.target.value)}
             />
           </div>
+          <FieldError id="reg-hours-error" message={fieldError('hours')} />
           {values.hours && (
             <p className="text-muted-foreground text-xs">
               {formatOpeningHours(values.hours, locale)}

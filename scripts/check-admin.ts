@@ -3,7 +3,7 @@ import { desc, eq, inArray, sql as raw } from 'drizzle-orm';
 
 import { ActionClient, createReporter, html, signIn, status } from './lib/action-client';
 import { db, sql as pg } from '../lib/db';
-import { adminAuditLog, shops } from '../lib/db/schema';
+import { adminAuditLog, notifications, shops } from '../lib/db/schema';
 
 /**
  * Acceptance check for the mall modules (Prompt C9).
@@ -192,8 +192,20 @@ async function main() {
 
   const client = await ActionClient.create(['/fa/admin/shops'], cookie);
 
+  /*
+   * Suspension now NOTIFIES the shop's owners as well as writing the audit row,
+   * so the ids present beforehand are captured here too. Scoped by id and never
+   * by "recent": seeded notifications carry today's timestamps, and deleting by
+   * a time window empties the demo log (CLAUDE.md).
+   */
+  const notesBefore = new Set(
+    (await db.select({ id: notifications.id }).from(notifications)).map((row) => row.id),
+  );
+
   const suspended = await client.call(cookie, 'setShopStatus', [
-    { shopId: victim.id, status: 'suspended' },
+    // Suspension now takes a written reason, at the same ten-character floor
+    // as a rejection — the audit row below is where it lands.
+    { shopId: victim.id, status: 'suspended', reason: 'بررسی شکایت‌های پی‌درپی مشتریان' },
   ]);
   report.check('suspending a shop succeeds', suspended?.ok === true, suspended);
 
@@ -224,11 +236,19 @@ async function main() {
 
   // Put it back — both the shop and the log. Scoped by the ids captured above,
   // never by "recent": the seeded history carries today's timestamps.
-  await client.call(cookie, 'setShopStatus', [{ shopId: victim.id, status: victim.status }]);
+  await client.call(cookie, 'setShopStatus', [
+    { shopId: victim.id, status: victim.status, reason: 'بازگرداندن پس از بررسی' },
+  ]);
   const finalRows = await db.select({ id: adminAuditLog.id }).from(adminAuditLog);
   const mine = finalRows.filter((row) => !before.has(row.id)).map((row) => row.id);
   if (mine.length > 0) {
     await db.delete(adminAuditLog).where(inArray(adminAuditLog.id, mine));
+  }
+
+  const notesAfter = await db.select({ id: notifications.id }).from(notifications);
+  const myNotes = notesAfter.filter((row) => !notesBefore.has(row.id)).map((row) => row.id);
+  if (myNotes.length > 0) {
+    await db.delete(notifications).where(inArray(notifications.id, myNotes));
   }
 
   const [restored] = await db

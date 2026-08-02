@@ -5,10 +5,13 @@ import { MapPin, MessageCircle, Phone, Store } from 'lucide-react';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { FollowButton } from '@/components/shop/follow-button';
 import { OpenPill } from '@/components/shop/shop-page/open-pill';
+import { PauseNotice, PausePill } from '@/components/shop/shop-page/pause-notice';
 import { VerifiedBadge } from '@/components/shop/verified-badge';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
+import { Link } from '@/lib/i18n/navigation';
 import { formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
+import { pauseState } from '@/lib/pause';
 import { cn } from '@/lib/utils';
 
 export type ShopHeroShop = {
@@ -24,6 +27,9 @@ export type ShopHeroShop = {
   logoPath: string | null;
   bannerPath: string | null;
   verifiedAt: Date | null;
+  /** Vacation mode (lib/pause.ts) — null means trading. */
+  pausedUntil?: Date | null;
+  pauseNote?: LocalizedText | null;
   rating: number;
   reviewCount: number;
   productCount: number;
@@ -65,7 +71,9 @@ export async function ShopHero({
 }) {
   const locale = await getLocale();
   const t = await getTranslations('shop');
+  const tPage = await getTranslations('shopPage');
   const name = pickLocale(shop.name, locale);
+  const paused = pauseState(shop.pausedUntil, now)?.paused ?? false;
 
   const contactAction =
     'rounded-control border-border bg-card hover:border-primary hover:text-primary pressable inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-medium transition-[color,border-color,scale] duration-150 ease-out';
@@ -74,7 +82,14 @@ export async function ShopHero({
     <section className="relative">
       <div className="bg-primary-800 sm:rounded-card relative -mx-4 h-44 overflow-hidden sm:mx-0 sm:mt-4 sm:h-60">
         {shop.bannerPath ? (
-          <Image src={shop.bannerPath} alt="" fill sizes="100vw" priority className="object-cover" />
+          <Image
+            src={shop.bannerPath}
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+          />
         ) : (
           <div className="from-primary-900 to-primary-700 h-full w-full ltr:bg-linear-to-r rtl:bg-linear-to-l" />
         )}
@@ -86,11 +101,22 @@ export async function ShopHero({
         />
 
         {/* TOP of the banner, not the bottom: the identity card overlaps the
-            lower edge by 40px, and a pill placed there is simply covered. */}
-        {shop.hours && (
+            lower edge by 40px, and a pill placed there is simply covered.
+
+            While the shop is PAUSED the open/closed pill is replaced rather
+            than joined. "Open now" beside "not taking orders" is two answers to
+            one question, and the reader has to work out which one governs; the
+            pause is the one that decides whether they can buy. */}
+        {paused ? (
           <div className="absolute inset-x-0 top-0 flex justify-end p-3 sm:p-4">
-            <OpenPill shopHours={shop.hours} mallHours={mallHours} now={now} />
+            <PausePill pausedUntil={shop.pausedUntil} now={now} />
           </div>
+        ) : (
+          shop.hours && (
+            <div className="absolute inset-x-0 top-0 flex justify-end p-3 sm:p-4">
+              <OpenPill shopHours={shop.hours} mallHours={mallHours} now={now} />
+            </div>
+          )
         )}
       </div>
 
@@ -167,8 +193,34 @@ export async function ShopHero({
               </>
             )}
           </div>
+
+          {/*
+            WHAT FOLLOWING DOES, said once, beside the button that does it.
+            The button existed for a long time with nothing explaining it and
+            nothing behind it — a heart that files a row in a table. It now
+            leads somewhere (the account's following view), and the sentence is
+            what makes pressing it a decision rather than a guess.
+          */}
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {tPage.rich('followExplainer', {
+              link: (chunks) => (
+                <Link href="/account/following" className="text-primary hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
         </div>
       </div>
+
+      {/* Vacation mode, under the identity card and above the tabs — the first
+          thing read after "who is this", because it governs everything below. */}
+      <PauseNotice
+        pausedUntil={shop.pausedUntil}
+        pauseNote={shop.pauseNote}
+        now={now}
+        className="mt-4"
+      />
     </section>
   );
 }

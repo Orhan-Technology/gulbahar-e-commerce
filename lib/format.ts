@@ -1,4 +1,10 @@
 import type { AppLocale } from './i18n/routing';
+import {
+  parseWeeklyHours,
+  weeklySchedule,
+  type DayKey,
+  type HoursRange,
+} from './opening';
 
 /**
  * Locale-aware formatting for money, numbers, and dates (PRD §11).
@@ -90,10 +96,55 @@ export function formatPercent(
 export function formatOpeningHours(value: string | null | undefined, locale: string): string {
   if (!value) return '';
   const match = /^(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})$/.exec(value.trim());
-  if (!match) return value;
+  if (match) {
+    const [, openHour, openMinute, closeHour, closeMinute] = match;
+    return `${formatClock(`${openHour}:${openMinute}`, locale)} – ${formatClock(`${closeHour}:${closeMinute}`, locale)}`;
+  }
 
-  const [, openHour, openMinute, closeHour, closeMinute] = match;
-  return `${formatClock(`${openHour}:${openMinute}`, locale)} – ${formatClock(`${closeHour}:${closeMinute}`, locale)}`;
+  /*
+   * A per-day schedule (`08:00-19:00;fri=closed`) renders as its USUAL range and
+   * nothing else. This function returns one line and has no translator, so it
+   * cannot say "closed on Friday" in the reader's language — but it must never
+   * fall through to the raw-passthrough below either, which would print the
+   * semicolons and the ASCII day keys onto a customer's screen. Callers that
+   * want the whole week use formatWeekdayHours() and label the days themselves.
+   */
+  const weekly = parseWeeklyHours(value);
+  const usual = weekly?.base ?? Object.values(weekly?.overrides ?? {}).find(Boolean) ?? null;
+  if (usual) return formatHoursRange(usual, locale);
+
+  // Anything else — a hand-entered "Fridays only" — survives unchanged.
+  return value;
+}
+
+/** One resolved range, e.g. "۸:۰۰ – ۱۹:۰۰". */
+export function formatHoursRange(range: HoursRange, locale: string): string {
+  const clock = (minutes: number) =>
+    formatClock(
+      `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`,
+      locale,
+    );
+  return `${clock(range.open)} – ${clock(range.close)}`;
+}
+
+/**
+ * The whole week, Saturday-first, for a schedule block: one row per day with a
+ * formatted range, or null where the shop is shut.
+ *
+ * Returns null when the value carries no schedule at all, so a caller renders
+ * nothing rather than seven empty rows. Day NAMES are the caller's job — they
+ * are translated strings and this module holds none.
+ */
+export function formatWeekdayHours(
+  value: string | null | undefined,
+  locale: string,
+): Array<{ day: DayKey; hours: string | null }> | null {
+  const schedule = weeklySchedule(value);
+  if (!schedule) return null;
+  return schedule.map((row) => ({
+    day: row.day,
+    hours: row.range ? formatHoursRange(row.range, locale) : null,
+  }));
 }
 
 /**

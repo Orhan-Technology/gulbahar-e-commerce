@@ -16,11 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { FreeDeliveryBar } from '@/components/shop/cart/free-delivery-bar';
 import { HesabPaySheet } from '@/components/shop/checkout/hesabpay-sheet';
 import { saveAddress } from '@/lib/actions/account';
-import { placeOrder } from '@/lib/actions/checkout';
-import { formatCurrency, formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
-import { useRouter } from '@/lib/i18n/navigation';
+import { placeOrder, type StockShortage } from '@/lib/actions/checkout';
+import { pickLocale } from '@/lib/db/localized';
+import {
+  formatCurrency,
+  formatList,
+  formatNumber,
+  formatPhone,
+  formatUnitNumber,
+} from '@/lib/format';
+import { Link, useRouter } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
 export type CheckoutAddress = {
@@ -48,6 +56,10 @@ export type CheckoutFormProps = {
   cartTotal: number;
   deliveryFee: number;
   freeDeliveryThreshold: number;
+  /** How many shops the basket spans — how many parcels this becomes. */
+  shopCount: number;
+  /** The basket itself, rendered on the server (components/shop/checkout/checkout-items.tsx). */
+  itemsSummary: React.ReactNode;
 };
 
 /**
@@ -69,6 +81,8 @@ export function CheckoutForm({
   cartTotal,
   deliveryFee,
   freeDeliveryThreshold,
+  shopCount,
+  itemsSummary,
 }: CheckoutFormProps) {
   const t = useTranslations('checkout');
   const locale = useLocale();
@@ -80,23 +94,70 @@ export function CheckoutForm({
   const [showNewAddress, setShowNewAddress] = React.useState(addresses.length === 0);
   const [payOpen, setPayOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
+  /** Lines the shop could not cover, shown in place of a bare error toast. */
+  const [shortages, setShortages] = React.useState<StockShortage[]>([]);
+
+  /*
+   * ONE KEY FOR THIS CHECKOUT, minted on first submit and kept afterwards.
+   *
+   * In a ref rather than in state, and set inside the handler rather than
+   * during render: crypto.randomUUID() is impure and React 19's lint rules
+   * forbid calling it while rendering (CLAUDE.md). A ref also means a retry
+   * after a failure carries the SAME key, which is the entire point — a
+   * double-tapped button or a retry after a network timeout on a request that
+   * actually committed comes back with the original order instead of writing a
+   * second one.
+   */
+  const idempotencyKey = React.useRef<string | null>(null);
 
   const effectiveFee =
     fulfillment === 'delivery' && cartTotal < freeDeliveryThreshold ? deliveryFee : 0;
   const grandTotal = cartTotal + effectiveFee;
+  const freeDeliveryGap = freeDeliveryThreshold - cartTotal;
 
   function submitOrder() {
+    idempotencyKey.current ??= crypto.randomUUID();
+
     startTransition(async () => {
       const result = await placeOrder({
         fulfillment,
         paymentMethod,
         addressId: fulfillment === 'delivery' ? addressId : undefined,
+        idempotencyKey: idempotencyKey.current!,
       });
 
       if (!result.ok) {
+        /*
+         * A SOLD-OUT LINE IS NOT A TOAST. It names specific products and the
+         * customer has to change the basket to get past it, so it stays on
+         * screen with the numbers in it rather than disappearing after four
+         * seconds.
+         */
+        if (result.error === 'insufficient_stock') {
+          setShortages(result.shortages);
+          toast.error(t('errors.insufficient_stock'));
+          // The cart page holds the steppers that fix it, and its stock figures
+          // are now stale.
+          router.refresh();
+          return;
+        }
+        /*
+         * Same reasoning as the sold-out branch: the customer cannot get past
+         * this without changing the basket, and the message has to name WHICH
+         * shop stopped taking orders — a basket can hold several.
+         */
+        if (result.error === 'shop_paused') {
+          toast.error(
+            t('errors.shop_paused', { shops: formatList(result.pausedShops, locale) }),
+          );
+          router.refresh();
+          return;
+        }
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
+
+      setShortages([]);
 
       // Confirmation lives on its own URL, so it survives a refresh and can be
       // reopened from the order list.
@@ -355,8 +416,53 @@ export function CheckoutForm({
           </RadioGroup>
         </section>
 
+        {/* What is being bought, immediately above what it costs */}
+        {itemsSummary}
+
         {/* Totals + submit */}
         <section className="rounded-card border-border bg-card space-y-3 border p-4">
+          {/*
+            THE LINES THAT CANNOT BE FILLED, in place. Named, with the number
+            still available, because "out of stock" without saying which item
+            leaves the customer to guess across a basket of six.
+          */}
+          {shortages.length > 0 && (
+            <div className="rounded-control border-danger-border bg-danger-bg space-y-1.5 border p-3">
+              <p className="text-danger text-xs font-semibold">{t('errors.insufficient_stock')}</p>
+              <ul className="space-y-1">
+                {shortages.map((shortage) => (
+                  <li key={shortage.productId} className="text-danger flex flex-wrap gap-x-2 text-xs">
+                    <span className="font-medium">{pickLocale(shortage.title, locale)}</span>
+                    <span className="tabular-nums">
+                      {shortage.available > 0
+                        ? t('onlyLeft', { count: formatNumber(shortage.available, locale) })
+                        : t('soldOut')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <Button asChild variant="outline" size="sm">
+                <Link href="/cart">{t('editCart')}</Link>
+              </Button>
+            </div>
+          )}
+
+          {/* Free delivery, as distance rather than as a sentence (PRD §8.1) */}
+          {fulfillment === 'delivery' && (
+            <FreeDeliveryBar
+              percent={(cartTotal / Math.max(1, freeDeliveryThreshold)) * 100}
+              reached={freeDeliveryGap <= 0}
+              message={
+                freeDeliveryGap > 0
+                  ? t('freeDeliveryGap', {
+                      amount: formatCurrency(freeDeliveryGap, locale),
+                      fee: formatCurrency(deliveryFee, locale),
+                    })
+                  : t('freeDeliveryReached')
+              }
+            />
+          )}
+
           <dl className="space-y-1.5 text-sm">
             <div className="flex justify-between">
               <dt className="text-muted-foreground">{t('itemsTotal')}</dt>
@@ -373,6 +479,19 @@ export function CheckoutForm({
               <dd className="tabular-nums">{formatCurrency(grandTotal, locale)}</dd>
             </div>
           </dl>
+
+          {/*
+            Said once more beside the button, in the fulfilment's own words: two
+            shops means two deliveries or two counters, and this is the last
+            moment it can be a decision rather than a surprise.
+          */}
+          {shopCount > 1 && (
+            <p className="text-muted-foreground text-xs">
+              {t(fulfillment === 'delivery' ? 'multiShopDelivery' : 'multiShopPickup', {
+                count: formatNumber(shopCount, locale),
+              })}
+            </p>
+          )}
 
           <Button
             type="button"

@@ -213,6 +213,7 @@ const EVENT_KEYS: Record<string, NotificationEventKey> = {
   rejected: 'order.rejected',
   ready: 'order.ready',
   fulfilled: 'order.fulfilled',
+  cancelled: 'order.cancelled',
 };
 
 /**
@@ -437,39 +438,63 @@ export async function triggerNewOrder(
    * consistently; the suffix comes from a counter over existing rows rather than
    * randomness, to avoid a collision on the unique index.
    */
-  const [{ next: nextRef }] = await db
-    .select({
-      next: sql<number>`coalesce(max(substring(reference from 4)::int), 24000) + 1`,
-    })
-    .from(orders);
+  /*
+   * Written exactly like a real checkout: one transaction, the reference from
+   * the shared sequence, and the stock RESERVED for every line.
+   *
+   * The reservation is not decoration. Stock is now held from placement and
+   * given back on reject/cancel/hold-expiry, so an order that appears without
+   * one is a unit of inventory the system will hand back that it never took —
+   * cancel a demo order and the shelf count goes UP. The presenter would be
+   * demonstrating the bug rather than the feature.
+   */
+  const created = await db.transaction(async (tx) => {
+    const [{ reference }] = await tx.execute<{ reference: string }>(
+      sql`select next_order_reference() as reference`,
+    );
 
-  const [created] = await db
-    .insert(orders)
-    .values({
-      reference: `GC-${nextRef}`,
-      userId: customer.id,
-      status: 'placed',
-      fulfillment: customer.addressId ? 'delivery' : 'pickup',
-      paymentMethod: 'cod',
-      addressId: customer.addressId,
-      subtotal,
-      discountTotal: 0,
-      deliveryFee,
-      total: subtotal + deliveryFee,
-    })
-    .returning({ id: orders.id, reference: orders.reference });
+    const [order] = await tx
+      .insert(orders)
+      .values({
+        reference,
+        userId: customer.id,
+        status: 'placed',
+        fulfillment: customer.addressId ? 'delivery' : 'pickup',
+        paymentMethod: 'cod',
+        addressId: customer.addressId,
+        subtotal,
+        discountTotal: 0,
+        deliveryFee,
+        total: subtotal + deliveryFee,
+      })
+      .returning({ id: orders.id, reference: orders.reference });
 
-  await db.insert(orderItems).values(
-    lines.map((line) => ({
-      orderId: created.id,
-      shopId: parsed.data,
-      productId: line.product.id,
-      titleSnapshot: line.product.title,
-      priceSnapshot: line.price,
-      quantity: line.quantity,
-      variantSelection: null,
-    })),
-  );
+    for (const line of lines) {
+      const reserved = await tx
+        .update(products)
+        .set({ stock: sql`${products.stock} - ${line.quantity}` })
+        .where(and(eq(products.id, line.product.id), sql`${products.stock} >= ${line.quantity}`))
+        .returning({ id: products.id });
+
+      // The basket was built from in-stock products moments ago, so this only
+      // fires if something sold out in between — roll back rather than oversell.
+      if (reserved.length === 0) throw new Error('demo_insufficient_stock');
+    }
+
+    await tx.insert(orderItems).values(
+      lines.map((line) => ({
+        orderId: order.id,
+        shopId: parsed.data,
+        productId: line.product.id,
+        titleSnapshot: line.product.title,
+        priceSnapshot: line.price,
+        quantity: line.quantity,
+        variantSelection: null,
+      })),
+    );
+
+    return order;
+  });
 
   await db.insert(orderEvents).values({
     orderId: created.id,

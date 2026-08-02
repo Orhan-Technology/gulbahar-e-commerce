@@ -22,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { saveOffer } from '@/lib/actions/shop-promotions';
+import { digitsOnly } from '@/lib/digits';
 import { formatCurrency, formatNumber } from '@/lib/format';
 
 export type OfferProduct = { id: string; title: string; price: number };
@@ -105,7 +106,7 @@ export function OfferDialog({
   const set = <K extends keyof OfferDraft>(key: K, value: OfferDraft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
-  const numericValue = Number(draft.value.replace(/\D/g, '')) || 0;
+  const numericValue = Number(digitsOnly(draft.value)) || 0;
 
   /** What the customer would pay, on the products actually in scope. */
   const preview = React.useMemo(() => {
@@ -212,7 +213,7 @@ export function OfferDialog({
               inputMode="numeric"
               dir="ltr"
               value={draft.value}
-              onChange={(event) => set('value', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('value', digitsOnly(event.target.value))}
             />
           </div>
 

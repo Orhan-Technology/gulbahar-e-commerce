@@ -8,10 +8,12 @@ import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
+import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import {
   campaignLedger,
   revenueByMonth,
   revenueBySlot,
+  revenueMonthToDate,
   revenueTotals,
   topPayingShops,
 } from '@/lib/db/queries/admin-revenue';
@@ -58,13 +60,16 @@ export default async function AdminRevenuePage({
           <p className="mt-1.5 max-w-prose text-sm text-neutral-500">{t('intro')}</p>
         </div>
 
-        <Link
-          href="/admin/promotions"
-          className="rounded-pill bg-primary text-primary-foreground hover:bg-primary-800 ms-auto inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold transition-colors duration-150"
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden />
-          {t('manageCampaigns')}
-        </Link>
+        <div className="ms-auto flex flex-wrap items-center gap-2">
+          <ExportCsvLink report="revenue" />
+          <Link
+            href="/admin/promotions"
+            className="rounded-pill bg-primary text-primary-foreground hover:bg-primary-800 inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold transition-colors duration-150"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            {t('manageCampaigns')}
+          </Link>
+        </div>
       </div>
 
       <Suspense fallback={<HeadlineSkeleton />}>
@@ -116,22 +121,26 @@ export default async function AdminRevenuePage({
  *
  * The lead tile is THIS MONTH, not lifetime: a mall manager bills monthly, and a
  * cumulative total only ever goes up, which makes it useless as a signal.
+ *
+ * AND THE COMPARISON IS MONTH-TO-DATE, which is the whole reason this tile
+ * needed a query of its own. It used to divide the calendar month so far by the
+ * WHOLE of the previous month — so on the 2nd it read «؋۰ · −۱۰۰٪», one day of
+ * trading measured against thirty, on the first number of the screen this
+ * console exists to sell. Technically true and rhetorically ruinous, every
+ * month, for the first week of it. The baseline is now the same stretch of last
+ * month, and the caption says so rather than leaving "vs last month" to imply a
+ * full one.
  */
 async function Headline({ locale }: { locale: string }) {
   const t = await getTranslations('adminRevenue');
 
-  const [totals, months, slots, platform, shops] = await Promise.all([
+  const [totals, month, slots, platform, shops] = await Promise.all([
     revenueTotals(),
-    revenueByMonth(12),
+    revenueMonthToDate(),
     revenueBySlot(),
     platformTotals(30),
     activeShopCount(30),
   ]);
-
-  const thisMonth = months.at(-1)?.revenue ?? 0;
-  const lastMonth = months.at(-2)?.revenue ?? 0;
-  // Null rather than +100% when there is no baseline — see StatCard.
-  const monthDelta = lastMonth > 0 ? (thisMonth - lastMonth) / lastMonth : null;
 
   const capacity = slots.reduce((sum, slot) => sum + slot.capacity, 0);
   const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
@@ -140,13 +149,19 @@ async function Headline({ locale }: { locale: string }) {
     <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         variant="feature"
-        label={t('monthRevenueLabel')}
-        value={thisMonth}
+        label={month.partial ? t('monthToDateLabel') : t('monthRevenueLabel')}
+        value={month.current}
         format="currency"
-        delta={monthDelta}
-        hint={monthDelta !== null ? t('vsLastMonth') : t('lifetime', {
-          amount: formatCurrency(totals.total, locale),
-        })}
+        delta={month.delta}
+        hint={
+          month.delta === null
+            ? t('lifetime', { amount: formatCurrency(totals.total, locale) })
+            : month.partial
+              ? // Names the actual comparison. "vs last month" beside a
+                // part-month figure is the sentence that made the tile lie.
+                t('vsSamePeriodLastMonth', { days: formatNumber(month.dayOfMonth, locale) })
+              : t('vsLastMonth')
+        }
       />
       <StatCard
         label={t('occupancyLabel')}

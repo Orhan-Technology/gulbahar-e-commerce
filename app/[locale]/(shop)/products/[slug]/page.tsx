@@ -14,9 +14,10 @@ import { FeatureList } from '@/components/shop/product/feature-list';
 import { ComparisonTable, type ComparisonColumn } from '@/components/shop/product/comparison-table';
 import { QuestionSection } from '@/components/shop/product/question-section';
 import { SpecTable } from '@/components/shop/product/spec-table';
-import { RatingSummary } from '@/components/shop/product/rating-summary';
-import { ReviewList } from '@/components/shop/product/review-list';
-import { WriteReviewDialog } from '@/components/shop/product/write-review-dialog';
+import {
+  ProductReviewPanel,
+  ProductReviewsSkeleton,
+} from '@/components/shop/reviews/product-review-panel';
 import { ProductRails } from '@/components/shop/product/product-rails';
 import { ProductGridSkeleton } from '@/components/shop/product-grid';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,11 +27,9 @@ import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { comparableProducts } from '@/lib/db/queries/comparison';
 import { productDetail } from '@/lib/db/queries/products';
 import { productQuestionThreads } from '@/lib/db/queries/questions';
-import {
-  recordProductView,
-  reviewableOrderItem,
-  userReviewForProduct,
-} from '@/lib/db/queries/reviews';
+import { recordProductView } from '@/lib/db/queries/reviews';
+import { shopPause } from '@/lib/db/queries/shops';
+import { pauseState } from '@/lib/pause';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { SPEC_GROUPS, specTemplateFor } from '@/lib/product-templates';
 import { Link } from '@/lib/i18n/navigation';
@@ -48,13 +47,12 @@ export default async function ProductPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ reviewPage?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { locale, slug: rawSlug } = await params;
   // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
   const slug = decodeSlug(rawSlug);
   setRequestLocale(locale);
-  const { reviewPage } = await searchParams;
   const t = await getTranslations('product');
 
   const product = await productDetail(slug, locale);
@@ -66,11 +64,26 @@ export default async function ProductPage({
   }
 
   const user = await currentUser();
-  const [saved, entitlement, ownReview] = await Promise.all([
+  const [saved, shopPauseRow] = await Promise.all([
     wishlistedProductIds(user?.id, [product.id]),
-    reviewableOrderItem(user?.id, product.id),
-    user?.id ? userReviewForProduct(user.id, product.id) : Promise.resolve(null),
+    shopPause(product.shopId),
   ]);
+
+  /*
+   * A shop on vacation keeps its pages and its position; what it cannot do is
+   * take an order today. The clock is read once, here on the server — a client
+   * component computing `paused` during render would be an impure read under
+   * React 19, and two panels computing it separately could disagree.
+   *
+   * This is presentation. The rule itself is enforced in the cart and at
+   * checkout, because a basket filled before the pause began would otherwise
+   * walk straight past a disabled button.
+   */
+  const now = new Date();
+  const pause = pauseState(shopPauseRow?.pausedUntil, now);
+  const pausedUntil = pause?.paused ? pause.until.toISOString() : null;
+  const pauseNote =
+    pause?.paused && shopPauseRow?.pauseNote ? pickLocale(shopPauseRow.pauseNote, locale) : null;
 
   // Seeded counter is the only analytics there is (PRD §12.4); never blocks render.
   void recordProductView(product.id);
@@ -115,7 +128,6 @@ export default async function ProductPage({
     title: pickLocale(feature.title, locale),
     body: pickLocale(feature.body, locale),
   }));
-  const currentReviewPage = Math.max(1, Number(reviewPage ?? 1) || 1);
 
   return (
     /* The old pb-28 reserved space under the FIXED action bar. It is sticky
@@ -289,6 +301,8 @@ export default async function ProductPage({
             stock={product.stock}
             variants={variants}
             initialSaved={saved.has(product.id)}
+            pausedUntil={pausedUntil}
+            pauseNote={pauseNote}
           />
         </BuyColumn>
 
@@ -333,33 +347,28 @@ export default async function ProductPage({
             />
           </Suspense>
 
-          {/* Reviews */}
-          <section id="reviews" className="scroll-mt-24 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-bold">{t('reviewsHeading')}</h2>
-              {/*
-                The form appears ONLY for a signed-in customer with a fulfilled
-                order item for this product, or one editing their own review
-                (PRD §5.5).
-              */}
-              {(entitlement || ownReview) && (
-                <WriteReviewDialog
-                  productSlug={slug}
-                  existing={
-                    ownReview ? { rating: ownReview.rating, body: ownReview.body } : null
-                  }
-                />
-              )}
-            </div>
-
-            <RatingSummary
-              average={product.rating.average}
-              total={product.rating.total}
-              distribution={product.rating.distribution}
-            />
-
-            <Suspense fallback={<ReviewsSkeleton />}>
-              <ReviewList productId={product.id} slug={slug} page={currentReviewPage} />
+          {/*
+            Reviews — heading, write-form entitlement, histogram, filtering,
+            sorting and the list itself all live inside one server component, so
+            the filter and sort params are read where they are used rather than
+            threaded through this page.
+          */}
+          {/*
+            The ANCHOR lives out here, on the boundary, not inside the streamed
+            panel. The rating beside the title links to `#reviews`, and an
+            anchor that only exists once the reviews have finished streaming is
+            a link that does nothing for the first moment of the page. Keeping
+            it on the wrapper also keeps this section in its editorial place in
+            the HTML — inside the panel it arrived after the discovery rails,
+            because streamed content is appended in resolution order.
+          */}
+          <section id="reviews" className="scroll-mt-24">
+            <Suspense fallback={<ProductReviewsSkeleton />}>
+              <ProductReviewPanel
+                productId={product.id}
+                productSlug={slug}
+                searchParams={searchParams}
+              />
             </Suspense>
           </section>
 
@@ -411,6 +420,8 @@ export default async function ProductPage({
           stock={product.stock}
           variants={variants}
           initialSaved={saved.has(product.id)}
+          pausedUntil={pausedUntil}
+          pauseNote={pauseNote}
         />
       </div>
     </div>
@@ -523,21 +534,6 @@ function ComparisonSkeleton() {
           <Skeleton key={index} className="rounded-card h-64 w-56 shrink-0" />
         ))}
       </div>
-    </div>
-  );
-}
-
-
-function ReviewsSkeleton() {
-  return (
-    <div className="space-y-4">
-      {Array.from({ length: 3 }, (_, index) => (
-        <div key={index} className="rounded-card border-border bg-card space-y-2 border p-4">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-2/3" />
-        </div>
-      ))}
     </div>
   );
 }

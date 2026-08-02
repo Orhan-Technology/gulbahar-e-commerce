@@ -4,14 +4,26 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Eye, Heart, ImageOff, Pencil } from 'lucide-react';
+import { Archive, ArchiveRestore, Eye, Heart, ImageOff, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { PriceDisplay } from '@/components/custom/price-display';
-import { bulkSetProductStatus } from '@/lib/actions/shop-products';
+import {
+  archiveProduct,
+  bulkSetProductStatus,
+  restoreProduct,
+} from '@/lib/actions/shop-products';
 import { StockEditor } from '@/components/dashboard/products/stock-editor';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -25,7 +37,13 @@ export type ShopProductRow = {
   price: number;
   discountPrice: number | null;
   stock: number;
-  status: 'draft' | 'published' | 'unpublished';
+  status: 'draft' | 'published' | 'unpublished' | 'archived';
+  /**
+   * ADMIN's stated reason for taking the product down (PRD §3.1). Read-only for
+   * the shop — they may republish once they have fixed it, but they may not
+   * rewrite what the mall said about it.
+   */
+  unpublishReason: string | null;
   viewCount: number;
   /** Views over the last seven days — see `viewWindow`. */
   weekViews: number;
@@ -68,6 +86,14 @@ export function ProductTable({
 
   const allSelected = rows.length > 0 && selected.size === rows.length;
 
+  /*
+   * The archive view has no bulk controls. Publish and unpublish both refuse an
+   * archived row (only restoreProduct leaves the archive), so offering the
+   * buttons there would be offering an action that always fails — the one thing
+   * worse than not offering it.
+   */
+  const archiveView = rows.length > 0 && rows.every((row) => row.status === 'archived');
+
   function toggle(id: string, checked: boolean) {
     setSelected((current) => {
       const next = new Set(current);
@@ -98,7 +124,7 @@ export function ProductTable({
     <div className="space-y-3">
       {/* Bulk action bar appears only with a selection, so it never occupies space
           a shopkeeper is not using. */}
-      {selected.size > 0 && (
+      {selected.size > 0 && !archiveView && (
         <div className="rounded-card border-primary-200 bg-primary-50 sticky top-14 z-20 flex flex-wrap items-center gap-2 border p-3">
           <span className="text-primary-900 text-sm font-medium">
             {t('selectedCount', { count: formatNumber(selected.size, locale) })}
@@ -122,16 +148,18 @@ export function ProductTable({
         </div>
       )}
 
-      <div className="flex items-center gap-2 px-1">
-        <Checkbox
-          checked={allSelected}
-          onCheckedChange={(checked) =>
-            setSelected(checked ? new Set(rows.map((row) => row.id)) : new Set())
-          }
-          aria-label={t('selectAll')}
-        />
-        <span className="text-muted-foreground text-xs">{t('selectAll')}</span>
-      </div>
+      {!archiveView && (
+        <div className="flex items-center gap-2 px-1">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={(checked) =>
+              setSelected(checked ? new Set(rows.map((row) => row.id)) : new Set())
+            }
+            aria-label={t('selectAll')}
+          />
+          <span className="text-muted-foreground text-xs">{t('selectAll')}</span>
+        </div>
+      )}
 
       <ul className="space-y-2">
         {rows.map((row) => (
@@ -142,12 +170,14 @@ export function ProductTable({
               selected.has(row.id) ? 'border-primary' : 'border-border',
             )}
           >
-            <Checkbox
-              checked={selected.has(row.id)}
-              onCheckedChange={(checked) => toggle(row.id, Boolean(checked))}
-              aria-label={row.title}
-              className="mt-1 shrink-0"
-            />
+            {!archiveView && (
+              <Checkbox
+                checked={selected.has(row.id)}
+                onCheckedChange={(checked) => toggle(row.id, Boolean(checked))}
+                aria-label={row.title}
+                className="mt-1 shrink-0"
+              />
+            )}
 
             <span className="rounded-control relative h-16 w-16 shrink-0 overflow-hidden bg-neutral-100">
               {row.imagePath ? (
@@ -176,6 +206,18 @@ export function ProductTable({
                 <p className="text-muted-foreground text-xs">{row.categoryName}</p>
               )}
 
+              {/*
+                WHY it is down, on the row that is down. An unpublished product
+                with no stated cause leaves the shopkeeper guessing at what to
+                fix, and the reason is already written — by admin, on the row.
+              */}
+              {row.status === 'unpublished' && row.unpublishReason && (
+                <p className="rounded-control border-danger-border bg-danger-bg text-danger px-2 py-1.5 text-xs">
+                  <span className="font-bold">{t('unpublishReasonLabel')}</span>{' '}
+                  {row.unpublishReason}
+                </p>
+              )}
+
               <PriceDisplay price={row.price} discountPrice={row.discountPrice} size="sm" />
 
               <div className="text-muted-foreground flex flex-wrap items-center gap-3 text-xs">
@@ -192,11 +234,18 @@ export function ProductTable({
             </div>
 
             <div className="flex shrink-0 flex-col gap-1">
-              <Button variant="ghost" size="icon" asChild aria-label={t('edit')}>
-                <Link href={`/dashboard/products/${row.id}`}>
-                  <Pencil />
-                </Link>
-              </Button>
+              {row.status === 'archived' ? (
+                <RestoreButton productId={row.id} />
+              ) : (
+                <>
+                  <Button variant="ghost" size="icon" asChild aria-label={t('edit')}>
+                    <Link href={`/dashboard/products/${row.id}`}>
+                      <Pencil />
+                    </Link>
+                  </Button>
+                  <ArchiveButton productId={row.id} title={row.title} />
+                </>
+              )}
             </div>
           </li>
         ))}
@@ -205,9 +254,112 @@ export function ProductTable({
   );
 }
 
+/**
+ * The delete a shopkeeper has never had (Prompt: no delete action exists).
+ *
+ * The dialog SAYS WHAT REALLY HAPPENS rather than asking "are you sure?". The
+ * product is hidden, not erased, and the reason is worth one sentence: order
+ * history has to keep naming what was bought, so a product that has ever been
+ * sold cannot be removed. A shopkeeper told that once will not go hunting for a
+ * harder delete, and one who is told nothing will.
+ */
+function ArchiveButton({ productId, title }: { productId: string; title: string }) {
+  const t = useTranslations('shopProducts.archive');
+  const router = useRouter();
+  const [open, setOpen] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t('action')}
+        className="hover:text-danger text-neutral-500"
+        onClick={() => setOpen(true)}
+      >
+        <Archive />
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('confirmTitle')}</DialogTitle>
+            <DialogDescription>{t('confirmBody', { title })}</DialogDescription>
+          </DialogHeader>
+
+          {/* The way back, stated up front — this is reversible and says so. */}
+          <p className="text-muted-foreground text-xs">{t('reversibleNote')}</p>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const result = await archiveProduct(productId);
+                  if (!result.ok) {
+                    toast.error(t(`errors.${result.error}` as never));
+                    return;
+                  }
+                  setOpen(false);
+                  toast.success(t('archived'));
+                  router.refresh();
+                })
+              }
+            >
+              <Archive />
+              {pending ? t('archiving') : t('confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** Out of the archive, as unpublished — never straight back onto the storefront. */
+function RestoreButton({ productId }: { productId: string }) {
+  const t = useTranslations('shopProducts.archive');
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          const result = await restoreProduct(productId);
+          if (!result.ok) {
+            toast.error(t(`errors.${result.error}` as never));
+            return;
+          }
+          toast.success(t('restored'));
+          router.refresh();
+        })
+      }
+    >
+      <ArchiveRestore />
+      {pending ? t('restoring') : t('restore')}
+    </Button>
+  );
+}
+
 function StatusBadge({ status }: { status: ShopProductRow['status'] }) {
   const t = useTranslations('shopProducts.status');
-  const variant = status === 'published' ? 'success' : status === 'draft' ? 'secondary' : 'outline';
+  const variant =
+    status === 'published'
+      ? 'success'
+      : status === 'draft'
+        ? 'secondary'
+        : status === 'archived'
+          ? 'destructive'
+          : 'outline';
   return <Badge variant={variant}>{t(status)}</Badge>;
 }
 

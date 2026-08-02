@@ -4,12 +4,15 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Banknote, MapPin, Smartphone, Store } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
+import { CancelOrderButton } from '@/components/shop/order/cancel-order-button';
 import { CollectionPanel } from '@/components/shop/account/collection-panel';
 import { RateShopsPrompt } from '@/components/shop/account/rate-shops-prompt';
 import { ReorderButton } from '@/components/shop/account/reorder-button';
+import { OrderItemReviewPrompt } from '@/components/shop/reviews/order-item-review-prompt';
 import { requireUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
+import { parseReasonNote } from '@/lib/order-reject-reasons';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -30,6 +33,9 @@ export default async function OrderDetailPage({
   setRequestLocale(locale);
   const t = await getTranslations('orders');
   const tStatus = await getTranslations('order.status');
+  // The shop's reason list is authored once, under the shop's namespace, and
+  // read here so the customer sees the same sentence their SMS was built from.
+  const tReasons = await getTranslations('shopOrders.rejectReasons');
 
   const session = await requireUser(locale);
   const order = await orderByReference(reference);
@@ -49,8 +55,24 @@ export default async function OrderDetailPage({
           <h1 className="font-mono text-lg font-bold tabular-nums">{order.reference}</h1>
           <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt, locale)}</p>
         </div>
-        <ReorderButton reference={order.reference} />
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Only while nobody has committed anything — see the component. */}
+          {order.status === 'placed' && <CancelOrderButton orderId={order.id} />}
+          <ReorderButton reference={order.reference} />
+        </div>
       </div>
+
+      {/*
+        THE WAY OUT, once the button is gone. An order the shop has accepted can
+        still be stopped — by ringing the shop, which is a thing this mall's
+        customers do anyway — and saying so is the difference between "you
+        cannot cancel" and "here is how".
+      */}
+      {(order.status === 'accepted' || order.status === 'ready') && (
+        <p className="rounded-card border-border bg-neutral-50 text-muted-foreground border p-3 text-xs">
+          {t('cancel.tooLateHint')}
+        </p>
+      )}
 
       {/*
         The collection code, ABOVE the timeline (Prompt C11). It is the only
@@ -92,20 +114,44 @@ export default async function OrderDetailPage({
         />
       )}
 
+      {/*
+        And the PRODUCTS, which is a different question from the service above.
+        Asking here rather than only on the product page is the whole point: the
+        customer is holding the thing, and they are already on a screen that
+        knows exactly which items they are entitled to review. Each prompt
+        disappears as it is answered.
+      */}
+      {order.status === 'fulfilled' && (
+        <OrderItemReviewPrompt orderId={order.id} userId={session.id} />
+      )}
+
       {/* The append-only event chain, which is the audit trail (PRD §14) */}
       {order.events.length > 1 && (
         <section className="rounded-card border-border bg-card space-y-2 border p-4">
           <h2 className="text-sm font-bold">{t('historyHeading')}</h2>
           <ol className="space-y-1.5 text-xs">
-            {order.events.map((event) => (
-              <li key={event.id} className="flex items-baseline gap-2">
-                <span className="text-foreground font-medium">{tStatus(event.toStatus)}</span>
-                <span className="text-muted-foreground">
-                  {formatDateTime(event.createdAt, locale)}
-                </span>
-                {event.note && <span className="text-muted-foreground">— {event.note}</span>}
-              </li>
-            ))}
+            {order.events.map((event) => {
+              /*
+               * The note carries an internal code — `reason:out_of_stock` — and
+               * the customer must read a sentence, not a token. Translated into
+               * THEIR language here, which is the same string the SMS was
+               * written from.
+               */
+              const reason = parseReasonNote(event.note);
+              const words = [reason.code ? tReasons(reason.code) : null, reason.text]
+                .filter(Boolean)
+                .join(' — ');
+
+              return (
+                <li key={event.id} className="flex items-baseline gap-2">
+                  <span className="text-foreground font-medium">{tStatus(event.toStatus)}</span>
+                  <span className="text-muted-foreground">
+                    {formatDateTime(event.createdAt, locale)}
+                  </span>
+                  {words && <span className="text-muted-foreground">— {words}</span>}
+                </li>
+              );
+            })}
           </ol>
         </section>
       )}

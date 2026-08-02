@@ -1,11 +1,14 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
+// The template may be filled in by hand on a Persian keyboard, so every number
+// in it goes through the same normaliser the dashboard's own inputs use.
+import { toAsciiDigits } from '../digits';
 import { products } from '../db/schema';
 import { categoryIdsBySlug, shopProductSlugs } from '../db/queries/shop-products';
 import { IMPORT_REQUIRED_COLUMNS, SPEC_COLUMN_PATTERN } from '../import-template';
@@ -117,14 +120,6 @@ function parseCsv(text: string): string[][] {
   if (row.some((value) => value.trim() !== '')) rows.push(row);
 
   return rows;
-}
-
-/** Accepts Persian and Arabic-Indic digits, since the template may be filled by hand. */
-function toAsciiDigits(value: string): string {
-  return value
-    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
-    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
-    .replace(/[,٬\s]/g, '');
 }
 
 const rowSchema = z.object({
@@ -372,6 +367,15 @@ export async function confirmImport(rows: ImportRow[]): Promise<ConfirmResult> {
            * mention it would be the worst kind of silent data loss.
            */
           ...(payload.attributes.length > 0 ? { attributes: payload.attributes } : {}),
+          /*
+           * An ARCHIVED row that the file names again comes back as a draft.
+           * Product slugs are globally unique, so re-importing an archived
+           * product cannot create a second row — without this it would update a
+           * row nobody can see and the import would report a success the
+           * shopkeeper finds no trace of. Draft, not published: an import is
+           * never a publish (see the create branch below).
+           */
+          status: sql`case when ${products.status} = 'archived' then 'draft'::product_status else ${products.status} end`,
         })
         // Ownership: the shop id is part of the predicate.
         .where(and(eq(products.id, payload.existingId), eq(products.shopId, context.shopId)))

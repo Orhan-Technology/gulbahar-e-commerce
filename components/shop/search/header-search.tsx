@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { useLocale, useTranslations } from 'next-intl';
-import { Clock, Package, Search, Sparkle, Store, X } from 'lucide-react';
+import { Clock, LayoutGrid, Package, Search, Sparkle, Store, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { TypedPlaceholder, useTypedPlaceholder } from '@/components/shop/search/typed-placeholder';
@@ -38,16 +38,24 @@ export function HeaderSearch({
    * is the bare bordered input, kept for narrow contexts.
    */
   variant = 'plain',
+  /**
+   * Prefills the field — the results page passes the term it is showing, so
+   * refining a search is an edit rather than a retype.
+   */
+  initialQuery = '',
+  autoFocus = false,
 }: {
   className?: string;
   variant?: 'plain' | 'pill';
+  initialQuery?: string;
+  autoFocus?: boolean;
 }) {
   const t = useTranslations('nav');
   const tSearch = useTranslations('search');
   const locale = useLocale();
   const router = useRouter();
 
-  const [query, setQuery] = React.useState('');
+  const [query, setQuery] = React.useState(initialQuery);
   const [focused, setFocused] = React.useState(false);
 
   /*
@@ -128,9 +136,12 @@ export function HeaderSearch({
 
   function go(suggestion: Suggestion) {
     setOpen(false);
-    router.push(
-      suggestion.kind === 'product' ? `/products/${suggestion.slug}` : `/shops/${suggestion.slug}`,
-    );
+    const href = {
+      product: `/products/${suggestion.slug}`,
+      shop: `/shops/${suggestion.slug}`,
+      category: `/categories/${suggestion.slug}`,
+    }[suggestion.kind];
+    router.push(href);
   }
 
   function runSearch(override?: string) {
@@ -222,6 +233,14 @@ export function HeaderSearch({
             }}
             onBlur={() => setFocused(false)}
             onKeyDown={onKeyDown}
+            /*
+             * Autofocus is off by default and opt-in per surface. The one place
+             * it is asked for is /search with no query, which is a screen whose
+             * entire purpose is this field — on a phone that is the difference
+             * between landing on the search page and searching. Anywhere else it
+             * would steal the caret from whatever the reader was doing.
+             */
+            autoFocus={autoFocus}
             // The pill draws its own animated placeholder above; a native one
             // would sit underneath it, showing two labels at once.
             placeholder={variant === 'pill' ? undefined : t('searchPlaceholder')}
@@ -378,6 +397,8 @@ export function HeaderSearch({
                         />
                       ) : suggestion.kind === 'shop' ? (
                         <Store className="h-4 w-4 text-neutral-400" aria-hidden />
+                      ) : suggestion.kind === 'category' ? (
+                        <LayoutGrid className="text-primary h-4 w-4" aria-hidden />
                       ) : (
                         <Package className="h-4 w-4 text-neutral-400" aria-hidden />
                       )}
@@ -387,7 +408,11 @@ export function HeaderSearch({
                         {suggestion.label}
                       </span>
                       <span className="text-muted-foreground block truncate text-xs">
-                        {suggestion.kind === 'shop' ? tSearch('shopLabel') : suggestion.sublabel}
+                        {suggestion.kind === 'shop'
+                          ? tSearch('shopLabel')
+                          : suggestion.kind === 'category'
+                            ? tSearch('categoryLabel')
+                            : suggestion.sublabel}
                       </span>
                     </span>
                   </button>

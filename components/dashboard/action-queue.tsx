@@ -67,26 +67,58 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
 
     switch (entry.kind) {
       case 'new_order':
-      case 'to_ready': {
-        // subtitle is packed as "itemCount|shopTotal" by the query.
-        const [count, total] = entry.subtitle.split('|');
+      case 'to_ready':
+      case 'to_deliver':
+      case 'to_collect': {
+        // subtitle is packed as "itemCount|shopTotal|holdExpiresAt" by the query.
+        const [count, total, holdExpires] = entry.subtitle.split('|');
+
+        const TITLE_KEY = {
+          new_order: 'newOrder',
+          to_ready: 'markReady',
+          to_deliver: 'toDeliver',
+          to_collect: 'toCollect',
+        } as const;
+
         return {
           ...base,
           orderId: entry.id,
           reference: entry.title,
-          advanceTo: entry.kind === 'new_order' ? ('accepted' as const) : ('ready' as const),
-          // The rail is the SLA now, not the row type: a two-hour-old order and
-          // a three-day-old one are different situations.
-          tone: SLA_TONE[level],
-          title: t(entry.kind === 'new_order' ? 'newOrder' : 'markReady', {
-            reference: entry.title,
-          }),
-          subtitle: t('newOrderSub', {
-            // `n` pluralises, `count` renders — see the dashboard stat row.
-            n: Number(count),
-            count: formatNumber(Number(count), locale),
-            total: formatCurrency(Number(total), locale),
-          }),
+          /*
+           * Only the first two rows carry an inline advance. Handover is its own
+           * control (`handover`) and collection needs the code the customer
+           * reads out, which is a dialog on the order itself.
+           */
+          advanceTo:
+            entry.kind === 'new_order'
+              ? ('accepted' as const)
+              : entry.kind === 'to_ready'
+                ? ('ready' as const)
+                : undefined,
+          handover: entry.kind === 'to_deliver',
+          /*
+           * The rail is the SLA, not the row type: a two-hour-old order and a
+           * three-day-old one are different situations. A waiting pickup is the
+           * exception — it is not late, it is reserved stock, and amber is the
+           * honest colour for something counting down that nobody is at fault for.
+           */
+          tone: entry.kind === 'to_collect' ? ('warning' as const) : SLA_TONE[level],
+          title: t(TITLE_KEY[entry.kind], { reference: entry.title }),
+          subtitle:
+            /*
+             * A waiting pickup says WHEN THE HOLD LAPSES rather than what it is
+             * worth. The value is the same fact for every row on the list; the
+             * deadline is the only thing that makes this one urgent, and it is
+             * what the shopkeeper would otherwise have to open the order to find.
+             */
+            entry.kind === 'to_collect' && holdExpires
+              ? t('toCollectSub', { date: formatDate(holdExpires, locale) })
+              : t('newOrderSub', {
+                  // `n` pluralises, `count` renders — see the dashboard stat row.
+                  n: Number(count),
+                  count: formatNumber(Number(count), locale),
+                  total: formatCurrency(Number(total), locale),
+                }),
         };
       }
       case 'needs_answer':

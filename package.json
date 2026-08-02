@@ -39,7 +39,8 @@
     "check:admin": "tsx scripts/check-admin.ts",
     "check:reports": "tsx scripts/check-reports.ts",
     "check:collect": "tsx scripts/check-collect.ts",
-    "check:notify": "tsx scripts/check-notify.ts"
+    "check:notify": "tsx scripts/check-notify.ts",
+    "messages:merge": "tsx scripts/merge-message-patches.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.5.7",

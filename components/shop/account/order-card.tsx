@@ -15,6 +15,10 @@ import { cn } from '@/lib/utils';
  * `placed` is deliberately neutral rather than warning-coloured: from the
  * customer's side nothing has gone wrong, the shop simply has not answered yet.
  * Amber there would make every fresh order look like a problem.
+ *
+ * `cancelled` is neutral for the same reason and a stronger one: the customer
+ * is usually the person who cancelled it. Red is reserved for `rejected`, which
+ * is something that happened TO them.
  */
 const STATUS_VARIANT = {
   placed: 'secondary',
@@ -22,6 +26,7 @@ const STATUS_VARIANT = {
   ready: 'warning',
   fulfilled: 'success',
   rejected: 'destructive',
+  cancelled: 'outline',
 } as const;
 
 export type CustomerOrderRow = {

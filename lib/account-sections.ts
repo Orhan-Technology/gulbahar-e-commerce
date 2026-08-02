@@ -6,6 +6,7 @@ import {
   Settings,
   ShieldCheck,
   Star,
+  Store,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -25,7 +26,15 @@ import {
  * that was never about quantity.
  */
 export type AccountSection = {
-  key: 'orders' | 'wishlist' | 'addresses' | 'reviews' | 'security' | 'settings' | 'support';
+  key:
+    | 'orders'
+    | 'wishlist'
+    | 'following'
+    | 'addresses'
+    | 'reviews'
+    | 'security'
+    | 'settings'
+    | 'support';
   href: string;
   icon: LucideIcon;
   countKey?: 'orders' | 'wishlist' | 'reviews' | 'addresses';
@@ -34,6 +43,13 @@ export type AccountSection = {
 export const ACCOUNT_SECTIONS: AccountSection[] = [
   { key: 'orders', href: '/account/orders', icon: Package, countKey: 'orders' },
   { key: 'wishlist', href: '/account/wishlist', icon: Heart, countKey: 'wishlist' },
+  /*
+   * No `countKey`: following has no entry in AccountCounts, and inventing one
+   * would mean widening a query every account page already runs for the sake of
+   * a number nobody asked for. The row's description carries the section
+   * instead, which is what the hub falls back to when a count is absent.
+   */
+  { key: 'following', href: '/account/following', icon: Store },
   { key: 'addresses', href: '/account/addresses', icon: MapPin, countKey: 'addresses' },
   { key: 'reviews', href: '/account/reviews', icon: Star, countKey: 'reviews' },
   { key: 'security', href: '/account/security', icon: ShieldCheck },
