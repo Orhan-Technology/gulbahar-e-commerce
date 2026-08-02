@@ -561,7 +561,11 @@ async function main() {
     where p.shop_id = ${shop.id} and r.status = 'visible' limit 1
   `;
   if (visibleReview) {
-    const flagged = await callAction(shopkeeper, 'flagReview', [visibleReview.id]);
+    // flagReview now REQUIRES a violation category, so the admin queue is never
+    // handed a report with no statement of what is wrong with it.
+    const flagged = await callAction(shopkeeper, 'flagReview', [
+      { reviewId: visibleReview.id, reason: 'offensive' },
+    ]);
     const [flaggedRow] = await sql<{ status: string }[]>`
       select status from reviews where id = ${visibleReview.id}
     `;

@@ -2,12 +2,17 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
   BarChart3,
   ChevronRight,
+  LifeBuoy,
   MessageCircleQuestion,
+  Phone,
   Settings,
   Star,
   Store,
 } from 'lucide-react';
 
+import { pickLocale } from '@/lib/db/localized';
+import { siteSettings } from '@/lib/db/queries/settings';
+import { formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -29,6 +34,9 @@ export default async function MorePage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations('dashboardNav');
+  const help = await getTranslations('dashboardNav.help');
+
+  const settings = await siteSettings();
 
   return (
     <div className="space-y-4 p-4 md:hidden">
@@ -52,6 +60,42 @@ export default async function MorePage({ params }: { params: Promise<{ locale: s
           );
         })}
       </ul>
+
+      {/*
+        HELP, with a number that dials (Prompt: no help affordance anywhere).
+        The panel had no way to reach a human at all — a tenant stuck on a
+        rejected application or an order they cannot advance had the mall office
+        two floors away and no phone number on any screen. A `tel:` link, not a
+        support form: this persona rings people, and there is no ticketing system
+        in the demo to pretend otherwise.
+      */}
+      <section className="rounded-card border-border bg-card space-y-2 border p-4">
+        <div className="flex items-center gap-2">
+          <LifeBuoy className="text-primary h-4 w-4" aria-hidden />
+          <h2 className="text-sm font-bold">{help('heading')}</h2>
+        </div>
+        <p className="text-muted-foreground text-xs">{help('body')}</p>
+
+        <a
+          href={`tel:${settings.supportPhone}`}
+          className="rounded-control border-border hover:border-primary flex items-center gap-3 border p-3"
+        >
+          <span className="rounded-control bg-primary-50 text-primary-700 flex h-9 w-9 shrink-0 items-center justify-center">
+            <Phone className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-medium">{help('callOffice')}</span>
+            <span className="text-muted-foreground block text-xs" dir="ltr">
+              {formatPhone(settings.supportPhone, locale)}
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-neutral-400 rtl:rotate-180" aria-hidden />
+        </a>
+
+        <p className="text-muted-foreground text-xs">
+          {help('address', { address: pickLocale(settings.address, locale) })}
+        </p>
+      </section>
     </div>
   );
 }

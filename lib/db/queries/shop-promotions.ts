@@ -75,6 +75,150 @@ export async function shopPublishedProducts(shopId: string) {
     .orderBy(asc(products.createdAt));
 }
 
+/**
+ * Did the offer sell anything? (Prompt: self-funded offers get no readout.)
+ *
+ * A campaign comes back with impressions and clicks; an Offer — the mechanism
+ * that costs the shop its own margin — came back with nothing at all, so a
+ * shopkeeper had no way to tell a discount that worked from one that gave money
+ * away. This answers the only question they can act on: units and revenue while
+ * the offer ran, against the SAME LENGTH OF TIME immediately before it.
+ *
+ * Three deliberate limits, because the honest version is worth more than a
+ * fuller-looking one:
+ *
+ *   - FULFILLED ORDERS ONLY, the same predicate the dashboard's revenue tile
+ *     uses. A placed order is not money and the two figures must not disagree.
+ *   - THE WINDOW STOPS AT `now` for a running offer, and the baseline is
+ *     shortened to match. Comparing three days of an offer against a full week
+ *     before it reports a collapse on every offer's first morning.
+ *   - NO ATTRIBUTION IS CLAIMED. This is what happened during the window, not
+ *     what the offer caused — the UI says so rather than printing a lift figure
+ *     nothing here can support.
+ */
+export type OfferPerformance = {
+  offerId: string;
+  units: number;
+  revenue: number;
+  baselineUnits: number;
+  baselineRevenue: number;
+  /** Days of the offer measured so far — what the comparison actually covers. */
+  measuredDays: number;
+  /** Nothing sold in either window: say so instead of printing two zeros. */
+  empty: boolean;
+  /** The offer has not started, so there is nothing to measure yet. */
+  notStarted: boolean;
+};
+
+export async function offerPerformance(
+  shopId: string,
+  offers: Array<{
+    id: string;
+    scope: 'shop' | 'products';
+    productIds: string[] | null;
+    startsAt: Date;
+    endsAt: Date;
+  }>,
+  now: Date = new Date(),
+): Promise<Map<string, OfferPerformance>> {
+  const results = await Promise.all(
+    offers.map(async (offer): Promise<OfferPerformance> => {
+      const start = offer.startsAt;
+      const end = offer.endsAt.getTime() < now.getTime() ? offer.endsAt : now;
+      const span = end.getTime() - start.getTime();
+
+      if (span <= 0) {
+        return {
+          offerId: offer.id,
+          units: 0,
+          revenue: 0,
+          baselineUnits: 0,
+          baselineRevenue: 0,
+          measuredDays: 0,
+          empty: true,
+          notStarted: true,
+        };
+      }
+
+      const baselineStart = new Date(start.getTime() - span);
+      const ids = offer.scope === 'products' ? (offer.productIds ?? []) : [];
+
+      // A products-scoped offer with no products attached measures nothing.
+      if (offer.scope === 'products' && ids.length === 0) {
+        return {
+          offerId: offer.id,
+          units: 0,
+          revenue: 0,
+          baselineUnits: 0,
+          baselineRevenue: 0,
+          measuredDays: Math.max(1, Math.round(span / 86_400_000)),
+          empty: true,
+          notStarted: false,
+        };
+      }
+
+      /*
+       * ISO strings with explicit ::timestamptz — inside a raw fragment drizzle
+       * has no column to infer a type from and postgres.js rejects a bare Date
+       * with a message nowhere near the cause (see slotInventory above).
+       */
+      const scope =
+        ids.length > 0
+          ? sql`and oi.product_id in (${sql.join(
+              ids.map((id) => sql`${id}::uuid`),
+              sql`, `,
+            )})`
+          : sql``;
+
+      const [row] = (await db.execute(sql`
+        select
+          coalesce(sum(oi.quantity) filter (
+            where o.created_at >= ${start.toISOString()}::timestamptz
+          ), 0)::int as units,
+          coalesce(sum(oi.price_snapshot * oi.quantity) filter (
+            where o.created_at >= ${start.toISOString()}::timestamptz
+          ), 0)::int as revenue,
+          coalesce(sum(oi.quantity) filter (
+            where o.created_at < ${start.toISOString()}::timestamptz
+          ), 0)::int as baseline_units,
+          coalesce(sum(oi.price_snapshot * oi.quantity) filter (
+            where o.created_at < ${start.toISOString()}::timestamptz
+          ), 0)::int as baseline_revenue
+        from order_items oi
+        join orders o on o.id = oi.order_id
+        where oi.shop_id = ${shopId}
+          and o.status = 'fulfilled'
+          and o.created_at >= ${baselineStart.toISOString()}::timestamptz
+          and o.created_at < ${end.toISOString()}::timestamptz
+          ${scope}
+      `)) as unknown as Array<{
+        units: number;
+        revenue: number;
+        baseline_units: number;
+        baseline_revenue: number;
+      }>;
+
+      const units = Number(row?.units ?? 0);
+      const revenue = Number(row?.revenue ?? 0);
+      const baselineUnits = Number(row?.baseline_units ?? 0);
+      const baselineRevenue = Number(row?.baseline_revenue ?? 0);
+
+      return {
+        offerId: offer.id,
+        units,
+        revenue,
+        baselineUnits,
+        baselineRevenue,
+        measuredDays: Math.max(1, Math.round(span / 86_400_000)),
+        empty: units === 0 && baselineUnits === 0,
+        notStarted: false,
+      };
+    }),
+  );
+
+  return new Map(results.map((row) => [row.offerId, row]));
+}
+
 /* -------------------------------------------------------------------------- */
 /* Featured slots                                                             */
 

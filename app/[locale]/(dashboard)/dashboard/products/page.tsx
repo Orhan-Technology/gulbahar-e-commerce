@@ -16,7 +16,7 @@ import { Link } from '@/lib/i18n/navigation';
 
 type Query = {
   q?: string;
-  status?: 'draft' | 'published' | 'unpublished';
+  status?: 'draft' | 'published' | 'unpublished' | 'archived';
   stock?: 'out' | 'low';
   /** Arrives from the dashboard's "views this week" tile. */
   sort?: 'title' | 'views';
@@ -76,6 +76,21 @@ export default async function ShopProductsPage({
       active: query.stock === 'low',
     },
   ];
+
+  /*
+   * The archive chip appears only once something is IN the archive. A shop that
+   * has never deleted a product has no use for a permanently visible "archived
+   * (۰)" filter — the point of archiving is that those rows are out of the way,
+   * and a chip advertising an empty drawer puts them back in the eyeline.
+   */
+  if (counts.archived > 0) {
+    chips.push({
+      key: 'archived',
+      href: '/dashboard/products?status=archived',
+      count: counts.archived,
+      active: query.status === 'archived',
+    });
+  }
 
   return (
     <div className="space-y-4 p-4">
@@ -146,6 +161,19 @@ async function ProductList({
   });
 
   if (items.length === 0) {
+    // An empty ARCHIVE is a good state, not a shop with no products — offering
+    // "add your first product" there would answer a question nobody asked.
+    if (query.status === 'archived') {
+      return (
+        <EmptyState
+          illustration={<PackagePlus className="h-7 w-7" />}
+          title={t('archive.emptyTitle')}
+          description={t('archive.emptyBody')}
+          action={{ label: t('archive.backToCatalogue'), href: '/dashboard/products' }}
+        />
+      );
+    }
+
     return (
       <EmptyState
         illustration={<PackagePlus className="h-7 w-7" />}
@@ -172,6 +200,7 @@ async function ProductList({
         discountPrice: item.discountPrice,
         stock: item.stock,
         status: item.status,
+        unpublishReason: item.unpublishReason,
         viewCount: item.viewCount,
         weekViews: item.weekViews,
         wishlistCount: item.wishlistCount,

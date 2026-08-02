@@ -72,6 +72,8 @@ export default async function EditProductPage({
           discountPrice: product.discountPrice ? String(product.discountPrice) : '',
           stock: String(product.stock),
           status: product.status,
+          // Admin's note, read-only — shown so an unpublished product says why.
+          unpublishReason: product.unpublishReason,
           brand: product.brand ?? '',
           model: product.model ?? '',
           specs: (product.attributes ?? []).map((row) => ({

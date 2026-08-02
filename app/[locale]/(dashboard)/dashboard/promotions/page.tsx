@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import {
+  offerPerformance,
   shopCampaignTotals,
   shopCampaigns,
   shopOffers,
@@ -51,6 +52,11 @@ export default async function ShopPromotionsPage({
     shopCampaignTotals(user.shopId),
     shopPublishedProducts(user.shopId),
   ]);
+
+  // Real order data, per offer — see offerPerformance() for what it does and
+  // does not claim. Needs the offers, so it cannot join the batch above.
+  const performance = await offerPerformance(user.shopId, offers, new Date(now));
+  const tPerf = await getTranslations('shopPromotions.offers.performance');
 
   const productOptions = products.map((product) => ({
     id: product.id,
@@ -104,6 +110,30 @@ export default async function ShopPromotionsPage({
                 startsAt: offer.startsAt.toISOString(),
                 endsAt: offer.endsAt.toISOString(),
                 phase: offer.phase,
+                /*
+                 * Formatted HERE, on the server. The client half of this panel
+                 * never sees a locale or a raw amount, so the money in it is
+                 * formatted by the same lib/format call as every other figure
+                 * in the dashboard.
+                 */
+                performance: (() => {
+                  const row = performance.get(offer.id);
+                  const days = formatNumber(row?.measuredDays ?? 0, locale);
+                  return {
+                    note: !row
+                      ? tPerf('noData')
+                      : row.notStarted
+                        ? tPerf('notStarted')
+                        : row.empty
+                          ? tPerf('noData')
+                          : null,
+                    units: formatNumber(row?.units ?? 0, locale),
+                    revenue: formatCurrency(row?.revenue ?? 0, locale),
+                    baselineUnits: formatNumber(row?.baselineUnits ?? 0, locale),
+                    baselineRevenue: formatCurrency(row?.baselineRevenue ?? 0, locale),
+                    windowLabel: tPerf('window', { days, n: row?.measuredDays ?? 0 }),
+                  };
+                })(),
               }))}
             />
           )}

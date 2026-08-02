@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { productImages, productVariants, products } from '../db/schema';
+import { toAsciiDigits } from '../digits';
 import { assertSupportedImage, storeImage } from '../images';
 
 /**
@@ -29,8 +30,10 @@ async function requireShopContext() {
   return { userId: user.id, shopId: user.shopId };
 }
 
+/** `fields` maps FORM FIELD NAME → code; see lib/actions/shop-profile.ts. */
 export type ProductActionResult<T = undefined> =
-  ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
+  | ({ ok: true } & (T extends undefined ? object : { data: T }))
+  | { ok: false; error: string; fields?: Record<string, string> };
 
 /* -------------------------------------------------------------------------- */
 
@@ -78,15 +81,28 @@ const featureSchema = z.object({
   body: optionalLocalizedField,
 });
 
+/**
+ * A number field that also accepts «۵۰۰».
+ *
+ * The forms sanitise before they submit, but the ACTION is the boundary and it
+ * has to hold on its own — an import, a check script, or a future screen may
+ * hand it exactly what a Persian keyboard produces, and `z.coerce.number()`
+ * turns «۵۰۰» into NaN. One implementation for both sides (lib/digits.ts): the
+ * transliteration only, so "۱۲.۵" still becomes 12.5 and still fails `.int()`
+ * rather than being silently read as 125.
+ */
+const numeric = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (typeof value === 'string' ? toAsciiDigits(value) : value), schema);
+
 const productSchema = z
   .object({
     id: z.string().uuid().optional(),
     title: localizedField,
     description: optionalLocalizedField.optional(),
     categoryId: z.string().uuid().nullable().optional(),
-    price: z.coerce.number().int().positive({ message: 'price_positive' }),
-    discountPrice: z.coerce.number().int().nonnegative().nullable().optional(),
-    stock: z.coerce.number().int().min(0).max(100000),
+    price: numeric(z.coerce.number().int().positive({ message: 'price_positive' })),
+    discountPrice: numeric(z.coerce.number().int().nonnegative().nullable().optional()),
+    stock: numeric(z.coerce.number().int().min(0).max(100000)),
     status: z.enum(['draft', 'published', 'unpublished']),
     variants: z.array(variantSchema).max(4).optional(),
     brand: z.string().trim().max(60).nullable().optional(),
@@ -122,6 +138,38 @@ function errorCode(error: z.ZodError): string {
   return message && KNOWN_CODES.has(message) ? message : 'invalid_input';
 }
 
+/**
+ * Zod path → the name the FORM calls that field, so the error can be printed
+ * under the input it is about instead of only in a toast that names none.
+ *
+ * `discount_below_price` arrives from a `.refine()` on the OBJECT, so its path
+ * is empty — it is attributed to the discount field by hand below, because that
+ * is the field the shopkeeper has to change.
+ */
+const FIELD_BY_PATH: Record<string, string> = {
+  'title.fa': 'titleFa',
+  'description.fa': 'descriptionFa',
+  price: 'price',
+  discountPrice: 'discountPrice',
+  stock: 'stock',
+  brand: 'brand',
+  model: 'model',
+};
+
+function fieldErrors(error: z.ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const code = KNOWN_CODES.has(issue.message) ? issue.message : 'invalid_input';
+    const field =
+      issue.path.length === 0 && issue.message === 'discount_below_price'
+        ? 'discountPrice'
+        : FIELD_BY_PATH[issue.path.join('.')];
+    if (!field || out[field]) continue;
+    out[field] = code;
+  }
+  return out;
+}
+
 /** Slug derived from the Dari title, since that is the required field. */
 function slugify(value: string, suffix: string): string {
   const base = value
@@ -140,7 +188,9 @@ export async function saveProduct(
   if (!context) return { ok: false, error: 'forbidden' };
 
   const parsed = productSchema.safeParse(input);
-  if (!parsed.success) return { ok: false, error: errorCode(parsed.error) };
+  if (!parsed.success) {
+    return { ok: false, error: errorCode(parsed.error), fields: fieldErrors(parsed.error) };
+  }
 
   const data = parsed.data;
   const discountPrice =
@@ -195,7 +245,19 @@ export async function saveProduct(
       .update(products)
       .set(values)
       // shopId in the predicate is the ownership check.
-      .where(and(eq(products.id, productId), eq(products.shopId, context.shopId)))
+      .where(
+        and(
+          eq(products.id, productId),
+          eq(products.shopId, context.shopId),
+          /*
+           * An archived row is not editable, and refusing here is what keeps
+           * `restoreProduct` the ONLY way out of the archive. Without it, saving
+           * the edit form against an archived product would quietly set a live
+           * status again — an un-delete nobody asked for and nobody confirmed.
+           */
+          sql`${products.status} <> 'archived'`,
+        ),
+      )
       .returning({ id: products.id, slug: products.slug });
 
     if (!updated) return { ok: false, error: 'not_found' };
@@ -264,6 +326,81 @@ export async function setProductStock(
   return { ok: true };
 }
 
+/**
+ * The shopkeeper's DELETE (Prompt: a mis-created product is permanent clutter).
+ *
+ * It archives rather than deletes, and that is not a euphemism — a product that
+ * has ever been ordered is referenced by order_items, and removing the row would
+ * either fail on the foreign key or erase what a customer bought from their own
+ * order history. Archiving hides it from every surface INCLUDING this shop's own
+ * catalogue list, which is what the word "delete" means to the person pressing
+ * it, while the history keeps naming the thing that was sold.
+ *
+ * Reversible on purpose: `restoreProduct` brings it back as unpublished, so the
+ * mistake of archiving the wrong row costs two taps rather than a re-entry.
+ */
+export async function archiveProduct(productId: string): Promise<ProductActionResult> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = z.string().uuid().safeParse(productId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [updated] = await db
+    .update(products)
+    .set({ status: 'archived' })
+    .where(
+      and(
+        eq(products.id, parsed.data),
+        eq(products.shopId, context.shopId),
+        sql`${products.status} <> 'archived'`,
+      ),
+    )
+    .returning({ slug: products.slug });
+
+  if (!updated) return { ok: false, error: 'not_found' };
+
+  revalidatePath('/dashboard/products');
+  revalidatePath('/dashboard');
+  // The product page and every listing it appeared on now have one fewer row.
+  revalidatePath(`/products/${updated.slug}`);
+  revalidatePath('/products');
+  return { ok: true };
+}
+
+/**
+ * Out of the archive, as UNPUBLISHED.
+ *
+ * Never straight back to published: the shop archived it, time has passed, and
+ * putting it in front of customers again without anyone looking at the price or
+ * the stock first is a decision the platform should not make on their behalf.
+ */
+export async function restoreProduct(productId: string): Promise<ProductActionResult> {
+  const context = await requireShopContext();
+  if (!context) return { ok: false, error: 'forbidden' };
+
+  const parsed = z.string().uuid().safeParse(productId);
+  if (!parsed.success) return { ok: false, error: 'invalid_input' };
+
+  const [updated] = await db
+    .update(products)
+    .set({ status: 'unpublished' })
+    .where(
+      and(
+        eq(products.id, parsed.data),
+        eq(products.shopId, context.shopId),
+        eq(products.status, 'archived'),
+      ),
+    )
+    .returning({ slug: products.slug });
+
+  if (!updated) return { ok: false, error: 'not_found' };
+
+  revalidatePath('/dashboard/products');
+  revalidatePath('/dashboard');
+  return { ok: true };
+}
+
 /** Bulk publish / unpublish (PRD §6.2). */
 export async function bulkSetProductStatus(
   productIds: string[],
@@ -277,8 +414,25 @@ export async function bulkSetProductStatus(
 
   const updated = await db
     .update(products)
-    .set({ status })
-    .where(and(inArray(products.id, parsed.data), eq(products.shopId, context.shopId)))
+    .set({
+      status,
+      /*
+       * `unpublishReason` is admin's note explaining why mall management took
+       * the product off the storefront, and it is only meaningful while the
+       * product is unpublished. Publishing clears it — otherwise the shop
+       * republishes, fixes nothing, and the stale reason stays attached to a
+       * live product, where the next reader takes it for a current complaint.
+       */
+      ...(status === 'published' ? { unpublishReason: null } : {}),
+    })
+    .where(
+      and(
+        inArray(products.id, parsed.data),
+        eq(products.shopId, context.shopId),
+        // Same rule as the edit form: only restoreProduct leaves the archive.
+        sql`${products.status} <> 'archived'`,
+      ),
+    )
     .returning({ id: products.id });
 
   revalidatePath('/dashboard/products');

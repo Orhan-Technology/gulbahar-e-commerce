@@ -4,7 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
+import { ArchiveRestore, GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -18,12 +18,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { FieldError } from '@/components/custom/field-error';
 import { PriceDisplay } from '@/components/custom/price-display';
+import { digitsOnly } from '@/lib/digits';
 import {
+  archiveProduct,
   deleteProductImage,
   reorderProductImages,
+  restoreProduct,
   saveProduct,
   uploadProductImages,
 } from '@/lib/actions/shop-products';
@@ -57,7 +69,9 @@ export type ProductFormValues = {
   price: string;
   discountPrice: string;
   stock: string;
-  status: 'draft' | 'published' | 'unpublished';
+  status: 'draft' | 'published' | 'unpublished' | 'archived';
+  /** Admin's reason for taking it down — shown, never edited (PRD §3.1). */
+  unpublishReason: string | null;
   variants: Array<{ nameFa: string; nameEn: string; options: Array<{ fa: string; en: string }> }>;
   brand: string;
   model: string;
@@ -94,14 +108,56 @@ export function ProductForm({
   const [values, setValues] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
 
-  const set = <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) =>
+  /*
+   * FIELD-LEVEL ERRORS (Prompt: errors have no field-level surface).
+   *
+   * A toast of a translated code is the weakest surface this persona could be
+   * given: it appears in a corner, names no field, and is gone before someone
+   * serving a customer has looked up. The action now returns `fields`, keyed by
+   * the names below, and each input renders its own message and goes red. The
+   * toast stays as the secondary signal, because the error may also be about
+   * nothing on screen (a permission, a vanished row).
+   */
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+
+  const set = <K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
+    // Clear the message the moment the field it is about is touched — an error
+    // that survives the fix reads as "still wrong".
+    setFieldErrors((current) => {
+      if (!(key in current)) return current;
+      const next = { ...current };
+      delete next[key as string];
+      return next;
+    });
+  };
 
-  const priceNumber = Number(values.price.replace(/\D/g, '')) || 0;
-  const discountNumber = Number(values.discountPrice.replace(/\D/g, '')) || 0;
+  /** The message under one input, or nothing. */
+  const fieldError = (field: string) => fieldErrors[field];
 
-  function submit(status?: ProductFormValues['status']) {
-    const nextStatus = status ?? values.status;
+  const priceNumber = Number(digitsOnly(values.price)) || 0;
+  const discountNumber = Number(digitsOnly(values.discountPrice)) || 0;
+
+  function submit(status?: 'draft' | 'published' | 'unpublished') {
+    const nextStatus = status ?? (values.status === 'archived' ? 'draft' : values.status);
+
+    /*
+     * CHECKED HERE FIRST, so the commonest mistakes never cost a round trip —
+     * the person filling this in is on a phone on mall wifi. The server
+     * re-validates all of it regardless; this is a faster copy of the same
+     * rules, not the enforcement.
+     */
+    const local: Record<string, string> = {};
+    if (!values.titleFa.trim()) local.titleFa = 'fa_required';
+    if (priceNumber <= 0) local.price = 'price_positive';
+    if (discountNumber > 0 && discountNumber >= priceNumber) {
+      local.discountPrice = 'discount_below_price';
+    }
+    if (Object.keys(local).length > 0) {
+      setFieldErrors(local);
+      toast.error(t(`errors.${Object.values(local)[0]}` as never));
+      return;
+    }
 
     startTransition(async () => {
       const result = await saveProduct({
@@ -115,7 +171,7 @@ export function ProductForm({
         categoryId: values.categoryId,
         price: priceNumber,
         discountPrice: discountNumber || null,
-        stock: Number(values.stock.replace(/\D/g, '')) || 0,
+        stock: Number(digitsOnly(values.stock)) || 0,
         status: nextStatus,
         brand: values.brand.trim() || null,
         model: values.model.trim() || null,
@@ -144,10 +200,12 @@ export function ProductForm({
       });
 
       if (!result.ok) {
+        setFieldErrors(result.fields ?? {});
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
 
+      setFieldErrors({});
       toast.success(values.id ? t('saved') : t('created'));
 
       if (!values.id) {
@@ -167,6 +225,32 @@ export function ProductForm({
 
   return (
     <div className="space-y-5">
+      {/*
+        ARCHIVED IS A WALL, not a badge. Every write in the action refuses an
+        archived row, so a form that still offered Save and Publish would offer
+        two buttons that always fail. The only thing on offer is the way back.
+      */}
+      {values.status === 'archived' && values.id && (
+        <section className="rounded-card border-danger-border bg-danger-bg space-y-2 border p-4">
+          <h2 className="text-danger text-sm font-bold">{t('archivedHeading')}</h2>
+          <p className="text-danger/90 text-xs">{t('archivedBody')}</p>
+          <RestoreProductButton productId={values.id} />
+        </section>
+      )}
+
+      {/*
+        ADMIN'S REASON, read-only (PRD §3.1). The shop may fix the product and
+        publish it again; it may not rewrite what the mall said about it. Without
+        this line an unpublished product is a shopkeeper guessing.
+      */}
+      {values.status === 'unpublished' && values.unpublishReason && (
+        <section className="rounded-card border-danger-border bg-danger-bg space-y-1 border p-4">
+          <p className="text-danger text-sm font-bold">{t('unpublishedHeading')}</p>
+          <p className="text-danger/90 text-sm">{values.unpublishReason}</p>
+          <p className="text-danger/80 text-xs">{t('unpublishedHint')}</p>
+        </section>
+      )}
+
       {/* Content, per language */}
       <section className="rounded-card border-border bg-card space-y-3 border p-4">
         <h2 className="text-sm font-bold">{t('contentHeading')}</h2>
@@ -212,7 +296,21 @@ export function ProductForm({
                     value={values[titleKey]}
                     onChange={(event) => set(titleKey, event.target.value)}
                     required={lang === 'fa'}
+                    aria-invalid={lang === 'fa' && fieldError('titleFa') !== undefined}
+                    aria-describedby={
+                      lang === 'fa' && fieldError('titleFa') ? 'title-fa-error' : undefined
+                    }
                   />
+                  {lang === 'fa' && (
+                    <FieldError
+                      id="title-fa-error"
+                      message={
+                        fieldError('titleFa')
+                          ? t(`fieldErrors.${fieldError('titleFa')}` as never)
+                          : null
+                      }
+                    />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor={`desc-${lang}`}>{t('descriptionLabel')}</Label>
@@ -287,8 +385,14 @@ export function ProductForm({
               inputMode="numeric"
               dir="ltr"
               value={values.price}
-              onChange={(event) => set('price', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('price', digitsOnly(event.target.value))}
               required
+              aria-invalid={fieldError('price') !== undefined}
+              aria-describedby={fieldError('price') ? 'price-error' : undefined}
+            />
+            <FieldError
+              id="price-error"
+              message={fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null}
             />
           </div>
           <div className="space-y-1.5">
@@ -298,7 +402,17 @@ export function ProductForm({
               inputMode="numeric"
               dir="ltr"
               value={values.discountPrice}
-              onChange={(event) => set('discountPrice', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('discountPrice', digitsOnly(event.target.value))}
+              aria-invalid={fieldError('discountPrice') !== undefined}
+              aria-describedby={fieldError('discountPrice') ? 'discount-error' : undefined}
+            />
+            <FieldError
+              id="discount-error"
+              message={
+                fieldError('discountPrice')
+                  ? t(`fieldErrors.${fieldError('discountPrice')}` as never)
+                  : null
+              }
             />
           </div>
           <div className="space-y-1.5">
@@ -308,7 +422,13 @@ export function ProductForm({
               inputMode="numeric"
               dir="ltr"
               value={values.stock}
-              onChange={(event) => set('stock', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('stock', digitsOnly(event.target.value))}
+              aria-invalid={fieldError('stock') !== undefined}
+              aria-describedby={fieldError('stock') ? 'stock-error' : undefined}
+            />
+            <FieldError
+              id="stock-error"
+              message={fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null}
             />
           </div>
         </div>
@@ -352,27 +472,126 @@ export function ProductForm({
       )}
 
       {/* Save bar */}
-      <div className="rounded-card border-border bg-background/95 sticky bottom-16 z-20 flex flex-wrap gap-2 border p-3 backdrop-blur-md md:bottom-0">
-        <Button onClick={() => submit()} disabled={pending || !values.titleFa.trim()}>
-          {pending ? t('saving') : values.id ? t('save') : t('saveAndContinue')}
-        </Button>
-
-        {values.id && values.status !== 'published' && (
-          <Button variant="accent" onClick={() => submit('published')} disabled={pending}>
-            {t('publish')}
+      {values.status !== 'archived' && (
+        <div className="rounded-card border-border bg-background/95 sticky bottom-16 z-20 flex flex-wrap gap-2 border p-3 backdrop-blur-md md:bottom-0">
+          <Button onClick={() => submit()} disabled={pending}>
+            {pending ? t('saving') : values.id ? t('save') : t('saveAndContinue')}
           </Button>
-        )}
-        {values.id && values.status === 'published' && (
-          <Button variant="outline" onClick={() => submit('unpublished')} disabled={pending}>
-            {t('unpublish')}
-          </Button>
-        )}
 
-        <span className="text-muted-foreground ms-auto self-center text-xs">
-          {t(`statusNow.${values.status}` as never)}
-        </span>
-      </div>
+          {values.id && values.status !== 'published' && (
+            <Button variant="accent" onClick={() => submit('published')} disabled={pending}>
+              {t('publish')}
+            </Button>
+          )}
+          {values.id && values.status === 'published' && (
+            <Button variant="outline" onClick={() => submit('unpublished')} disabled={pending}>
+              {t('unpublish')}
+            </Button>
+          )}
+
+          {/* Archiving is the delete, and it lives beside the other status
+              changes rather than in a menu — this is where a shopkeeper looks
+              for "get rid of it". */}
+          {values.id && <ArchiveProductButton productId={values.id} title={values.titleFa} />}
+
+          <span className="text-muted-foreground ms-auto self-center text-xs">
+            {t(`statusNow.${values.status}` as never)}
+          </span>
+        </div>
+      )}
     </div>
+  );
+}
+
+/**
+ * Archive from the editor, with the same explanation the list gives.
+ *
+ * Duplicated deliberately rather than shared with the list's version: this one
+ * navigates away afterwards (the product it was editing is gone from the
+ * catalogue) and that difference is the whole behaviour.
+ */
+function ArchiveProductButton({ productId, title }: { productId: string; title: string }) {
+  const t = useTranslations('shopProducts.archive');
+  const localeRouter = useLocaleRouter();
+  const [open, setOpen] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <>
+      <Button
+        variant="ghost"
+        className="hover:text-danger text-neutral-500"
+        onClick={() => setOpen(true)}
+        disabled={pending}
+      >
+        <Trash2 />
+        {t('action')}
+      </Button>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('confirmTitle')}</DialogTitle>
+            <DialogDescription>{t('confirmBody', { title })}</DialogDescription>
+          </DialogHeader>
+          <p className="text-muted-foreground text-xs">{t('reversibleNote')}</p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const result = await archiveProduct(productId);
+                  if (!result.ok) {
+                    toast.error(t(`errors.${result.error}` as never));
+                    return;
+                  }
+                  toast.success(t('archived'));
+                  // Back to the list: staying on an editor for a product that is
+                  // no longer in the catalogue is a screen with nothing to do.
+                  localeRouter.replace('/dashboard/products');
+                })
+              }
+            >
+              <Trash2 />
+              {pending ? t('archiving') : t('confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+/** The one control an archived product offers. */
+function RestoreProductButton({ productId }: { productId: string }) {
+  const t = useTranslations('shopProducts.archive');
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      disabled={pending}
+      onClick={() =>
+        startTransition(async () => {
+          const result = await restoreProduct(productId);
+          if (!result.ok) {
+            toast.error(t(`errors.${result.error}` as never));
+            return;
+          }
+          toast.success(t('restored'));
+          router.refresh();
+        })
+      }
+    >
+      <ArchiveRestore />
+      {pending ? t('restoring') : t('restore')}
+    </Button>
   );
 }
 

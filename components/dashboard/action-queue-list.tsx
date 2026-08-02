@@ -6,6 +6,7 @@ import { CheckCircle2, ChevronDown } from 'lucide-react';
 
 import { ActionQueueItem } from '@/components/custom/action-queue-item';
 import { EmptyState } from '@/components/custom/empty-state';
+import { InlineHandoverAction } from '@/components/dashboard/inline-handover-action';
 import { InlineOrderAction } from '@/components/dashboard/inline-order-action';
 import {
   InlineQuestionAnswer,
@@ -23,6 +24,8 @@ export type QueueRow = {
   kind:
     | 'new_order'
     | 'to_ready'
+    | 'to_deliver'
+    | 'to_collect'
     | 'needs_reply'
     | 'needs_answer'
     | 'out_of_stock'
@@ -42,6 +45,8 @@ export type QueueRow = {
   orderId?: string;
   reference?: string;
   advanceTo?: 'accepted' | 'ready';
+  /** Ready-for-DELIVERY: the row offers "handed over" rather than an advance. */
+  handover?: boolean;
   /** Ids for the other row types' inline composers (Prompt C4). */
   questionId?: string;
   reviewId?: string;
@@ -205,6 +210,13 @@ export function ActionQueueList({
                           <OrderRejectButton orderId={row.orderId} size="sm" />
                         )}
                       </div>
+                    ) : row.orderId && row.handover ? (
+                      <InlineHandoverAction
+                        orderId={row.orderId}
+                        reference={row.reference ?? ''}
+                        onOptimistic={() => dismiss(row.key)}
+                        onRollback={() => restore(row.key)}
+                      />
                     ) : row.questionId ? (
                       <InlineQuestionAnswer
                         questionId={row.questionId}

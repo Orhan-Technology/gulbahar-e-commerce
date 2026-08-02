@@ -2,6 +2,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ExternalLink, Store } from 'lucide-react';
 
 import { DashboardSidebar, DashboardTabBar } from '@/components/dashboard/dashboard-nav';
+import { PauseBanner } from '@/components/dashboard/pause-banner';
 import { StretchScroll } from '@/components/motion/stretch-scroll';
 import { BellSlot } from '@/components/custom/bell-slot';
 import { LocaleSwitcher } from '@/components/shop/locale-switcher';
@@ -37,6 +38,9 @@ export default async function DashboardLayout({
 
   const user = await requireShopkeeper(locale);
   const t = await getTranslations('dashboardNav');
+  // One clock read, on the server, handed to the banner — a client component
+  // may not call new Date() during render (React 19 purity, CLAUDE.md).
+  const now = new Date();
   const common = await getTranslations('common');
 
   // The bell fetches its own data now (components/custom/bell-slot.tsx).
@@ -110,6 +114,14 @@ export default async function DashboardLayout({
           </div>
         </div>
       </header>
+
+      {/*
+        Vacation mode, on every screen of the panel rather than on the one that
+        set it (Prompt: prominent and persistent, not a toast). Outside the
+        stretch for the same reason as the header — and directly under it, so it
+        reads as part of the shop's identity block: this shop is shut.
+      */}
+      <PauseBanner pausedUntil={shop?.pausedUntil ?? null} now={now} />
 
       {/*
         Same rule as the storefront: the shop header above and the tab bar below

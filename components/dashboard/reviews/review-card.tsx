@@ -17,8 +17,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { flagReview, respondToReview } from '@/lib/actions/shop-reviews';
+import { REVIEW_FLAG_REASONS, type ReviewFlagReason } from '@/lib/review-flags';
 import { formatDate } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -62,6 +64,18 @@ export function ReviewCard({
   const [replying, setReplying] = React.useState(autoReply);
   const [body, setBody] = React.useState('');
   const [pending, startTransition] = React.useTransition();
+
+  /*
+   * Reporting now needs a REASON (Prompt: flagReview carries none, so admin
+   * moderates context-free). It became a dialog for that: a category is a
+   * choice, and a choice made by a single button press is not a choice. The
+   * dialog is also the place to say what reporting does and does not do — the
+   * review stays visible either way, because a shop that could hide a rating by
+   * reporting it makes every rating meaningless.
+   */
+  const [flagging, setFlagging] = React.useState(false);
+  const [reason, setReason] = React.useState<ReviewFlagReason | ''>('');
+  const [note, setNote] = React.useState('');
 
   function submit() {
     startTransition(async () => {
@@ -120,18 +134,8 @@ export function ReviewCard({
             <Button
               size="sm"
               variant="ghost"
-              disabled={pending}
               className="hover:text-danger text-neutral-600"
-              onClick={() =>
-                startTransition(async () => {
-                  const result = await flagReview(review.id);
-                  if (!result.ok) toast.error(t(`errors.${result.error}` as never));
-                  else {
-                    toast.success(t('flaggedDone'));
-                    router.refresh();
-                  }
-                })
-              }
+              onClick={() => setFlagging(true)}
             >
               <Flag />
               {t('flag')}
@@ -139,6 +143,75 @@ export function ReviewCard({
           )}
         </div>
       )}
+
+      <Dialog open={flagging} onOpenChange={setFlagging}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('flagTitle')}</DialogTitle>
+            {/* Said before they choose: this does not remove the review. */}
+            <DialogDescription>{t('flagBody')}</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`flag-reason-${review.id}`}>{t('flagReasonLabel')}</Label>
+            <select
+              id={`flag-reason-${review.id}`}
+              className="rounded-control border-input bg-card h-10 w-full border px-3 text-sm"
+              value={reason}
+              onChange={(event) => setReason(event.target.value as ReviewFlagReason)}
+            >
+              <option value="">{t('flagReasonPlaceholder')}</option>
+              {REVIEW_FLAG_REASONS.map((key) => (
+                <option key={key} value={key}>
+                  {t(`flagReasons.${key}`)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor={`flag-note-${review.id}`}>{t('flagNoteLabel')}</Label>
+            <Textarea
+              id={`flag-note-${review.id}`}
+              rows={3}
+              maxLength={300}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder={t('flagNotePlaceholder')}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setFlagging(false)} disabled={pending}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending || reason === ''}
+              onClick={() =>
+                startTransition(async () => {
+                  if (reason === '') return;
+                  const result = await flagReview({
+                    reviewId: review.id,
+                    reason,
+                    note: note.trim() || null,
+                  });
+                  if (!result.ok) {
+                    toast.error(t(`errors.${result.error}` as never));
+                    return;
+                  }
+                  setFlagging(false);
+                  toast.success(t('flaggedDone'));
+                  router.refresh();
+                })
+              }
+            >
+              <Flag />
+              {pending ? t('sending') : t('flagSubmit')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={replying} onOpenChange={setReplying}>
         <DialogContent>

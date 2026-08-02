@@ -6,8 +6,10 @@ import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
-import { shopMembers, shops, users } from '../db/schema';
+import { shopMembers, shops, users, type DbLocale } from '../db/schema';
 import { notify } from '../notify';
+import { toAsciiDigits } from '../digits';
+import { isCanonicalHours } from '../opening';
 
 /**
  * Shop registration by the shopkeeper themselves (PRD §13.1).
@@ -25,15 +27,24 @@ import { notify } from '../notify';
  * application is fresh in the queue.
  */
 
+/** `fields` maps FORM FIELD NAME → code; see lib/actions/shop-profile.ts. */
 export type RegistrationResult<T = undefined> =
-  ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
+  | ({ ok: true } & (T extends undefined ? object : { data: T }))
+  | { ok: false; error: string; fields?: Record<string, string> };
+
+/**
+ * A number field that also accepts «۵۰۰» — see lib/actions/shop-products.ts for
+ * why the ACTION normalises as well as the form.
+ */
+const numeric = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((value) => (typeof value === 'string' ? toAsciiDigits(value) : value), schema);
 
 const registrationSchema = z.object({
   nameFa: z.string().trim().min(2, { message: 'name_required' }).max(80),
   nameEn: z.string().trim().max(80).optional().nullable(),
   descriptionFa: z.string().trim().max(1200).optional().nullable(),
   categoryId: z.string().uuid().nullable().optional(),
-  floor: z.coerce.number().int().min(0).max(10).nullable().optional(),
+  floor: numeric(z.coerce.number().int().min(0).max(10).nullable().optional()),
   unitNumber: z.string().trim().max(20).optional().nullable(),
   phone: z
     .string()
@@ -41,11 +52,11 @@ const registrationSchema = z.object({
     .regex(/^07\d{8}$/, { message: 'bad_phone' })
     .optional()
     .nullable(),
-  /** Canonical ASCII "HH:MM-HH:MM"; see formatOpeningHours in lib/format.ts. */
+  /** Canonical ASCII hours, single range or per-day (lib/opening.ts). */
   hours: z
     .string()
     .trim()
-    .regex(/^\d{1,2}:\d{2}-\d{1,2}:\d{2}$/, { message: 'bad_hours' })
+    .refine(isCanonicalHours, { message: 'bad_hours' })
     .optional()
     .nullable(),
 });
@@ -54,6 +65,26 @@ export type RegistrationInput = z.input<typeof registrationSchema>;
 
 const KNOWN_CODES = new Set(['name_required', 'bad_phone', 'bad_hours']);
 
+const FIELD_BY_PATH: Record<string, string> = {
+  nameFa: 'nameFa',
+  nameEn: 'nameEn',
+  descriptionFa: 'descriptionFa',
+  phone: 'phone',
+  hours: 'hours',
+  floor: 'floor',
+  unitNumber: 'unitNumber',
+};
+
+function fieldErrors(error: z.ZodError): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const issue of error.issues) {
+    const field = FIELD_BY_PATH[issue.path.join('.')];
+    if (!field || out[field]) continue;
+    out[field] = KNOWN_CODES.has(issue.message) ? issue.message : 'invalid_input';
+  }
+  return out;
+}
+
 function slugify(value: string, suffix: string): string {
   const base = value
     .toLowerCase()
@@ -61,6 +92,34 @@ function slugify(value: string, suffix: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
   return `${base || 'shop'}-${suffix}`;
+}
+
+/**
+ * Tells the APPLICANT their application arrived (Prompt: registration notified
+ * only the admin).
+ *
+ * Submitting used to be silent on the applicant's side — a form, a toast, and
+ * then nothing, while the only message the system wrote went to the mall
+ * office. For a tenant waiting on a decision that reads as "did it even send",
+ * and the SMS log the demo shows off contained no evidence that it had.
+ *
+ * In THEIR OWN locale, never a hardcoded 'fa': a shopkeeper who has set the
+ * panel to English is telling us which language to write to them in, and
+ * notify() defaults to Dari when nobody says otherwise.
+ */
+async function notifyApplicant(
+  userId: string,
+  locale: DbLocale | null | undefined,
+  shopName: string,
+  resubmitted: boolean,
+) {
+  await notify({
+    eventKey: resubmitted ? 'shop.resubmitted' : 'shop.applicationReceived',
+    recipientUserId: userId,
+    recipientRole: 'shopkeeper',
+    locale: locale ?? 'fa',
+    values: { shopName },
+  });
 }
 
 export async function registerShop(
@@ -75,7 +134,11 @@ export async function registerShop(
   const parsed = registrationSchema.safeParse(input);
   if (!parsed.success) {
     const message = parsed.error.issues[0]?.message;
-    return { ok: false, error: message && KNOWN_CODES.has(message) ? message : 'invalid_input' };
+    return {
+      ok: false,
+      error: message && KNOWN_CODES.has(message) ? message : 'invalid_input',
+      fields: fieldErrors(parsed.error),
+    };
   }
 
   const data = parsed.data;
@@ -121,6 +184,7 @@ export async function registerShop(
       recipientRole: 'admin',
       values: { shopName: data.nameFa },
     });
+    await notifyApplicant(user.id, user.locale, data.nameFa, true);
 
     revalidatePath('/dashboard/register-shop');
     revalidatePath('/admin/shops');
@@ -154,6 +218,7 @@ export async function registerShop(
     recipientRole: 'admin',
     values: { shopName: data.nameFa },
   });
+  await notifyApplicant(user.id, user.locale, data.nameFa, false);
 
   revalidatePath('/dashboard');
   revalidatePath('/admin/shops');

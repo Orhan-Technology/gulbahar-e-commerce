@@ -48,6 +48,7 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
           discountPrice: '',
           stock: '0',
           status: 'draft',
+          unpublishReason: null,
           brand: '',
           model: '',
           specs: [],

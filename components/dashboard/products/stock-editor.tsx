@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { setProductStock } from '@/lib/actions/shop-products';
+import { digitsOnly } from '@/lib/digits';
 import { formatNumber } from '@/lib/format';
 
 /*
@@ -45,7 +46,7 @@ export function StockEditor({ productId, stock }: { productId: string; stock: nu
 
   function commit() {
     setEditing(false);
-    const next = Number(value.replace(/\D/g, ''));
+    const next = Number(digitsOnly(value));
     if (!Number.isInteger(next) || next === shown) {
       setValue(String(shown));
       return;
@@ -87,7 +88,7 @@ export function StockEditor({ productId, stock }: { productId: string; stock: nu
         autoFocus
         value={value}
         inputMode="numeric"
-        onChange={(event) => setValue(event.target.value.replace(/\D/g, ''))}
+        onChange={(event) => setValue(digitsOnly(event.target.value))}
         onKeyDown={(event) => {
           if (event.key === 'Enter') commit();
           if (event.key === 'Escape') {

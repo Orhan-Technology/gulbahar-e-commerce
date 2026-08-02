@@ -134,7 +134,7 @@ export async function shopDashboardStats(
           eq(orderItems.shopId, shopId),
           gte(orders.createdAt, since),
           until ? lt(orders.createdAt, until) : undefined,
-          sql`${orders.status} <> 'rejected'`,
+          sql`${orders.status} not in ('rejected', 'cancelled')`,
         ),
       );
 
@@ -478,6 +478,10 @@ export type ActionQueueEntry = {
   kind:
     | 'new_order'
     | 'to_ready'
+    /** Ready, going out for delivery — the shop still has to move it. */
+    | 'to_deliver'
+    /** Ready, waiting on the shelf for the customer to walk in. */
+    | 'to_collect'
     | 'needs_reply'
     | 'needs_answer'
     | 'out_of_stock'
@@ -505,18 +509,48 @@ export async function actionQueueItems(
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
   const [orderRows, reviewRows, questionRows, stockRows, promoRows] = await Promise.all([
-    // Orders sitting at placed (accept/reject) or accepted (mark ready), scoped
-    // to this shop's own lines.
+    /*
+     * Orders still on the shop's hands, scoped to this shop's own lines.
+     *
+     * `ready` IS IN THE LIST, and its absence was a hole in the middle of the
+     * screen: a delivery marked ready is a parcel the shop still has to move,
+     * and a pickup marked ready is stock behind the counter — neither is
+     * finished, both were invisible here until the hold expired, and the stats
+     * object beside this query has been counting them as `readyForHandover` the
+     * whole time.
+     *
+     * `status_at` is when the order ENTERED its current status, from the event
+     * chain. Ageing a ready row from `created_at` would paint a three-day-old
+     * order red one minute after the shopkeeper packed it, which trains people
+     * to ignore the colour.
+     *
+     * A pickup whose hold has already expired is excluded: that is the panel
+     * above the queue (components/dashboard/expired-holds.tsx), which carries
+     * the customer's phone number and the release control, and the same parcel
+     * listed twice on one screen reads as two parcels.
+     */
     db.execute(sql`
-      select o.id, o.reference, o.status, o.created_at,
+      select o.id, o.reference, o.status, o.created_at, o.fulfillment,
+             o.hold_expires_at,
+             (
+               select max(e.created_at) from order_events e
+               where e.order_id = o.id and e.to_status = o.status
+             ) as status_at,
              sum(oi.quantity)::int as item_count,
              sum(oi.price_snapshot * oi.quantity)::int as shop_total
       from orders o
       join order_items oi on oi.order_id = o.id
-      where oi.shop_id = ${shopId} and o.status in ('placed', 'accepted')
+      where oi.shop_id = ${shopId}
+        and o.status in ('placed', 'accepted', 'ready')
+        and (
+          o.status <> 'ready'
+          or o.fulfillment <> 'pickup'
+          or o.hold_expires_at is null
+          or o.hold_expires_at > ${now.toISOString()}::timestamptz
+        )
       group by o.id
       order by o.created_at asc
-      limit 12
+      limit 16
     `),
     /*
      * Reviews with no shop response yet (PRD §6.5).
@@ -573,6 +607,9 @@ export async function actionQueueItems(
     reference: string;
     status: string;
     created_at: string;
+    fulfillment: 'delivery' | 'pickup';
+    hold_expires_at: string | null;
+    status_at: string | null;
     item_count: number;
     shop_total: number;
   }>;
@@ -601,16 +638,36 @@ export async function actionQueueItems(
   }>;
 
   const entries: ActionQueueEntry[] = [
-    ...orders_.map((row): ActionQueueEntry => ({
-      // A customer placed this and is waiting for an answer.
-      urgency: 'blocking',
-      kind: row.status === 'placed' ? 'new_order' : 'to_ready',
-      id: row.id,
-      title: row.reference,
-      subtitle: `${row.item_count}|${row.shop_total}`,
-      href: `/dashboard/orders/${row.reference}`,
-      at: new Date(row.created_at),
-    })),
+    ...orders_.map((row): ActionQueueEntry => {
+      const kind =
+        row.status === 'placed'
+          ? ('new_order' as const)
+          : row.status === 'accepted'
+            ? ('to_ready' as const)
+            : row.fulfillment === 'delivery'
+              ? ('to_deliver' as const)
+              : ('to_collect' as const);
+
+      return {
+        /*
+         * A READY PICKUP IS NOT BLOCKING. Every other row here is the shop
+         * holding somebody up; that one is the shop waiting on the customer to
+         * walk in, and colouring it like a late order would spend the alarm on
+         * the one line nobody can act on faster. It stays on the list because
+         * the goods are off the shelf and the hold is running down.
+         */
+        urgency: kind === 'to_collect' ? 'important' : 'blocking',
+        kind,
+        id: row.id,
+        title: row.reference,
+        // Packed for the server half to format: items, this shop's total, and —
+        // on a pickup — when the reservation lapses.
+        subtitle: `${row.item_count}|${row.shop_total}|${row.hold_expires_at ?? ''}`,
+        href: `/dashboard/orders/${row.reference}`,
+        // Age from the CURRENT status, not from when the order was placed.
+        at: new Date(row.status === 'placed' ? row.created_at : (row.status_at ?? row.created_at)),
+      };
+    }),
     ...unanswered.map((row): ActionQueueEntry => ({
       // Nobody is blocked, but it is public and it is about the shop.
       urgency: 'important',
@@ -671,9 +728,11 @@ export async function actionQueueItems(
     new_order: 0,
     needs_answer: 1,
     to_ready: 2,
-    needs_reply: 3,
-    out_of_stock: 4,
-    expiring_promotion: 5,
+    to_deliver: 3,
+    needs_reply: 4,
+    to_collect: 5,
+    out_of_stock: 6,
+    expiring_promotion: 7,
   };
 
   return entries.sort(

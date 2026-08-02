@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Trash2, UserPlus } from 'lucide-react';
+import { CalendarClock, Trash2, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -11,8 +11,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { addStaff, removeStaff, setDashboardLocale } from '@/lib/actions/shop-settings';
-import { formatPhone } from '@/lib/format';
+import { ResumeShopButton } from '@/components/dashboard/resume-shop-button';
+import {
+  addStaff,
+  pauseShop,
+  removeStaff,
+  setDashboardLocale,
+} from '@/lib/actions/shop-settings';
+import { digitsOnly } from '@/lib/digits';
+import { formatDate, formatPhone } from '@/lib/format';
+import { MALL_TIME_ZONE } from '@/lib/opening';
 import { usePathname, useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
 
 export type StaffMember = {
@@ -72,6 +80,173 @@ export function NotificationPreferences() {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/**
+ * Vacation mode (Prompt: the missing escape hatch).
+ *
+ * The alternative a shopkeeper had was unpublishing products one at a time, and
+ * republishing them one at a time on their return — for an Eid closure, a trip
+ * to Dubai for stock, or a week of illness. This closes the shop with a date on
+ * it and leaves the catalogue exactly where it is.
+ *
+ * The DATE is required and the NOTE is not, in that order on the screen, because
+ * the date is what the customer is actually told: "back on ۱۲ سنبله" is useful
+ * to someone deciding whether to wait, and «سفر خرید» on its own is not.
+ */
+export function VacationPanel({
+  pausedUntil,
+  paused,
+  noteFa,
+  noteEn,
+  earliest,
+}: {
+  /** ISO string, or null while trading. */
+  pausedUntil: string | null;
+  /**
+   * Whether that date is still in the future — decided on the SERVER. Working
+   * it out here would mean reading the clock during render, which React 19
+   * forbids (CLAUDE.md), and would also make the panel disagree with the banner
+   * in the layout by however long the tab has been open.
+   */
+  paused: boolean;
+  noteFa: string;
+  noteEn: string;
+  /**
+   * The first day the shop may reopen — tomorrow at the mall, computed on the
+   * server. It is the `min` of the date input, so the commonest way to write a
+   * pause that is already over cannot be typed in the first place; the action
+   * still refuses a past date, because a form control is not a validator.
+   */
+  earliest: string;
+}) {
+  const t = useTranslations('shopSettings.vacation');
+  const locale = useLocale();
+  const router = useRouter();
+
+  /*
+   * `pausedUntil` is the last MOMENT of the last closed day; the control asks
+   * for the day the shop is BACK, which is the next one.
+   *
+   * Read in the MALL's timezone, not through `toISOString()`. Kabul is +04:30,
+   * so the stored 23:59:59 local is 19:29 UTC on the same date — an ISO slice
+   * therefore lands on the closing day and the input would show the shopkeeper
+   * a return date one day earlier than the one they set, every time.
+   */
+  const returnDay = pausedUntil
+    ? new Intl.DateTimeFormat('en-CA', { timeZone: MALL_TIME_ZONE }).format(
+        new Date(new Date(pausedUntil).getTime() + 60_000),
+      )
+    : '';
+
+  const [until, setUntil] = React.useState(returnDay);
+  const [fa, setFa] = React.useState(noteFa);
+  const [en, setEn] = React.useState(noteEn);
+  const [error, setError] = React.useState<string | null>(null);
+  const [pending, startTransition] = React.useTransition();
+
+  function save() {
+    if (!until) {
+      setError('bad_pause_date');
+      return;
+    }
+    setError(null);
+
+    startTransition(async () => {
+      /*
+       * The control asks when the shop is BACK; the action stores the last day
+       * it is CLOSED. That is one calendar day earlier, and it is computed as
+       * calendar arithmetic on the date parts rather than by subtracting 86.4
+       * million milliseconds from a parsed Date — the Kabul offset is +04:30, so
+       * a timestamp round-trip lands on the wrong side of midnight and the shop
+       * would reopen a day early.
+       */
+      const [year, month, day] = until.split('-').map(Number);
+      const previous = new Date(Date.UTC(year, month - 1, day));
+      previous.setUTCDate(previous.getUTCDate() - 1);
+      const lastClosedDay = previous.toISOString().slice(0, 10);
+
+      const result = await pauseShop({ until: lastClosedDay, noteFa: fa, noteEn: en });
+      if (!result.ok) {
+        setError(result.error);
+        toast.error(t(`errors.${result.error}` as never));
+        return;
+      }
+      toast.success(t('paused'));
+      router.refresh();
+    });
+  }
+
+  return (
+    <section className="rounded-card border-border bg-card space-y-3 border p-4">
+      <div>
+        <h2 className="text-sm font-bold">{t('heading')}</h2>
+        <p className="text-muted-foreground text-xs">{t('hint')}</p>
+      </div>
+
+      {paused && (
+        <p className="rounded-control border-accent-warm/40 bg-accent-warm/10 p-3 text-xs font-medium">
+          {t('currentlyPaused', { date: formatDate(pausedUntil!, locale, 'medium') })}
+        </p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="pause-until">{t('untilLabel')}</Label>
+          <Input
+            id="pause-until"
+            type="date"
+            dir="ltr"
+            min={earliest}
+            value={until}
+            aria-invalid={error !== null}
+            aria-describedby={error ? 'pause-until-error' : undefined}
+            onChange={(event) => {
+              setUntil(event.target.value);
+              setError(null);
+            }}
+          />
+          {error && (
+            <p id="pause-until-error" className="text-danger text-xs font-medium">
+              {t(`errors.${error}` as never)}
+            </p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pause-note-fa">{t('noteLabel')}</Label>
+          <Input
+            id="pause-note-fa"
+            value={fa}
+            maxLength={200}
+            placeholder={t('notePlaceholder')}
+            onChange={(event) => setFa(event.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="pause-note-en">{t('noteEnLabel')}</Label>
+        <Input
+          id="pause-note-en"
+          dir="ltr"
+          value={en}
+          maxLength={200}
+          onChange={(event) => setEn(event.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" onClick={save} disabled={pending || !until}>
+          <CalendarClock />
+          {pending ? t('saving') : paused ? t('update') : t('pause')}
+        </Button>
+        {pausedUntil && <ResumeShopButton label={t('resumeNow')} />}
+      </div>
+
+      {/* Say what a customer will see, before it is switched on. */}
+      <p className="text-muted-foreground text-xs">{t('customerNote')}</p>
     </section>
   );
 }
@@ -163,7 +338,7 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
                 dir="ltr"
                 placeholder="07XXXXXXXX"
                 value={phone}
-                onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))}
+                onChange={(event) => setPhone(digitsOnly(event.target.value, 10))}
               />
             </div>
           </div>

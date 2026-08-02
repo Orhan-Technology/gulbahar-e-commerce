@@ -46,7 +46,7 @@ export async function salesSeries(shopId: string, period: ReportPeriod) {
       join orders o on o.id = oi.order_id
       where oi.shop_id = ${shopId}
         and o.created_at >= ${startOf(period)}::timestamptz
-        and o.status <> 'rejected'
+        and o.status not in ('rejected', 'cancelled')
       group by 1
     )
     select
@@ -81,7 +81,7 @@ export async function salesTotals(shopId: string, period: ReportPeriod) {
       join orders o on o.id = oi.order_id
       where oi.shop_id = ${shopId}
         and o.created_at >= ${startOf(period)}::timestamptz
-        and o.status <> 'rejected'
+        and o.status not in ('rejected', 'cancelled')
       group by o.id
     ) t
   `);
@@ -114,7 +114,7 @@ export async function salesByProduct(shopId: string, period: ReportPeriod, limit
     left join products p on p.id = oi.product_id
     where oi.shop_id = ${shopId}
       and o.created_at >= ${startOf(period)}::timestamptz
-      and o.status <> 'rejected'
+      and o.status not in ('rejected', 'cancelled')
     -- Grouped by the SNAPSHOT title as well as the product, so a deleted product
     -- still appears in history under the name it was sold as.
     group by 1, oi.title_snapshot
@@ -203,9 +203,16 @@ export async function promotionPerformance(shopId: string, period: ReportPeriod)
  * counter has no time dimension, so dividing a window's orders by it would
  * report a shop's conversion falling every month it stayed the same.
  *
- * ORDERS are everything except rejected — a customer who placed an order
- * converted, whatever the shop did next. Money is a different question and uses
- * `fulfilled` (Prompt C2); these two predicates must not be unified.
+ * ORDERS are everything except rejected and cancelled — a customer who placed
+ * an order converted, whatever the shop did next, but an order that was pulled
+ * before it changed hands is not a sale by anyone's reckoning and its stock
+ * went back on the shelf. Money is a different question and uses `fulfilled`
+ * (Prompt C2); these two predicates must not be unified.
+ *
+ * `cancelled` is newer than the rest of this file. Every predicate that used to
+ * read `<> 'rejected'` now reads `not in ('rejected', 'cancelled')`, and they
+ * have to move together — one of them left behind would put a withdrawn order
+ * into the conversion numerator while the strip above it left the order out.
  */
 const viewsInWindow = (since: string) => sql`(
   select coalesce(sum(v.views), 0)::int from product_view_days v
@@ -218,7 +225,7 @@ const ordersInWindow = (since: string) => sql`(
   join orders o on o.id = oi.order_id
   where oi.product_id = p.id
     and o.created_at >= ${since}::timestamptz
-    and o.status <> 'rejected'
+    and o.status not in ('rejected', 'cancelled')
 )`;
 
 export type ViewsWithoutSalesRow = {
@@ -535,7 +542,7 @@ export async function orderTiming(shopId: string, period: ReportPeriod) {
     join order_items oi on oi.order_id = o.id
     where oi.shop_id = ${shopId}
       and o.created_at >= ${since}::timestamptz
-      and o.status <> 'rejected'
+      and o.status not in ('rejected', 'cancelled')
     group by 1, 2
   `);
 
@@ -562,7 +569,7 @@ export async function periodSummary(shopId: string, period: ReportPeriod) {
     select
       coalesce(sum(oi.price_snapshot * oi.quantity)
         filter (where o.status = 'fulfilled'), 0)::int as revenue,
-      count(distinct o.id) filter (where o.status <> 'rejected')::int as order_count,
+      count(distinct o.id) filter (where o.status not in ('rejected', 'cancelled'))::int as order_count,
       coalesce(sum(oi.quantity) filter (where o.status = 'fulfilled'), 0)::int as units,
       coalesce((
         select sum(v.views)::int from product_view_days v

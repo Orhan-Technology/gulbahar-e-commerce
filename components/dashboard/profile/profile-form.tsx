@@ -20,7 +20,10 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { FieldError } from '@/components/custom/field-error';
+import { WeeklyHoursEditor } from '@/components/dashboard/profile/weekly-hours';
 import { saveShopProfile, uploadShopImage } from '@/lib/actions/shop-profile';
+import { digitsOnly } from '@/lib/digits';
 import { formatOpeningHours } from '@/lib/format';
 
 export type ProfileCategory = { id: string; label: string };
@@ -42,14 +45,6 @@ export type ShopProfileValues = {
   bannerPath: string | null;
   status: 'pending' | 'approved' | 'suspended' | 'closed';
 };
-
-/** Splits the canonical hours string for the two time inputs. */
-function splitHours(hours: string): { open: string; close: string } {
-  const match = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(hours);
-  if (!match) return { open: '', close: '' };
-  const pad = (value: string) => value.padStart(2, '0');
-  return { open: `${pad(match[1])}:${match[2]}`, close: `${pad(match[3])}:${match[4]}` };
-}
 
 /**
  * Shop profile editor (PRD §6.6).
@@ -76,17 +71,35 @@ export function ProfileForm({
   const [values, setValues] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
 
-  const set = <K extends keyof ShopProfileValues>(key: K, value: ShopProfileValues[K]) =>
+  /*
+   * Errors under the FIELDS, not only in a toast (Prompt: errors have no
+   * field-level surface). See components/custom/field-error.tsx for the
+   * argument; the action returns `fields` keyed by these names.
+   */
+  const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
+
+  const set = <K extends keyof ShopProfileValues>(key: K, value: ShopProfileValues[K]) => {
     setValues((current) => ({ ...current, [key]: value }));
+    setFieldErrors((current) => {
+      if (!(key in current)) return current;
+      const next = { ...current };
+      delete next[key as string];
+      return next;
+    });
+  };
 
-  const { open, close } = splitHours(values.hours);
-
-  function setHours(nextOpen: string, nextClose: string) {
-    // Only a complete pair is a valid value; a half-set range would fail Zod.
-    set('hours', nextOpen && nextClose ? `${nextOpen}-${nextClose}` : '');
-  }
+  const fieldError = (field: string) =>
+    fieldErrors[field] ? t(`fieldErrors.${fieldErrors[field]}` as never) : null;
 
   function submit() {
+    // The one rule worth catching before the round trip: a phone number that is
+    // not an Afghan mobile is the commonest thing typed wrong here.
+    if (values.phone && !/^07\d{8}$/.test(values.phone)) {
+      setFieldErrors({ phone: 'bad_phone' });
+      toast.error(t('errors.bad_phone'));
+      return;
+    }
+
     startTransition(async () => {
       const result = await saveShopProfile({
         name: { fa: values.nameFa, en: values.nameEn || null, ps: values.namePs || null },
@@ -103,9 +116,11 @@ export function ProfileForm({
       });
 
       if (!result.ok) {
+        setFieldErrors(result.fields ?? {});
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
+      setFieldErrors({});
       toast.success(t('saved'));
       router.refresh();
     });
@@ -183,7 +198,14 @@ export function ProfileForm({
                     dir={lang === 'en' ? 'ltr' : 'rtl'}
                     value={values[nameKey]}
                     onChange={(event) => set(nameKey, event.target.value)}
+                    aria-invalid={lang === 'fa' && fieldError('nameFa') !== null}
+                    aria-describedby={
+                      lang === 'fa' && fieldError('nameFa') ? 'shop-name-fa-error' : undefined
+                    }
                   />
+                  {lang === 'fa' && (
+                    <FieldError id="shop-name-fa-error" message={fieldError('nameFa')} />
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor={`shop-desc-${lang}`}>{t('description')}</Label>
@@ -232,8 +254,11 @@ export function ProfileForm({
               inputMode="numeric"
               dir="ltr"
               value={values.floor}
-              onChange={(event) => set('floor', event.target.value.replace(/\D/g, ''))}
+              onChange={(event) => set('floor', digitsOnly(event.target.value))}
+              aria-invalid={fieldError('floor') !== null}
+              aria-describedby={fieldError('floor') ? 'shop-floor-error' : undefined}
             />
+            <FieldError id="shop-floor-error" message={fieldError('floor')} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="shop-unit">{t('unit')}</Label>
@@ -252,32 +277,26 @@ export function ProfileForm({
               dir="ltr"
               placeholder="07XXXXXXXX"
               value={values.phone}
-              onChange={(event) => set('phone', event.target.value.replace(/\D/g, '').slice(0, 10))}
+              onChange={(event) => set('phone', digitsOnly(event.target.value, 10))}
+              aria-invalid={fieldError('phone') !== null}
+              aria-describedby={fieldError('phone') ? 'shop-phone-error' : undefined}
             />
+            <FieldError id="shop-phone-error" message={fieldError('phone')} />
           </div>
         </div>
 
         <div className="space-y-1.5">
           <Label>{t('hours')}</Label>
-          <div className="flex items-center gap-2">
-            <Input
-              type="time"
-              aria-label={t('opensAt')}
-              dir="ltr"
-              value={open}
-              onChange={(event) => setHours(event.target.value, close)}
-              className="w-32"
-            />
-            <span className="text-muted-foreground">—</span>
-            <Input
-              type="time"
-              aria-label={t('closesAt')}
-              dir="ltr"
-              value={close}
-              onChange={(event) => setHours(open, event.target.value)}
-              className="w-32"
-            />
-          </div>
+          {/*
+            Per-day hours, still inside the same free-text column — see
+            components/dashboard/profile/weekly-hours.tsx for the canonical
+            format and why it did not need a schema change.
+          */}
+          <WeeklyHoursEditor
+            value={values.hours}
+            onChange={(next) => set('hours', next)}
+            error={fieldError('hours')}
+          />
           {/* Shown the way a customer will read it. */}
           {values.hours && (
             <p className="text-muted-foreground text-xs">
