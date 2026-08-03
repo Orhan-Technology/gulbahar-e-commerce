@@ -46,9 +46,11 @@ import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { specTemplateFor } from '../lib/product-templates';
 import { generateCollectionCode } from '../lib/collection-code';
 import { storeVerificationDocument } from '../lib/verification-storage';
+import { orderReasonText } from '../lib/order-lifecycle';
+import type { OrderRejectReason } from '../lib/order-reject-reasons';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
 import faMessages from '../messages/fa.json';
-import { formatCurrency } from '../lib/format';
+import { formatCurrency, formatNumber } from '../lib/format';
 import { pickLocale } from '../lib/db/localized';
 import {
   ADDRESS_LABELS,
@@ -1199,6 +1201,14 @@ async function main() {
    * deep link lands.
    */
   const demoCustomerRow = customerRows.find((row) => row.phone === '0700000003')!;
+  /*
+   * ONE ROW PER ORDER. The shop name arrives as a correlated subquery rather
+   * than a join: joining order_items to reach it multiplies the row by the
+   * number of lines, and this loop writes a notification chain per row — so a
+   * two-line order got its whole chain twice, and the duplicates ate the LIMIT
+   * that newer orders needed. Nine of eighteen cards on the customer's bell
+   * were the same message printed again.
+   */
   const demoCustomerOrders = await db
     .select({
       id: orders.id,
@@ -1209,11 +1219,21 @@ async function main() {
       fulfillment: orders.fulfillment,
       collectionCode: orders.collectionCode,
       holdExpiresAt: orders.holdExpiresAt,
-      shopName: shops.name,
+      /*
+       * `orders.id` written out rather than interpolated: drizzle renders the
+       * column unqualified here, and inside a subquery that already has `shops`
+       * and `order_items` in scope a bare "id" is ambiguous — Postgres refuses
+       * the whole query.
+       */
+      shopName: sql<LocalizedText>`(
+        select s.name from shops s
+        join order_items oi on oi.shop_id = s.id
+        where oi.order_id = orders.id
+        order by s.slug asc
+        limit 1
+      )`,
     })
     .from(orders)
-    .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
-    .innerJoin(shops, eq(orderItems.shopId, shops.id))
     .where(eq(orders.userId, demoCustomerRow.id))
     .orderBy(desc(orders.createdAt))
     .limit(6);
@@ -1257,7 +1277,10 @@ async function main() {
           fulfillment: order.fulfillment,
           // Only a pickup order has these, and only the pickup branch reads them.
           collectionCode: order.collectionCode ?? '',
-          holdHours,
+          // Pre-formatted, like every money value in this file. A bare number
+          // reaches ICU as a plain substitution, so «۴۸» arrived as "48" —
+          // Latin digits sitting inside a Dari sentence.
+          holdHours: formatNumber(holdHours, 'fa'),
         },
       });
     }
@@ -1327,7 +1350,7 @@ async function main() {
   for (const order of demoShopOrders) {
     const values = {
       reference: order.reference,
-      itemCount: 1,
+      itemCount: formatNumber(1, 'fa'),
       total: formatCurrency(order.total, 'fa'),
     };
     const rendered = renderTemplate('order.newForShop', 'fa', values);
@@ -1872,6 +1895,83 @@ async function main() {
         createdAt: new Date(placedAt.getTime() + 3 * 60 * 60 * 1000),
       },
     ]);
+  }
+
+  /*
+   * THE BELL FOR THE ORDERS THAT DID NOT EXIST YET.
+   *
+   * GC-25142 (ready, with its collection code) and the two closed orders above
+   * are created AFTER the notification block, so that block could not reach
+   * them — the most demo-worthy message the product sends, the one that hands a
+   * customer a code to read at a counter, was announced by nothing. Written
+   * here, where the orders finally exist.
+   */
+  const lateNotifications: NotificationInsert[] = [];
+
+  const [holdShopName] = await db
+    .select({ name: shops.name })
+    .from(shops)
+    .where(eq(shops.slug, demoShopSlug))
+    .limit(1);
+
+  if (demoHold) {
+    const readyValues = {
+      reference: demoHold.reference,
+      shopName: pickLocale(holdShopName!.name, 'fa'),
+      fulfillment: 'pickup',
+      collectionCode: demoHold.collectionCode ?? '',
+      holdHours: formatNumber(DEFAULT_SETTINGS.pickupHoldHours ?? 24, 'fa'),
+    };
+    const rendered = renderTemplate('order.ready', 'fa', readyValues);
+    lateNotifications.push({
+      eventKey: 'order.ready',
+      recipientUserId: demoCustomer.id,
+      recipientRole: 'customer' as const,
+      channel: 'sms' as const,
+      locale: 'fa',
+      title: rendered.title,
+      body: rendered.body,
+      payload: { ...readyValues, orderId: demoHold.id },
+      // Unread: this is the one the bell should be drawing attention to.
+      read: false,
+      createdAt: new Date(demoPlacedAt.getTime() + 5 * 60 * 60 * 1000),
+    });
+  }
+
+  for (const plan of closedOrderPlans) {
+    const [row] = await db
+      .select({ id: orders.id, total: orders.total })
+      .from(orders)
+      .where(eq(orders.reference, plan.reference))
+      .limit(1);
+    if (!row) continue;
+
+    const code = plan.note.replace('reason:', '') as OrderRejectReason;
+    const values = {
+      reference: plan.reference,
+      shopName: pickLocale(holdShopName!.name, 'fa'),
+      // The customer reads the REASON, not the code it was filed under.
+      reason: orderReasonText(code, 'fa'),
+    };
+    const key = plan.status === 'rejected' ? 'order.rejected' : 'order.cancelled';
+    const rendered = renderTemplate(key, 'fa', values);
+
+    lateNotifications.push({
+      eventKey: key,
+      recipientUserId: demoCustomer.id,
+      recipientRole: 'customer' as const,
+      channel: 'sms' as const,
+      locale: 'fa',
+      title: rendered.title,
+      body: rendered.body,
+      payload: { ...values, orderId: row.id },
+      read: true,
+      createdAt: new Date(NOW.getTime() - (plan.hoursAgo - 3) * 60 * 60 * 1000),
+    });
+  }
+
+  if (lateNotifications.length > 0) {
+    await db.insert(notifications).values(lateNotifications);
   }
 
   // ----------------------------------------------- shop reviews and follows

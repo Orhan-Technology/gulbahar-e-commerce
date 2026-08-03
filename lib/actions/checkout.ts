@@ -24,7 +24,7 @@ import {
 } from '../db/schema';
 import { deliveryFeeFor } from '../offers';
 import { deliveryRates } from '../db/queries/settings';
-import { formatCurrency } from '../format';
+import { formatCurrency, formatNumber } from '../format';
 import { isUniqueViolation } from '../order-lifecycle';
 import { notify, notifyMany, type NotifyParams } from '../notify';
 
@@ -390,7 +390,10 @@ export async function placeOrder(input: {
       locale: shopLocale,
       values: {
         reference: created.reference,
-        itemCount,
+        // Formatted in the SHOP's language, like the money beside it: a bare
+        // number reaches ICU as a plain substitution, so a Dari message read
+        // «با 1 قلم» with a Latin digit in the middle of the sentence.
+        itemCount: formatNumber(itemCount, shopLocale),
         total: formatCurrency(group.total, shopLocale),
         shopName: pickLocale(group.shopName, shopLocale),
       },
