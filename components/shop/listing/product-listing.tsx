@@ -13,6 +13,7 @@ import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot, shopIdsBySlug } from '@/lib/db/queries/listing';
+import { categoryBySlug } from '@/lib/db/queries/shops';
 import { isProductSort, productList, type ProductSort } from '@/lib/db/queries/products';
 import { FILTER_KEYS } from '@/lib/listing';
 import { recordImpressions } from '@/lib/db/queries/promoted';
@@ -130,10 +131,25 @@ export async function ProductListing({
   const facetShopIds = scope.shopIds ? [] : await shopIdsBySlug(facetShopSlugs);
   const brands = Array.isArray(query.brand) ? query.brand : query.brand ? [query.brand] : [];
 
+  /*
+   * The category FACET, resolved to an id the grid actually uses.
+   *
+   * The facet writes `?category=<slug>` and the facet-count side
+   * (facetConditions in queries/listing.ts) has always honoured it — but this
+   * component only ever passed `scope.categoryId`, which exists solely on the
+   * category ROUTE. So on /products, /search and /offers the chip lit up, the
+   * counts changed, and the grid ignored the filter entirely: an active
+   * «موبایل و تابلت» chip over a page of cricket bats. A surface scope still
+   * wins when both exist, for the same reason the shop scope does.
+   */
+  const facetCategorySlug = Array.isArray(query.category) ? query.category[0] : query.category;
+  const facetCategory =
+    !scope.categoryId && facetCategorySlug ? await categoryBySlug(facetCategorySlug) : null;
+
   const [result, promoted, user] = await Promise.all([
     productList({
       locale,
-      categoryId: scope.categoryId,
+      categoryId: scope.categoryId ?? facetCategory?.id,
       // A surface-level scope always wins over the facet: a shop page filtered
       // by "shop" could otherwise list another tenant's products.
       shopIds: scope.shopIds ?? (facetShopIds.length > 0 ? facetShopIds : undefined),
