@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { UserCheck, UserCog, UserX } from 'lucide-react';
+import { MoreHorizontal, Store, UserCheck, UserCog, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -25,31 +32,56 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { setUserActive, setUserRole } from '@/lib/actions/admin-catalogue';
+import { Link } from '@/lib/i18n/navigation';
 import type { UserRole } from '@/lib/db/schema';
+
+/** What the shop behind this account would be left with. Pre-formatted server-side. */
+export type ShopConsequence = {
+  id: string;
+  name: string;
+  /** Persian-digit strings — every number on this surface goes through lib/format. */
+  publishedProducts: string;
+  openOrders: string;
+  hasOpenOrders: boolean;
+};
 
 /**
  * Per-user decisions (PRD §7.5, Prompt A4): change the role, or lock the account.
+ *
+ * BOTH LIVE BEHIND A KEBAB, and that is deliberate. These are the two most
+ * consequential controls in the console — one hands over the platform, the
+ * other stops a tenant signing in — and they were also the two most-rendered
+ * pieces of UI on it: two hundred rows, four hundred buttons, «تغییر نقش» and
+ * «غیرفعال‌کردن» repeated down the page until they read as decoration. Risk and
+ * repetition should run in opposite directions.
  *
  * Deactivation is a sign-in block, not a delete: orders reference their user with
  * ON DELETE RESTRICT so history cannot be erased, and that is deliberate. The
  * dialog says as much, because "deactivate" reads like "remove" otherwise.
  *
- * The role change asks for a NOTE and will not proceed without one. It is the
- * most consequential control on this screen — promoting to admin hands over the
- * platform — and the note is delivered to the person it happened to as an in-app
- * notification, so the reason lands somewhere real instead of in a field that
- * gets discarded.
+ * AND IT NOW NAMES THE SHOP IT WOULD STRAND. Locking a shopkeeper leaves their
+ * shop published, with live products and possibly unanswered orders, and nobody
+ * able to sign in and accept one. The admin was making that decision blind; the
+ * dialog now puts the count of listings and open orders in front of them before
+ * the confirm button, and points at the shop.
+ *
+ * The role change asks for a NOTE and will not proceed without one. The note is
+ * delivered to the person it happened to as an in-app notification, so the
+ * reason lands somewhere real instead of in a field that gets discarded.
  */
 export function UserRowActions({
   userId,
   role,
   active,
   isSelf,
+  shop,
 }: {
   userId: string;
   role: UserRole;
   active: boolean;
   isSelf: boolean;
+  /** Present only for an account that owns a shop — see the note above. */
+  shop?: ShopConsequence | null;
 }) {
   const t = useTranslations('adminUsers');
   const router = useRouter();
@@ -91,36 +123,63 @@ export function UserRowActions({
   }
 
   return (
-    <div className="flex justify-end gap-1">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          setNextRole(role);
-          setRoleOpen(true);
-        }}
-        className="text-neutral-600"
-      >
-        <UserCog />
-        {t('changeRole')}
-      </Button>
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label={t('rowMenu')}>
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-52">
+          {shop && (
+            <>
+              <DropdownMenuItem asChild>
+                <Link href={`/admin/shops/${shop.id}`}>
+                  <Store />
+                  {t('viewShop')}
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
+          )}
 
-      {active ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className="hover:text-danger text-neutral-600"
-        >
-          <UserX />
-          {t('deactivate')}
-        </Button>
-      ) : (
-        <Button variant="outline" size="sm" disabled={pending} onClick={() => run(true)}>
-          <UserCheck />
-          {t('reactivate')}
-        </Button>
-      )}
+          <DropdownMenuItem
+            onSelect={(event) => {
+              // The menu must not tear its focus trap down under an opening
+              // dialog — see the same note on ProductRowActions.
+              event.preventDefault();
+              setNextRole(role);
+              setRoleOpen(true);
+            }}
+          >
+            <UserCog />
+            {t('changeRole')}
+          </DropdownMenuItem>
+
+          {active ? (
+            <DropdownMenuItem
+              className="text-danger focus:text-danger focus:bg-danger-bg"
+              onSelect={(event) => {
+                event.preventDefault();
+                setOpen(true);
+              }}
+            >
+              <UserX />
+              {t('deactivate')}
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                run(true);
+              }}
+            >
+              <UserCheck />
+              {t('reactivate')}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <Dialog open={roleOpen} onOpenChange={setRoleOpen}>
         <DialogContent>
@@ -146,6 +205,13 @@ export function UserRowActions({
               </Select>
               {nextRole === 'shopkeeper' && role !== 'shopkeeper' && (
                 <p className="text-muted-foreground text-xs">{t('roleShopkeeperHint')}</p>
+              )}
+              {/* Demoting the owner of a live shop is the same stranding as a
+                  deactivation, so it is named in the same words. */}
+              {shop && role === 'shopkeeper' && nextRole !== 'shopkeeper' && (
+                <p className="rounded-control border-warning-border bg-warning-bg text-warning-fg border-s-2 p-2 text-xs leading-relaxed">
+                  {t('roleShopWarning', { shop: shop.name })}
+                </p>
               )}
             </div>
 
@@ -183,6 +249,40 @@ export function UserRowActions({
             <DialogTitle>{t('deactivateTitle')}</DialogTitle>
             <DialogDescription>{t('deactivateBody')}</DialogDescription>
           </DialogHeader>
+
+          {/* THE CONSEQUENCE, before the button rather than after the fact. */}
+          {shop && (
+            <div
+              data-deactivate-consequence
+              className={
+                shop.hasOpenOrders
+                  ? 'rounded-control border-danger-border bg-danger-bg border-s-2 p-3'
+                  : 'rounded-control border-warning-border bg-warning-bg border-s-2 p-3'
+              }
+            >
+              <p
+                className={
+                  shop.hasOpenOrders
+                    ? 'text-danger text-xs font-bold'
+                    : 'text-warning-fg text-xs font-bold'
+                }
+              >
+                {t('deactivateShopTitle', { shop: shop.name })}
+              </p>
+              <p
+                className={
+                  shop.hasOpenOrders
+                    ? 'text-danger/90 mt-1 text-xs leading-relaxed'
+                    : 'text-warning-fg/80 mt-1 text-xs leading-relaxed'
+                }
+              >
+                {t('deactivateShopBody', {
+                  products: shop.publishedProducts,
+                  orders: shop.openOrders,
+                })}
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
             <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { BadgeCheck, MapPin } from 'lucide-react';
+import { BadgeCheck, ExternalLink, MapPin } from 'lucide-react';
 
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { VerificationReview } from '@/components/admin/verification-review';
@@ -58,7 +58,14 @@ export default async function AdminVerificationsPage({
   ];
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-6">
+    /*
+      DESKTOP WIDTH. The queue was capped at `max-w-4xl` — a 700px reading
+      column for a screen whose job is to put two scanned documents beside a
+      decision, on a console that is desktop-first by design. The cap is now the
+      same one the overview uses, so at 1440 the licence and the tazkira are
+      legible side by side instead of stacked at thumbnail size.
+    */
+    <div className="mx-auto max-w-[100rem] space-y-4 p-4 sm:p-6">
       <ConsolePageHeader title={t('title')} description={t('intro')} />
 
       <div className="flex flex-wrap gap-2">
@@ -117,8 +124,19 @@ async function Queue({
         <li key={record!.id} className="rounded-card border-border bg-card space-y-3 border p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
+              {/*
+                THE SHOP'S OWN PAGE, not its storefront (Prompt C11). A reviewer
+                deciding on a tazkira wants the registration beside it — who the
+                owner is, what the catalogue looks like, whether the shop is even
+                approved yet — and that is the ADMIN record. The public page is
+                still one click away as a secondary link, because "what do
+                shoppers see" is the other half of the question.
+
+                An id, never a slug: `/admin/shops/[id]` is a uuid column and a
+                slug reaching it is a Postgres type error, not a 404 (CLAUDE.md).
+              */}
               <Link
-                href={`/shops/${record!.shopSlug}`}
+                href={`/admin/shops/${record!.shopId}`}
                 className="hover:text-primary text-sm font-bold"
               >
                 {pickLocale(record!.shopName, locale)}
@@ -136,6 +154,14 @@ async function Queue({
                 {record!.submittedAt && (
                   <span>{t('submittedOn', { date: formatDate(record!.submittedAt, locale) })}</span>
                 )}
+                <Link
+                  href={`/shops/${record!.shopSlug}`}
+                  target="_blank"
+                  className="hover:text-primary inline-flex items-center gap-1"
+                >
+                  <ExternalLink className="h-3 w-3" aria-hidden />
+                  {t('viewStorefront')}
+                </Link>
               </p>
             </div>
 
@@ -154,6 +180,7 @@ async function Queue({
             verificationId={record!.id}
             status={record!.status}
             documents={record!.documents}
+            evidence={record!.evidence}
           />
         </li>
       ))}

@@ -60,8 +60,17 @@ export async function FloorMap({
           data-map-unit={entry.unit}
           data-map-state="vacant"
           title={t('vacant', { unit: label })}
+          /*
+           * VACANT UNITS RECEDE. Twenty-seven of these surround four shops, and
+           * at neutral-400 on neutral-50 the numbers were legible enough to
+           * count — so the eye read the empties first and the plan looked like a
+           * grid of numbers with a few coloured squares lost in it. They still
+           * have to be THERE (a floor with holes in it is the truth, and the
+           * gaps are how you know where a shop sits), but they are context, not
+           * content: one step lighter on the number and the border.
+           */
           className={cn(
-            'rounded-control flex items-center justify-center border border-dashed border-neutral-300 bg-neutral-50 text-2xs tabular-nums text-neutral-400',
+            'rounded-control text-2xs flex items-center justify-center border border-dashed border-neutral-200 bg-neutral-50 tabular-nums text-neutral-300',
             compact ? 'h-11' : 'h-16',
           )}
         >
@@ -90,7 +99,11 @@ export async function FloorMap({
             ? 'border-primary bg-primary text-primary-foreground shadow-card font-bold'
             : dimmed
               ? 'border-border bg-card text-neutral-400 opacity-50'
-              : 'border-primary-200 bg-primary-50 text-primary-900 hover:border-primary',
+              : // Occupied units CARRY the plan, so they are the loudest thing
+                // on it: a filled tint and a full-strength border rather than
+                // the 50-weight wash that put them barely a step above the
+                // dashed empties they are meant to stand out from.
+                'border-primary-300 bg-primary-100 text-primary-900 shadow-card hover:border-primary hover:bg-primary-200',
         )}
       >
         <span className="flex items-center gap-1 text-2xs font-bold tabular-nums">
@@ -133,14 +146,14 @@ export async function FloorMap({
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span
-              className="border-primary-200 bg-primary-50 h-3 w-3 rounded-[3px] border"
+              className="border-primary-300 bg-primary-100 h-3 w-3 rounded-[3px] border"
               aria-hidden
             />
             {t('legendShop')}
           </span>
           <span className="inline-flex items-center gap-1.5">
             <span
-              className="h-3 w-3 rounded-[3px] border border-dashed border-neutral-300 bg-neutral-50"
+              className="h-3 w-3 rounded-[3px] border border-dashed border-neutral-200 bg-neutral-50"
               aria-hidden
             />
             {t('legendVacant')}

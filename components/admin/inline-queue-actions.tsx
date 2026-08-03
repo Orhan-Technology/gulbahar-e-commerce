@@ -3,12 +3,14 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { BellRing, Eye, EyeOff } from 'lucide-react';
+import { BellRing, Eye, EyeOff, FileSearch, Hand } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { CancelOrderDialog } from '@/components/admin/cancel-order-dialog';
 import { Button } from '@/components/ui/button';
 import { moderateReview, nudgeShopAboutOrder } from '@/lib/actions/admin-catalogue';
+import { claimVerification } from '@/lib/actions/verification';
+import { Link } from '@/lib/i18n/navigation';
 
 /**
  * The admin queue's remaining inline actions (Prompt C4).
@@ -136,6 +138,65 @@ export function InlineNudgeShop({
         size="sm"
         onCancelled={onCancelled}
       />
+    </div>
+  );
+}
+
+/**
+ * The verification row's own controls (Prompt C12).
+ *
+ * IT WAS THE ONLY CHEVRON LEFT. Every other row in the admin queue decides in
+ * place; this one offered a bare arrow, so the queue read as "five things you
+ * can do and one place you can go" — and the odd row out is the one that gets
+ * skipped.
+ *
+ * WHAT IT DELIBERATELY DOES NOT OFFER IS APPROVAL. Deciding a verification means
+ * reading a tazkira and a business licence, and a thumbnail of somebody's
+ * identity document in an overview panel is exactly what C7's storage rules
+ * exist to prevent — approving from here would be approving from a row title.
+ *
+ * So the two actions are the ones that are honestly available without the
+ * papers on screen: CLAIM it, which tells the other admins somebody is reading
+ * it and is reversible by doing nothing, and OPEN it, which is the same
+ * destination the chevron had but as a named button. The row still leaves the
+ * queue when it is decided, on the screen where the decision is possible.
+ */
+export function InlineVerificationActions({ verificationId }: { verificationId: string }) {
+  const t = useTranslations('adminOverview.queue');
+  const router = useRouter();
+  const [claimed, setClaimed] = React.useState(false);
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      <Button asChild type="button" size="sm" variant="outline">
+        <Link href="/admin/verifications">
+          <FileSearch />
+          {t('openVerification')}
+        </Link>
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="text-neutral-600"
+        disabled={pending || claimed}
+        onClick={() =>
+          startTransition(async () => {
+            const result = await claimVerification(verificationId);
+            if (!result.ok) {
+              toast.error(t(`errors.${result.error}` as never));
+              return;
+            }
+            setClaimed(true);
+            toast.success(t('verificationClaimed'));
+            router.refresh();
+          })
+        }
+      >
+        <Hand />
+        {claimed ? t('verificationClaimedShort') : t('claimVerification')}
+      </Button>
     </div>
   );
 }

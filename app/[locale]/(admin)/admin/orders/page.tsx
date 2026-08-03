@@ -12,6 +12,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { adminOrderList, adminOrderStatusCounts, adminShopOptions } from '@/lib/db/queries/admin';
 import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { SLA_HOURS } from '@/lib/queue-sla';
 import type { OrderStatus } from '@/lib/db/schema';
 
 type Query = { status?: OrderStatus; q?: string; shop?: string; days?: string };
@@ -40,10 +41,21 @@ const STATUSES = [
  */
 const STATUS_BADGE: Record<
   OrderStatus,
-  'default' | 'success' | 'warning' | 'secondary' | 'destructive'
+  'default' | 'accent' | 'success' | 'warning' | 'secondary' | 'destructive'
 > = {
   placed: 'warning',
-  accepted: 'default',
+  /*
+   * ACCEPTED AND READY WERE THE SAME BLUE, and they are the two statuses an
+   * admin most often has to tell apart at a glance — "the shop has seen it" and
+   * "the customer can come and collect it" are different facts about where an
+   * order physically is. Two solid primary badges differing only by their label
+   * made the column a wall of identical chips.
+   *
+   * Accepted now takes the warm accent (work in progress); ready keeps the
+   * solid primary (the shop is done, the ball is with the customer). Both stay
+   * distinct from `placed`'s amber and `fulfilled`'s green.
+   */
+  accepted: 'accent',
   ready: 'default',
   fulfilled: 'success',
   rejected: 'destructive',
@@ -240,6 +252,9 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
             <tr className="text-muted-foreground border-border border-b text-xs">
               <th className="p-3 text-start font-normal">{t('colReference')}</th>
               <th className="p-3 text-start font-normal">{t('colCustomer')}</th>
+              {/* The dominant case is one shop per basket, and the list never
+                  named it — see the query note. */}
+              <th className="p-3 text-start font-normal">{t('colShop')}</th>
               <th className="p-3 text-start font-normal">{t('colPlaced')}</th>
               <th className="p-3 text-start font-normal">{t('colFulfillment')}</th>
               <th className="p-3 text-start font-normal">{t('colStatus')}</th>
@@ -264,6 +279,19 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                   )}
                 </td>
                 <td className="p-3">{order.customerName}</td>
+                <td className="p-3 text-xs">
+                  {order.shopCount > 1 ? (
+                    <span className="text-muted-foreground">
+                      {t('multiShopCell', { count: formatNumber(order.shopCount, locale) })}
+                    </span>
+                  ) : order.shopId && order.shopName ? (
+                    <Link href={`/admin/shops/${order.shopId}`} className="hover:text-primary">
+                      {pickLocale(order.shopName, locale)}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
                 <td className="text-muted-foreground p-3 text-xs">
                   {formatDateTime(order.createdAt, locale)}
                 </td>
@@ -278,7 +306,37 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                   </span>
                 </td>
                 <td className="p-3">
-                  <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
+                    {/*
+                      AGE, WHERE THE ADMIN MEETS THE ORDER (Prompt C4).
+                      The overview flags an order stalled past 48 hours and then
+                      links here, where nothing said so — the urgency evaporated
+                      at exactly the point it should have been acted on. Only
+                      rows still at `placed` carry it: an accepted order is the
+                      shop working, which is not the mall's business.
+                    */}
+                    {order.status === 'placed' && order.pendingHours >= SLA_HOURS.warning && (
+                      <span
+                        data-sla={order.pendingHours >= SLA_HOURS.danger ? 'danger' : 'warning'}
+                        className={
+                          order.pendingHours >= SLA_HOURS.danger
+                            ? 'rounded-pill bg-danger-bg text-danger px-2 py-0.5 text-2xs font-bold'
+                            : 'rounded-pill bg-warning-bg text-warning-fg px-2 py-0.5 text-2xs font-bold'
+                        }
+                      >
+                        {order.pendingHours >= 48
+                          ? t('waitingDays', {
+                              n: Math.floor(order.pendingHours / 24),
+                              count: formatNumber(Math.floor(order.pendingHours / 24), locale),
+                            })
+                          : t('waitingHours', {
+                              n: Math.floor(order.pendingHours),
+                              count: formatNumber(Math.floor(order.pendingHours), locale),
+                            })}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="p-3 text-end font-medium">{formatCurrency(order.total, locale)}</td>
               </tr>

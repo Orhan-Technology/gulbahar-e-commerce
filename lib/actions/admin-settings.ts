@@ -98,7 +98,19 @@ export async function updateMarketplaceSettings(
     const previous = before?.[key as keyof typeof before];
     const next = typeof value === 'object' ? JSON.stringify(value) : String(value);
     const old = typeof previous === 'object' ? JSON.stringify(previous) : String(previous);
-    if (old !== next) changed[key] = next;
+    /*
+     * BOTH SIDES OF THE CHANGE, packed as "old → new".
+     *
+     * The log recorded only the new value, so a settings row read
+     * `deliveryFee: 777` — true, and useless to anyone asking whether that was
+     * a rise or a typo. The audit page splits this on the arrow and formats
+     * each side (components/admin/audit-detail.tsx), which is the only reason a
+     * packed string is acceptable here rather than two columns: `detail` is a
+     * flat `Record<string, string | number | null>` by schema, and pairing
+     * `deliveryFee` with `deliveryFeeFrom` would put the pairing rule in two
+     * places instead of one.
+     */
+    if (old !== next) changed[key] = `${old} → ${next}`;
   }
 
   await recordAdminAction({

@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Eye, ImageOff, Package } from 'lucide-react';
+import { ArrowDownWideNarrow, Eye, ImageOff, Package } from 'lucide-react';
 
 import { ListCapNotice } from '@/components/admin/list-cap-notice';
 import { ProductRowActions } from '@/components/admin/product-row-actions';
@@ -16,12 +16,27 @@ import {
   adminProductStatusCounts,
   adminProducts,
   adminShopOptions,
+  type AdminProductSort,
   type AdminProductStatusFilter,
 } from '@/lib/db/queries/admin';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
-type Query = { shop?: string; status?: AdminProductStatusFilter; q?: string };
+type Query = {
+  shop?: string;
+  status?: AdminProductStatusFilter;
+  q?: string;
+  sort?: AdminProductSort;
+};
+
+/**
+ * The sort axes, in the order an admin asks for them (Prompt C12).
+ *
+ * The list could only ever be read newest-first, so "which listings are people
+ * actually looking at" and "what has run out" — the two questions that make a
+ * cross-platform catalogue view worth opening — had no answer on this screen.
+ */
+const SORTS = ['newest', 'views', 'price', 'stock'] as const satisfies readonly AdminProductSort[];
 
 const ROW_LIMIT = 100;
 
@@ -72,7 +87,7 @@ export default async function AdminProductsPage({
   const hrefWith = (patch: Partial<Record<keyof Query, string | undefined>>) => {
     const merged = { ...query, ...patch };
     const next = new URLSearchParams();
-    for (const key of ['status', 'shop', 'q'] as const) {
+    for (const key of ['status', 'shop', 'q', 'sort'] as const) {
       const value = merged[key];
       if (value) next.set(key, String(value));
     }
@@ -118,6 +133,33 @@ export default async function AdminProductsPage({
         ))}
       </div>
 
+      {/* Sorting sits with the filters and carries them, so narrowing and
+          ordering never cancel each other out. */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-muted-foreground inline-flex items-center gap-1 text-xs">
+          <ArrowDownWideNarrow className="h-3.5 w-3.5" aria-hidden />
+          {t('sortLabel')}
+        </span>
+        {SORTS.map((sort) => {
+          const active = (query.sort ?? 'newest') === sort;
+          return (
+            <Link
+              key={sort}
+              href={hrefWith({ sort: sort === 'newest' ? undefined : sort })}
+              data-sort={sort}
+              aria-current={active ? 'true' : undefined}
+              className={`rounded-pill shrink-0 border px-3 py-1 text-xs ${
+                active
+                  ? 'border-primary bg-primary-50 text-primary font-medium'
+                  : 'border-border bg-card hover:border-primary'
+              }`}
+            >
+              {t(`sorts.${sort}`)}
+            </Link>
+          );
+        })}
+      </div>
+
       {/* Shop filter as links rather than a select: it is also the deep-link target
           from the shops directory. */}
       <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
@@ -147,7 +189,7 @@ export default async function AdminProductsPage({
       </div>
 
       <Suspense
-        key={`${query.shop ?? ''}-${query.status ?? ''}-${query.q ?? ''}`}
+        key={`${query.shop ?? ''}-${query.status ?? ''}-${query.q ?? ''}-${query.sort ?? ''}`}
         fallback={<ProductListSkeleton />}
       >
         <ProductList locale={locale} query={query} />
@@ -164,6 +206,7 @@ async function ProductList({ locale, query }: { locale: string; query: Query }) 
     shopId: query.shop,
     status: query.status,
     search: query.q,
+    sort: query.sort,
     limit: ROW_LIMIT + 1,
   });
   const rows = fetched.slice(0, ROW_LIMIT);
@@ -181,73 +224,201 @@ async function ProductList({ locale, query }: { locale: string; query: Query }) 
 
   return (
     <>
-    <ul className="space-y-2">
-      {rows.map((row) => (
-        <li
-          key={row.id}
-          className="rounded-card border-border bg-card flex flex-wrap items-center gap-4 border p-3"
-        >
-          <span className="rounded-control relative h-14 w-14 shrink-0 overflow-hidden bg-neutral-100">
-            {row.imagePath ? (
-              <Image src={row.imagePath} alt="" fill sizes="56px" className="object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-neutral-400">
-                <ImageOff className="h-5 w-5" aria-hidden />
-              </span>
-            )}
-          </span>
+      {/*
+        A REAL TABLE AT DESKTOP WIDTH (Prompt C12). The screen rendered a
+        hundred full-width cards with a 56px thumbnail and four facts spread
+        across 1400px of horizontal air — one product per 80 vertical pixels on
+        a console that is desktop-first by design, so comparing two listings
+        meant scrolling between them. Columns line the same fact up under
+        itself, which is the entire reason tables exist and exactly what a
+        sortable list needs.
 
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Links to the PUBLIC page, not an editor — there is no editor. */}
-              <Link
-                href={`/products/${row.slug}`}
-                target="_blank"
-                className="hover:text-primary clamp-1 text-sm font-medium"
-              >
-                {pickLocale(row.title, locale)}
-              </Link>
-              {/* Archived is the shop's own delete, so it is destructive-toned
-                  rather than the neutral grey a draft gets — an admin scanning
-                  this list has to be able to see that the row is a tombstone. */}
-              <Badge
-                variant={
-                  row.status === 'published'
-                    ? 'success'
-                    : row.status === 'archived'
-                      ? 'destructive'
-                      : 'secondary'
-                }
-              >
-                {t(`filters.${row.status}`)}
-              </Badge>
-              {row.shopStatus !== 'approved' && (
-                <Badge variant="warning">{t('shopNotApproved')}</Badge>
+        The card list survives BELOW `xl`, because a six-column table on a
+        laptop is a horizontal scrollbar and on a phone it is unusable. Both
+        render from one row set; nothing is duplicated but the markup.
+      */}
+      <div className="rounded-card border-border bg-card hidden overflow-hidden border xl:block">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-muted-foreground border-border border-b text-xs">
+              <th className="p-3 text-start font-normal">{t('colProduct')}</th>
+              <th className="p-3 text-start font-normal">{t('colShop')}</th>
+              <th className="p-3 text-start font-normal">{t('colStatus')}</th>
+              <th className="p-3 text-end font-normal">{t('colViews')}</th>
+              <th className="p-3 text-end font-normal">{t('colStock')}</th>
+              <th className="p-3 text-end font-normal">{t('colPrice')}</th>
+              <th className="w-12 p-3 text-end font-normal">
+                <span className="sr-only">{t('rowMenu')}</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-border divide-y">
+            {rows.map((row) => (
+              <tr key={row.id} className="hover:bg-neutral-50">
+                <td className="p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="rounded-control relative h-10 w-10 shrink-0 overflow-hidden bg-neutral-100">
+                      {row.imagePath ? (
+                        <Image src={row.imagePath} alt="" fill sizes="40px" className="object-cover" />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-neutral-400">
+                          <ImageOff className="h-4 w-4" aria-hidden />
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0">
+                      <Link
+                        href={`/products/${row.slug}`}
+                        target="_blank"
+                        className="hover:text-primary clamp-1 font-medium"
+                      >
+                        {pickLocale(row.title, locale)}
+                      </Link>
+                      {/*
+                        THE REASON THE MALL TOOK IT DOWN, on the row it applies
+                        to (Prompt C7). The unpublish dialog demands ten
+                        characters and promises they reach the shop; until now
+                        the only place that sentence survived was the
+                        shopkeeper's own catalogue and the audit log, so the
+                        admin who wrote it could not see it on the listing they
+                        wrote it about.
+                      */}
+                      {row.status === 'unpublished' && row.unpublishReason && (
+                        <span className="text-danger clamp-1 mt-0.5 block text-xs" data-unpublish-reason>
+                          {t('unpublishedBecause', { reason: row.unpublishReason })}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </td>
+                <td className="p-3 text-xs">
+                  <Link href={`/admin/shops/${row.shopId}`} className="hover:text-primary">
+                    {pickLocale(row.shopName, locale)}
+                  </Link>
+                  {row.shopStatus !== 'approved' && (
+                    <Badge variant="warning" className="ms-1.5">
+                      {t('shopNotApproved')}
+                    </Badge>
+                  )}
+                </td>
+                <td className="p-3">
+                  <Badge
+                    variant={
+                      row.status === 'published'
+                        ? 'success'
+                        : row.status === 'archived'
+                          ? 'destructive'
+                          : 'secondary'
+                    }
+                  >
+                    {t(`filters.${row.status}`)}
+                  </Badge>
+                </td>
+                <td className="text-muted-foreground p-3 text-end text-xs tabular-nums">
+                  {formatNumber(row.viewCount, locale)}
+                </td>
+                <td
+                  className={`p-3 text-end text-xs tabular-nums ${
+                    row.stock === 0 ? 'text-danger font-bold' : 'text-muted-foreground'
+                  }`}
+                >
+                  {formatNumber(row.stock, locale)}
+                </td>
+                <td className="p-3 text-end">
+                  <PriceDisplay price={row.price} discountPrice={row.discountPrice} size="sm" />
+                </td>
+                <td className="p-3 text-end">
+                  <ProductRowActions
+                    productId={row.id}
+                    productSlug={row.slug}
+                    shopId={row.shopId}
+                    status={row.status}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <ul className="space-y-2 xl:hidden">
+        {rows.map((row) => (
+          <li
+            key={row.id}
+            className="rounded-card border-border bg-card flex flex-wrap items-center gap-4 border p-3"
+          >
+            <span className="rounded-control relative h-14 w-14 shrink-0 overflow-hidden bg-neutral-100">
+              {row.imagePath ? (
+                <Image src={row.imagePath} alt="" fill sizes="56px" className="object-cover" />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center text-neutral-400">
+                  <ImageOff className="h-5 w-5" aria-hidden />
+                </span>
+              )}
+            </span>
+
+            <div className="min-w-0 flex-1 space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Links to the PUBLIC page, not an editor — there is no editor. */}
+                <Link
+                  href={`/products/${row.slug}`}
+                  target="_blank"
+                  className="hover:text-primary clamp-1 text-sm font-medium"
+                >
+                  {pickLocale(row.title, locale)}
+                </Link>
+                {/* Archived is the shop's own delete, so it is destructive-toned
+                    rather than the neutral grey a draft gets — an admin scanning
+                    this list has to be able to see that the row is a tombstone. */}
+                <Badge
+                  variant={
+                    row.status === 'published'
+                      ? 'success'
+                      : row.status === 'archived'
+                        ? 'destructive'
+                        : 'secondary'
+                  }
+                >
+                  {t(`filters.${row.status}`)}
+                </Badge>
+                {row.shopStatus !== 'approved' && (
+                  <Badge variant="warning">{t('shopNotApproved')}</Badge>
+                )}
+              </div>
+
+              <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                <Link href={`/admin/shops/${row.shopId}`} className="hover:text-primary">
+                  {pickLocale(row.shopName, locale)}
+                </Link>
+                <span className="inline-flex items-center gap-1">
+                  <Eye className="h-3 w-3" aria-hidden />
+                  {formatNumber(row.viewCount, locale)}
+                </span>
+                <span>{t('stock', { count: formatNumber(row.stock, locale) })}</span>
+              </div>
+
+              {row.status === 'unpublished' && row.unpublishReason && (
+                <p className="text-danger text-xs" data-unpublish-reason>
+                  {t('unpublishedBecause', { reason: row.unpublishReason })}
+                </p>
               )}
             </div>
 
-            <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-              <Link href={`/admin/shops/${row.shopId}`} className="hover:text-primary">
-                {pickLocale(row.shopName, locale)}
-              </Link>
-              <span className="inline-flex items-center gap-1">
-                <Eye className="h-3 w-3" aria-hidden />
-                {formatNumber(row.viewCount, locale)}
-              </span>
-              <span>{t('stock', { count: formatNumber(row.stock, locale) })}</span>
-            </div>
-          </div>
+            <PriceDisplay price={row.price} discountPrice={row.discountPrice} size="sm" />
 
-          <PriceDisplay price={row.price} discountPrice={row.discountPrice} size="sm" />
+            <ProductRowActions
+              productId={row.id}
+              productSlug={row.slug}
+              shopId={row.shopId}
+              status={row.status}
+            />
+          </li>
+        ))}
+      </ul>
 
-          <ProductRowActions productId={row.id} status={row.status} />
-        </li>
-      ))}
-    </ul>
-
-    <div className="pt-3">
-      <ListCapNotice shown={rows.length} hasMore={hasMore} />
-    </div>
+      <div className="pt-3">
+        <ListCapNotice shown={rows.length} hasMore={hasMore} />
+      </div>
     </>
   );
 }

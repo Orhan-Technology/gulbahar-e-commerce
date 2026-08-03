@@ -71,6 +71,23 @@ export async function revenueBySlot() {
         sum(c.price_paid) filter (where ${SOLD} and c.starts_at >= date_trunc('month', now())),
         0
       )::int as month_revenue,
+      /*
+       * WHAT IS ON THE FLOOR THIS MONTH, as opposed to what was BILLED this
+       * month. A weekly fee is invoiced at the start of a run (PRD §8.3), so a
+       * campaign booked on the 28th and running through the next four weeks
+       * puts nothing into the billed-this-month column for the month it is
+       * actually visible in — which is how an inventory table ended up with a
+       * column of zeros beside eleven running campaigns. Overlap, not
+       * containment.
+       */
+      coalesce(
+        sum(c.price_paid) filter (
+          where ${SOLD}
+            and c.starts_at < date_trunc('month', now()) + interval '1 month'
+            and c.ends_at >= date_trunc('month', now())
+        ),
+        0
+      )::int as month_running_revenue,
       count(*) filter (where ${SOLD})::int as campaign_count,
       count(*) filter (
         where c.status in ('approved', 'active') and c.starts_at <= now() and c.ends_at >= now()
@@ -106,6 +123,7 @@ export async function revenueBySlot() {
       pricePerWeek: Number(row.price_per_week),
       revenue: Number(row.revenue),
       monthRevenue: Number(row.month_revenue),
+      monthRunningRevenue: Number(row.month_running_revenue),
       campaignCount: Number(row.campaign_count),
       occupied,
       currentShops: (row.current_shops ?? []) as LocalizedText[],
@@ -192,7 +210,24 @@ export async function revenueMonthToDate() {
           and c.starts_at < b.prev_start + b.elapsed) as previous,
       (select coalesce(sum(c.price_paid), 0)::int from campaigns c
         where ${SOLD} and c.starts_at >= b.prev_start
-          and c.starts_at < b.month_start) as previous_full
+          and c.starts_at < b.month_start) as previous_full,
+      /*
+       * BOOKED VALUE FOR THIS MONTH — every sold campaign whose run touches it,
+       * whenever it was billed.
+       *
+       * Recognized-so-far alone is what made the headline read «۰ ؋ ↓۱۰۰٪» on
+       * the 2nd of a month with eleven campaigns live and nearly a million
+       * afghani of placement on the walls. Both numbers are true and only the
+       * pair is honest, so both are read here and the card shows both.
+       */
+      (select coalesce(sum(c.price_paid), 0)::int from campaigns c
+        where ${SOLD}
+          and c.starts_at < b.month_start + interval '1 month'
+          and c.ends_at >= b.month_start) as booked_this_month,
+      (select count(*)::int from campaigns c
+        where ${SOLD}
+          and c.starts_at < b.month_start + interval '1 month'
+          and c.ends_at >= b.month_start) as booked_count
     from bounds b
   `);
 
@@ -206,7 +241,11 @@ export async function revenueMonthToDate() {
     current,
     previous,
     previousFullMonth: Number(row?.previous_full ?? 0),
+    /** Sold placement running at any point this month — see the SQL note. */
+    bookedThisMonth: Number(row?.booked_this_month ?? 0),
+    bookedCount: Number(row?.booked_count ?? 0),
     dayOfMonth,
+    daysInMonth,
     partial: dayOfMonth < daysInMonth,
     // Null rather than −100% or Infinity when there is no baseline to divide by
     // — the same rule StatCard applies everywhere else.

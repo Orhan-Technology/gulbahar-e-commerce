@@ -1,6 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { ShoppingBag, Store, UserPlus } from 'lucide-react';
 
+import { ChartScaleNote } from '@/components/admin/chart-scale-note';
 import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { SalesChart } from '@/components/dashboard/sales-chart';
 import { pressable } from '@/components/motion/pressable';
@@ -102,6 +103,8 @@ export async function PlatformHealth({ range }: { range?: ConsoleRange }) {
           <p className="ms-auto text-xs text-neutral-500">{t('gmvHint')}</p>
         </div>
         <SalesChart data={series} />
+        {/* The line has no Y axis by design; this is what makes it citable. */}
+        <ChartScaleNote data={series} />
       </div>
 
       {leaders.length > 0 && (
@@ -154,7 +157,15 @@ export function PlatformHealthSkeleton() {
   return (
     <section className="space-y-4">
       <Skeleton className="h-4 w-32" />
-      <div className="grid gap-3 sm:grid-cols-3">
+      {/*
+        THE SAME GRID AS THE REAL THING. The skeleton laid three tiles across at
+        every width while the loaded section stacks them from `xl` — so at 1440,
+        where this section lives in a 23rem rail, the placeholder overflowed its
+        own column and then snapped into a single file when the data arrived.
+        A skeleton whose shape disagrees with its content is a layout shift with
+        extra steps.
+      */}
+      <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
         {Array.from({ length: 3 }, (_, index) => (
           <StatCardSkeleton key={index} />
         ))}

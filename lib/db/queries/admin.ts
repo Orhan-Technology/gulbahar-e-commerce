@@ -15,6 +15,7 @@ import {
   type OrderStatus,
   type ShopStatus,
 } from '../schema';
+import type { LocalizedText } from '../schema/shared';
 import {
   categoryProductCount,
   shopPublishedProductCount,
@@ -82,7 +83,7 @@ export type AdminShopFilters = {
   locale: string;
 };
 
-export async function adminShopDirectory(filters: AdminShopFilters) {
+export async function adminShopDirectory(filters: AdminShopFilters & { revenueDays?: number }) {
   const conditions: SQL[] = [];
   if (filters.status) conditions.push(eq(shops.status, filters.status));
 
@@ -125,6 +126,50 @@ export async function adminShopDirectory(filters: AdminShopFilters) {
       totalProducts: shopTotalProductCount,
       ownerName: users.name,
       ownerPhone: users.phone,
+      /*
+       * WHO MATTERS, not only who exists (Prompt C12).
+       *
+       * The directory answered "which tenants are in the building" and nothing
+       * else, so an admin scanning fourteen identical rows had no way to tell
+       * the anchor tenant from the one that has taken two orders all year. This
+       * is the same figure the floors page and the revenue report show —
+       * fulfilled money, attributed through order_items so a two-shop basket is
+       * split between them rather than credited twice (Prompt C2). Three screens
+       * disagreeing about what a shop earned would make all three useless.
+       *
+       * A day count reaching SQL, never a Date: the clock read belongs here.
+       */
+      revenue: sql<number>`(
+        select coalesce(sum(oi.price_snapshot * oi.quantity), 0)::int
+        from order_items oi join orders o on o.id = oi.order_id
+        where oi.shop_id = ${shops.id}
+          and o.status = 'fulfilled'
+          and o.created_at >= now() - (${filters.revenueDays ?? 30} * interval '1 day')
+      )`,
+      orderCount: sql<number>`(
+        select count(distinct o.id)::int
+        from order_items oi join orders o on o.id = oi.order_id
+        where oi.shop_id = ${shops.id}
+          and o.status not in ('rejected', 'cancelled')
+          and o.created_at >= now() - (${filters.revenueDays ?? 30} * interval '1 day')
+      )`,
+      /*
+       * Whether this tenant is on the health list — the "needs attention" chip
+       * (Prompt C12). Only the CHEAP half of the flag set is answerable here:
+       * an empty catalogue and an expired verification are one predicate each,
+       * while slow acceptance and a falling rating need the window arithmetic
+       * that lives in queries/mall.ts. The chip therefore says "look at the
+       * health view", it does not try to be it.
+       */
+      needsAttention: sql<boolean>`(
+        (select count(*)::int from products p
+          where p.shop_id = ${shops.id} and p.status = 'published') = 0
+        or exists (
+          select 1 from shop_verifications v
+          where v.shop_id = ${shops.id} and v.status = 'verified'
+            and v.expires_at is not null and v.expires_at < now()
+        )
+      )`,
     })
     .from(shops)
     .leftJoin(categories, eq(shops.categoryId, categories.id))
@@ -264,10 +309,22 @@ export async function adminCategoryTree(locale: string) {
 
 export type AdminProductStatusFilter = 'draft' | 'published' | 'unpublished' | 'archived';
 
+/**
+ * How the product list may be ordered (Prompt C12).
+ *
+ * `newest` stays the default because a cross-platform catalogue view is mostly
+ * "what has changed lately". The other three exist because the questions an
+ * admin actually arrives with — what is selling, what is expensive, what has
+ * run out — were unanswerable on a list that could only be read in insertion
+ * order.
+ */
+export type AdminProductSort = 'newest' | 'views' | 'price' | 'stock';
+
 export type AdminProductFilters = {
   shopId?: string;
   status?: AdminProductStatusFilter;
   search?: string;
+  sort?: AdminProductSort;
   locale: string;
   limit?: number;
 };
@@ -312,6 +369,7 @@ export async function adminProducts(filters: AdminProductFilters) {
       shopName: shops.name,
       shopSlug: shops.slug,
       shopStatus: shops.status,
+      unpublishReason: products.unpublishReason,
       imagePath: sql<string | null>`(
         select pi.path from product_images pi
         where pi.product_id = products.id
@@ -321,7 +379,23 @@ export async function adminProducts(filters: AdminProductFilters) {
     .from(products)
     .innerJoin(shops, eq(products.shopId, shops.id))
     .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(desc(products.createdAt))
+    /*
+     * A whitelist, not the raw query string: `sort` arrives from the URL and a
+     * column name interpolated from it is an injection, however narrow the
+     * surface. Anything unrecognised falls through to `newest`.
+     *
+     * Stock ascending — "what has run out" is the useful end of that axis, and
+     * a descending stock sort answers a question nobody has.
+     */
+    .orderBy(
+      filters.sort === 'views'
+        ? desc(products.viewCount)
+        : filters.sort === 'price'
+          ? desc(products.price)
+          : filters.sort === 'stock'
+            ? asc(products.stock)
+            : desc(products.createdAt),
+    )
     .limit(filters.limit ?? 100);
 }
 
@@ -430,6 +504,37 @@ export async function adminOrderList(filters: AdminOrderFilters) {
       shopCount: sql<number>`(
         select count(distinct oi.shop_id)::int from order_items oi where oi.order_id = orders.id
       )`,
+      /*
+       * WHO IS SELLING IT. Most baskets in this mall are single-shop, and the
+       * list showed a reference, a customer and a total — so the commonest
+       * question an admin arrives with ("which tenant is this order sitting
+       * with") could only be answered by opening the row. The multi-shop badge
+       * already existed; what was missing was the name in the ordinary case.
+       *
+       * A correlated subquery rather than a join, for the same reason the shop
+       * FILTER above is an EXISTS: joining order_items would repeat the order
+       * once per line.
+       */
+      shopId: sql<string | null>`(
+        select oi.shop_id::text from order_items oi where oi.order_id = orders.id limit 1
+      )`,
+      shopName: sql<LocalizedText | null>`(
+        select s.name from order_items oi join shops s on s.id = oi.shop_id
+        where oi.order_id = orders.id limit 1
+      )`,
+      /*
+       * HOW LONG THE CUSTOMER HAS BEEN WAITING, in hours, computed in SQL.
+       *
+       * The clock read belongs to the query (CLAUDE.md): a component may not
+       * call Date.now() during render, and passing `now` down for every row
+       * would put the arithmetic in three places. The list turns this into an
+       * SLA chip through lib/queue-sla.ts, which is the same table the
+       * shopkeeper's queue and the overview's stalled-order rule use — the
+       * whole point being that "late" means one thing across the product.
+       */
+      pendingHours: sql<number>`
+        extract(epoch from (now() - ${orders.createdAt})) / 3600
+      `,
     })
     .from(orders)
     .innerJoin(users, eq(orders.userId, users.id))
@@ -437,7 +542,46 @@ export async function adminOrderList(filters: AdminOrderFilters) {
     .orderBy(desc(orders.createdAt))
     .limit(limit + 1);
 
-  return { rows: rows.slice(0, limit), hasMore: rows.length > limit, limit };
+  return {
+    rows: rows.slice(0, limit).map((row) => ({ ...row, pendingHours: Number(row.pendingHours) })),
+    hasMore: rows.length > limit,
+    limit,
+  };
+}
+
+/**
+ * How long one order has been sitting where it is (Prompt C4).
+ *
+ * The overview flags an order stalled past 48 hours and, until now, neither the
+ * orders LIST nor the order DETAIL said a word about it — an admin who followed
+ * the queue's own link arrived at a screen that had forgotten why they came.
+ *
+ * `sinceLastEventHours` rather than age alone: an order placed four days ago and
+ * accepted an hour ago is not stalled, it is being worked. The banner needs the
+ * time since the last thing that HAPPENED, and the list — which only chips
+ * rows still at `placed` — needs the age. Both are read here, in SQL.
+ */
+export async function adminOrderAging(orderId: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)) return null;
+
+  const [row] = await db
+    .select({
+      status: orders.status,
+      pendingHours: sql<number>`extract(epoch from (now() - ${orders.createdAt})) / 3600`,
+      sinceLastEventHours: sql<number>`extract(epoch from (now() - coalesce((
+        select max(e.created_at) from order_events e where e.order_id = ${orders.id}
+      ), ${orders.createdAt}))) / 3600`,
+    })
+    .from(orders)
+    .where(eq(orders.id, orderId))
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    status: row.status,
+    pendingHours: Number(row.pendingHours),
+    sinceLastEventHours: Number(row.sinceLastEventHours),
+  };
 }
 
 /** How many orders sit in each status — the counts on the order filter chips. */
@@ -509,6 +653,21 @@ export async function adminReviewQueue(status: 'reported' | 'removed' | 'visible
       authorRemovedReviews: sql<number>`(
         select count(*)::int from reviews r2
         where r2.user_id = ${reviews.userId} and r2.status = 'removed'
+      )`,
+      /*
+       * The enum key, when the report carried one. The moderation card
+       * translates this; reports written before `reasonCode` existed have none,
+       * which is why `reportReason` below still travels as the literal the
+       * shopkeeper's message was written from. The card renders the translation
+       * when it has a code and the literal otherwise — never a key path.
+       */
+      reportReasonCode: sql<string | null>`(
+        select n.payload->>'reasonCode'
+        from notifications n
+        where n.event_key = 'review.flagged'
+          and n.payload->>'reviewId' = ${reviews.id}::text
+        order by n.created_at desc
+        limit 1
       )`,
       reportReason: sql<string | null>`(
         select n.payload->>'reason'
@@ -600,6 +759,41 @@ export async function adminUsers(filters: AdminUserFilters) {
        */
       reviewCount: sql<number>`(select count(*)::int from reviews r where r.user_id = users.id and r.status = 'visible')`,
       lastOrderAt: sql<Date | null>`(select max(o.created_at) from orders o where o.user_id = users.id)`,
+      /*
+       * LAST ACTIVE, which is what the joined-on column pretended to be.
+       *
+       * Every seeded account was created in the same import, so «تاریخ پیوستن»
+       * rendered fourteen identical dates down the table — a column that costs
+       * width and answers nothing. "When did this person last do something
+       * here" is the fact a role change or a deactivation actually turns on.
+       *
+       * GREATEST over the three traces there are: an order, a review, and the
+       * signup itself as the floor, so a brand-new account reads as new rather
+       * than as never-seen.
+       */
+      lastActiveAt: sql<Date>`greatest(
+        coalesce((select max(o.created_at) from orders o where o.user_id = users.id), users.created_at),
+        coalesce((select max(r.created_at) from reviews r where r.user_id = users.id), users.created_at),
+        users.created_at
+      )`,
+      /*
+       * WHAT DEACTIVATING THIS ACCOUNT WOULD COST — the consequence preview
+       * (Prompt C12). Deactivating a shopkeeper locks the person, and their
+       * shop keeps trading with nobody able to sign in and accept an order;
+       * the dialog said "this blocks sign-in" and stopped there, which is true
+       * and not the part that matters.
+       */
+      shopId: shops.id,
+      shopStatus: shops.status,
+      shopPublishedProducts: sql<number>`(
+        select count(*)::int from products p
+        where p.shop_id = ${shops.id} and p.status = 'published'
+      )`,
+      shopOpenOrders: sql<number>`(
+        select count(distinct o.id)::int
+        from order_items oi join orders o on o.id = oi.order_id
+        where oi.shop_id = ${shops.id} and o.status in ('placed', 'accepted', 'ready')
+      )`,
     })
     .from(users)
     .leftJoin(shopMembers, eq(shopMembers.userId, users.id))

@@ -4,8 +4,7 @@ import { ArrowDownRight, ArrowUpRight, ChevronRight } from 'lucide-react';
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
-import { promotionRevenueMonths } from '@/lib/db/queries/admin-overview';
-import { revenueBySlot } from '@/lib/db/queries/admin-revenue';
+import { revenueBySlot, revenueMonthToDate } from '@/lib/db/queries/admin-revenue';
 import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -21,12 +20,27 @@ import { cn } from '@/lib/utils';
  * Occupancy is the second number on purpose. Income alone says how the month
  * went; income beside "seven of eight places sold" says whether there is room
  * to grow it, which is the question a mall manager asks next.
+ *
+ * EVERY MONEY FIGURE ON THIS CARD NAMES ITS PERIOD, and that is a repair. The
+ * headline was month-to-date and the top-three list under it was LIFETIME, so
+ * on the 2nd of a month the card read «۰ ؋ ↓۱۰۰٪» directly above a breakdown
+ * summing to nine hundred thousand — the block contradicting itself inside one
+ * blue rectangle, on the first number the console exists to sell.
+ *
+ * Three changes, together:
+ *   - the comparison is the SAME STRETCH of last month (revenueMonthToDate),
+ *     not month-so-far against a whole previous month, so a two-day-old month
+ *     no longer scores −100%;
+ *   - BOOKED VALUE sits beside recognized income, because placement running on
+ *     the walls today is the thing a bare zero was denying;
+ *   - the breakdown carries its own period label instead of borrowing the
+ *     headline's by adjacency.
  */
 export async function RevenueBlock() {
   const locale = await getLocale();
   const t = await getTranslations('adminOverview.revenue');
 
-  const [months, slots] = await Promise.all([promotionRevenueMonths(), revenueBySlot()]);
+  const [month, slots] = await Promise.all([revenueMonthToDate(), revenueBySlot()]);
 
   const capacity = slots.reduce((sum, slot) => sum + slot.capacity, 0);
   const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
@@ -37,8 +51,9 @@ export async function RevenueBlock() {
     .filter((slot) => slot.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue)
     .slice(0, 3);
+  const lifetimeTotal = slots.reduce((sum, slot) => sum + slot.revenue, 0);
 
-  const positive = (months.delta ?? 0) >= 0;
+  const positive = (month.delta ?? 0) >= 0;
 
   return (
     <section className="rounded-card bg-primary-700 text-primary-foreground p-5 sm:p-6">
@@ -56,11 +71,17 @@ export async function RevenueBlock() {
         </Link>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-baseline gap-3">
+      {/* The period, on the figure rather than inferable from the heading. */}
+      <p className="text-primary-300 mt-3 text-2xs font-semibold">
+        {month.partial
+          ? t('recognisedLabel', { day: formatNumber(month.dayOfMonth, locale) })
+          : t('recognisedFullLabel')}
+      </p>
+      <div className="mt-1 flex flex-wrap items-baseline gap-3">
         <p className="text-3xl leading-none font-extrabold tabular-nums">
-          {formatCurrency(months.thisMonth, locale)}
+          {formatCurrency(month.current, locale)}
         </p>
-        {months.delta !== null && months.delta !== 0 && (
+        {month.delta !== null && month.delta !== 0 && (
           <span
             className={cn(
               'rounded-pill inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold',
@@ -75,15 +96,41 @@ export async function RevenueBlock() {
             ) : (
               <ArrowDownRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden />
             )}
-            {formatPercent(Math.abs(months.delta), locale)}
+            {formatPercent(Math.abs(month.delta), locale)}
           </span>
         )}
       </div>
       <p className="text-primary-300 mt-1 text-xs">
-        {months.lastMonth > 0
-          ? t('vsLastMonth', { amount: formatCurrency(months.lastMonth, locale) })
-          : t('firstMonth')}
+        {month.delta === null
+          ? t('noBaselineThisFar')
+          : month.partial
+            ? t('vsSameStretch', {
+                day: formatNumber(month.dayOfMonth, locale),
+                amount: formatCurrency(month.previous, locale),
+              })
+            : t('vsLastMonth', { amount: formatCurrency(month.previous, locale) })}
       </p>
+
+      {/*
+        BOOKED VALUE, on its own line and clearly a different measure.
+        Recognized income answers "what have we billed"; this answers "what is
+        on the walls", and at the start of a month the second is the only one
+        of the two with anything in it.
+      */}
+      {month.bookedThisMonth > 0 && (
+        <p className="border-primary-foreground/15 mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-t pt-3 text-sm">
+          <span className="text-primary-200 text-xs">{t('bookedLabel')}</span>
+          <span className="font-bold tabular-nums">
+            {formatCurrency(month.bookedThisMonth, locale)}
+          </span>
+          <span className="text-primary-300 text-2xs">
+            {t('bookedHint', {
+              n: month.bookedCount,
+              count: formatNumber(month.bookedCount, locale),
+            })}
+          </span>
+        </p>
+      )}
 
       {/* ---------------------------------------------------------------- */}
       <div className="mt-5">
@@ -123,7 +170,17 @@ export async function RevenueBlock() {
 
       {/* ---------------------------------------------------------------- */}
       {top.length > 0 && (
-        <ul className="border-primary-foreground/15 mt-5 space-y-2 border-t pt-4">
+        <div className="border-primary-foreground/15 mt-5 border-t pt-4">
+          {/*
+            THE LIST'S OWN PERIOD. These are lifetime slot totals and always
+            were; without this line they sat under a month-to-date headline and
+            read as its breakdown, which is how the card came to disagree with
+            itself by a factor of nine hundred thousand.
+          */}
+          <p className="text-primary-300 mb-2 text-2xs font-semibold">
+            {t('topSlotsLifetime', { total: formatCurrency(lifetimeTotal, locale) })}
+          </p>
+        <ul className="space-y-2">
           {top.map((slot, index) => (
             <li key={slot.id} className="flex items-baseline gap-3 text-sm">
               <span className="text-primary-300 w-4 shrink-0 text-center text-xs font-bold tabular-nums">
@@ -136,6 +193,7 @@ export async function RevenueBlock() {
             </li>
           ))}
         </ul>
+        </div>
       )}
     </section>
   );

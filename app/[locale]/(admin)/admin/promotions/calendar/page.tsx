@@ -82,6 +82,27 @@ export default async function AdminPromotionCalendarPage({
   const vacantTotal = rows.reduce((sum, row) => sum + row.vacantDays, 0);
   const slotDays = rows.length * days.length;
 
+  /*
+   * WHAT THE EMPTY CELLS ARE WORTH — the one number a mall director would quote
+   * (Prompt C12).
+   *
+   * The page already counted vacant slot-days and drew them; a count of squares
+   * is a fact about a grid, not about a business. Priced, the same grid says
+   * «there is ؋X of inventory on our own walls that nobody has been asked to
+   * buy this month», which is what turns this screen from a report into a sales
+   * target.
+   *
+   * A DAILY RATE DERIVED FROM THE WEEKLY ONE, and the figure is deliberately
+   * presented as approximate: placement is sold by the week (PRD §8.3), so a
+   * scatter of single vacant days is not literally sellable at a seventh of the
+   * price each. Rounded to whole afghanis because every monetary value in this
+   * product is an integer.
+   */
+  const vacantValue = rows.reduce(
+    (sum, row) => sum + Math.round((row.pricePerWeek / 7) * row.vacantDays),
+    0,
+  );
+
   const filtered = query.slot
     ? bookings.filter((booking) => booking.slotId === query.slot)
     : bookings;
@@ -96,9 +117,10 @@ export default async function AdminPromotionCalendarPage({
     <div className="space-y-5 p-6">
       <ConsolePageHeader
         title={t('title')}
-        description={t('subtitle', {
+        description={t('subtitleWithValue', {
           vacant: formatNumber(vacantTotal, locale),
           total: formatNumber(slotDays, locale),
+          value: formatCurrency(vacantValue, locale),
         })}
         actions={
           <div className="flex items-center gap-2">
@@ -207,8 +229,19 @@ export default async function AdminPromotionCalendarPage({
                     );
                   })}
 
-                  <td className="px-3 py-2 text-end font-semibold tabular-nums">
-                    {formatNumber(row.vacantDays, locale)}
+                  <td className="px-3 py-2 text-end tabular-nums">
+                    <span className="block font-semibold">
+                      {formatNumber(row.vacantDays, locale)}
+                    </span>
+                    {/* The row's own share of the unsold total. */}
+                    <span className="text-muted-foreground text-2xs block">
+                      {t('vacantValue', {
+                        value: formatCurrency(
+                          Math.round((row.pricePerWeek / 7) * row.vacantDays),
+                          locale,
+                        ),
+                      })}
+                    </span>
                   </td>
                 </tr>
               ))}

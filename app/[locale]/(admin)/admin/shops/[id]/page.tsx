@@ -2,6 +2,7 @@ import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import {
+  BadgeCheck,
   ChevronRight,
   Clock,
   ExternalLink,
@@ -20,6 +21,7 @@ import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopReview } from '@/lib/db/queries/admin';
 import { latestShopStatusReason } from '@/lib/db/queries/audit';
+import { shopVerificationSummary } from '@/lib/db/queries/verification';
 import { formatDate, formatNumber, formatOpeningHours, formatPhone, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
@@ -51,7 +53,10 @@ export default async function AdminShopReviewPage({
   const shop = await adminShopReview(id);
   if (!shop) notFound();
 
-  const statusReason = await latestShopStatusReason(shop.id);
+  const [statusReason, verification] = await Promise.all([
+    latestShopStatusReason(shop.id),
+    shopVerificationSummary(shop.id),
+  ]);
 
   const published = shop.catalogue.filter((item) => item.status === 'published').length;
   const withoutImages = shop.catalogue.filter((item) => item.imageCount === 0).length;
@@ -117,6 +122,56 @@ export default async function AdminShopReviewPage({
           </div>
         </div>
       </section>
+
+      {/*
+        THE OTHER DECISION WAITING ON THIS TENANT (Prompt C11).
+        Approving a registration and verifying an identity are two queues about
+        the same shop on two pages that had never heard of each other — an admin
+        could approve a shop here while its tazkira sat unread one nav item
+        away, and the verification queue could approve papers for a shop that
+        was still pending. The banner is only loud when there is a decision to
+        make; a settled verification is a quiet line.
+      */}
+      {verification && (
+        <section
+          data-verification-cross-link={verification.status}
+          className={
+            verification.status === 'submitted' || verification.status === 'under_review'
+              ? 'rounded-card border-warning-border bg-warning-bg flex flex-wrap items-center justify-between gap-3 border p-4'
+              : 'rounded-card border-border bg-card flex flex-wrap items-center justify-between gap-3 border p-4'
+          }
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-bold">
+              {t(`verification.${verification.status}` as never)}
+            </p>
+            <p className="text-muted-foreground mt-0.5 text-xs">
+              {verification.status === 'submitted' || verification.status === 'under_review'
+                ? t('verification.waitingBody', {
+                    count: formatNumber(verification.documentCount, locale),
+                    date: verification.submittedAt
+                      ? formatDate(verification.submittedAt, locale, 'medium')
+                      : '—',
+                  })
+                : verification.status === 'verified' && verification.expiresAt
+                  ? t('verification.validUntil', {
+                      date: formatDate(verification.expiresAt, locale, 'medium'),
+                    })
+                  : t('verification.decidedOn', {
+                      date: verification.decidedAt
+                        ? formatDate(verification.decidedAt, locale, 'medium')
+                        : '—',
+                    })}
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href="/admin/verifications">
+              <BadgeCheck />
+              {t('verification.open')}
+            </Link>
+          </Button>
+        </section>
+      )}
 
       {/* An outstanding rejection reason stays visible until resubmission. */}
       {shop.rejectionReason && (

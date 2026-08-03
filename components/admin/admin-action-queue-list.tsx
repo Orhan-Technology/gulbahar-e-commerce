@@ -9,6 +9,7 @@ import { InlineDecision } from '@/components/admin/inline-decision';
 import {
   InlineNudgeShop,
   InlineReviewModeration,
+  InlineVerificationActions,
 } from '@/components/admin/inline-queue-actions';
 import { pressable } from '@/components/motion/pressable';
 import { formatNumber, formatRelative } from '@/lib/format';
@@ -120,12 +121,15 @@ export function AdminActionQueueList({
         {(expanded ? rows : rows.slice(0, visibleRows)).map((row, index) => {
           const leaving = resolved.has(row.key);
           const decidable = row.decisionId && row.decisionKind;
-          // Every row type now acts in place, so the chevron is only for rows
-          // that genuinely have nowhere to act — none, today.
-          // A verification row is a LINK on purpose: deciding it needs the
-          // documents on screen, and a thumbnail of a tazkira in an overview
-          // panel is exactly what C7's security rules exist to prevent.
-          const actionable = decidable || row.reviewId || row.orderId;
+          /*
+            Every row type acts in place, and as of C12 that includes
+            verifications — which were the last chevron-only rows on the queue.
+            They still cannot be APPROVED from here (see
+            InlineVerificationActions for why), but "claim it" and "open the
+            documents" are real controls, and a row with real controls is not an
+            odd one out.
+          */
+          const actionable = decidable || row.reviewId || row.orderId || row.verificationId;
 
           return (
             <li
@@ -186,6 +190,10 @@ export function AdminActionQueueList({
                         onOptimistic={() => dismiss(row.key)}
                         onRollback={() => restore(row.key)}
                       />
+                    )}
+
+                    {row.verificationId && (
+                      <InlineVerificationActions verificationId={row.verificationId} />
                     )}
 
                     {row.reviewId && (

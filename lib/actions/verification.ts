@@ -17,6 +17,7 @@ import {
   type VerificationDocumentKind,
 } from '../db/schema';
 import { notify } from '../notify';
+import { verificationDetail } from '../db/queries/verification';
 import {
   MAX_DOCUMENT_BYTES,
   isAllowedDocumentMime,
@@ -182,6 +183,26 @@ export async function decideVerification(
   if (!record) return { ok: false, error: 'not_found' };
   if (record.status === 'verified' || record.status === 'rejected') {
     return { ok: false, error: 'already_decided' };
+  }
+
+  /*
+   * NO BADGE WITHOUT EVIDENCE.
+   *
+   * The review screen disables approval when a required document cannot be
+   * opened, and that is a courtesy, not a control: this action is reachable
+   * without its button. Approval writes a verified badge onto a public
+   * storefront and starts a year-long clock, so the last word on whether the
+   * papers exist belongs here, next to the write.
+   *
+   * REJECTION IS DELIBERATELY STILL ALLOWED on the same submission. "We cannot
+   * read your licence" is a legitimate and common verdict, and a missing
+   * document that could neither be approved nor rejected would strand the shop
+   * in a queue forever.
+   */
+  if (decision === 'verified') {
+    const detail = await verificationDetail(verificationId);
+    if (!detail) return { ok: false, error: 'not_found' };
+    if (!detail.evidence.canApprove) return { ok: false, error: 'evidence_missing' };
   }
 
   const now = new Date();
