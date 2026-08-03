@@ -170,8 +170,13 @@ export function BuyColumn({
             The title comes from this component rather than from a prop on the
             page — it already has it for the condensed identity line, so the
             control needs nothing wired through.
+
+            FROM `lg` UP ONLY. Below that the column is not a sidebar, it is the
+            page, and a labelled share here became a third full-width bar under
+            "add to cart" and "buy now". The buy panel renders it as an icon
+            beside the wishlist heart at those widths instead.
           */}
-          <ShareButton title={title} className="w-full" />
+          <ShareButton title={title} className="hidden w-full lg:inline-flex" />
           {extras}
         </div>
       </Collapsible>

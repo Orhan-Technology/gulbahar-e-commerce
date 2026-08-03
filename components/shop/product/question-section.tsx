@@ -114,6 +114,7 @@ export function QuestionSection({
           </label>
           <Textarea
             id="question-body"
+            dir="auto"
             value={body}
             onChange={(event) => setBody(event.target.value)}
             rows={3}
@@ -150,7 +151,13 @@ export function QuestionSection({
           {all.map((thread) => (
             <li key={thread.id} className="rounded-card border-border bg-card border p-4">
               <div className="flex flex-wrap items-baseline gap-2">
-                <span className="text-sm font-semibold">{thread.askerName}</span>
+                {/* `dir="auto"` on everything a person typed — a question, a
+                    name, a shop's answer. Without it a Dari question read on
+                    the English page inherits LTR and its full stop jumps to the
+                    start of the line. */}
+                <span dir="auto" className="text-sm font-semibold">
+                  {thread.askerName}
+                </span>
                 <span className="text-muted-foreground text-xs">
                   {formatDate(thread.createdAt, locale, 'short')}
                 </span>
@@ -162,7 +169,9 @@ export function QuestionSection({
                 )}
               </div>
 
-              <p className="mt-1 text-sm leading-relaxed">{thread.body}</p>
+              <p dir="auto" className="mt-1 text-sm leading-relaxed">
+                {thread.body}
+              </p>
 
               {thread.answer && (
                 /* Indented and badged, so it reads as the shop speaking rather
@@ -172,7 +181,7 @@ export function QuestionSection({
                     <Store className="h-3.5 w-3.5" aria-hidden />
                     {t('shopAnswer', { shop: shopName })}
                   </p>
-                  <p className="mt-1 text-sm leading-relaxed text-neutral-700">
+                  <p dir="auto" className="mt-1 text-sm leading-relaxed text-neutral-700">
                     {thread.answer.body}
                   </p>
                 </div>

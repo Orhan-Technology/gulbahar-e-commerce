@@ -132,7 +132,13 @@ function Row({ row }: { row: SpecRow }) {
   return (
     <div className="grid grid-cols-[minmax(0,9rem)_minmax(0,1fr)] gap-4 px-4 py-3 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
       <dt className="text-sm text-neutral-500">{row.label}</dt>
-      <dd className="text-foreground text-sm font-semibold">{row.value}</dd>
+      {/* `<bdi>` on the VALUE, not the row. A spec value is the one cell that
+          is routinely in the other script — "Super Retina XDR", "M, L, XL" —
+          and left un-isolated its punctuation resolves against the Dari around
+          it, so a comma-separated list of Latin tokens renders back to front. */}
+      <dd className="text-foreground text-sm font-semibold">
+        <bdi>{row.value}</bdi>
+      </dd>
     </div>
   );
 }

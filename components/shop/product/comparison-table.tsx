@@ -2,10 +2,12 @@ import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { MapPin } from 'lucide-react';
 
+import { BidiText } from '@/components/custom/bidi-text';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { Link } from '@/lib/i18n/navigation';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
+import { MIN_RATING_REVIEWS } from '@/lib/ratings';
 import { cn } from '@/lib/utils';
 
 export type ComparisonColumn = {
@@ -32,6 +34,20 @@ export type ComparisonColumn = {
 export const MIN_SHARED_SPECS = 3;
 /** One other product is not a comparison. */
 export const MIN_COMPARABLES = 2;
+
+/**
+ * How far apart two prices may be before "at a similar price" stops being true.
+ *
+ * A third either way. The catalogue is thin enough that the nearest three
+ * products in a category can still be a 58,000 afghani phone and a 13,500
+ * afghani tablet, and the strap-line claimed those were priced alike — a
+ * sentence the reader can disprove by looking at the row underneath it. The
+ * table still renders, because same-category products ARE worth comparing; it
+ * just stops making a claim about money it cannot keep.
+ */
+const NEAR_PRICE_BAND = 4 / 3;
+
+const effectivePrice = (column: ComparisonColumn) => column.discountPrice ?? column.price;
 
 /**
  * Compare similar products (Prompt P3).
@@ -70,13 +86,21 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
 
   if (sharedKeys.length < MIN_SHARED_SPECS) return null;
 
+  const base = effectivePrice(current);
+  const nearInPrice = columns.every((column) => {
+    const ratio = effectivePrice(column) / base;
+    return ratio <= NEAR_PRICE_BAND && ratio >= 1 / NEAR_PRICE_BAND;
+  });
+
   return (
     <section className="space-y-4" aria-labelledby="compare-heading">
       <div>
         <h2 id="compare-heading" className="text-foreground text-xl font-bold">
           {t('compareHeading')}
         </h2>
-        <p className="text-muted-foreground text-sm">{t('compareHint')}</p>
+        <p className="text-muted-foreground text-sm">
+          {nearInPrice ? t('compareHint') : t('compareHintCategory')}
+        </p>
       </div>
 
       {/*
@@ -122,8 +146,8 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
                       </span>
                     )}
 
-                    <span className="clamp-2 group-hover:text-primary block text-start text-sm font-semibold">
-                      {column.title}
+                    <span className="clamp-2 group-hover:text-primary block text-start text-sm font-semibold text-balance">
+                      <BidiText text={column.title} />
                     </span>
 
                     <span className="text-muted-foreground block text-start text-xs">
@@ -143,8 +167,16 @@ export async function ComparisonTable({ columns }: { columns: ComparisonColumn[]
                       <PriceDisplay price={column.price} discountPrice={column.discountPrice} size="sm" />
                     </span>
 
-                    <span className="flex items-center gap-1.5">
-                      <RatingStars value={column.rating} size="sm" count={column.reviewCount} />
+                    {/* Same evidence threshold as the cards: a column headed by
+                        one review's worth of outline stars invites a comparison
+                        of scores that are not comparable. */}
+                    <span className="flex h-5 items-center gap-1.5">
+                      <RatingStars
+                        value={column.rating}
+                        size="sm"
+                        count={column.reviewCount}
+                        minCount={MIN_RATING_REVIEWS}
+                      />
                     </span>
                   </Link>
                 </th>
