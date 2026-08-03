@@ -265,7 +265,10 @@ async function ZeroResultRecovery({ term, locale }: { term: string; locale: stri
                   className="rounded-pill border-border bg-card hover:border-primary hover:text-primary inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium transition-colors duration-150"
                 >
                   <Store className="h-4 w-4 shrink-0" aria-hidden />
-                  <span>{pickLocale(shop.name, locale)}</span>
+                  {/* `dir="auto"`: the shop's name is the tenant's own text, and
+                      a Latin one inside this RTL chip put the count on the
+                      wrong side of it. */}
+                  <span dir="auto">{pickLocale(shop.name, locale)}</span>
                   <span className="text-2xs text-neutral-500 tabular-nums">
                     {t('categoryHasCount', {
                       count: formatNumber(shop.productCount, locale),

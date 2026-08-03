@@ -12,6 +12,7 @@ import {
 } from '../schema';
 import { firstProductImagePath, productRatingAvg, productReviewCount } from './fragments';
 import { productSearchMatch } from './search';
+import { MIN_RATING_REVIEWS } from '../../ratings';
 
 /**
  * Facets and promoted slots for the listing pages (PRD §5.1).
@@ -103,7 +104,23 @@ function facetConditions(
   const effectivePrice = sql<number>`coalesce(${products.discountPrice}, ${products.price})`;
   if (query.priceMin) conditions.push(gte(effectivePrice, Number(query.priceMin)));
   if (query.priceMax) conditions.push(lte(effectivePrice, Number(query.priceMax)));
-  if (query.minRating) conditions.push(gte(productRatingAvg, Number(query.minRating)));
+  /*
+   * "FOUR STARS AND UP" MEANS FOUR STARS WORTH BELIEVING.
+   *
+   * A card hides its star row below MIN_RATING_REVIEWS (lib/ratings.ts) because
+   * one review is not a rating — so a rating filter that ignores the evidence
+   * threshold selects products the grid then renders with NO STARS ON THEM. The
+   * reader asked for the best-reviewed things in the mall and got a wall of
+   * cards saying nothing about reviews at all, which reads as a filter that did
+   * not run.
+   *
+   * The constant is IMPORTED, never restated: the card and the filter have to
+   * move together or the same contradiction comes straight back.
+   */
+  if (query.minRating) {
+    conditions.push(gte(productRatingAvg, Number(query.minRating)));
+    conditions.push(gte(productReviewCount, MIN_RATING_REVIEWS));
+  }
   if (scope.inStockOnly || query.inStock === '1') conditions.push(sql`${products.stock} > 0`);
   if (scope.onOfferOnly || query.onOffer === '1') {
     conditions.push(

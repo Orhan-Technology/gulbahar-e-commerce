@@ -92,7 +92,15 @@ export async function OffersTab({ shopId, shopSlug }: { shopId: string; shopSlug
               <p className="text-accent-800/80 text-xs">
                 {offer.scope === 'shop'
                   ? t('scopeShop')
-                  : t('scopeProducts', { count: offer.productIds?.length ?? 0 })}
+                  : /* formatNumber, not the raw count: a bare `{count}` in an
+                       ICU message is a STRING substitution — only `{n, number}`
+                       reaches Intl.NumberFormat — so the number arrived as
+                       ASCII «1» beside the Persian date it shares the line
+                       with. Every other count in the storefront goes through
+                       lib/format for exactly this reason. */
+                    t('scopeProducts', {
+                      count: formatNumber(offer.productIds?.length ?? 0, locale),
+                    })}
                 {' · '}
                 {t('until', { date: formatDate(offer.endsAt, locale, 'medium') })}
               </p>

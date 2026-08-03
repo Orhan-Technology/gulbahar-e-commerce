@@ -113,7 +113,13 @@ export function ShopCard({
 
         <span className="flex min-w-0 flex-col gap-1.5">
           <span className="flex items-center gap-2">
-            <span className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150">
+            {/* `dir="auto"`: a shop's name is the tenant's own text and this
+                directory holds both scripts. Left to inherit, a Latin name
+                dragged the verified tick to the far side of the row. */}
+            <span
+              dir="auto"
+              className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150"
+            >
               {name}
               <VerifiedBadge
                 verifiedAt={verifiedAt ?? null}
@@ -200,7 +206,10 @@ export function ShopCard({
           )}
         </div>
 
-        <h3 className="clamp-1 text-foreground flex items-center gap-1 text-sm font-semibold">
+        <h3
+          dir="auto"
+          className="clamp-1 text-foreground flex items-center gap-1 text-sm font-semibold"
+        >
           {name}
           <VerifiedBadge verifiedAt={verifiedAt ?? null} size="sm" />
         </h3>

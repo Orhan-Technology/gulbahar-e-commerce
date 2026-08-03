@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
-import { formatCurrency, formatNumber, formatPhone } from '@/lib/format';
+import { formatCurrency, formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -114,7 +114,13 @@ export default async function ConfirmationPage({
                 {item.shopFloor !== null && (
                   <span className="ms-auto flex shrink-0 items-center gap-1 text-xs">
                     <MapPin className="h-3 w-3" aria-hidden />
-                    {t('floorUnit', { floor: item.shopFloor, unit: item.shopUnitNumber ?? '—' })}
+                    {/* Both numbers through lib/format — the unit is a STRING
+                        column, so ICU does not localise its digits and it
+                        arrived as «دکان 214» in Dari prose. */}
+                    {t('floorUnit', {
+                      floor: formatNumber(item.shopFloor, locale),
+                      unit: formatUnitNumber(item.shopUnitNumber, locale) || '—',
+                    })}
                   </span>
                 )}
               </li>

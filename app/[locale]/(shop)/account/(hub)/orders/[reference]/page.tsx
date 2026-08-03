@@ -14,7 +14,13 @@ import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
 import { parseReasonNote } from '@/lib/order-reject-reasons';
 import { siteSettings } from '@/lib/db/queries/settings';
-import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
+import {
+  formatCurrency,
+  formatDateTime,
+  formatNumber,
+  formatPhone,
+  formatUnitNumber,
+} from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -274,7 +280,16 @@ export default async function OrderDetailPage({
                 <span className="truncate">{pickLocale(item.shopName, locale)}</span>
                 {item.shopFloor !== null && (
                   <span className="ms-auto shrink-0 text-xs">
-                    {t('floorUnit', { floor: item.shopFloor, unit: item.shopUnitNumber ?? '—' })}
+                    {/* Both numbers through lib/format. The unit is a STRING in
+                        the schema, so it does not pass through ICU's number
+                        formatting the way `floor` does — interpolated raw it
+                        left «دکان 214» sitting in Persian prose, Latin digits
+                        and all, three lines under a collection panel that
+                        renders the same unit as «۲۱۴». */}
+                    {t('floorUnit', {
+                      floor: formatNumber(item.shopFloor, locale),
+                      unit: formatUnitNumber(item.shopUnitNumber, locale) || '—',
+                    })}
                   </span>
                 )}
               </li>

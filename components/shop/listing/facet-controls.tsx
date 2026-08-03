@@ -487,7 +487,12 @@ export function FacetControls({
                       htmlFor={`shop-${shop.slug}`}
                       className="flex min-w-0 flex-1 cursor-pointer items-center gap-1.5 text-sm font-normal"
                     >
-                      <span className="truncate">{pickLocale(shop.name, locale)}</span>
+                      {/* `dir="auto"`, like the brand row above it: a shop's
+                          name is the tenant's own text and the count beside it
+                          must stay put whichever script it is in. */}
+                      <span dir="auto" className="truncate">
+                        {pickLocale(shop.name, locale)}
+                      </span>
                       <FacetCount value={total} locale={locale} />
                     </Label>
                   </li>

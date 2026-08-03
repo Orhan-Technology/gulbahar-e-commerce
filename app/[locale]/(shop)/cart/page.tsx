@@ -11,7 +11,7 @@ import { PopularFallback } from '@/components/shop/listing/popular-fallback';
 import { getCart } from '@/lib/cart';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { pickLocale } from '@/lib/db/localized';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { formatCurrency, formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -96,9 +96,12 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
                 {group.shopFloor !== null && (
                   <span className="text-muted-foreground ms-auto flex shrink-0 items-center gap-1 text-xs">
                     <MapPin className="h-3 w-3" aria-hidden />
+                    {/* The unit is a STRING column, so ICU never localises its
+                        digits the way it does `floor` — raw it printed «دکان
+                        119» in Dari. Same call the checkout screen makes. */}
                     {t('floorUnit', {
                       floor: formatNumber(group.shopFloor, locale),
-                      unit: group.shopUnitNumber ?? '—',
+                      unit: formatUnitNumber(group.shopUnitNumber, locale) || '—',
                     })}
                   </span>
                 )}

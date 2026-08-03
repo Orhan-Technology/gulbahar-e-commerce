@@ -58,12 +58,17 @@ export async function ShopSpotlight({
               directions, so this one does not mirror. */}
           <div className="from-neutral-900/85 absolute inset-0 bg-linear-to-t to-transparent" />
 
+          {/* `dir="auto"` on both: the shop's name and its blurb are the
+              tenant's own text, and this catalogue has tenants writing in both
+              scripts. A Latin sentence inheriting RTL puts its full stop on the
+              wrong side, which on a headline that size is the first thing the
+              eye lands on. */}
           <span className="text-primary-foreground relative flex flex-col gap-2">
-            <span className="text-2xl leading-tight font-extrabold">
+            <span dir="auto" className="text-2xl leading-tight font-extrabold">
               {pickLocale(shop.name, locale)}
             </span>
             {shop.description && (
-              <span className="clamp-2 text-primary-200 text-sm">
+              <span dir="auto" className="clamp-2 text-primary-200 text-sm">
                 {pickLocale(shop.description, locale)}
               </span>
             )}

@@ -65,8 +65,12 @@ export async function PromoStrip() {
      * and read as a strip, which is what they are. The scroller inherits
      * document direction, so in Dari it starts at the right with no per-locale
      * duplication, and it bleeds to the screen edge exactly like the rails.
+     *
+     * `scroll-ps-4` is what keeps the gutter: a snapport is the scrollport less
+     * SCROLL-padding, not less padding, so without it the first panel snapped
+     * flush to the screen edge. Same fix, same reason, as Rail.
      */
-    <section className="-mx-4 flex snap-x scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0">
+    <section className="-mx-4 flex snap-x scroll-ps-4 scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0 sm:scroll-ps-0">
       {panels.map((panel) => (
         <Link
           key={panel.href}
