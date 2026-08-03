@@ -30,9 +30,20 @@ export type ManagedAddress = {
 /** Saved-address CRUD (PRD §5.4). */
 export function AddressManager({
   addresses,
+  defaultAddressId,
   districts,
 }: {
   addresses: ManagedAddress[];
+  /**
+   * The address checkout preselects (finding #14).
+   *
+   * Marked, not settable: `addresses` has no `is_default` column and the schema
+   * is frozen for this pass, so the value is derived from the last order's
+   * destination on the server. Showing it is still the larger half of the fix —
+   * the profile card claimed a default existed and this list gave no clue which
+   * row it was.
+   */
+  defaultAddressId: string | null;
   districts: string[];
 }) {
   const t = useTranslations('account');
@@ -82,6 +93,13 @@ export function AddressManager({
 
   return (
     <div className="space-y-3">
+      {/* Says what the badge below MEANS, and therefore how to move it. With no
+          `is_default` column there is no switch to offer, and an unexplained
+          chip on one row would be a state the customer cannot account for. */}
+      {defaultAddressId && addresses.length > 1 && (
+        <p className="text-muted-foreground text-xs">{t('defaultAddressHint')}</p>
+      )}
+
       <ul className="space-y-2">
         {addresses.map((address) => (
           <li
@@ -89,7 +107,14 @@ export function AddressManager({
             className="rounded-control border-border flex items-start gap-3 border p-3"
           >
             <div className="min-w-0 flex-1 text-sm">
-              <p className="font-medium">{address.label}</p>
+              <p className="flex flex-wrap items-center gap-1.5">
+                <span className="font-medium">{address.label}</span>
+                {address.id === defaultAddressId && (
+                  <span className="rounded-pill bg-primary-50 text-primary-700 text-2xs px-2 py-0.5 font-medium">
+                    {t('defaultAddress')}
+                  </span>
+                )}
+              </p>
               <p className="text-muted-foreground text-xs">
                 {address.district} — {address.streetDetails}
               </p>
@@ -162,9 +187,14 @@ export function AddressManager({
 
           <div className="space-y-1.5">
             <Label htmlFor="a-phone">{t('phone')}</Label>
+            {/* `tel` + numeric keypad (finding #10): this is the number a
+                courier rings, and it was opening the letter keyboard. */}
             <Input
               id="a-phone"
               name="phone"
+              type="tel"
+              inputMode="numeric"
+              autoComplete="tel"
               required
               dir="ltr"
               defaultValue={current?.phone ?? ''}

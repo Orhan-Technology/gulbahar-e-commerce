@@ -48,9 +48,18 @@ export default async function WishlistPage({ params }: { params: Promise<{ local
   // The hub layout owns the page frame (Prompt A2).
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">
-        {t('title')} · {formatNumber(items.length, locale)}
-      </h1>
+      {/*
+        The count is a SUBTITLE, not part of the title. It used to be
+        «علاقه‌مندی‌ها · ۴», and a middle dot immediately before a Persian
+        numeral reads as «۰» in Vazirmatn — so a list of four looked like a list
+        of forty. Two elements need no separator glyph at all.
+      */}
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <h1 className="text-xl font-bold">{t('title')}</h1>
+        <span className="text-muted-foreground text-sm tabular-nums">
+          {t('itemCount', { count: formatNumber(items.length, locale) })}
+        </span>
+      </div>
 
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6 lg:grid-cols-4">
         {items.map((item) => (

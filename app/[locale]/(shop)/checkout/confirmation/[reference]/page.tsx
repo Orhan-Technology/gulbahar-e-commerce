@@ -1,13 +1,14 @@
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { CheckCircle2, MapPin, Package, Store } from 'lucide-react';
+import { Banknote, CheckCircle2, MapPin, Package, Smartphone, Store } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
+import { CopyReferenceButton } from '@/components/shop/checkout/copy-reference-button';
 import { Button } from '@/components/ui/button';
 import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -44,9 +45,21 @@ export default async function ConfirmationPage({
         <h1 className="text-2xl font-bold">{t('title')}</h1>
         <p className="text-muted-foreground text-sm">{t('subtitle')}</p>
 
-        <p className="rounded-card border-border bg-card border px-4 py-2 font-mono text-lg font-bold tabular-nums">
+        {/*
+          `dir="ltr"` on the reference: GC-24788 is an identifier, not prose,
+          and it reads backwards if it inherits an RTL paragraph — the same
+          reason the order list marks it.
+        */}
+        <p
+          dir="ltr"
+          className="rounded-card border-border bg-card border px-4 py-2 font-mono text-lg font-bold tabular-nums"
+        >
           {order.reference}
         </p>
+
+        {/* The subtitle above tells the customer to KEEP this number. Until now
+            nothing on the page helped them do it. */}
+        <CopyReferenceButton reference={order.reference} />
       </div>
 
       <section className="rounded-card border-border bg-card border p-4">
@@ -57,17 +70,32 @@ export default async function ConfirmationPage({
       <section className="rounded-card border-border bg-card space-y-3 border p-4">
         <h2 className="text-sm font-bold">{t('nextHeading')}</h2>
         <ol className="text-muted-foreground space-y-2 text-sm">
+          {/*
+            The step numbers used to be the literals «۱.» «۲.» «۳.» in the
+            markup, which put Persian digits on the English page. They come from
+            the locale now, like every other number on the storefront.
+          */}
           <li className="flex gap-2">
-            <span className="text-primary font-bold">۱.</span>
+            <span className="text-primary font-bold">{formatNumber(1, locale)}.</span>
             {t('next1')}
           </li>
           <li className="flex gap-2">
-            <span className="text-primary font-bold">۲.</span>
+            <span className="text-primary font-bold">{formatNumber(2, locale)}.</span>
             {t('next2')}
           </li>
           <li className="flex gap-2">
-            <span className="text-primary font-bold">۳.</span>
-            {order.fulfillment === 'pickup' ? t('next3Pickup') : t('next3Delivery')}
+            <span className="text-primary font-bold">{formatNumber(3, locale)}.</span>
+            {/*
+              WHEN, not just what (finding #9). "۱ تا ۲ روز کاری" lived only in
+              the footer's marketing strip, so the one screen where a customer
+              is actively wondering how long this takes never said.
+            */}
+            <span>
+              {order.fulfillment === 'pickup' ? t('next3Pickup') : t('next3Delivery')}{' '}
+              <span className="text-primary-800 font-medium">
+                {order.fulfillment === 'pickup' ? t('pickupEta') : t('deliveryEta')}
+              </span>
+            </span>
           </li>
         </ol>
       </section>
@@ -94,6 +122,50 @@ export default async function ConfirmationPage({
           </ul>
         </section>
       )}
+
+      {/*
+        WHAT WAS JUST AGREED TO (finding #7).
+
+        The confirmation restated the money and nothing else: not the address
+        the parcel is going to, not how it is being paid for. Those are the two
+        facts a customer re-reads immediately after committing — the moment they
+        would still be able to ring and correct a wrong door — and the only
+        place they existed was the checkout screen they had just left.
+
+        Delivery orders show the address they were sent to, including the phone
+        the courier will ring; pickup orders already get the per-shop panel
+        above, so this section carries the payment method alone for them.
+      */}
+      <section className="rounded-card border-border bg-card space-y-2 border p-4 text-sm">
+        <h2 className="text-sm font-bold">{t('fulfillmentHeading')}</h2>
+
+        {order.fulfillment === 'delivery' && (
+          <p className="text-muted-foreground flex items-start gap-2">
+            <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span className="min-w-0">
+              {order.addressLabel && <span className="font-medium">{order.addressLabel} — </span>}
+              {order.addressDistrict}
+              {order.addressStreet ? `، ${order.addressStreet}` : ''}
+              {order.addressPhone && (
+                /* LTR on the number: it is dialable, not prose, and it reads
+                   backwards inside an RTL paragraph. */
+                <span className="block tabular-nums" dir="ltr">
+                  {formatPhone(order.addressPhone, locale)}
+                </span>
+              )}
+            </span>
+          </p>
+        )}
+
+        <p className="text-muted-foreground flex items-center gap-2">
+          {order.paymentMethod === 'cod' ? (
+            <Banknote className="h-4 w-4 shrink-0" aria-hidden />
+          ) : (
+            <Smartphone className="h-4 w-4 shrink-0" aria-hidden />
+          )}
+          {t(order.paymentMethod)}
+        </p>
+      </section>
 
       <section className="rounded-card border-border bg-card space-y-2 border p-4 text-sm">
         <div className="flex justify-between">

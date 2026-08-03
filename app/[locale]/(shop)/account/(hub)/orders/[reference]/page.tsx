@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Banknote, MapPin, Smartphone, Store } from 'lucide-react';
+import { Banknote, MapPin, Phone, Smartphone, Store } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
 import { CancelOrderButton } from '@/components/shop/order/cancel-order-button';
@@ -14,7 +14,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { orderByReference } from '@/lib/db/queries/orders';
 import { parseReasonNote } from '@/lib/order-reject-reasons';
 import { siteSettings } from '@/lib/db/queries/settings';
-import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -47,6 +47,24 @@ export default async function OrderDetailPage({
   const settings = await siteSettings();
   const collectFrom = shops[0];
 
+  /*
+   * The events that carry a REASON, which is the only thing the visual timeline
+   * cannot show (finding #11).
+   *
+   * The note holds an internal code — `reason:out_of_stock` — and the customer
+   * must read a sentence, not a token, so it is translated into THEIR language
+   * here, from the same authored list the shop's SMS was written from.
+   */
+  const annotated = order.events
+    .map((event) => {
+      const reason = parseReasonNote(event.note);
+      const words = [reason.code ? tReasons(reason.code) : null, reason.text]
+        .filter(Boolean)
+        .join(' — ');
+      return { event, words };
+    })
+    .filter((row) => row.words.length > 0);
+
   return (
     // The hub layout owns the page frame (Prompt A2).
     <div className="max-w-2xl space-y-5">
@@ -57,7 +75,15 @@ export default async function OrderDetailPage({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* Only while nobody has committed anything — see the component. */}
-          {order.status === 'placed' && <CancelOrderButton orderId={order.id} />}
+          {order.status === 'placed' && (
+            <CancelOrderButton
+              orderId={order.id}
+              reference={order.reference}
+              // Formatted here: the button is a client component and every
+              // number on the storefront is shaped by lib/format on the server.
+              total={formatCurrency(order.total, locale)}
+            />
+          )}
           <ReorderButton reference={order.reference} />
         </div>
       </div>
@@ -69,9 +95,22 @@ export default async function OrderDetailPage({
         cannot cancel" and "here is how".
       */}
       {(order.status === 'accepted' || order.status === 'ready') && (
-        <p className="rounded-card border-border bg-neutral-50 text-muted-foreground border p-3 text-xs">
-          {t('cancel.tooLateHint')}
-        </p>
+        <div className="rounded-card border-border text-muted-foreground space-y-2 border bg-neutral-50 p-3 text-xs">
+          <p>{t('cancel.tooLateHint')}</p>
+          {/* …and the number to ring, since the sentence above is an
+              instruction to ring. Same fix as the collection panel's. */}
+          {collectFrom?.shopPhone && (
+            <a
+              href={`tel:${collectFrom.shopPhone}`}
+              className="rounded-control border-border bg-card hover:border-primary hover:text-primary inline-flex items-center gap-1.5 border px-3 py-1.5 font-semibold transition-colors duration-150"
+            >
+              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+              <span className="tabular-nums" dir="ltr">
+                {formatPhone(collectFrom.shopPhone, locale)}
+              </span>
+            </a>
+          )}
+        </div>
       )}
 
       {/*
@@ -83,6 +122,7 @@ export default async function OrderDetailPage({
           code={order.collectionCode}
           expiresAt={order.holdExpiresAt}
           shopName={pickLocale(collectFrom.shopName, locale)}
+          shopPhone={collectFrom.shopPhone}
           floor={collectFrom.shopFloor}
           unitNumber={collectFrom.shopUnitNumber}
           mallHours={settings.hours}
@@ -125,33 +165,33 @@ export default async function OrderDetailPage({
         <OrderItemReviewPrompt orderId={order.id} userId={session.id} />
       )}
 
-      {/* The append-only event chain, which is the audit trail (PRD §14) */}
-      {order.events.length > 1 && (
+      {/*
+        The append-only event chain, which is the audit trail (PRD §14) — but
+        ONLY WHEN IT SAYS SOMETHING THE TIMELINE DOES NOT (finding #11).
+
+        The stepper above already carries every transition WITH its timestamp,
+        so on an ordinary order this section reprinted the same four rows in a
+        duller typeface directly underneath — «سیر سفارش» reading as a second,
+        contradictory-looking copy of the thing immediately above it.
+
+        What the stepper genuinely cannot show is a REASON: why a shop refused,
+        what note came with a cancellation. Those rows are the audit trail
+        earning its place, so the section renders when at least one event
+        carries one, and only those rows are listed.
+      */}
+      {annotated.length > 0 && (
         <section className="rounded-card border-border bg-card space-y-2 border p-4">
           <h2 className="text-sm font-bold">{t('historyHeading')}</h2>
           <ol className="space-y-1.5 text-xs">
-            {order.events.map((event) => {
-              /*
-               * The note carries an internal code — `reason:out_of_stock` — and
-               * the customer must read a sentence, not a token. Translated into
-               * THEIR language here, which is the same string the SMS was
-               * written from.
-               */
-              const reason = parseReasonNote(event.note);
-              const words = [reason.code ? tReasons(reason.code) : null, reason.text]
-                .filter(Boolean)
-                .join(' — ');
-
-              return (
-                <li key={event.id} className="flex items-baseline gap-2">
-                  <span className="text-foreground font-medium">{tStatus(event.toStatus)}</span>
-                  <span className="text-muted-foreground">
-                    {formatDateTime(event.createdAt, locale)}
-                  </span>
-                  {words && <span className="text-muted-foreground">— {words}</span>}
-                </li>
-              );
-            })}
+            {annotated.map(({ event, words }) => (
+              <li key={event.id} className="flex flex-wrap items-baseline gap-x-2">
+                <span className="text-foreground font-medium">{tStatus(event.toStatus)}</span>
+                <span className="text-muted-foreground">
+                  {formatDateTime(event.createdAt, locale)}
+                </span>
+                <span className="text-muted-foreground">— {words}</span>
+              </li>
+            ))}
           </ol>
         </section>
       )}
@@ -185,10 +225,20 @@ export default async function OrderDetailPage({
                 <p className="text-muted-foreground mt-0.5 text-xs">
                   {pickLocale(item.shopName, locale)}
                 </p>
+                {/* Chips, not `join(' · ')`: the middle dot ran into the
+                    Persian numeral of the next value and read as a leading
+                    zero. Separate elements need no separator glyph. */}
                 {item.variantSelection && item.variantSelection.length > 0 && (
-                  <p className="text-muted-foreground text-xs">
-                    {item.variantSelection.join(' · ')}
-                  </p>
+                  <ul className="mt-1 flex flex-wrap gap-1">
+                    {item.variantSelection.map((value) => (
+                      <li
+                        key={value}
+                        className="rounded-pill text-2xs bg-neutral-100 px-2 py-0.5 text-neutral-600"
+                      >
+                        {value}
+                      </li>
+                    ))}
+                  </ul>
                 )}
                 <p className="text-muted-foreground mt-1 text-xs">
                   {formatNumber(item.quantity, locale)} ×{' '}

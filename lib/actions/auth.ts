@@ -33,8 +33,17 @@ const verifySchema = phoneSchema.extend({
 export type ActionResult<T = undefined> =
   ({ ok: true } & (T extends undefined ? object : { data: T })) | { ok: false; error: string };
 
+/**
+ * What the CODE STEP needs to know as soon as a code exists.
+ *
+ * `lifetimeMinutes` so the form can state how long the code lasts under the
+ * field, instead of the customer learning it from an "expired" toast after
+ * typing it; `hasName` so a returning customer is not asked their name again.
+ */
+export type OtpRequested = { lifetimeMinutes: number; hasName: boolean };
+
 /** Issues a code. It arrives in the on-screen notification log (PRD §9.2). */
-export async function requestOtpAction(formData: FormData): Promise<ActionResult> {
+export async function requestOtpAction(formData: FormData): Promise<ActionResult<OtpRequested>> {
   const parsed = phoneSchema.safeParse({ phone: formData.get('phone') });
   if (!parsed.success) {
     return { ok: false, error: 'invalid_phone' };
@@ -43,7 +52,17 @@ export async function requestOtpAction(formData: FormData): Promise<ActionResult
   const result = await requestOtp(parsed.data.phone);
   if (!result.ok) return { ok: false, error: result.error };
 
-  return { ok: true };
+  return {
+    ok: true,
+    data: {
+      // Rounded UP: "5 minutes" is the promise, and a code that dies at 4:59
+      // when the screen said 4 would be the one failure this line exists to
+      // prevent. Derived from the issued row rather than from a duplicated
+      // constant, so the sentence cannot drift from the TTL.
+      lifetimeMinutes: Math.max(1, Math.ceil((result.expiresAt.getTime() - Date.now()) / 60_000)),
+      hasName: result.hasName,
+    },
+  };
 }
 
 /** Verifies the code and establishes the session. */

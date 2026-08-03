@@ -83,6 +83,15 @@ export async function orderWithTimeline(orderId: string) {
         shopSlug: shops.slug,
         shopFloor: shops.floor,
         shopUnitNumber: shops.unitNumber,
+        /*
+         * The shop's own number, carried with the order.
+         *
+         * The collection panel warns that a shop may put the goods back on the
+         * shelf once the hold expires, and the tracking page tells a customer
+         * past the cancel window to "ring the shop" — and neither screen had a
+         * number on it. Nullable in the schema, so every reader must branch.
+         */
+        shopPhone: shops.phone,
         imagePath: orderItemImagePath,
       })
       .from(orderItems)

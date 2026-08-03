@@ -26,15 +26,27 @@ import { MUTABLE_CATEGORIES, type MutableCategory } from '@/lib/notification-lin
  */
 export function NotificationPreferences({
   preferences,
+  categories = MUTABLE_CATEGORIES,
 }: {
   preferences: Record<string, boolean> | null;
+  /**
+   * Which switches to show (finding #18).
+   *
+   * Defaults to every mutable category, which is what the stored preference
+   * shape and the action's Zod enum both still accept — this narrows the UI, not
+   * the model. The customer settings page passes a shorter list because
+   * `promotions` is decisions about advertising SLOTS a shop reserved, and its
+   * own hint says «مخصوص دکان‌داران»: a control that can only ever mute
+   * messages you cannot receive.
+   */
+  categories?: readonly MutableCategory[];
 }) {
   const t = useTranslations('notificationCentre.preferences');
   const router = useRouter();
 
   const [state, setState] = React.useState<Record<string, boolean>>(() =>
     Object.fromEntries(
-      MUTABLE_CATEGORIES.map((category) => [category, preferences?.[category] !== false]),
+      categories.map((category) => [category, preferences?.[category] !== false]),
     ),
   );
   const [, startTransition] = React.useTransition();
@@ -59,7 +71,7 @@ export function NotificationPreferences({
 
   return (
     <ul className="divide-border divide-y" data-notification-preferences>
-      {MUTABLE_CATEGORIES.map((category) => (
+      {categories.map((category) => (
         <li key={category} className="flex items-center justify-between gap-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-medium">{t(`categories.${category}` as never)}</p>

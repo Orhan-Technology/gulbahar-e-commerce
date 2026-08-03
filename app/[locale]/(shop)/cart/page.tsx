@@ -7,6 +7,7 @@ import { PriceDisplay } from '@/components/custom/price-display';
 import { Button } from '@/components/ui/button';
 import { CartLineControls } from '@/components/shop/cart/cart-line-controls';
 import { FreeDeliveryBar } from '@/components/shop/cart/free-delivery-bar';
+import { PopularFallback } from '@/components/shop/listing/popular-fallback';
 import { getCart } from '@/lib/cart';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { pickLocale } from '@/lib/db/localized';
@@ -33,13 +34,27 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
 
   if (cart.groups.length === 0) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-10">
+      /*
+        AN EMPTY BASKET IS A RECOVERABLE STATE, not a dead end (finding #17).
+
+        A zero-result search already answers this with the popular band; a cart
+        that offers only "start shopping" sends the customer back to a menu they
+        have just declined. The SAME component, not a copy — it is the shared
+        fallback the listing screens use, so the rail here cannot drift from the
+        rail there.
+
+        `layout="row"` for the same reason it uses one under an empty listing:
+        this band is a consolation, not the page's subject, and a full grid
+        would give the failure case three screens of height.
+      */
+      <div className="mx-auto max-w-5xl space-y-8 px-4 py-10">
         <EmptyState
           illustration={<ShoppingCart className="h-7 w-7" />}
           title={t('emptyTitle')}
           description={t('emptyBody')}
           action={{ label: t('startShopping'), href: '/products' }}
         />
+        <PopularFallback heading={t('popularTitle')} layout="row" />
       </div>
     );
   }
@@ -48,9 +63,19 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-4 sm:py-6">
-      <h1 className="text-xl font-bold">
-        {t('title')} · {t('itemCount', { count: formatNumber(cart.itemCount, locale) })}
-      </h1>
+      {/*
+        TWO ELEMENTS, NOT ONE STRING. This was «سبد خرید · ۴ قلم», and a middle
+        dot immediately before a Persian numeral reads as «۰» in Vazirmatn —
+        «۴ قلم» became «۰۴ قلم», i.e. forty items. The count is a subtitle, not
+        part of the title, so it gets its own element and its own weight and no
+        separator glyph is needed at all.
+      */}
+      <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <h1 className="text-xl font-bold">{t('title')}</h1>
+        <span className="text-muted-foreground text-sm">
+          {t('itemCount', { count: formatNumber(cart.itemCount, locale) })}
+        </span>
+      </div>
 
       <div className="mt-4 grid gap-6 lg:grid-cols-[1fr_320px]">
         {/* Shop groups */}
@@ -105,10 +130,24 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
                         {pickLocale(line.title, locale)}
                       </Link>
 
+                      {/*
+                        CHIPS, not `join(' · ')`. The middle dot ran straight
+                        into the Persian numeral of the next value and read as a
+                        leading zero — «۴۲ · سرخ» became «۰۴۲ سرخ». Separate
+                        elements need no separator glyph at all, and a selected
+                        variant reads as a chosen value rather than as prose.
+                      */}
                       {line.variantSelection && line.variantSelection.length > 0 && (
-                        <p className="text-muted-foreground text-xs">
-                          {line.variantSelection.join(' · ')}
-                        </p>
+                        <ul className="flex flex-wrap gap-1">
+                          {line.variantSelection.map((value) => (
+                            <li
+                              key={value}
+                              className="rounded-pill text-2xs bg-neutral-100 px-2 py-0.5 text-neutral-600"
+                            >
+                              {value}
+                            </li>
+                          ))}
+                        </ul>
                       )}
 
                       <PriceDisplay
@@ -150,10 +189,14 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
 
               {/* Per-shop total, with the offer itemised (PRD §5.3) */}
               <footer className="border-border space-y-1 border-t px-4 py-3 text-sm">
-                <div className="text-muted-foreground flex justify-between">
-                  <span>{t('shopSubtotal')}</span>
-                  <span className="tabular-nums">{formatCurrency(group.subtotal, locale)}</span>
-                </div>
+                {/* The gross line is only worth printing when something comes
+                    off it — see the discounted branch below. */}
+                {group.total !== group.subtotal && (
+                  <div className="text-muted-foreground flex justify-between">
+                    <span>{t('shopSubtotal')}</span>
+                    <span className="tabular-nums">{formatCurrency(group.subtotal, locale)}</span>
+                  </div>
+                )}
 
                 {group.offer && (
                   <div className="text-success flex items-center justify-between">
@@ -167,6 +210,14 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
                   </div>
                 )}
 
+                {/*
+                  ONE ROW WHEN NOTHING WAS DEDUCTED. «جمع این دکان» and «قابل
+                  پرداخت این دکان» carried the SAME number three millimetres
+                  apart on every undiscounted shop, which reads as a mistake and
+                  makes the customer stop to work out which of the two they owe.
+                  With an offer both rows earn their place, because the second
+                  is genuinely a different figure.
+                */}
                 <div className="flex justify-between font-semibold">
                   <span>{t('shopTotal')}</span>
                   <span className="tabular-nums">{formatCurrency(group.total, locale)}</span>
@@ -224,7 +275,10 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
               }
             />
 
-            <Button asChild size="lg" className="w-full">
+            {/* Below `lg` this button lives in the sticky bar at the foot of
+                the page instead, so the same call to action is never on screen
+                twice. */}
+            <Button asChild size="lg" className="w-full max-lg:hidden">
               <Link href="/checkout">{t('checkout')}</Link>
             </Button>
 
@@ -233,6 +287,40 @@ export default async function CartPage({ params }: { params: Promise<{ locale: s
             </Button>
           </div>
         </aside>
+      </div>
+
+      {/*
+        THE STICKY PRIMARY ACTION, on phones and tablets (finding #5).
+
+        A basket spanning three shops puts «ادامه به پرداخت» roughly fifteen
+        hundred pixels below the fold, and the summary card it lives in is the
+        LAST block in the mobile flow — so the one thing this screen exists to
+        do was reachable only by scrolling past everything else first. The bar
+        carries the payable total with it, because a button to pay that does not
+        say what it costs is the wrong half of the decision.
+
+        `sticky`, not `fixed`, for the reason the product page's action bar
+        gives: the storefront shell wraps its content in StretchScroll, whose
+        transform during an overscroll becomes the containing block for any
+        fixed descendant and throws it out of the viewport for the length of the
+        gesture. `bottom-16` clears the mobile tab bar; from `md` there is no
+        tab bar, and from `lg` the summary card is itself sticky and owns the
+        button again.
+
+        No transition here on purpose, so there is nothing for
+        `prefers-reduced-motion` to gate — the bar is a position, not an
+        animation, and the behaviour is therefore identical for every reader.
+      */}
+      <div className="border-border bg-background/95 sticky bottom-16 z-30 -mx-4 mt-6 flex items-center gap-3 border-t p-3 backdrop-blur-md md:bottom-0 lg:hidden">
+        <div className="min-w-0">
+          <p className="text-muted-foreground text-2xs">{t('total')}</p>
+          <p className="text-base font-bold tabular-nums">
+            {formatCurrency(cart.total, locale)}
+          </p>
+        </div>
+        <Button asChild size="lg" className="ms-auto shrink-0">
+          <Link href="/checkout">{t('checkout')}</Link>
+        </Button>
       </div>
     </div>
   );
