@@ -56,7 +56,17 @@ export async function PromoStrip() {
   ];
 
   return (
-    <section className="grid gap-4 sm:grid-cols-3">
+    /*
+     * A SCROLLER ON A PHONE, a three-up grid from `sm`.
+     *
+     * Stacked, these were three 180px blocks of solid colour — over half a
+     * screen of promise before the next band of products, on the page where
+     * scroll depth is the whole game. Side by side they cost one screen-height
+     * and read as a strip, which is what they are. The scroller inherits
+     * document direction, so in Dari it starts at the right with no per-locale
+     * duplication, and it bleeds to the screen edge exactly like the rails.
+     */
+    <section className="-mx-4 flex snap-x scrollbar-none gap-3 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:overflow-visible sm:px-0">
       {panels.map((panel) => (
         <Link
           key={panel.href}
@@ -64,7 +74,8 @@ export async function PromoStrip() {
           className={cn(
             // `scale` is in the list because `transition-*` is a utility and
             // .pressable is not — see components/ui/button.tsx for the same note.
-            'pressable rounded-card group flex min-h-[180px] flex-col gap-3 p-6 transition-[opacity,scale] duration-150 ease-out hover:opacity-95',
+            'pressable rounded-card group flex flex-col gap-3 p-5 transition-[opacity,scale] duration-150 ease-out hover:opacity-95',
+            'w-[78%] shrink-0 snap-start sm:w-auto sm:min-h-[180px] sm:p-6',
             panel.surface,
           )}
         >
@@ -92,9 +103,12 @@ export async function PromoStrip() {
 
 export function PromoStripSkeleton() {
   return (
-    <section className="grid gap-4 sm:grid-cols-3">
+    <section className="-mx-4 flex gap-3 overflow-hidden px-4 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
       {Array.from({ length: 3 }, (_, index) => (
-        <div key={index} className="rounded-card min-h-[180px] animate-pulse bg-neutral-100" />
+        <div
+          key={index}
+          className="rounded-card h-[150px] w-[78%] shrink-0 animate-pulse bg-neutral-100 sm:h-auto sm:min-h-[180px] sm:w-auto"
+        />
       ))}
     </section>
   );

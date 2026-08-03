@@ -13,6 +13,7 @@ import {
   shops,
   users,
 } from '../schema';
+import { DEFAULT_REVIEW_SORT, type ReviewSort } from '../../review-sort';
 
 /**
  * Everything the enriched shop page reads (Prompt C8).
@@ -150,8 +151,27 @@ export type ShopReviewView = {
   authorName: string;
 };
 
-/** Shop-level reviews, newest first. */
-export async function shopServiceReviews(shopId: string, limit = 20) {
+/**
+ * Shop-level reviews, in the order the reader asked for.
+ *
+ * The SAME VOCABULARY as product reviews (lib/review-sort.ts) minus `helpful`:
+ * a shop review carries no helpful votes, and offering an order that cannot be
+ * computed would be a control that silently does nothing. Anything unrecognised
+ * falls back to newest, which is also the default.
+ */
+export async function shopServiceReviews(
+  shopId: string,
+  options: { limit?: number; sort?: ReviewSort } = {},
+) {
+  const { limit = 20, sort = DEFAULT_REVIEW_SORT } = options;
+
+  const order =
+    sort === 'highest'
+      ? [desc(shopReviewRows.rating), desc(shopReviewRows.createdAt)]
+      : sort === 'lowest'
+        ? [asc(shopReviewRows.rating), desc(shopReviewRows.createdAt)]
+        : [desc(shopReviewRows.createdAt)];
+
   return db
     .select({
       id: shopReviewRows.id,
@@ -163,7 +183,7 @@ export async function shopServiceReviews(shopId: string, limit = 20) {
     .from(shopReviewRows)
     .innerJoin(users, eq(shopReviewRows.userId, users.id))
     .where(and(eq(shopReviewRows.shopId, shopId), eq(shopReviewRows.status, 'visible')))
-    .orderBy(desc(shopReviewRows.createdAt))
+    .orderBy(...order)
     .limit(limit);
 }
 

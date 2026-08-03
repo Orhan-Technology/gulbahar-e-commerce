@@ -4,6 +4,7 @@ import { MessageSquareQuote } from 'lucide-react';
 import { EmptyState } from '@/components/custom/empty-state';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { RatingSummary } from '@/components/shop/product/rating-summary';
+import { ReviewSortSelect } from '@/components/shop/reviews/review-sort-select';
 import { WriteShopReviewDialog } from '@/components/shop/shop-page/write-shop-review-dialog';
 import { currentUser } from '@/lib/auth/guards';
 import {
@@ -12,6 +13,7 @@ import {
   shopServiceReviews,
 } from '@/lib/db/queries/shop-page';
 import { formatDate } from '@/lib/format';
+import type { ReviewSort } from '@/lib/review-sort';
 
 /**
  * Shop-level reviews (Prompt C8).
@@ -27,14 +29,27 @@ import { formatDate } from '@/lib/format';
  * order. Hiding the button is a courtesy; `submitShopReview` re-checks and
  * picks the order server-side, so nothing here is load-bearing for the rule.
  */
-export async function ReviewsTab({ shopId }: { shopId: string }) {
+export async function ReviewsTab({
+  shopId,
+  sort,
+  /**
+   * The rest of the URL, so re-sorting cannot drop `?tab=reviews` and land the
+   * reader back on the products tab — the control writes the whole query string
+   * from scratch (lib/review-sort.ts).
+   */
+  preserved,
+}: {
+  shopId: string;
+  sort: ReviewSort;
+  preserved: Record<string, string>;
+}) {
   const locale = await getLocale();
   const t = await getTranslations('shopPage.reviews');
 
   const user = await currentUser();
   const [summary, reviews, reviewable] = await Promise.all([
     shopServiceRating(shopId),
-    shopServiceReviews(shopId),
+    shopServiceReviews(shopId, { sort }),
     reviewableOrderForShop(user?.id, shopId),
   ]);
 
@@ -57,6 +72,19 @@ export async function ReviewsTab({ shopId }: { shopId: string }) {
 
       <RatingSummary average={summary.average} total={summary.total} distribution={distribution} />
 
+      {/*
+        THE SAME CONTROL PRODUCT REVIEWS HAVE, and the same URL vocabulary — a
+        reader who learned to ask for the lowest ratings first on a product page
+        looked for it here and found a fixed newest-first list. Rendered only
+        once there is an order to choose between: a select over two rows is a
+        control that cannot change anything.
+      */}
+      {reviews.length > 1 && (
+        <div className="flex items-center justify-end">
+          <ReviewSortSelect current={sort} preserved={preserved} />
+        </div>
+      )}
+
       {reviews.length === 0 ? (
         <EmptyState
           illustration={<MessageSquareQuote className="h-7 w-7" aria-hidden />}
@@ -72,7 +100,11 @@ export async function ReviewsTab({ shopId }: { shopId: string }) {
                   <span className="text-sm font-semibold">{review.authorName}</span>
                   {/* Every row in this table is earned by a fulfilled order, so
                       the badge is a statement of fact rather than a claim. */}
-                  <span className="rounded-pill bg-success-50 text-success-700 px-2 py-0.5 text-2xs font-medium">
+                  {/* `success-bg`/`success`, not `success-50`/`success-700`:
+                      `--color-*` is reset to initial in the @theme block, so
+                      the numbered success shades genuinely do not exist and
+                      this badge was rendering unstyled text. */}
+                  <span className="rounded-pill bg-success-bg text-success text-2xs px-2 py-0.5 font-medium">
                     {t('verifiedPurchase')}
                   </span>
                 </div>
@@ -83,8 +115,13 @@ export async function ReviewsTab({ shopId }: { shopId: string }) {
 
               <RatingStars value={review.rating} size="sm" className="mt-2" />
 
+              {/* `dir="auto"`: a review is the customer's own text and this
+                  catalogue has both scripts in it — an English sentence
+                  inheriting RTL ends up with its full stop on the left. */}
               {review.body && (
-                <p className="mt-2 text-sm leading-relaxed text-neutral-700">{review.body}</p>
+                <p dir="auto" className="mt-2 text-sm leading-relaxed text-neutral-700">
+                  {review.body}
+                </p>
               )}
             </li>
           ))}

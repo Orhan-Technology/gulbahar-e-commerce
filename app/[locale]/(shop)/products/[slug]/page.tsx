@@ -32,6 +32,7 @@ import { shopPause } from '@/lib/db/queries/shops';
 import { pauseState } from '@/lib/pause';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { SPEC_GROUPS, specTemplateFor } from '@/lib/product-templates';
+import { variantAxis, variantOptionLabel, type VariantAxis } from '@/lib/product-variants';
 import { Link } from '@/lib/i18n/navigation';
 import { decodeSlug } from '@/lib/utils';
 
@@ -94,11 +95,36 @@ export default async function ProductPage({
     blurDataUrl: image.blurDataUrl,
   }));
 
-  const variants = product.variants.map((variant) => ({
-    id: variant.id,
-    name: pickLocale(variant.name, locale),
-    options: variant.options.map((option) => pickLocale(option, locale)),
-  }));
+  /*
+   * ONE SOURCE FOR EVERY AXIS THE VARIANTS COVER.
+   *
+   * The chips and the specification table used to be filled from two different
+   * columns, and they disagreed: the perahan's chips sold S–XL while its
+   * `sizes` spec row read "M, L, XL, XXL", and its colour row listed a grey it
+   * has no variant for. The variant rows win because they are the thing that
+   * can actually be put in a basket, so the axis values are computed once here
+   * and the matching spec rows are rewritten from them below.
+   *
+   * `Intl.ListFormat` rather than a hardcoded separator — fa joins with «،» and
+   * a right-to-left mark, en with a comma, and neither belongs in a component.
+   */
+  const optionList = new Intl.ListFormat(locale, { style: 'narrow', type: 'conjunction' });
+  const axisValues = new Map<VariantAxis, string>();
+
+  const variants = product.variants.map((variant) => {
+    const axis = variantAxis(pickLocale(variant.name, 'en'));
+    const options = variant.options.map((option) => variantOptionLabel(axis, option, locale));
+    if (axis) axisValues.set(axis, optionList.format(options.map((option) => option.label)));
+
+    return {
+      id: variant.id,
+      name: pickLocale(variant.name, locale),
+      options: options.map((option) => option.label),
+      // Whole axis, not per option: a size axis is Latin tokens throughout, and
+      // a chip row where only some chips carry a direction reads as an accident.
+      ltr: options.some((option) => option.ltr),
+    };
+  });
 
   const title = pickLocale(product.title, locale);
 
@@ -108,12 +134,18 @@ export default async function ProductPage({
    * LocalizedText would mean shipping every locale's copy of every row to the
    * browser and picking one there.
    */
-  const specRows = (product.attributes ?? []).map((row) => ({
-    key: row.key,
-    label: pickLocale(row.label, locale),
-    value: pickLocale(row.value, locale),
-    group: row.group,
-  }));
+  const specRows = (product.attributes ?? []).map((row) => {
+    // A spec row naming an axis the variants already carry is DERIVED from
+    // them; anything else is the shop's own text.
+    const axis = variantAxis(row.key);
+    const derived = axis ? axisValues.get(axis) : undefined;
+    return {
+      key: row.key,
+      label: pickLocale(row.label, locale),
+      value: derived ?? pickLocale(row.value, locale),
+      group: row.group,
+    };
+  });
 
   // Only the groups this product actually uses, in template order — a chip that
   // filters to nothing is worse than no chip.
@@ -301,6 +333,9 @@ export default async function ProductPage({
             stock={product.stock}
             variants={variants}
             initialSaved={saved.has(product.id)}
+            /* Turns on the icon share beside the heart, which is where the
+               control lives below `lg` (see BuyColumn). */
+            shareTitle={title}
             pausedUntil={pausedUntil}
             pauseNote={pauseNote}
           />

@@ -1,14 +1,16 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Building2 } from 'lucide-react';
+import { Building2, ChevronLeft } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { FloorMap } from '@/components/shop/floor-map';
+import { ScrollFade } from '@/components/shop/listing/scroll-fade';
 import { pressable } from '@/components/motion/pressable';
 import { pickLocale } from '@/lib/db/localized';
 import { mallMap } from '@/lib/db/queries/mall';
 import { siteSettings } from '@/lib/db/queries/settings';
-import { formatNumber } from '@/lib/format';
+import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { openState } from '@/lib/opening';
 import { cn } from '@/lib/utils';
 
 type Query = { floor?: string; category?: string };
@@ -61,6 +63,20 @@ export default async function FloorsPage({
   const requested = Number(query.floor);
   const active =
     floors.find((floor) => floor.floor === requested) ?? floors[0];
+
+  /*
+   * The occupied units of the active floor, narrowed by the category chip.
+   * The MAP dims rather than removes — a map that changes shape when you filter
+   * it stops being a map — but a LIST is not a map, and a list of shops that do
+   * not match the filter is just noise beside it.
+   */
+  const tenants = active.units.filter(
+    (
+      entry,
+    ): entry is typeof entry & { shop: NonNullable<(typeof entry)['shop']> } =>
+      Boolean(entry.shop) &&
+      (!query.category || entry.shop?.categorySlug === query.category),
+  );
 
   const totalShops = floors.reduce(
     (sum, floor) => sum + floor.units.filter((unit) => unit.shop).length,
@@ -116,10 +132,9 @@ export default async function FloorsPage({
         ))}
       </nav>
 
-      <nav
-        aria-label={t('allCategories')}
-        className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 scrollbar-none sm:mx-0 sm:px-0"
-      >
+      {/* Eleven chips in a row that has to clip somewhere: the fade is what
+          tells the reader the eleventh exists. */}
+      <ScrollFade label={t('allCategories')}>
         <Link
           href={href({ category: null })}
           aria-current={query.category ? undefined : 'page'}
@@ -137,7 +152,7 @@ export default async function FloorsPage({
             {name}
           </Link>
         ))}
-      </nav>
+      </ScrollFade>
 
       <section className="rounded-card border-border bg-card border p-4">
         <FloorMap
@@ -146,6 +161,81 @@ export default async function FloorsPage({
           now={now}
           mallHours={settings.hours}
         />
+      </section>
+
+      {/*
+        THE MAP IS NOT A DIRECTORY, and this page shipped as though it were.
+        Twenty-seven dashed empty units and four shops, then a thousand pixels
+        of nothing — which means the only way to find out what is on this floor
+        was to hunt four tinted tiles among thirty-one and read a truncated name
+        in a 10px face. The list underneath says every one of them in full, with
+        the thing a person standing in the building actually needs next: what
+        the shop sells, whether it is open right now, and a way in.
+      */}
+      <section className="space-y-3">
+        <h2 className="text-base font-bold">
+          {t('shopsOnFloorHeading', { floor: formatNumber(active.floor, locale) })}
+        </h2>
+
+        {tenants.length === 0 ? (
+          <EmptyState
+            illustration={<Building2 className="h-7 w-7" aria-hidden />}
+            title={t('emptyTitle')}
+            description={t('emptyBody')}
+            action={{ label: t('allCategories'), href: href({ category: null }) }}
+          />
+        ) : (
+          <ul className="grid gap-3 sm:grid-cols-2">
+            {tenants.map((entry) => {
+              const open =
+                openState(entry.shop.hours, now)?.open && openState(settings.hours, now)?.open;
+
+              return (
+                <li key={entry.unit}>
+                  <Link
+                    href={`/shops/${entry.shop.slug}`}
+                    className={cn(
+                      pressable,
+                      'rounded-card border-border bg-card hover:border-primary hover:shadow-card group flex items-center gap-3 border p-3 transition-[border-color,box-shadow,scale] duration-150 ease-out',
+                    )}
+                  >
+                    <span className="rounded-control bg-primary-50 text-primary-800 text-2xs flex h-11 w-11 shrink-0 items-center justify-center font-bold tabular-nums">
+                      {formatUnitNumber(String(entry.unit), locale)}
+                    </span>
+
+                    <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span
+                        dir="auto"
+                        className="text-foreground group-hover:text-primary truncate text-sm font-bold transition-colors duration-150"
+                      >
+                        {pickLocale(entry.shop.name, locale)}
+                      </span>
+                      <span className="text-muted-foreground truncate text-xs">
+                        {entry.shop.categoryName
+                          ? pickLocale(entry.shop.categoryName, locale)
+                          : t('unitLabel', {
+                              unit: formatUnitNumber(String(entry.unit), locale),
+                            })}
+                      </span>
+                    </span>
+
+                    {open && (
+                      <span className="rounded-pill bg-success-bg text-success text-2xs inline-flex shrink-0 items-center gap-1 px-2 py-0.5 font-medium">
+                        <span className="bg-success h-1.5 w-1.5 rounded-full" aria-hidden />
+                        {t('legendOpen')}
+                      </span>
+                    )}
+
+                    <span className="text-primary hidden shrink-0 items-center gap-1 text-xs font-semibold sm:inline-flex">
+                      {t('openShop')}
+                      <ChevronLeft className="h-4 w-4 ltr:rotate-180" aria-hidden />
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
     </div>
   );

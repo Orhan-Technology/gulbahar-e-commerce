@@ -86,6 +86,45 @@ export function activeFilterCount(params: URLSearchParams): number {
 }
 
 /**
+ * BRAND NAMES, and the one mixed-script block on a Dari listing page.
+ *
+ * `products.brand` stores a Latin token — "Ariana", "Samsung" — because that is
+ * the key the catalogue, the importer and the URL all agree on, and a filter
+ * value has to survive a round trip through a query string. But a column of
+ * Latin words down the side of an otherwise Dari page is the only place the
+ * reader's eye has to change direction, and half of these brands are Afghan
+ * companies whose real name is written in Persian script.
+ *
+ * THE RULE, applied everywhere a brand is shown to a customer: render the Dari
+ * name from `filters.brandNames` with the Latin token beside it in a muted,
+ * `dir="ltr"` span — the token is what is printed on the box and what a shopper
+ * matches against a product page. A brand with no entry falls back to its token
+ * alone, so an imported brand nobody has translated yet still filters correctly
+ * rather than rendering a raw message path.
+ *
+ * Read out of the message tree by key rather than through `t()` because the key
+ * is a data value: `t('brandNames.Xiaomi')` on a brand that has no entry logs a
+ * missing-message error and renders the path.
+ */
+export type BrandNames = Record<string, string>;
+
+export function brandNamesFrom(messages: unknown): BrandNames {
+  const names = (messages as { filters?: { brandNames?: unknown } } | null)?.filters?.brandNames;
+  return names !== null && typeof names === 'object' ? (names as BrandNames) : {};
+}
+
+/** The Dari name and, when it differs, the Latin token to show beside it. */
+export function brandLabel(
+  value: string,
+  names: BrandNames,
+): { label: string; token: string | null } {
+  const translated = names[value];
+  return translated && translated !== value
+    ? { label: translated, token: value }
+    : { label: value, token: null };
+}
+
+/**
  * Threshold for the "only N left" badge on a card (PRD §5.2).
  *
  * Three, not the dashboard's five: a shopkeeper wants warning early enough to

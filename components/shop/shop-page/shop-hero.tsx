@@ -160,8 +160,13 @@ export async function ShopHero({
             )}
           </div>
 
+          {/* `dir="auto"`: the shopkeeper wrote this, and a tenant whose blurb
+              is in English inside the Dari storefront otherwise gets its
+              punctuation flipped to the wrong end of the sentence. */}
           {shop.description && (
-            <p className="text-muted-foreground text-sm">{pickLocale(shop.description, locale)}</p>
+            <p dir="auto" className="text-muted-foreground text-sm">
+              {pickLocale(shop.description, locale)}
+            </p>
           )}
 
           <div className="flex flex-wrap items-center gap-2 pt-1">

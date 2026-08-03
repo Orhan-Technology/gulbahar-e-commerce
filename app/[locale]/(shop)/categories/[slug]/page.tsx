@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 import { FacetControls } from '@/components/shop/listing/facet-controls';
+import { PopularFallback } from '@/components/shop/listing/popular-fallback';
 import {
   ProductListing,
   ProductListingSkeleton,
@@ -13,7 +14,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { filterFacets } from '@/lib/db/queries/listing';
 import { categoryBySlug, categoryTree } from '@/lib/db/queries/shops';
 import { Link } from '@/lib/i18n/navigation';
-import { decodeSlug } from '@/lib/utils';
+import { cn, decodeSlug } from '@/lib/utils';
 
 /**
  * Category listing (PRD §5.1, NN/g's merged category-and-listing page).
@@ -97,10 +98,22 @@ export default async function CategoryPage({
         </div>
       )}
 
-      <div className="mt-4 grid gap-6 lg:grid-cols-[240px_1fr]">
-        <aside className="hidden lg:block">
-          <FacetControls {...facetOptions} />
-        </aside>
+      {/*
+        NO FILTER RAIL OVER AN EMPTY CATEGORY. The same rule the search page
+        follows: a column of price bands and star ratings beside a shelf that
+        has nothing on it is a form asking somebody to narrow nothing, and here
+        it also pushed the "coming soon" panel into a third of the width.
+        `facets.total` is the count under every current narrowing and comes back
+        with the facet counts themselves, so this costs no extra query.
+      */}
+      <div
+        className={cn('mt-4 grid gap-6', (facets.total ?? 0) > 0 && 'lg:grid-cols-[240px_1fr]')}
+      >
+        {(facets.total ?? 0) > 0 && (
+          <aside className="hidden lg:block">
+            <FacetControls {...facetOptions} />
+          </aside>
+        )}
 
         <div className="min-w-0">
           <Suspense fallback={<ProductListingSkeleton />}>
@@ -111,6 +124,13 @@ export default async function CategoryPage({
               scope={{ categoryId: category.id }}
               promotedSlot="category_top"
               emptyHref={`/categories/${slug}`}
+              /*
+               * A category with no stock is not a failed query, so the dead end
+               * gets the same recovery a zero-result search gets: something to
+               * look at instead. Without it this page was a single empty panel
+               * above eight hundred pixels of nothing.
+               */
+              emptyExtra={<PopularFallback />}
             />
           </Suspense>
         </div>

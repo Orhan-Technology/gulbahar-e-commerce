@@ -58,10 +58,11 @@ const LISTING_COLUMNS = 'lg:grid-cols-3';
  *
  * Reading order inside it, which is Baymard's and not an accident:
  *
- *   1. toolbar — how many, sorted how, and (on a phone) the way to filter
+ *   1. toolbar — how many of how many, sorted how, and (on a phone) the way to
+ *      filter
  *   2. applied chips — WHY the count is what it is, in plain words
- *   3. paid strip, bounded and badged, above organic results it never reorders
- *   4. the grid
+ *   3. the note that says paid placement did not reorder anything
+ *   4. the grid, with any promoted card first and badged
  *   5. load more, with the remainder stated
  *
  * The chips are second on purpose. On a phone the facets live behind a button,
@@ -74,6 +75,7 @@ export async function ProductListing({
   facets,
   scope = {},
   promotedSlot,
+  hideOutOfStock = false,
   defaultSort = 'popularity',
   emptyHref,
   emptyExtra,
@@ -89,6 +91,17 @@ export async function ProductListing({
     search?: string;
   };
   promotedSlot?: PromotionSlotKey;
+  /**
+   * Drops sold-out products from the grid — a SURFACE rule, not a filter.
+   *
+   * The offers page is a promotional surface: every card on it carries a
+   * discount ribbon, and a ribbon over «موجود نیست» is an advert for something
+   * nobody can buy. Deliberately NOT expressed as `query.inStock`, which would
+   * tick the availability checkbox and raise a chip for a filter the shopper
+   * never applied — and which they could then remove, putting the sold-out
+   * cards back on the one page that must not have them.
+   */
+  hideOutOfStock?: boolean;
   /**
    * The order used when the URL names none — the offers page opens on biggest
    * discount. The toolbar shows it as selected, so the control never claims an
@@ -129,7 +142,7 @@ export async function ProductListing({
       priceMin: query.priceMin ? Number(query.priceMin) : undefined,
       priceMax: query.priceMax ? Number(query.priceMax) : undefined,
       minRating: query.minRating ? Number(query.minRating) : undefined,
-      inStockOnly: query.inStock === '1',
+      inStockOnly: hideOutOfStock || query.inStock === '1',
       onOfferOnly: query.onOffer === '1',
       sort,
       page,
@@ -175,13 +188,24 @@ export async function ProductListing({
 
   if (result.total === 0) {
     /*
-     * The copy has to match the REASON the list is empty. "Remove one of the
-     * filters" under a search that simply found nothing is advice the reader
-     * cannot follow — there are no filters — and it reads as the page blaming
-     * them for something they did not do.
+     * The copy has to match the REASON the list is empty, and there are three
+     * different reasons — conflating any two of them puts advice on screen the
+     * reader cannot act on.
+     *
+     *   narrowed  — filters are on: undo one. The only case "remove a filter"
+     *               is honest advice.
+     *   searched  — a term found nothing: try another spelling.
+     *   neither   — the shopper opened a category that simply has no stock yet.
+     *               This one used to borrow the filter copy and told them to
+     *               "remove one of the filters" when the URL carried none: the
+     *               page blaming them for something they did not do, with a
+     *               button that clears nothing. It is not a failure at all, it
+     *               is a shelf that has not been filled, and the honest move is
+     *               to say so and put something worth looking at underneath.
      */
     const narrowed = FILTER_KEYS.some((key) => query[key] !== undefined);
     const searched = Boolean(scope.search ?? query.q);
+    const unfiltered = !narrowed && !searched;
 
     return (
       <div className="space-y-4">
@@ -189,11 +213,19 @@ export async function ProductListing({
         <EmptyState
           illustration={<PackageSearch className="h-7 w-7" />}
           title={
-            searched && !narrowed
-              ? t('emptySearchTitle', { term: scope.search ?? query.q ?? '' })
-              : t('emptyTitle')
+            unfiltered
+              ? t('emptyUnfilteredTitle')
+              : searched && !narrowed
+                ? t('emptySearchTitle', { term: scope.search ?? query.q ?? '' })
+                : t('emptyTitle')
           }
-          description={searched && !narrowed ? t('emptySearchBody') : t('emptyBody')}
+          description={
+            unfiltered
+              ? t('emptyUnfilteredBody')
+              : searched && !narrowed
+                ? t('emptySearchBody')
+                : t('emptyBody')
+          }
           // One tap back to everything. An empty listing whose only exit is
           // undoing filters by hand is where a session ends.
           action={{
@@ -210,30 +242,42 @@ export async function ProductListing({
 
   return (
     <div className="space-y-4">
-      <ListingToolbar total={result.total} facets={facets} defaultSort={defaultSort} />
+      <ListingToolbar
+        total={result.total}
+        // Clamped: a promoted product that the current page's organic slice
+        // does not contain would otherwise make "showing 25 of 24".
+        shown={Math.min(promoted.length + organic.length, result.total)}
+        facets={facets}
+        defaultSort={defaultSort}
+      />
 
       <AppliedFilters labels={labels} />
 
+      {/*
+        THE PAID PLACEMENT IS A CARD IN THE GRID, not a panel above it.
+        Boxed in its own bordered strip, a single promoted product occupied a
+        full-width band roughly five hundred pixels tall before the first
+        organic result — one product given more space than the six under it,
+        which is not the position that was sold and reads as an interstitial ad.
+        First position in the same grid, at the same size, with the Sponsored
+        badge the card already draws, is the whole of what §8.4 promises: a
+        bought place among matching results that never reorders them.
+
+        The note stays, above the grid, because the badge alone does not explain
+        that the ordering underneath is untouched.
+      */}
       {promoted.length > 0 && (
-        <section className="rounded-card border-border space-y-2 border bg-neutral-100/70 p-3">
-          <div className="flex items-center gap-2">
-            <SponsoredBadge />
-            <span className="text-xs text-neutral-600">{t('promotedNote')}</span>
-          </div>
-          <ProductGrid
-            items={promoted.map((item) => ({ ...item, sponsored: true }))}
-            savedIds={saved}
-            className={LISTING_COLUMNS}
-            priority
-          />
-        </section>
+        <p className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
+          <SponsoredBadge />
+          {t('promotedNote')}
+        </p>
       )}
 
       <ProductGrid
-        items={organic}
+        items={[...promoted.map((item) => ({ ...item, sponsored: true as const })), ...organic]}
         savedIds={saved}
         className={LISTING_COLUMNS}
-        priority={promoted.length === 0}
+        priority
       />
 
       <LoadMore

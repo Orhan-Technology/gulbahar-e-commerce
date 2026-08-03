@@ -138,9 +138,18 @@ function Slide({
           </span>
         )}
 
-        <p className="max-w-xl text-2xl leading-tight font-extrabold sm:text-3xl">{slide.title}</p>
+        {/* `dir="auto"` on both: a slide's headline and body are a shop's own
+            product title, shop name or offer name, and a Latin one inheriting
+            the page's RTL renders its trailing punctuation on the wrong side. */}
+        <p dir="auto" className="max-w-xl text-2xl leading-tight font-extrabold sm:text-3xl">
+          {slide.title}
+        </p>
 
-        {slide.body && <p className="text-primary-200 clamp-2 max-w-lg text-base">{slide.body}</p>}
+        {slide.body && (
+          <p dir="auto" className="text-primary-200 clamp-2 max-w-lg text-base">
+            {slide.body}
+          </p>
+        )}
 
         <div className="flex flex-wrap gap-3 pt-3">
           <Button asChild size="lg" variant="secondary">

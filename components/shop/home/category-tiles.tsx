@@ -1,17 +1,7 @@
 import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
-import {
-  Baby,
-  Dumbbell,
-  Gem,
-  type LucideIcon,
-  Nut,
-  Shirt,
-  Smartphone,
-  Sparkles,
-  UtensilsCrossed,
-} from 'lucide-react';
 
+import { CategoryMark, categoryMarkSurface } from '@/components/shop/listing/category-mark';
 import { SectionHeader, SectionHeaderSkeleton } from '@/components/custom/section-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
@@ -38,18 +28,11 @@ import { Link } from '@/lib/i18n/navigation';
  * so. Hiding it instead would be the other defensible answer, but the tile is
  * how the mall's taxonomy is read and a taxonomy with a hole in it teaches the
  * shopper something false.
+ *
+ * The icon map moved to components/shop/listing/category-mark.tsx so the
+ * subcategory tiles and the category index draw the same department the same
+ * way — three private copies is how one category ends up with two icons.
  */
-const ICONS: Record<string, LucideIcon> = {
-  electronics: Smartphone,
-  beauty: Sparkles,
-  clothing: Shirt,
-  'home-kitchen': UtensilsCrossed,
-  'watches-jewellery': Gem,
-  'kids-hobby': Baby,
-  sports: Dumbbell,
-  food: Nut,
-};
-
 export async function CategoryTiles() {
   const locale = await getLocale();
   const t = await getTranslations('home');
@@ -64,7 +47,6 @@ export async function CategoryTiles() {
 
       <Rail label={t('shopByCategory')} size="tile">
         {tree.map((category) => {
-          const Icon = ICONS[category.slug] ?? Sparkles;
           const stocked = category.productCount > 0;
           return (
             <Link
@@ -88,8 +70,8 @@ export async function CategoryTiles() {
                    * mark in the middle of one is why this tile read as empty
                    * next to eight photographs.
                    */
-                  <span className="bg-primary-100 text-primary-600 ring-primary-200 flex h-full w-full items-center justify-center ring-1 ring-inset">
-                    <Icon className="h-[38%] w-[38%]" aria-hidden />
+                  <span className={categoryMarkSurface}>
+                    <CategoryMark slug={category.slug} />
                   </span>
                 )}
               </span>

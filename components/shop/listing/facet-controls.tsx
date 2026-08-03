@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 
@@ -11,7 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { activeFilterCount, PRESERVED_KEYS, PRICE_BANDS } from '@/lib/listing';
+import {
+  activeFilterCount,
+  brandLabel,
+  brandNamesFrom,
+  PRESERVED_KEYS,
+  PRICE_BANDS,
+} from '@/lib/listing';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
 import { digitsOnly } from '@/lib/digits';
@@ -80,6 +86,7 @@ export function FacetControls({
 }: FacetOptions) {
   const t = useTranslations('filters');
   const locale = useLocale();
+  const brandNames = brandNamesFrom(useMessages());
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -121,7 +128,6 @@ export function FacetControls({
   }, [params, pathname, router]);
 
   const activeCount = activeFilterCount(params);
-  const showCategories = !hide.includes('category') && categories.length > 0;
   const showShops = !hide.includes('shop') && shops.length > 0;
 
   /*
@@ -143,6 +149,33 @@ export function FacetControls({
    * too far with no way back except the chips — and on a phone the chips are on
    * the screen behind this sheet.
    */
+  /*
+   * A ZERO-COUNT OPTION IS NOT AN OPTION. The category axis is the whole mall
+   * tree on every surface, so a page scoped to one shop or one search rendered
+   * twenty-odd rows reading «۰» — a column of nothing beside a grid of five
+   * products, which makes the catalogue look empty rather than narrow. Brands
+   * and shops were already filtered this way; categories were the axis that
+   * still printed its holes.
+   *
+   * A ticked option survives the filter for the same reason it does on the
+   * other two axes: hiding the control that produced the current result set
+   * leaves a shopper who narrowed too far with no way back.
+   */
+  const visibleCategories = categories
+    .map((parent) => ({
+      ...parent,
+      children: parent.children.filter(
+        (child) => child.slug === selectedCategory || (countOf('categories', child.slug) ?? 1) > 0,
+      ),
+    }))
+    .filter(
+      (parent) =>
+        parent.slug === selectedCategory ||
+        (countOf('categories', parent.slug) ?? 1) > 0 ||
+        parent.children.length > 0,
+    );
+  const showCategories = !hide.includes('category') && visibleCategories.length > 0;
+
   const listedBrands = brands.filter(
     (brand) => selectedBrands.includes(brand.value) || (countOf('brands', brand.value) ?? 1) > 0,
   );
@@ -161,7 +194,7 @@ export function FacetControls({
       {showCategories && (
         <FacetGroup title={t('category')}>
           <ul className="space-y-1">
-            {categories.map((parent) => (
+            {visibleCategories.map((parent) => (
               <li key={parent.slug}>
                 <FacetButton
                   active={selectedCategory === parent.slug}
@@ -217,6 +250,7 @@ export function FacetControls({
             {visibleBrands.map((brand) => {
               const total = countOf('brands', brand.value);
               const empty = total === 0;
+              const { label, token } = brandLabel(brand.value, brandNames);
               return (
                 <li key={brand.value} className="flex items-center gap-2">
                   <Checkbox
@@ -239,11 +273,20 @@ export function FacetControls({
                       empty && 'text-muted-foreground cursor-not-allowed',
                     )}
                   >
-                    {/* A brand is a proper noun in both languages, so it is one
-                        string in the column and reads left-to-right either way. */}
-                    <span className="truncate" dir="ltr">
-                      {brand.value}
+                    {/*
+                      The Dari name leads and the Latin token follows it, muted
+                      and isolated — see brandLabel in lib/listing.ts for why.
+                      The token is `dir="ltr"` inside its own <bdi> so a name
+                      like "L'Oréal" cannot drag the row's punctuation with it.
+                    */}
+                    <span className="truncate" dir="auto">
+                      {label}
                     </span>
+                    {token && (
+                      <bdi dir="ltr" className="text-2xs shrink-0 text-neutral-400">
+                        {token}
+                      </bdi>
+                    )}
                     <FacetCount value={total} locale={locale} />
                   </Label>
                 </li>
