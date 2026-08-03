@@ -33,6 +33,14 @@ export interface RatingStarsProps {
    * line and throws the price and shop lines out of alignment across a row.
    */
   reserveSpace?: boolean;
+  /**
+   * Minimum reviews before a score is drawn at all (lib/ratings).
+   *
+   * Defaults to 1 — one review is enough to show *this* review's own stars,
+   * which is what the review list and the composer do. Cards pass the shared
+   * evidence threshold instead, because an average of one is not an average.
+   */
+  minCount?: number;
   className?: string;
 }
 
@@ -63,6 +71,7 @@ export function RatingStars({
   size = 'md',
   count,
   reserveSpace = false,
+  minCount = 1,
   className,
 }: RatingStarsProps) {
   const locale = useLocale();
@@ -71,16 +80,21 @@ export function RatingStars({
   const percent = (clamped / 5) * 100;
 
   /*
-   * NOTHING AT ZERO REVIEWS. An unrated product is not a bad product, and a
-   * row of empty stars followed by "(0)" says it is — it is the single most
-   * common way a young catalogue talks itself down.
+   * NOTHING WITHOUT ENOUGH EVIDENCE. An unrated product is not a bad product,
+   * and a row of empty stars followed by "(0)" says it is — it is the single
+   * most common way a young catalogue talks itself down. Above a caller's
+   * `minCount` the same applies to a score drawn from one or two opinions.
    */
-  const unrated = count !== undefined ? count === 0 : clamped === 0;
+  const unrated = count !== undefined ? count < minCount : clamped === 0;
   if (unrated && !reserveSpace) return null;
   if (unrated) return <span className={cn('inline-flex h-5 items-center', className)} aria-hidden />;
 
   return (
-    <span className={cn('inline-flex items-center gap-1.5', className)}>
+    /* `reserveSpace` fixes the row's HEIGHT as well as its presence: a rated
+       card and an unrated one sit side by side in the same grid row, and a
+       score that is a pixel taller than the blank it replaces knocks the price
+       lines out of line across the whole row. */
+    <span className={cn('inline-flex items-center gap-1.5', reserveSpace && 'h-5', className)}>
       <span
         className="relative inline-flex"
         role="img"

@@ -43,6 +43,19 @@ function flatten(tree: Tree, prefix = ''): string[] {
   );
 }
 
+/** Same walk as `flatten`, but keeping the leaf so a rule can read the copy. */
+function flattenWithValues(tree: Tree, prefix = ''): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(tree)) {
+    if (typeof value === 'object' && value !== null) {
+      Object.assign(out, flattenWithValues(value as Tree, `${prefix}${key}.`));
+    } else {
+      out[`${prefix}${key}`] = String(value);
+    }
+  }
+  return out;
+}
+
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((entry) => {
     const path = join(dir, entry);
@@ -144,6 +157,46 @@ const faKeys = new Set(flatten(LOCALES.fa));
 const enKeys = new Set(flatten(LOCALES.en));
 for (const key of faKeys) if (!enKeys.has(key)) problems.push(`messages/en.json: missing ${key}`);
 for (const key of enKeys) if (!faKeys.has(key)) problems.push(`messages/fa.json: missing ${key}`);
+
+/*
+ * 5 — the middle dot that Persian readers see as a zero.
+ *
+ * Persian ۰ is a dot, so a «·» touching a numeral merges with it: «سبد خرید ·
+ * ۴ قلم» reads as "cart, 40 items" and «طبقه ۱ · دکان» as "floor 10". It was
+ * swept out of thirty-nine strings once and came straight back in new copy,
+ * twice — which is what a convention gets you when several people are writing
+ * at the same time. Now it fails the check instead of reaching a reader.
+ *
+ * Only fa is tested. In Latin script the interpunct is unambiguous, and en
+ * uses it deliberately.
+ *
+ * A placeholder counts as a numeral when it is one of the names this codebase
+ * actually interpolates numbers under — a `{shopName}` beside a dot is fine.
+ */
+const NUMERIC_PLACEHOLDERS =
+  /^(count|n|total|orders|days|day|views|price|amount|units|saves|clicks|impressions|floor|unit|hours|weeks|lifetime|threshold|fee|quantity|stock|reviews|products|shops|vacant|ctr)$/i;
+
+for (const [key, value] of Object.entries(flattenWithValues(LOCALES.fa))) {
+  if (!value.includes('·')) continue;
+
+  for (const match of value.matchAll(/(.{0,3})·(\s*)(\{(\w+)[^}]*\}|[۰-۹0-9])/g)) {
+    const placeholder = match[4];
+    const isNumeric = placeholder ? NUMERIC_PLACEHOLDERS.test(placeholder) : true;
+    if (isNumeric) {
+      problems.push(
+        `messages/fa.json: ${key} — «·» sits before a numeral, which Persian readers merge with ۰. Use «–».`,
+      );
+      break;
+    }
+  }
+
+  // The other direction: a numeral immediately BEFORE the dot reads the same way.
+  if (/([۰-۹0-9]|\}\s*)·/.test(value) && !problems.some((p) => p.includes(`${key} —`))) {
+    problems.push(
+      `messages/fa.json: ${key} — «·» sits after a numeral, which Persian readers merge with ۰. Use «–».`,
+    );
+  }
+}
 
 if (problems.length > 0) {
   console.error(`\n${problems.length} message problem(s):\n`);

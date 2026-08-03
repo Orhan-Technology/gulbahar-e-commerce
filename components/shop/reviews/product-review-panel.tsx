@@ -2,6 +2,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 import { MessageSquareQuote, X } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RatingHistogram } from '@/components/shop/reviews/rating-histogram';
 import { ReviewList } from '@/components/shop/reviews/review-list';
@@ -64,6 +65,7 @@ export async function ProductReviewPanel({
   const locale = await getLocale();
   const t = await getTranslations('product');
   const tFilter = await getTranslations('product.reviewFilter');
+  const tEmpty = await getTranslations('product.reviewEmpty');
 
   const query = await searchParams;
   const stars = parseReviewStars(query.reviewStars);
@@ -85,20 +87,63 @@ export async function ProductReviewPanel({
   if (stars) preserved[REVIEW_STARS_PARAM] = String(stars);
   if (sort) preserved[REVIEW_SORT_PARAM] = sort;
 
+  /*
+   * The form appears ONLY for a signed-in customer with a fulfilled order item
+   * for this product, or one editing their own review (PRD §5.5).
+   */
+  const canWrite = Boolean(entitlement || ownReview);
+  const composer = (
+    <WriteReviewDialog
+      productSlug={productSlug}
+      existing={ownReview ? { rating: ownReview.rating, body: ownReview.body } : null}
+    />
+  );
+
+  /*
+   * NO REVIEWS IS A MOMENT, NOT A GAP. It used to be one grey line — "be the
+   * first!" — with nothing to press, while the Q&A section three inches below
+   * offered a composer and a sign-in. The invitation and the way to accept it
+   * now sit in the same box, and the way in depends on who is reading:
+   * an entitled buyer gets the composer, a signed-out visitor gets the sign-in
+   * carrying `next=` back to this product, and a signed-in visitor who has not
+   * bought it is told plainly why there is no button — the alternative is a
+   * control that fails on submission.
+   */
+  if (summary.total === 0) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-base font-bold">{t('reviewsHeading')}</h2>
+
+        <div className="rounded-card border-border flex flex-col items-center gap-2 border border-dashed px-6 py-8 text-center">
+          <span className="rounded-pill bg-primary-50 text-primary-600 flex h-12 w-12 items-center justify-center">
+            <MessageSquareQuote className="h-6 w-6" aria-hidden />
+          </span>
+          <p className="text-sm font-semibold">{tEmpty('title')}</p>
+          <p className="text-muted-foreground max-w-sm text-sm">
+            {canWrite
+              ? tEmpty('bodyBuyer')
+              : user?.id
+                ? tEmpty('bodyNotBuyer')
+                : tEmpty('bodySignedOut')}
+          </p>
+
+          {canWrite ? (
+            composer
+          ) : user?.id ? null : (
+            <Button asChild size="sm" variant="outline">
+              <Link href={`/account/sign-in?next=/products/${productSlug}`}>{tEmpty('write')}</Link>
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-base font-bold">{t('reviewsHeading')}</h2>
-        {/*
-          The form appears ONLY for a signed-in customer with a fulfilled order
-          item for this product, or one editing their own review (PRD §5.5).
-        */}
-        {(entitlement || ownReview) && (
-          <WriteReviewDialog
-            productSlug={productSlug}
-            existing={ownReview ? { rating: ownReview.rating, body: ownReview.body } : null}
-          />
-        )}
+        {canWrite && composer}
       </div>
 
       <RatingHistogram
@@ -110,54 +155,52 @@ export async function ProductReviewPanel({
         sort={sort}
       />
 
-      {summary.total > 0 && (
-        <div className="flex flex-wrap items-center gap-3">
-          {/*
-            THE FILTER SAYS ITS OWN NAME AND CARRIES ITS OWN EXIT. A histogram
-            bar that quietly shortens the list below it leaves a reader
-            wondering where the other reviews went; this chip is the sentence
-            that answers it, and the × is the one click back.
-          */}
-          {stars ? (
-            <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
-              <span>
-                {tFilter('showing', {
-                  star: formatNumber(stars, locale),
-                  count: formatNumber(result.total, locale),
-                })}
-              </span>
-              <Link
-                href={reviewHref(productSlug, { stars: null, sort })}
-                scroll={false}
-                className="rounded-pill border-border hover:border-primary hover:text-primary inline-flex items-center gap-1 border px-2 py-0.5 text-xs font-medium"
-              >
-                <X className="h-3 w-3" aria-hidden />
-                {tFilter('clear')}
-              </Link>
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              {t('reviewCount', { count: formatNumber(result.total, locale) })}
-            </p>
-          )}
+      {/* Unconditional now: the empty catalogue case returned above, so
+          anything reaching here has reviews to filter and order. */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/*
+          THE FILTER SAYS ITS OWN NAME AND CARRIES ITS OWN EXIT. A histogram
+          bar that quietly shortens the list below it leaves a reader
+          wondering where the other reviews went; this chip is the sentence
+          that answers it, and the × is the one click back.
+        */}
+        {stars ? (
+          <p className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+            <span>
+              {tFilter('showing', {
+                star: formatNumber(stars, locale),
+                count: formatNumber(result.total, locale),
+              })}
+            </span>
+            <Link
+              href={reviewHref(productSlug, { stars: null, sort })}
+              scroll={false}
+              className="rounded-pill border-border hover:border-primary hover:text-primary focus-visible:ring-ring inline-flex items-center gap-1 border px-2 py-0.5 text-xs font-medium focus-visible:ring-2 focus-visible:outline-none"
+            >
+              <X className="h-3 w-3" aria-hidden />
+              {tFilter('clear')}
+            </Link>
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            {t('reviewCount', { count: formatNumber(result.total, locale) })}
+          </p>
+        )}
 
-          <div className="ms-auto">
-            <ReviewSortSelect current={sort} preserved={preserved} />
-          </div>
+        <div className="ms-auto">
+          <ReviewSortSelect current={sort} preserved={preserved} />
         </div>
-      )}
+      </div>
 
       {result.items.length === 0 ? (
-        summary.total === 0 ? null : (
-          /* Filtered to nothing — reachable by a hand-typed URL, since a bar
-             with no reviews behind it is not a link. */
-          <EmptyState
-            illustration={<MessageSquareQuote className="h-7 w-7" aria-hidden />}
-            title={tFilter('emptyTitle', { star: formatNumber(stars ?? 0, locale) })}
-            description={tFilter('emptyBody')}
-            action={{ label: tFilter('clear'), href: reviewHref(productSlug, { sort }) }}
-          />
-        )
+        /* Filtered to nothing — reachable by a hand-typed URL, since a bar
+           with no reviews behind it is not a link. */
+        <EmptyState
+          illustration={<MessageSquareQuote className="h-7 w-7" aria-hidden />}
+          title={tFilter('emptyTitle', { star: formatNumber(stars ?? 0, locale) })}
+          description={tFilter('emptyBody')}
+          action={{ label: tFilter('clear'), href: reviewHref(productSlug, { sort }) }}
+        />
       ) : (
         <ReviewList
           items={result.items}

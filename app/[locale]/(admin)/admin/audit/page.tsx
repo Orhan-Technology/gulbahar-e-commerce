@@ -1,6 +1,7 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ScrollText } from 'lucide-react';
 
+import { AuditDetail, auditTargetHref } from '@/components/admin/audit-detail';
 import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { EmptyState } from '@/components/custom/empty-state';
@@ -118,7 +119,9 @@ export default async function AdminAuditPage({
         />
       ) : (
         <ol className="rounded-card border-border bg-card divide-border divide-y overflow-hidden border">
-          {entries.map((entry) => (
+          {entries.map((entry) => {
+            const href = auditTargetHref(entry.targetType, entry.targetId, entry.targetLabel);
+            return (
             <li key={entry.id} className="flex flex-wrap items-start gap-3 p-3.5 text-sm">
               <span
                 className={cn(
@@ -136,9 +139,22 @@ export default async function AdminAuditPage({
                       object rather than a flat key containing a dot — a flat
                       one throws INVALID_KEY at render (CLAUDE.md). */}
                   {t(`actions.${entry.action}` as never)}
-                  {entry.targetLabel && (
-                    <span className="text-muted-foreground"> — {entry.targetLabel}</span>
-                  )}
+                  {entry.targetLabel &&
+                    /*
+                      THE ROW POINTS AT WHAT IT IS ABOUT. Every line named a shop
+                      or a product and none of them linked to it, so following up
+                      on an entry meant retyping the name into another screen's
+                      search box — on the one page whose value is that somebody
+                      can go back and check.
+                    */
+                    (href ? (
+                      <Link href={href} className="hover:text-primary text-muted-foreground">
+                        {' '}
+                        — {entry.targetLabel}
+                      </Link>
+                    ) : (
+                      <span className="text-muted-foreground"> — {entry.targetLabel}</span>
+                    ))}
                 </p>
 
                 {entry.reason && (
@@ -147,13 +163,8 @@ export default async function AdminAuditPage({
                   </p>
                 )}
 
-                {entry.detail && Object.keys(entry.detail).length > 0 && (
-                  <p className="text-2xs text-neutral-500">
-                    {Object.entries(entry.detail)
-                      .map(([key, value]) => `${key}: ${value ?? '—'}`)
-                      .join(' · ')}
-                  </p>
-                )}
+                {/* Humanised per event type — see components/admin/audit-detail. */}
+                <AuditDetail action={entry.action} detail={entry.detail} />
               </div>
 
               <div className="shrink-0 text-end">
@@ -163,7 +174,8 @@ export default async function AdminAuditPage({
                 </p>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
 

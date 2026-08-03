@@ -1,9 +1,10 @@
 import { cache } from 'react';
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, sql } from 'drizzle-orm';
 
 import { db } from '..';
 import {
   addresses,
+  orders,
   productImages,
   products,
   reviewResponses,
@@ -89,6 +90,36 @@ export const accountAddresses = cache(async (userId: string) => {
     .from(addresses)
     .where(eq(addresses.userId, userId))
     .orderBy(asc(addresses.createdAt));
+});
+
+/**
+ * Which saved address counts as the DEFAULT (finding #14).
+ *
+ * DERIVED, not declared. The profile card has always said «آدرس پیش‌فرض» and
+ * checkout has always silently preselected `addresses[0]` — the OLDEST row —
+ * which for anyone who has moved is the address they no longer live at. There
+ * is no `is_default` column and the schema is frozen for this pass, so the
+ * default is read out of behaviour instead: the address the customer most
+ * recently sent an order to is the one they mean by "my address".
+ *
+ * `addressId` is ON DELETE SET NULL, so a deleted address drops out of this
+ * naturally rather than returning an id that resolves to nothing; the caller
+ * still checks the id against the live list before using it, because an order
+ * may name an address that has since been removed AND recreated.
+ *
+ * Returns null for an account that has never ordered, and the caller falls back
+ * to the previous behaviour — which is the correct answer there: with no
+ * evidence, the first saved address is as good a guess as any.
+ */
+export const defaultAddressId = cache(async (userId: string) => {
+  const [row] = await db
+    .select({ id: orders.addressId })
+    .from(orders)
+    .where(and(eq(orders.userId, userId), isNotNull(orders.addressId)))
+    .orderBy(desc(orders.createdAt))
+    .limit(1);
+
+  return row?.id ?? null;
 });
 
 /**

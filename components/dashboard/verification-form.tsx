@@ -164,7 +164,9 @@ export function VerificationForm({ canSubmit }: { canSubmit: boolean }) {
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-medium">{attachment.file.name}</span>
+                <span className="block truncate text-xs font-medium" dir="auto">
+                  {attachment.file.name}
+                </span>
                 <span className="text-muted-foreground text-2xs">
                   {Math.max(1, Math.round(attachment.file.size / 1024))} KB
                 </span>

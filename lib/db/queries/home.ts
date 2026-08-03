@@ -185,6 +185,33 @@ export async function activeOffers(limit = 8, now: Date = new Date()) {
         order by p.view_count desc, pi.sort asc
         limit 1
       )`,
+      /*
+       * HOW MUCH IS ACTUALLY IN THE SALE. An offer card read as a headline over
+       * a shop name with no sense of scale, so «۲۵٪ تخفیف» could equally have
+       * meant one clearance item or the whole floor. A shop-wide offer counts
+       * the shop's published catalogue; a product-scoped one counts its own
+       * list, intersected with what is still published so a deleted product
+       * cannot inflate the number.
+       */
+      /*
+       * Written as literal qualified SQL, not with interpolated columns: inside
+       * a subquery aliased `p`, drizzle's unqualified rendering of
+       * `${offers.scope}` would bind to the wrong relation (see
+       * queries/fragments.ts for the same trap). `product_ids` is jsonb, so the
+       * membership test goes through jsonb_array_elements_text rather than
+       * `= any(...)`, which only works on a real array column.
+       */
+      productCount: sql<number>`(
+        select count(*)::int from products p
+        where p.shop_id = offers.shop_id
+          and p.status = 'published'
+          and (
+            offers.scope = 'shop'
+            or p.id::text in (
+              select jsonb_array_elements_text(coalesce(offers.product_ids, '[]'::jsonb))
+            )
+          )
+      )`,
     })
     .from(offers)
     .innerJoin(shops, eq(offers.shopId, shops.id))
@@ -201,6 +228,18 @@ export async function activeOffers(limit = 8, now: Date = new Date()) {
 
   return rows;
 }
+
+/**
+ * NOTHING SOLD OUT IN A PROMOTIONAL SLOT.
+ *
+ * A rail, a spotlight and an offers grid are all the shop TELLING the reader to
+ * buy something. An out-of-stock card there is an advert for a disappointment —
+ * and it is worse with a discount ribbon on it, because the reader reads the
+ * price before the badge. Ordinary category and search listings keep their
+ * sold-out rows: there the reader asked what exists, and "this exists but is
+ * gone" is a true and useful answer.
+ */
+const inStock = sql`${products.stock} > 0`;
 
 /**
  * Products carrying an active discount — what the offers section actually links
@@ -229,6 +268,7 @@ export async function discountedProducts(limit = 12) {
       and(
         eq(products.status, 'published'),
         eq(shops.status, 'approved'),
+        inStock,
         sql`${products.discountPrice} is not null and ${products.discountPrice} < ${products.price}`,
       ),
     )
@@ -336,6 +376,7 @@ export async function categoryBestsellers(rootSlug: string, limit = 5) {
       and(
         eq(products.status, 'published'),
         eq(shops.status, 'approved'),
+        inStock,
         sql`(${categories.slug} = ${rootSlug} or ${categories.parentId} = (
           select id from ${categories} root where root.slug = ${rootSlug}
         ))`,
@@ -418,7 +459,7 @@ export async function shopSpotlight(productLimit = 4) {
     })
     .from(products)
     .innerJoin(shops, eq(products.shopId, shops.id))
-    .where(and(eq(products.shopId, shop.id), eq(products.status, 'published')))
+    .where(and(eq(products.shopId, shop.id), eq(products.status, 'published'), inStock))
     .orderBy(desc(products.viewCount))
     .limit(productLimit);
 
@@ -487,7 +528,16 @@ export async function homeProductModules(locale: string, railSlugs: readonly str
   const spotlight = await shopSpotlight(4);
   const spotlightItems = spotlight ? claim(spotlight.items, 4) : [];
 
-  const arrivals = claim(await newArrivalsForHome(locale, 32), 14);
+  /*
+   * `newArrivals` is the shared listing query and rightly keeps sold-out rows,
+   * so the promotional rule is applied HERE rather than by widening a query two
+   * other surfaces depend on. Eight, not fourteen: this band is a rail now, and
+   * fourteen cards in a scroller is a catalogue nobody reaches the end of.
+   */
+  const arrivals = claim(
+    (await newArrivalsForHome(locale, 32)).filter((item) => item.stock > 0),
+    8,
+  );
 
   return {
     deals,

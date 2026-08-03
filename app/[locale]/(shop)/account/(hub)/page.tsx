@@ -8,7 +8,12 @@ import { SignOutButton } from '@/components/shop/account/sign-out-button';
 import { pressable } from '@/components/motion/pressable';
 import { ACCOUNT_SECTIONS } from '@/lib/account-sections';
 import { requireUser } from '@/lib/auth/guards';
-import { accountAddresses, accountCounts, accountProfile } from '@/lib/db/queries/account';
+import {
+  accountAddresses,
+  accountCounts,
+  accountProfile,
+  defaultAddressId,
+} from '@/lib/db/queries/account';
 import { formatMonthYear, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -36,14 +41,23 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
   // All three reads are `cache()`d and already resolved by the hub layout, so
   // this costs nothing extra — see lib/db/queries/account.ts.
-  const [profile, counts, saved] = await Promise.all([
+  const [profile, counts, saved, preferredAddressId] = await Promise.all([
     accountProfile(session.id),
     accountCounts(session.id),
     accountAddresses(session.id),
+    defaultAddressId(session.id),
   ]);
 
   const displayName = profile?.name?.trim() || t('title');
-  const first = saved[0];
+  /*
+   * The card's row is labelled «آدرس پیش‌فرض» and used to show `saved[0]` — the
+   * OLDEST saved address — while checkout silently preselected the same row. It
+   * now shows the one checkout actually preselects: the address this customer
+   * last had an order delivered to, falling back to the first when there is no
+   * order to learn from (lib/db/queries/account.ts). One derivation, two
+   * screens, so the label cannot be contradicted by the form it describes.
+   */
+  const first = saved.find((address) => address.id === preferredAddressId) ?? saved[0];
 
   /*
    * A computed message key resolves to `never` in next-intl's typing, which is
@@ -216,7 +230,14 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         </div>
       )}
 
-      <div className="flex justify-center pb-2">
+      {/*
+        ONE WAY OUT PER VIEWPORT (finding #18). The hub layout's sidebar carries
+        its own «خارج شدن» from `lg` up, so on a desktop the same action stood
+        twice on the same screen — once in the nav and once at the foot of the
+        page. Below `lg` the sidebar is hidden and this is the only one, which
+        is the viewport it was added for.
+      */}
+      <div className="flex justify-center pb-2 lg:hidden">
         <SignOutButton />
       </div>
     </div>

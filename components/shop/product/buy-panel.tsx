@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { QuantityStepper } from '@/components/custom/quantity-stepper';
+import { ShareButton } from '@/components/shop/product/share-button';
 import { WishlistButton } from '@/components/shop/wishlist-button';
 import { addCartItem } from '@/lib/actions/cart';
 import { formatDate, formatNumber } from '@/lib/format';
@@ -17,7 +18,14 @@ import { cn } from '@/lib/utils';
 export type BuyPanelVariant = {
   id: string;
   name: string;
+  /** Already canonical — see lib/product-variants. */
   options: string[];
+  /**
+   * The options are Latin tokens (S, M, L, XL) and need their own direction
+   * inside the chip: in an RTL row a bare "XL" is fine, but the moment a token
+   * carries punctuation or a digit the paragraph direction reorders it.
+   */
+  ltr?: boolean;
 };
 
 export type BuyPanelProps = {
@@ -27,6 +35,12 @@ export type BuyPanelProps = {
   stock: number;
   variants: BuyPanelVariant[];
   initialSaved: boolean;
+  /**
+   * The product's localised title, which turns on the share control beside the
+   * wishlist heart. Only the inline panel gets it — the sticky mobile bar is
+   * price and one button, and nothing else may compete there.
+   */
+  shareTitle?: string | null;
   /**
    * Vacation mode on the SHOP that sells this product (lib/pause.ts).
    *
@@ -60,6 +74,7 @@ export function BuyPanel({
   stock,
   variants,
   initialSaved,
+  shareTitle = null,
   pausedUntil = null,
   pauseNote = null,
   compact = false,
@@ -230,6 +245,7 @@ export function BuyPanel({
                 <button
                   key={`${variant.id}-${index}`}
                   type="button"
+                  dir={variant.ltr ? 'ltr' : undefined}
                   onClick={() => setSelection((current) => ({ ...current, [variant.id]: option }))}
                   aria-pressed={active}
                   className={cn(
@@ -259,6 +275,10 @@ export function BuyPanel({
         <div className="flex gap-2">
           {addButton}
           <WishlistButton productId={productId} initialSaved={initialSaved} variant="inline" />
+          {/* Below `lg` only: from there up the buy box is a sidebar and the
+              labelled share sits with the rest of the secondary block, where a
+              full-width control costs nothing. */}
+          {shareTitle && <ShareButton title={shareTitle} iconOnly className="lg:hidden" />}
         </div>
 
         {!blocked && (

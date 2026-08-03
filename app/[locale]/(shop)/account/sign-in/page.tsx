@@ -16,7 +16,18 @@ export default async function SignInPage({
   setRequestLocale(locale);
   const { next } = await searchParams;
   const t = await getTranslations('auth');
-  const redirectTo = next && next.startsWith('/') ? next : '/';
+  /*
+   * `?next=` IS HONOURED HERE — signing in from a product page has to come back
+   * to that product page, and the follow / helpful / ask-a-question controls all
+   * link with it already. (The header's account link does not; see the note in
+   * components/shop/site-header.tsx's sibling report.)
+   *
+   * `//evil.example` starts with a slash and is a PROTOCOL-RELATIVE ABSOLUTE
+   * URL, so `startsWith('/')` alone is an open redirect: a link mailed to a
+   * customer could bounce them off-site the moment they signed in. One slash,
+   * not two, and no backslash either — browsers normalise `/\` to `//`.
+   */
+  const redirectTo = next && /^\/(?![/\\])/.test(next) ? next : '/';
 
   return (
     <div className="mx-auto max-w-sm py-8">

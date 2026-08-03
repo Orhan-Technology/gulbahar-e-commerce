@@ -1,12 +1,28 @@
 'use client';
 
 import * as React from 'react';
+import { useLocale } from 'next-intl';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
+import { localeDirection } from '@/lib/i18n/routing';
 import { cn } from '@/lib/utils';
 
-const Select = SelectPrimitive.Root;
+/**
+ * Same reason as components/ui/tabs.tsx: Radix stamps its own `dir="ltr"` onto
+ * the DOM, which outranks the `dir` on <html>, so a select trigger and its
+ * dropdown laid themselves out left-to-right inside an RTL page — chevron on
+ * the wrong edge, checkmark on the wrong side of the option. Defaulting from
+ * the locale fixes every select at once; an explicit `dir` still wins.
+ */
+const Select = ({
+  dir,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof SelectPrimitive.Root>) => {
+  const locale = useLocale();
+  return <SelectPrimitive.Root dir={dir ?? localeDirection(locale)} {...props} />;
+};
+Select.displayName = 'Select';
 
 const SelectGroup = SelectPrimitive.Group;
 

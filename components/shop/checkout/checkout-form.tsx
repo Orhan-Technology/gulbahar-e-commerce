@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { Banknote, MapPin, Plus, Smartphone, Store } from 'lucide-react';
+import { Banknote, Clock, MapPin, Plus, Smartphone, Store } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,14 @@ export type CheckoutPickupShop = {
 
 export type CheckoutFormProps = {
   addresses: CheckoutAddress[];
+  /**
+   * Which saved address opens selected (finding #14).
+   *
+   * Derived on the server from the customer's most recent delivered-to address
+   * — see lib/db/queries/account.ts. Null when there is no evidence, and the
+   * form falls back to the first saved row exactly as before.
+   */
+  defaultAddressId: string | null;
   districts: string[];
   pickupShops: CheckoutPickupShop[];
   /** How long a shop holds a reserve-and-collect order (Prompt C11). */
@@ -75,6 +83,7 @@ export type CheckoutFormProps = {
  */
 export function CheckoutForm({
   addresses,
+  defaultAddressId,
   districts,
   pickupShops,
   holdHours,
@@ -90,7 +99,9 @@ export function CheckoutForm({
 
   const [fulfillment, setFulfillment] = React.useState<'delivery' | 'pickup'>('delivery');
   const [paymentMethod, setPaymentMethod] = React.useState<'cod' | 'hesabpay'>('cod');
-  const [addressId, setAddressId] = React.useState(addresses[0]?.id ?? '');
+  const [addressId, setAddressId] = React.useState(
+    defaultAddressId ?? addresses[0]?.id ?? '',
+  );
   const [showNewAddress, setShowNewAddress] = React.useState(addresses.length === 0);
   const [payOpen, setPayOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
@@ -114,6 +125,28 @@ export function CheckoutForm({
     fulfillment === 'delivery' && cartTotal < freeDeliveryThreshold ? deliveryFee : 0;
   const grandTotal = cartTotal + effectiveFee;
   const freeDeliveryGap = freeDeliveryThreshold - cartTotal;
+
+  /*
+   * WHERE THIS ORDER IS GOING, in one sentence, for the recap beside the button.
+   *
+   * Null when a delivery order has no address chosen yet — the recap then says
+   * nothing about a destination rather than inventing one, and `onPlaceOrder`
+   * is the control that refuses.
+   */
+  const selectedAddress = addresses.find((address) => address.id === addressId) ?? null;
+  const destination =
+    fulfillment === 'delivery'
+      ? selectedAddress
+        ? t('recapDelivery', {
+            address: `${selectedAddress.label} — ${selectedAddress.district}، ${selectedAddress.streetDetails}`,
+          })
+        : null
+      : // `n` pluralises, `count` renders with locale digits — the same pair the
+        // account hub's section counts use.
+        t('recapPickup', {
+          n: pickupShops.length,
+          count: formatNumber(pickupShops.length, locale),
+        });
 
   function submitOrder() {
     idempotencyKey.current ??= crypto.randomUUID();
@@ -245,6 +278,17 @@ export function CheckoutForm({
                   <span className="text-muted-foreground mt-0.5 block text-xs">
                     {t(`${option}Hint`)}
                   </span>
+                  {/*
+                    WHEN IT ARRIVES, on the control where the choice is made.
+                    "۱ تا ۲ روز کاری" existed only in the footer's marketing
+                    strip — three screens away from the one decision it informs
+                    — so the customer picking between a courier and a walk up
+                    two flights of stairs had no idea what they were trading.
+                  */}
+                  <span className="text-primary-700 mt-1 flex items-center gap-1 text-xs font-medium">
+                    <Clock className="h-3 w-3 shrink-0" aria-hidden />
+                    {t(option === 'delivery' ? 'deliveryEta' : 'pickupEta')}
+                  </span>
                 </span>
               </label>
             ))}
@@ -283,7 +327,18 @@ export function CheckoutForm({
                   >
                     <RadioGroupItem value={address.id} className="mt-0.5" />
                     <span className="min-w-0 text-sm">
-                      <span className="font-medium">{address.label}</span>
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-medium">{address.label}</span>
+                        {/* SAYS WHY IT IS PRESELECTED. A radio that arrives
+                            already chosen with no explanation is a decision
+                            somebody else made; naming it as the last place they
+                            had something delivered makes it checkable. */}
+                        {address.id === defaultAddressId && (
+                          <span className="rounded-pill bg-primary-50 text-primary-700 text-2xs px-2 py-0.5 font-medium">
+                            {t('defaultAddress')}
+                          </span>
+                        )}
+                      </span>
                       <span className="text-muted-foreground block text-xs">
                         {address.district} — {address.streetDetails}
                       </span>
@@ -335,7 +390,21 @@ export function CheckoutForm({
 
                 <div className="space-y-1.5">
                   <Label htmlFor="addrPhone">{t('phone')}</Label>
-                  <Input id="addrPhone" name="phone" required dir="ltr" placeholder="0700000000" />
+                  {/* `tel` + numeric keypad: this is the field a courier will
+                      ring, and it was opening the full QWERTY keyboard on a
+                      phone — ten digits typed through a letter keyboard, on the
+                      screen where a typo means an undeliverable parcel. The
+                      sign-in form has always got this right; these two had not. */}
+                  <Input
+                    id="addrPhone"
+                    name="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel"
+                    required
+                    dir="ltr"
+                    placeholder="0700000000"
+                  />
                 </div>
 
                 <Button type="submit" size="sm">
@@ -493,11 +562,38 @@ export function CheckoutForm({
             </p>
           )}
 
+          {/*
+            THE RECAP, immediately above the press (finding #6).
+
+            This is the highest-anxiety button in the product, and until now the
+            two facts it commits to — where it goes and how it gets paid for —
+            were two screens further up and never restated. Scrolling back to
+            check means leaving the button, which is exactly when baskets get
+            abandoned.
+
+            Two ROWS rather than one «تحویل به: … · پرداخت …» line, and not only
+            for width: a middle dot immediately before a Persian numeral renders
+            as «۰» in Vazirmatn, and an address ending in a house number would
+            have picked up a leading zero from the separator.
+          */}
+          <Recap
+            className="rounded-control border-border space-y-1.5 border bg-neutral-50 p-3 text-xs"
+            fulfillment={fulfillment}
+            destination={destination}
+            method={paymentMethod}
+            // The radio's own label repeats the word «پرداخت» — «پرداخت:
+            // پرداخت در وقت تحویل» — so the recap has its own shorter noun for
+            // each method.
+            payment={t('recapPayment', { method: t(`recapMethod.${paymentMethod}` as never) })}
+          />
+
+          {/* Below `lg` the sticky bar at the foot of the screen owns this
+              press, so the same button is never on screen twice. */}
           <Button
             type="button"
             onClick={onPlaceOrder}
             size="lg"
-            className="w-full"
+            className="w-full max-lg:hidden"
             disabled={pending}
           >
             {pending
@@ -507,6 +603,59 @@ export function CheckoutForm({
                 : t('placeOrder')}
           </Button>
         </section>
+
+        {/*
+          THE STICKY PRIMARY ACTION on phones and tablets (finding #5).
+
+          Checkout is one long column — fulfilment, address, payment, the whole
+          basket, then the totals — so «ثبت سفارش» sat past the fold on every
+          order and a long way past it on a multi-shop one. The bar carries the
+          payable total and the same recap the inline button gets, condensed:
+          a commit button that does not say what it commits to is the wrong half
+          of the decision, and that is more true when it floats.
+
+          `sticky`, not `fixed` — StretchScroll's overscroll transform becomes
+          the containing block for a fixed descendant and throws it out of the
+          viewport for the length of the gesture (see the product page's bar).
+          `bottom-16` clears the mobile tab bar; from `md` there is none.
+
+          It carries no transition, so `prefers-reduced-motion` has nothing to
+          gate here and the behaviour is identical for every reader — the rule
+          is that reduced motion removes the ANIMATION, never the feature.
+        */}
+        <div className="border-border bg-background/95 sticky bottom-16 z-30 -mx-4 space-y-2 border-t p-3 backdrop-blur-md sm:-mx-7 md:bottom-0 lg:hidden">
+          <Recap
+            className="text-2xs space-y-0.5"
+            fulfillment={fulfillment}
+            destination={destination}
+            method={paymentMethod}
+            // The radio's own label repeats the word «پرداخت» — «پرداخت:
+            // پرداخت در وقت تحویل» — so the recap has its own shorter noun for
+            // each method.
+            payment={t('recapPayment', { method: t(`recapMethod.${paymentMethod}` as never) })}
+          />
+          <div className="flex items-center gap-3">
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-2xs">{t('grandTotal')}</p>
+              <p className="text-base font-bold tabular-nums">
+                {formatCurrency(grandTotal, locale)}
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={onPlaceOrder}
+              size="lg"
+              className="ms-auto shrink-0"
+              disabled={pending}
+            >
+              {pending
+                ? t('placing')
+                : paymentMethod === 'hesabpay'
+                  ? t('payAndPlace')
+                  : t('placeOrder')}
+            </Button>
+          </div>
+        </div>
       </div>
 
       <HesabPaySheet
@@ -519,5 +668,52 @@ export function CheckoutForm({
         }}
       />
     </>
+  );
+}
+
+/**
+ * The two commitments restated next to the button that makes them (finding #6).
+ *
+ * Rendered twice — inline above the desktop button and inside the mobile sticky
+ * bar — from one component, so the sentence a customer reads before pressing
+ * cannot differ between viewports. Each fact is its own ROW with its own icon:
+ * a single line joined by a separator would put a punctuation mark against a
+ * Persian numeral, which Vazirmatn renders as a leading zero.
+ */
+function Recap({
+  className,
+  fulfillment,
+  destination,
+  method,
+  payment,
+}: {
+  className?: string;
+  fulfillment: 'delivery' | 'pickup';
+  /** Null while a delivery order still has no address chosen. */
+  destination: string | null;
+  method: 'cod' | 'hesabpay';
+  payment: string;
+}) {
+  return (
+    <div className={cn('text-muted-foreground', className)}>
+      {destination && (
+        <p className="flex items-start gap-1.5">
+          {fulfillment === 'delivery' ? (
+            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          ) : (
+            <Store className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+          )}
+          <span className="clamp-2 min-w-0">{destination}</span>
+        </p>
+      )}
+      <p className="flex items-center gap-1.5">
+        {method === 'cod' ? (
+          <Banknote className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        ) : (
+          <Smartphone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+        )}
+        <span className="clamp-1 min-w-0">{payment}</span>
+      </p>
+    </div>
   );
 }

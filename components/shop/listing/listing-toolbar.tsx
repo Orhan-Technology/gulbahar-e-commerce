@@ -42,12 +42,27 @@ import { cn } from '@/lib/utils';
  */
 export function ListingToolbar({
   total,
+  shown,
   facets,
   sortKey = 'sort',
   defaultSort = 'popularity',
 }: {
   /** Result count for this query — the number the sheet's button promises. */
   total: number;
+  /**
+   * How many cards are actually on the page right now.
+   *
+   * A LISTING MUST STATE ITS OWN EXTENT. With sixty-nine matches and twenty-four
+   * rendered, "۶۹ محصول" over an unpaginated wall is a number the reader cannot
+   * reconcile with what they can see — they scroll to the end and conclude the
+   * page is broken rather than that there is a button. The remainder was stated
+   * only at the very bottom, on the load-more button, which is precisely where
+   * somebody deciding whether to keep scrolling is not looking.
+   *
+   * Equal to `total` on a listing that fits in one page, and the line then
+   * collapses back to the plain count — "showing 9 of 9" is noise.
+   */
+  shown: number;
   /** Omit to render a toolbar with no filter controls (the offers page). */
   facets?: FacetOptions;
   /** Some surfaces sort on their own key; search uses `sort` like the rest. */
@@ -81,11 +96,16 @@ export function ListingToolbar({
   return (
     <div className="bg-background/95 sticky top-[var(--sticky-offset)] z-20 -mx-4 flex flex-wrap items-center gap-3 px-4 py-3 backdrop-blur-md sm:-mx-1 sm:px-1">
       <p className="text-muted-foreground text-sm">
-        {t('resultCount', {
-          // `n` pluralises, `count` renders — see lib/db/queries/dashboard.ts.
-          n: total,
-          count: formatNumber(total, locale),
-        })}
+        {shown < total
+          ? t('showingOf', {
+              shown: formatNumber(shown, locale),
+              count: formatNumber(total, locale),
+            })
+          : t('resultCount', {
+              // `n` pluralises, `count` renders — see lib/db/queries/dashboard.ts.
+              n: total,
+              count: formatNumber(total, locale),
+            })}
       </p>
 
       <div className="ms-auto flex items-center gap-2">

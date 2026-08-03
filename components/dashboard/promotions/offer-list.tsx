@@ -121,20 +121,45 @@ function OfferCard({
     <li className="rounded-card border-border bg-card space-y-2 border p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="clamp-1 text-sm font-medium">{offer.name}</p>
-          <p className="text-muted-foreground flex items-center gap-1.5 text-xs">
+          {/* The shopkeeper's own name for the offer — user-generated, so it
+              sets its own base direction. */}
+          <p className="clamp-1 text-sm font-medium" dir="auto">
+            {offer.name}
+          </p>
+
+          {/*
+            EACH FRAGMENT ISOLATED, for the reason spelled out on the campaign
+            card (campaign-list.tsx). «۲۵٪ تخفیف · ۱ محصول» in one RTL text run
+            rendered as «تخفیف ۱ محصول ۲۵٪» with the percent sign orphaned onto
+            the next line and the middle dot swallowed: three numeric runs
+            separated by neutrals let the bidi algorithm resolve across the
+            separators, and the card ended up advertising a discount it does not
+            offer. `<bdi>` is the element for a run whose direction must not
+            leak into its neighbours; the separator is its own span so nothing
+            is resolved through it.
+          */}
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
             {offer.type === 'percent' ? (
-              <Percent className="h-3 w-3" aria-hidden />
+              <Percent className="h-3 w-3 shrink-0" aria-hidden />
             ) : (
-              <Tag className="h-3 w-3" aria-hidden />
+              <Tag className="h-3 w-3 shrink-0" aria-hidden />
             )}
-            {offer.type === 'percent'
-              ? t('percentOff', { value: formatNumber(offer.value, locale) })
-              : t('fixedOff', { value: formatCurrency(offer.value, locale) })}
-            {' · '}
-            {offer.scope === 'shop'
-              ? t('wholeShop')
-              : t('productScope', { count: formatNumber(offer.productCount ?? 0, locale) })}
+            <bdi>
+              {offer.type === 'percent'
+                ? t('percentOff', { value: formatNumber(offer.value, locale) })
+                : t('fixedOff', { value: formatCurrency(offer.value, locale) })}
+            </bdi>
+            <span aria-hidden>·</span>
+            <bdi>
+              {offer.scope === 'shop'
+                ? t('wholeShop')
+                : t('productScope', {
+                    // `n` selects the plural form, `count` renders — see
+                    // dashboard.ratingCount. Without it English says "1 products".
+                    n: offer.productCount ?? 0,
+                    count: formatNumber(offer.productCount ?? 0, locale),
+                  })}
+            </bdi>
           </p>
         </div>
 
@@ -174,9 +199,14 @@ function OfferCard({
       </div>
 
       <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-        <span className="inline-flex items-center gap-1">
-          <CalendarClock className="h-3 w-3" aria-hidden />
-          {formatDate(offer.startsAt, locale)} — {formatDate(offer.endsAt, locale)}
+        {/* Same isolation, same reason: «۲۹ سرطان ۱۴۰۵ — ۱۲ اسد ۱۴۰۵» let the
+            first date's day number break off and float to the far end of the
+            line, so the card showed a range that started nowhere. */}
+        <span className="inline-flex flex-wrap items-center gap-x-1.5">
+          <CalendarClock className="h-3 w-3 shrink-0" aria-hidden />
+          <bdi>{formatDate(offer.startsAt, locale)}</bdi>
+          <span aria-hidden>—</span>
+          <bdi>{formatDate(offer.endsAt, locale)}</bdi>
         </span>
         {/* The same countdown the storefront shows, so what the shopkeeper sees
             here is literally what the customer sees. */}

@@ -146,6 +146,7 @@ async function Headline({ locale }: { locale: string }) {
   const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
 
   return (
+    <>
     <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         variant="feature"
@@ -154,8 +155,23 @@ async function Headline({ locale }: { locale: string }) {
         format="currency"
         delta={month.delta}
         hint={
+          /*
+           * WHAT THE TILE SAYS WHEN IT IS ZERO.
+           *
+           * With no comparable stretch behind it, this used to fall back to the
+           * LIFETIME total — «مجموع تا امروز ۱٬۲۳۷٬۰۰۰» printed under a headline
+           * of ؋۰, two numbers about different periods stacked on each other.
+           * Booked value is the honest thing to put there: it is about the SAME
+           * month, and it is the reason the headline is not really zero.
+           */
           month.delta === null
-            ? t('lifetime', { amount: formatCurrency(totals.total, locale) })
+            ? month.bookedThisMonth > 0
+              ? t('bookedThisMonth', {
+                  amount: formatCurrency(month.bookedThisMonth, locale),
+                  n: month.bookedCount,
+                  count: formatNumber(month.bookedCount, locale),
+                })
+              : t('lifetime', { amount: formatCurrency(totals.total, locale) })
             : month.partial
               ? // Names the actual comparison. "vs last month" beside a
                 // part-month figure is the sentence that made the tile lie.
@@ -197,6 +213,20 @@ async function Headline({ locale }: { locale: string }) {
         })}
       />
     </dl>
+
+    {/*
+      One line naming what every tile above measures. Four money figures over
+      three different windows were previously distinguishable only by reading
+      each caption; a mall director quoting one of them out loud needs the
+      period attached to it.
+    */}
+    <p className="text-muted-foreground mt-2 text-xs">
+      {t('periodsNote', {
+        day: formatNumber(month.dayOfMonth, locale),
+        lifetime: formatCurrency(totals.total, locale),
+      })}
+    </p>
+    </>
   );
 }
 
@@ -282,7 +312,16 @@ async function SlotInventory({ locale }: { locale: string }) {
               <th className="px-5 py-3 text-start font-semibold">{t('colOccupied')}</th>
               <th className="px-5 py-3 text-start font-semibold">{t('colCurrentShops')}</th>
               <th className="px-5 py-3 text-end font-semibold">{t('colWeeklyPrice')}</th>
-              <th className="px-5 py-3 text-end font-semibold">{t('colMonthRevenue')}</th>
+              {/*
+                TWO MONEY COLUMNS, because one of them is zero for the first
+                weeks of every month and on its own it reads as "this slot earns
+                nothing". Billed-this-month is campaigns INVOICED since the 1st
+                (a weekly fee is charged up front); running-this-month is every
+                sold campaign whose window touches the month, which is what is
+                actually on the walls. The header says which is which.
+              */}
+              <th className="px-5 py-3 text-end font-semibold">{t('colBilledMonth')}</th>
+              <th className="px-5 py-3 text-end font-semibold">{t('colRunningMonth')}</th>
             </tr>
           </thead>
           <tbody className="divide-border divide-y">
@@ -322,8 +361,11 @@ async function SlotInventory({ locale }: { locale: string }) {
                   <td className="px-5 py-4 text-end tabular-nums">
                     {formatCurrency(slot.pricePerWeek, locale)}
                   </td>
-                  <td className="px-5 py-4 text-end font-bold tabular-nums">
+                  <td className="px-5 py-4 text-end tabular-nums text-neutral-500">
                     {formatCurrency(slot.monthRevenue, locale)}
+                  </td>
+                  <td className="px-5 py-4 text-end font-bold tabular-nums">
+                    {formatCurrency(slot.monthRunningRevenue, locale)}
                   </td>
                 </tr>
               );

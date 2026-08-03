@@ -3,30 +3,30 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { LayoutGrid, SearchX, Store } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
-import { SectionHeader } from '@/components/custom/section-header';
 import { FacetControls } from '@/components/shop/listing/facet-controls';
+import { PopularFallback } from '@/components/shop/listing/popular-fallback';
 import {
   ProductListing,
   ProductListingSkeleton,
   type ListingSearchParams,
 } from '@/components/shop/listing/product-listing';
-import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
+import { ProductGridSkeleton } from '@/components/shop/product-grid';
 import { HeaderSearch } from '@/components/shop/search/header-search';
+import { SearchDiscovery } from '@/components/shop/search/search-discovery';
 import { ShopGrid, ShopGridSkeleton } from '@/components/shop/shop-grid';
-import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
-import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { filterFacets } from '@/lib/db/queries/listing';
-import { trendingProducts } from '@/lib/db/queries/products';
 import { categoryTree } from '@/lib/db/queries/shops';
 import {
   searchCategories,
   searchCorrection,
   searchShops,
   searchTermMatchCounts,
+  trendingSearches,
 } from '@/lib/db/queries/search';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { cn } from '@/lib/utils';
 
 /**
  * Search results (PRD §5.1, §5.2). Products by default with a tab for shops.
@@ -97,12 +97,20 @@ export default async function SearchPage({
       )}
 
       {!term ? (
+        /*
+          THE EMPTY SEARCH PAGE IS A STARTING POINT, not a fallback grid. What
+          this reader looked for before and what the mall is looking for now are
+          the two shortest routes to a query, and both were locked inside the
+          header field's dropdown — invisible on the one screen that exists to
+          begin a search. The popular grid stays underneath as the browse-y
+          answer for someone with neither.
+        */
         <Suspense fallback={<ProductGridSkeleton count={10} />}>
-          <PopularFallback locale={locale} heading={t('popularTitle')} />
+          <SearchStart locale={locale} />
         </Suspense>
       ) : activeTab === 'shops' ? (
         <Suspense fallback={<ShopGridSkeleton />}>
-          <ShopResults term={term} />
+          <ShopResults term={term} locale={locale} />
         </Suspense>
       ) : (
         /*
@@ -111,10 +119,25 @@ export default async function SearchPage({
           own query and no filters at all — which meant the one place a shopper
           most often lands was the one place they could not narrow.
         */
-        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-          <aside className="hidden lg:block">
-            <FacetControls {...facetOptions} />
-          </aside>
+        /*
+          NO FILTER RAIL OVER A ZERO-RESULT SEARCH. Twenty facet groups beside
+          an empty grid is a form asking somebody to narrow nothing — and every
+          one of its rows reads «۰», which is the page repeating its own bad
+          news two dozen times. `facets.total` is the count under every current
+          narrowing, computed alongside the facet counts themselves, so the
+          decision costs no extra query and the grid takes the full width.
+        */
+        <div
+          className={cn(
+            'grid gap-6',
+            (facets.total ?? 0) > 0 && 'lg:grid-cols-[240px_1fr]',
+          )}
+        >
+          {(facets.total ?? 0) > 0 && (
+            <aside className="hidden lg:block">
+              <FacetControls {...facetOptions} />
+            </aside>
+          )}
           <div className="min-w-0 space-y-4">
             {/* ONE boundary around the notice and the grid. The notice sits
                 above the results, so resolving it separately would push the
@@ -242,7 +265,10 @@ async function ZeroResultRecovery({ term, locale }: { term: string; locale: stri
                   className="rounded-pill border-border bg-card hover:border-primary hover:text-primary inline-flex items-center gap-2 border px-3 py-2 text-sm font-medium transition-colors duration-150"
                 >
                   <Store className="h-4 w-4 shrink-0" aria-hidden />
-                  <span>{pickLocale(shop.name, locale)}</span>
+                  {/* `dir="auto"`: the shop's name is the tenant's own text, and
+                      a Latin one inside this RTL chip put the count on the
+                      wrong side of it. */}
+                  <span dir="auto">{pickLocale(shop.name, locale)}</span>
                   <span className="text-2xs text-neutral-500 tabular-nums">
                     {t('categoryHasCount', {
                       count: formatNumber(shop.productCount, locale),
@@ -255,44 +281,86 @@ async function ZeroResultRecovery({ term, locale }: { term: string; locale: stri
         </section>
       )}
 
-      <PopularFallback locale={locale} heading={t('popularTitle')} />
+      <PopularFallback />
     </div>
   );
 }
 
-async function ShopResults({ term }: { term: string }) {
+/**
+ * The shops tab (PRD §5.1).
+ *
+ * IT STATES ITS OWN SIZE AND POINTS AT THE OTHER TAB. A bare grid of shop cards
+ * answered neither "how many" nor "is the thing I want on the other tab" — and
+ * the products tab is where a term like «کفش» has most of its answers, so a
+ * reader who lands here on a two-shop match has no idea they are one tap from
+ * six products. The hint is a link, and it carries the term.
+ */
+async function ShopResults({ term, locale }: { term: string; locale: string }) {
   // The clock is read here, on the server: ShopGrid takes `now` as a prop
   // rather than calling new Date() itself, which React 19 forbids during render.
   const now = new Date();
   const t = await getTranslations('search');
-  const results = await searchShops(term, { limit: 24 });
+  const [results, productMatches] = await Promise.all([
+    searchShops(term, { limit: 24 }),
+    searchTermMatchCounts(term),
+  ]);
+
+  const crossTab =
+    productMatches.total > 0 ? (
+      <Link
+        href={`/search?q=${encodeURIComponent(term)}`}
+        className="text-primary text-sm font-semibold hover:underline"
+      >
+        {t('alsoInProducts', { count: formatNumber(productMatches.total, locale) })}
+      </Link>
+    ) : null;
 
   if (results.length === 0) {
     return (
-      <EmptyState
-        illustration={<SearchX className="h-7 w-7" />}
-        title={t('noShopsTitle', { term })}
-        description={t('noShopsBody')}
-        action={{ label: t('allShops'), href: '/shops' }}
-      />
+      <div className="space-y-4">
+        <EmptyState
+          illustration={<SearchX className="h-7 w-7" />}
+          title={t('noShopsTitle', { term })}
+          description={t('noShopsBody')}
+          action={{ label: t('allShops'), href: '/shops' }}
+        />
+        {crossTab && <p className="text-center">{crossTab}</p>}
+      </div>
     );
   }
 
-  return <ShopGrid items={results} now={now} />;
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <p className="text-muted-foreground text-sm">
+          {t('shopResultCount', {
+            n: results.length,
+            count: formatNumber(results.length, locale),
+          })}
+        </p>
+        {crossTab}
+      </div>
+      <ShopGrid items={results} now={now} />
+    </div>
+  );
 }
 
-/** Popular products, shown for an empty query and beneath a zero-result search. */
-async function PopularFallback({ locale, heading }: { locale: string; heading: string }) {
-  const [items, user] = await Promise.all([trendingProducts(locale, 10), currentUser()]);
-  const saved = await wishlistedProductIds(
-    user?.id,
-    items.map((item) => item.id),
-  );
+/**
+ * The empty search page: the reader's own history, the mall's live trends, and
+ * the popular grid underneath.
+ *
+ * The trend list is read HERE rather than in the browser — it is an aggregate
+ * over everyone's searches, and a client that can ask for it is a client that
+ * asks for it on every page load nobody wanted (see the same note on the header
+ * field's dropdown).
+ */
+async function SearchStart({ locale }: { locale: string }) {
+  const trends = await trendingSearches(locale, { limit: 10 });
 
   return (
-    <section className="space-y-3">
-      <SectionHeader title={heading} href="/products" />
-      <ProductGrid items={items} savedIds={saved} />
-    </section>
+    <div className="space-y-8">
+      <SearchDiscovery trending={trends.map((row) => row.label)} />
+      <PopularFallback layout="grid" />
+    </div>
   );
 }

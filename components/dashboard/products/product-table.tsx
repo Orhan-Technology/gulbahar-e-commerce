@@ -19,11 +19,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { PriceDisplay } from '@/components/custom/price-display';
-import {
-  archiveProduct,
-  bulkSetProductStatus,
-  restoreProduct,
-} from '@/lib/actions/shop-products';
+import { archiveProduct, bulkSetProductStatus, restoreProduct } from '@/lib/actions/shop-products';
 import { StockEditor } from '@/components/dashboard/products/stock-editor';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
@@ -112,6 +108,8 @@ export function ProductTable({
       }
       toast.success(
         t(status === 'published' ? 'bulkPublished' : 'bulkUnpublished', {
+          // `n` selects, `count` renders — see dashboard.ratingCount.
+          n: result.data.updated,
           count: formatNumber(result.data.updated, locale),
         }),
       );
@@ -191,7 +189,9 @@ export function ProductTable({
 
             <div className="min-w-0 flex-1 space-y-1.5">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="clamp-1 text-sm font-medium">{row.title}</span>
+                <span className="clamp-1 text-sm font-medium" dir="auto">
+                  {row.title}
+                </span>
                 <StatusBadge status={row.status} />
                 {row.stock <= 0 ? (
                   <Badge variant="destructive">{t('outOfStock')}</Badge>
@@ -203,7 +203,9 @@ export function ProductTable({
               </div>
 
               {row.categoryName && (
-                <p className="text-muted-foreground text-xs">{row.categoryName}</p>
+                <p className="text-muted-foreground text-xs" dir="auto">
+                  {row.categoryName}
+                </p>
               )}
 
               {/*
@@ -214,7 +216,8 @@ export function ProductTable({
               {row.status === 'unpublished' && row.unpublishReason && (
                 <p className="rounded-control border-danger-border bg-danger-bg text-danger px-2 py-1.5 text-xs">
                   <span className="font-bold">{t('unpublishReasonLabel')}</span>{' '}
-                  {row.unpublishReason}
+                  {/* Admin wrote this, in whichever language they chose. */}
+                  <bdi>{row.unpublishReason}</bdi>
                 </p>
               )}
 
@@ -362,5 +365,3 @@ function StatusBadge({ status }: { status: ShopProductRow['status'] }) {
           : 'outline';
   return <Badge variant={variant}>{t(status)}</Badge>;
 }
-
-

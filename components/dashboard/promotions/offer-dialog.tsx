@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { NumberField } from '@/components/dashboard/number-field';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { saveOffer } from '@/lib/actions/shop-promotions';
 import { digitsOnly } from '@/lib/digits';
@@ -208,12 +209,14 @@ export function OfferDialog({
             <Label htmlFor="offer-value">
               {draft.type === 'percent' ? t('valuePercent') : t('valueFixed')}
             </Label>
-            <Input
+            {/* Persian digits on blur (number-field.tsx): this field sits a
+                few pixels from a «۲۵٪ تخفیف» preview, and the two disagreeing
+                about which script a number is written in is exactly where a
+                zero gets miscounted. */}
+            <NumberField
               id="offer-value"
-              inputMode="numeric"
-              dir="ltr"
               value={draft.value}
-              onChange={(event) => set('value', digitsOnly(event.target.value))}
+              onChange={(next) => set('value', next)}
             />
           </div>
 

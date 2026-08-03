@@ -10,6 +10,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { accountProfile } from '@/lib/db/queries/account';
 import { notificationPreferences } from '@/lib/db/queries/notifications';
 import { siteSettings } from '@/lib/db/queries/settings';
+import { CUSTOMER_CATEGORIES, MUTABLE_CATEGORIES } from '@/lib/notification-links';
 
 /**
  * Settings — language, and an honest account of the rest (Prompts A2, A3).
@@ -75,7 +76,18 @@ export default async function AccountSettingsPage({
           the other is honest about not existing yet.
         */}
         <div className="border-border mt-3 border-t pt-1">
-          <NotificationPreferences preferences={preferences} />
+          {/*
+            A CUSTOMER'S list, not the full enum (finding #18). `promotions`
+            covers decisions on the advertising SLOTS a shop reserved — its own
+            hint reads «مخصوص دکان‌داران» — so on a customer's settings screen
+            it is a switch that can only mute messages that will never arrive.
+            A shopkeeper or admin reading their own account keeps it, because
+            for them it is the one that matters.
+          */}
+          <NotificationPreferences
+            preferences={preferences}
+            categories={session.role === 'customer' ? CUSTOMER_CATEGORIES : MUTABLE_CATEGORIES}
+          />
         </div>
 
         <UnavailableCard

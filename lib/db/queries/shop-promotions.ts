@@ -259,6 +259,35 @@ export async function slotInventory(shopId: string, now: Date = new Date()) {
           and c.status in ('requested', 'approved', 'active')
           and c.ends_at >= ${at}::timestamptz
       )`,
+      /*
+       * WHAT A WEEK IN THIS SLOT HAS BEEN WORTH, IN CUSTOMERS (Prompt C15).
+       *
+       * The card sold placement on price and capacity — «؋۲٬۵۰۰ در هفته · ۲ از
+       * ۳ جای خالی» — which tells a shopkeeper what it costs and nothing about
+       * what it does. Impressions would have been the industry answer and the
+       * wrong one for this reader; CLICKS are people who arrived, which is the
+       * unit a shopkeeper counts in.
+       *
+       * Averaged per WEEK over every campaign the mall has run in this slot in
+       * the last ninety days, so it is a real observation rather than a
+       * promise. A slot nobody has bought yet returns 0 and the card says
+       * nothing rather than inventing a number.
+       */
+      weeklyVisitors: sql<number>`(
+        select coalesce(round(
+          sum(c.clicks)::numeric / nullif(sum(
+            greatest(
+              1,
+              extract(epoch from (least(c.ends_at, ${at}::timestamptz) - c.starts_at)) / 604800
+            )
+          ), 0)
+        )::int, 0)
+        from campaigns c
+        where c.slot_id = promotion_slots.id
+          and c.status in ('active', 'ended')
+          and c.ends_at >= ${at}::timestamptz - interval '90 days'
+          and c.starts_at <= ${at}::timestamptz
+      )`,
     })
     .from(promotionSlots)
     .orderBy(desc(promotionSlots.pricePerWeek));

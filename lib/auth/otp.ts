@@ -42,7 +42,27 @@ function safeEqualHex(a: string, b: string): boolean {
 }
 
 export type RequestOtpResult =
-  | { ok: true; expiresAt: Date; phone: string }
+  | {
+      ok: true;
+      expiresAt: Date;
+      phone: string;
+      /**
+       * Whether the account behind this number already carries a real name.
+       *
+       * Drives ONE thing: whether the verify step still asks for a name. A
+       * returning customer being asked their name every time they sign in reads
+       * as an account the shop does not remember, and the value is discarded
+       * server-side anyway (verifyOtp only uses it when it CREATES the row).
+       *
+       * It does leak that the number is known, which the request step is
+       * otherwise careful not to do. Accepted deliberately: the alternative is
+       * a field that exists purely to be ignored, and in this build the demo
+       * accounts' numbers are printed in the runbook regardless. A production
+       * build should move the name question to AFTER a successful verification,
+       * where the answer is already public to the caller.
+       */
+      hasName: boolean;
+    }
   | { ok: false; error: 'invalid_phone' | 'too_many_requests' };
 
 /**
@@ -107,7 +127,14 @@ export async function requestOtp(rawPhone: string): Promise<RequestOtpResult> {
     values: { code, phone },
   });
 
-  return { ok: true, expiresAt, phone };
+  /*
+   * A user row whose `name` was never supplied stores the PHONE as the name
+   * (see verifyOtp below), so "has a name" means "has one that is not just the
+   * number again" — otherwise every OTP-created account would look named.
+   */
+  const hasName = Boolean(existing && existing.name.trim() && existing.name.trim() !== phone);
+
+  return { ok: true, expiresAt, phone, hasName };
 }
 
 export type VerifyOtpResult =

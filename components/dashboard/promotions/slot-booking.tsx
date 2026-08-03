@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
@@ -29,6 +30,8 @@ export type SlotCard = {
   capacity: number;
   available: number;
   pricePerWeek: number;
+  /** Average clicks per week in this slot across the mall — see the query. */
+  weeklyVisitors: number;
   /** Show the product picker at all. */
   acceptsProduct: boolean;
   /** Block submission without one — the hero accepts a product but does not need it. */
@@ -62,49 +65,86 @@ export function SlotGrid({
   const locale = useLocale();
   const [booking, setBooking] = React.useState<SlotCard | null>(null);
 
+  // The one card that carries the primary treatment: the dearest slot with a
+  // place free, which is the order `slotInventory` already returns them in.
+  const leadSlotId = slots.find((slot) => slot.available > 0)?.id ?? null;
+
   return (
     <>
+      {/*
+        THE CARD IS THE BUTTON (Prompt C15).
+        Five slots each ended in the same full-width filled blue «گرفتن جایگاه»,
+        so the screen had five primary actions and therefore none — a wall of
+        identical buttons is read as a pattern, not as a set of choices. The
+        card itself is now the tap target (bigger than any button on it), and
+        exactly ONE of them is emphasised: the first slot with a place free,
+        which is the only one a tap can currently succeed on.
+      */}
       <ul className="grid gap-3 sm:grid-cols-2">
         {slots.map((slot) => {
           const soldOut = slot.available <= 0;
+          const lead = slot.id === leadSlotId;
           return (
-            <li
-              key={slot.id}
-              className="rounded-card border-border bg-card flex flex-col gap-2 border p-4"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <h3 className="text-sm font-bold">{slot.name}</h3>
-                {slot.mine > 0 && (
-                  <Badge variant="success">
-                    <Check className="h-3 w-3" aria-hidden />
-                    {t('yours')}
-                  </Badge>
-                )}
-              </div>
-
-              <p className="text-foreground text-base font-bold">
-                {t('perWeek', { price: formatCurrency(slot.pricePerWeek, locale) })}
-              </p>
-
-              <p className="text-muted-foreground text-xs">
-                {soldOut
-                  ? t('soldOut')
-                  : t('availability', {
-                      available: formatNumber(slot.available, locale),
-                      capacity: formatNumber(slot.capacity, locale),
-                    })}
-              </p>
-
-              <Button
-                size="sm"
-                variant={soldOut ? 'outline' : 'default'}
+            <li key={slot.id}>
+              <button
+                type="button"
                 disabled={soldOut}
                 onClick={() => setBooking(slot)}
-                className="mt-auto"
+                className={cn(
+                  'rounded-card flex h-full w-full flex-col gap-2 border p-4 text-start transition-[background-color,border-color] duration-150',
+                  soldOut
+                    ? 'border-border bg-neutral-50 opacity-70'
+                    : lead
+                      ? 'border-primary bg-primary-50 hover:bg-primary-100'
+                      : 'border-border bg-card hover:border-primary',
+                )}
               >
-                <TicketPlus />
-                {t('book')}
-              </Button>
+                <span className="flex w-full items-start justify-between gap-2">
+                  <span className="text-sm font-bold" dir="auto">
+                    {slot.name}
+                  </span>
+                  {slot.mine > 0 && (
+                    <Badge variant="success">
+                      <Check className="h-3 w-3" aria-hidden />
+                      {t('yours')}
+                    </Badge>
+                  )}
+                </span>
+
+                <span className="text-foreground text-base font-bold">
+                  {t('perWeek', { price: formatCurrency(slot.pricePerWeek, locale) })}
+                </span>
+
+                {/* What the money buys, in people rather than in impressions. */}
+                {slot.weeklyVisitors > 0 && (
+                  <span className="text-xs font-medium text-neutral-700">
+                    {t('weeklyVisitors', {
+                      count: formatNumber(slot.weeklyVisitors, locale),
+                    })}
+                  </span>
+                )}
+
+                <span className="text-muted-foreground text-xs">
+                  {soldOut
+                    ? t('soldOut')
+                    : t('availability', {
+                        available: formatNumber(slot.available, locale),
+                        capacity: formatNumber(slot.capacity, locale),
+                      })}
+                </span>
+
+                {!soldOut && (
+                  <span
+                    className={cn(
+                      'mt-auto inline-flex items-center gap-1.5 pt-1 text-xs font-semibold',
+                      lead ? 'text-primary' : 'text-neutral-600',
+                    )}
+                  >
+                    <TicketPlus className="h-3.5 w-3.5" aria-hidden />
+                    {t('book')}
+                  </span>
+                )}
+              </button>
             </li>
           );
         })}
@@ -174,7 +214,7 @@ function BookingSheet({
     <Sheet open onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{slot.name}</SheetTitle>
+          <SheetTitle dir="auto">{slot.name}</SheetTitle>
           <SheetDescription>{t('bookingIntro')}</SheetDescription>
         </SheetHeader>
 
@@ -196,7 +236,9 @@ function BookingSheet({
                           checked={productId === product.id}
                           onChange={() => setProductId(product.id)}
                         />
-                        <span className="clamp-1 flex-1">{product.title}</span>
+                        <span className="clamp-1 flex-1" dir="auto">
+                          {product.title}
+                        </span>
                         <span className="text-muted-foreground shrink-0 text-xs">
                           {formatCurrency(product.price, locale)}
                         </span>

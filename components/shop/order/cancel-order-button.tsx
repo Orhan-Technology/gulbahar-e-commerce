@@ -33,9 +33,15 @@ import { cancelOrder } from '@/lib/actions/orders';
  */
 export function CancelOrderButton({
   orderId,
+  reference,
+  total,
   className,
 }: {
   orderId: string;
+  /** The human reference, so the dialog names the order it is about to end. */
+  reference: string;
+  /** Pre-formatted by the caller — this component stays locale-free. */
+  total: string;
   className?: string;
 }) {
   const t = useTranslations('orders.cancel');
@@ -80,6 +86,24 @@ export function CancelOrderButton({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('title')}</DialogTitle>
+            {/*
+              NAMES WHAT IT DESTROYS. The dialog described the consequence
+              accurately and never said WHICH order — which on an account with
+              three live ones is a confirmation you cannot actually give. The
+              reference and the amount are the two things that identify it.
+
+              Its own row rather than interpolated into the body sentence:
+              «GC-24788 · ۹٬۲۰۰ ؋» would put a middle dot immediately before a
+              Persian numeral, and Vazirmatn renders that as a leading zero —
+              the amount you are about to cancel is the last number in the
+              product that should gain a digit.
+            */}
+            <div className="rounded-control border-border flex flex-wrap items-center justify-between gap-2 border bg-neutral-50 px-3 py-2 text-sm">
+              <span className="font-mono font-bold tabular-nums" dir="ltr">
+                {reference}
+              </span>
+              <span className="font-semibold tabular-nums">{total}</span>
+            </div>
             <DialogDescription>{t('body')}</DialogDescription>
           </DialogHeader>
           <DialogFooter>

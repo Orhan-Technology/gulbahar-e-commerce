@@ -12,6 +12,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { adminOrderList, adminOrderStatusCounts, adminShopOptions } from '@/lib/db/queries/admin';
 import { formatCurrency, formatDateTime, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { SLA_HOURS } from '@/lib/queue-sla';
 import type { OrderStatus } from '@/lib/db/schema';
 
 type Query = { status?: OrderStatus; q?: string; shop?: string; days?: string };
@@ -34,21 +35,45 @@ const STATUSES = [
 ] as const satisfies readonly OrderStatus[];
 
 /**
+ * The tone each status wears: a badge variant, plus an optional tint.
+ *
  * A `Record<OrderStatus, …>` on purpose, so a new status in the enum is a
  * COMPILE error here rather than a chip that renders unstyled. That is exactly
  * what caught this map when `cancelled` landed.
+ *
+ * ACCEPTED AND READY WERE THE SAME BLUE, and they are the two statuses an admin
+ * most often has to tell apart at a glance — "the shop has seen it" and "the
+ * customer can come and collect it" are different facts about where an order
+ * physically is. Two solid primary badges differing only by their label made
+ * the column a wall of identical chips.
+ *
+ * THE FIRST ATTEMPT AT THAT MOVED THE COLLISION RATHER THAN FIXING IT. Accepted
+ * was given the `accent` variant — and `accent` in this product is the SALE RED
+ * family (`--color-accent-600` is «THE sale red»), so «تاییدشده» rendered as
+ * pale pink on a pale-pink border, one row above «ردشده» in `destructive`'s
+ * pale red. Two chips whose difference is a few degrees of hue, on the two
+ * statuses that mean "the shop took it" and "the shop refused it" — the worst
+ * pair in the table to confuse.
+ *
+ * So accepted is a LIGHT BLUE now: same family as ready, two steps down in
+ * weight. The pair reads as one journey at two stages, which is what it is,
+ * while amber (waiting), green (done), red (refused) and grey (ended) each keep
+ * a hue of their own.
  */
 const STATUS_BADGE: Record<
   OrderStatus,
-  'default' | 'success' | 'warning' | 'secondary' | 'destructive'
+  {
+    variant: 'default' | 'outline' | 'success' | 'warning' | 'secondary' | 'destructive';
+    className?: string;
+  }
 > = {
-  placed: 'warning',
-  accepted: 'default',
-  ready: 'default',
-  fulfilled: 'success',
-  rejected: 'destructive',
+  placed: { variant: 'warning' },
+  accepted: { variant: 'outline', className: 'border-primary-200 bg-primary-50 text-primary-700' },
+  ready: { variant: 'default' },
+  fulfilled: { variant: 'success' },
+  rejected: { variant: 'destructive' },
   // Ended rather than refused — grey, because nobody did anything wrong.
-  cancelled: 'secondary',
+  cancelled: { variant: 'secondary' },
 };
 
 /**
@@ -240,6 +265,9 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
             <tr className="text-muted-foreground border-border border-b text-xs">
               <th className="p-3 text-start font-normal">{t('colReference')}</th>
               <th className="p-3 text-start font-normal">{t('colCustomer')}</th>
+              {/* The dominant case is one shop per basket, and the list never
+                  named it — see the query note. */}
+              <th className="p-3 text-start font-normal">{t('colShop')}</th>
               <th className="p-3 text-start font-normal">{t('colPlaced')}</th>
               <th className="p-3 text-start font-normal">{t('colFulfillment')}</th>
               <th className="p-3 text-start font-normal">{t('colStatus')}</th>
@@ -264,6 +292,19 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                   )}
                 </td>
                 <td className="p-3">{order.customerName}</td>
+                <td className="p-3 text-xs">
+                  {order.shopCount > 1 ? (
+                    <span className="text-muted-foreground">
+                      {t('multiShopCell', { count: formatNumber(order.shopCount, locale) })}
+                    </span>
+                  ) : order.shopId && order.shopName ? (
+                    <Link href={`/admin/shops/${order.shopId}`} className="hover:text-primary">
+                      {pickLocale(order.shopName, locale)}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </td>
                 <td className="text-muted-foreground p-3 text-xs">
                   {formatDateTime(order.createdAt, locale)}
                 </td>
@@ -278,7 +319,46 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                   </span>
                 </td>
                 <td className="p-3">
-                  <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge
+                      variant={STATUS_BADGE[order.status].variant}
+                      className={STATUS_BADGE[order.status].className}
+                    >
+                      {t(`status.${order.status}`)}
+                    </Badge>
+                    {/*
+                      AGE, WHERE THE ADMIN MEETS THE ORDER (Prompt C4).
+                      The overview flags an order stalled past 48 hours and then
+                      links here, where nothing said so — the urgency evaporated
+                      at exactly the point it should have been acted on. Only
+                      rows still at `placed` carry it: an accepted order is the
+                      shop working, which is not the mall's business.
+                    */}
+                    {order.status === 'placed' && order.pendingHours >= SLA_HOURS.warning && (
+                      <span
+                        data-sla={order.pendingHours >= SLA_HOURS.danger ? 'danger' : 'warning'}
+                        className={
+                          order.pendingHours >= SLA_HOURS.danger
+                            ? 'rounded-pill bg-danger-bg text-danger px-2 py-0.5 text-2xs font-bold'
+                            : 'rounded-pill bg-warning-bg text-warning-fg px-2 py-0.5 text-2xs font-bold'
+                        }
+                      >
+                        {/* The shared threshold, never a number of its own — the
+                            colour above already switches on it and a literal 48
+                            here is one edit away from the chip saying "26 hours"
+                            in red (lib/queue-sla.ts, CLAUDE.md). */}
+                        {order.pendingHours >= SLA_HOURS.danger
+                          ? t('waitingDays', {
+                              n: Math.floor(order.pendingHours / 24),
+                              count: formatNumber(Math.floor(order.pendingHours / 24), locale),
+                            })
+                          : t('waitingHours', {
+                              n: Math.floor(order.pendingHours),
+                              count: formatNumber(Math.floor(order.pendingHours), locale),
+                            })}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 <td className="p-3 text-end font-medium">{formatCurrency(order.total, locale)}</td>
               </tr>

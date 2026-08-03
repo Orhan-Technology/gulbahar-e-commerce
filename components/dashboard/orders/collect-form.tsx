@@ -54,28 +54,50 @@ export function CollectForm({ orderId }: { orderId: string }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-2" data-collect-form>
-      <div className="space-y-1">
-        <Label htmlFor={`collect-${orderId}`} className="text-xs">
-          {t('label')}
-        </Label>
-        <Input
-          id={`collect-${orderId}`}
-          value={code}
-          onChange={(event) => setCode(normaliseCollectionCode(event.target.value))}
-          placeholder={t('placeholder')}
-          autoComplete="off"
-          spellCheck={false}
-          maxLength={COLLECTION_CODE_LENGTH}
-          dir="ltr"
-          className="h-9 w-32 text-center font-mono text-base tracking-widest"
-        />
+    <form onSubmit={submit} className="space-y-1.5" data-collect-form>
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="space-y-1">
+          <Label htmlFor={`collect-${orderId}`} className="text-xs">
+            {t('label')}
+          </Label>
+          <Input
+            id={`collect-${orderId}`}
+            value={code}
+            onChange={(event) => setCode(normaliseCollectionCode(event.target.value))}
+            /*
+             * DASHES, NOT «AC7K4» (Prompt C11).
+             *
+             * The placeholder was a well-formed five-character code sitting in
+             * the field of every ready order — indistinguishable from a real
+             * one at a glance, and a shopkeeper comparing it against the code
+             * on a customer's screen has no way to know it is furniture. One
+             * slot per character says "type here, this long" and cannot be
+             * mistaken for data. Built from the length constant so it can
+             * never drift from the code the system actually issues, and not a
+             * translated string because it is not language.
+             */
+            placeholder={'–'.repeat(COLLECTION_CODE_LENGTH)}
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={COLLECTION_CODE_LENGTH}
+            dir="ltr"
+            aria-describedby={`collect-hint-${orderId}`}
+            className="h-9 w-32 text-center font-mono text-base tracking-widest"
+          />
+        </div>
+
+        <Button type="submit" size="sm" disabled={pending || !ready}>
+          <PackageCheck />
+          {pending ? t('saving') : t('submit')}
+        </Button>
       </div>
 
-      <Button type="submit" size="sm" disabled={pending || !ready}>
-        <PackageCheck />
-        {pending ? t('saving') : t('submit')}
-      </Button>
+      {/* PERMANENT, not a placeholder that vanishes on the first keystroke: it
+          says where the code comes from, which is the one thing a shopkeeper
+          doing this for the first time does not know. */}
+      <p id={`collect-hint-${orderId}`} className="text-muted-foreground text-2xs">
+        {t('hint')}
+      </p>
     </form>
   );
 }

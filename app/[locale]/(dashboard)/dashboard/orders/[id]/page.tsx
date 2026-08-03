@@ -1,11 +1,12 @@
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { ChevronRight, ImageOff, MapPin, Phone, Store, Truck, User } from 'lucide-react';
+import { ChevronRight, ImageOff, MapPin, Phone, Printer, Store, Truck, User } from 'lucide-react';
 
 import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
 import { LiveRefresh } from '@/components/dashboard/live-refresh';
 import { OrderActions } from '@/components/dashboard/orders/order-actions';
+import { OrderCancelButton } from '@/components/dashboard/orders/order-cancel-button';
 import { Badge } from '@/components/ui/badge';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
@@ -51,11 +52,24 @@ export default async function ShopOrderPage({
           </h1>
           <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt, locale)}</p>
         </div>
-        <OrderActions
-          orderId={order.id}
-          status={order.status}
-          fulfillment={order.fulfillment}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <OrderActions orderId={order.id} status={order.status} fulfillment={order.fulfillment} />
+
+          {/*
+            PAPER FROM HERE TOO (Prompt: print exists only on the list card).
+            "Open the order, then print it" is the obvious path and it
+            dead-ended — the shopkeeper had to go back to the list to find the
+            one link that produces the slip they are standing up to fetch.
+          */}
+          <Link
+            href={`/dashboard/orders/${order.id}/slip`}
+            target="_blank"
+            className="text-muted-foreground hover:text-primary inline-flex items-center gap-1.5 text-xs"
+          >
+            <Printer className="h-3.5 w-3.5" aria-hidden />
+            {t('slip.print')}
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-card border-border bg-card border p-4">
@@ -74,6 +88,8 @@ export default async function ShopOrderPage({
           <h2 className="text-sm font-bold">{t('itemsHeading')}</h2>
           <span className="text-muted-foreground text-xs">
             {t('itemCount', {
+              // `n` selects, `count` renders — otherwise English reads "1 items".
+              n: order.items.reduce((sum, item) => sum + item.quantity, 0),
               count: formatNumber(
                 order.items.reduce((sum, item) => sum + item.quantity, 0),
                 locale,
@@ -102,17 +118,24 @@ export default async function ShopOrderPage({
                   <Link
                     href={`/products/${item.productSlug}`}
                     className="hover:text-primary clamp-1 text-sm font-medium"
+                    dir="auto"
                   >
                     {pickLocale(item.titleSnapshot, locale)}
                   </Link>
                 ) : (
-                  <span className="clamp-1 text-sm font-medium">
+                  <span className="clamp-1 text-sm font-medium" dir="auto">
                     {pickLocale(item.titleSnapshot, locale)}
                   </span>
                 )}
                 {item.variantSelection && item.variantSelection.length > 0 && (
                   <p className="text-muted-foreground text-xs">
-                    {item.variantSelection.join(' · ')}
+                    {/*
+                      An EN DASH, not an interpunct. Persian ۰ is a dot, so a «·»
+                      touching a numeral merges with it — and a variant is very
+                      often a numeral («۴۲» for a shoe), which made «قهوه‌ای · ۴۲»
+                      read as «قهوه‌ای ۰۴۲».
+                    */}
+                    {item.variantSelection.join(' – ')}
                   </p>
                 )}
                 <p className="text-muted-foreground text-xs">
@@ -140,7 +163,8 @@ export default async function ShopOrderPage({
           <h2 className="text-sm font-bold">{t('customerHeading')}</h2>
           <p className="flex items-center gap-2 text-sm">
             <User className="text-muted-foreground h-4 w-4" aria-hidden />
-            {order.customerName}
+            {/* The customer typed their own name and their own address. */}
+            <bdi>{order.customerName}</bdi>
           </p>
           <a
             href={`tel:${order.customerPhone}`}
@@ -165,7 +189,7 @@ export default async function ShopOrderPage({
           {order.fulfillment === 'delivery' && order.addressDistrict && (
             <p className="text-muted-foreground flex items-start gap-2 text-sm">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              <span>
+              <span dir="auto">
                 {order.addressLabel && (
                   <span className="text-foreground">{order.addressLabel} · </span>
                 )}
@@ -213,6 +237,21 @@ export default async function ShopOrderPage({
           })}
         </ol>
       </section>
+
+      {/*
+        CANCELLATION LIVES DOWN HERE, not beside «آماده شد» (Prompt C13).
+        A destructive, irreversible action rendered at the same size and weight
+        as the primary one, an inch from a thumb that is holding a phone in a
+        crowded shop, is a fat-thumb hazard — and this one tells a customer
+        their order is off. It stays reachable, at the end of the record, under
+        a line that says when you would want it.
+      */}
+      {(order.status === 'accepted' || order.status === 'ready') && (
+        <section className="flex flex-wrap items-center justify-between gap-2 pt-2">
+          <p className="text-muted-foreground text-xs">{t('cancelHint')}</p>
+          <OrderCancelButton orderId={order.id} size="sm" />
+        </section>
+      )}
     </div>
   );
 }

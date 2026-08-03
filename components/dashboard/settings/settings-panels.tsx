@@ -11,17 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { NumberField } from '@/components/dashboard/number-field';
 import { ResumeShopButton } from '@/components/dashboard/resume-shop-button';
-import {
-  addStaff,
-  pauseShop,
-  removeStaff,
-  setDashboardLocale,
-} from '@/lib/actions/shop-settings';
-import { digitsOnly } from '@/lib/digits';
+import { addStaff, pauseShop, removeStaff, setDashboardLocale } from '@/lib/actions/shop-settings';
 import { formatDate, formatPhone } from '@/lib/format';
 import { MALL_TIME_ZONE } from '@/lib/opening';
 import { usePathname, useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
+import { cn } from '@/lib/utils';
 
 export type StaffMember = {
   userId: string;
@@ -82,6 +78,25 @@ export function NotificationPreferences() {
       </ul>
     </section>
   );
+}
+
+/**
+ * "A week", "two weeks", "a month" — the three lengths a shop is actually shut
+ * for. Counted from TODAY, so the value written is `earliest + (days - 1)`:
+ * `earliest` is tomorrow, the first day the shop may be back.
+ */
+const QUICK_PAUSES = [7, 14, 30] as const;
+
+/**
+ * Calendar arithmetic on the date PARTS, never on a timestamp: Kabul is +04:30,
+ * and adding 86.4 million milliseconds to a parsed local date lands on the
+ * wrong side of midnight — the same trap the save handler below documents.
+ */
+function addDays(iso: string, days: number): string {
+  const [year, month, day] = iso.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 /**
@@ -195,6 +210,43 @@ export function VacationPanel({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="pause-until">{t('untilLabel')}</Label>
+
+          {/*
+            QUICK PICKS FIRST, AND THE ANSWER READ BACK IN SHAMSI (Prompt C19).
+            `<input type="date">` renders the BROWSER's calendar — «mm/dd/yyyy»
+            and a Gregorian grid — in a panel where every other date on screen
+            is «۲۲ سنبله ۱۴۰۵». A shopkeeper closing for Eid does not know the
+            Gregorian date of their return and should not have to convert one.
+            The chips write the same ISO value the input does; the native
+            control stays underneath for an exact day, and the line below says
+            in the reader's own calendar what was actually chosen.
+          */}
+          <div className="flex flex-wrap gap-1.5">
+            {QUICK_PAUSES.map((days) => {
+              const value = addDays(earliest, days - 1);
+              const active = until === value;
+              return (
+                <button
+                  key={days}
+                  type="button"
+                  onClick={() => {
+                    setUntil(value);
+                    setError(null);
+                  }}
+                  aria-pressed={active}
+                  className={cn(
+                    'rounded-pill border px-3 py-1.5 text-xs font-medium transition-colors duration-150',
+                    active
+                      ? 'border-primary bg-primary-50 text-primary font-semibold'
+                      : 'border-border bg-card hover:border-primary',
+                  )}
+                >
+                  {t(`quick.${days}` as never)}
+                </button>
+              );
+            })}
+          </div>
+
           <Input
             id="pause-until"
             type="date"
@@ -202,12 +254,19 @@ export function VacationPanel({
             min={earliest}
             value={until}
             aria-invalid={error !== null}
-            aria-describedby={error ? 'pause-until-error' : undefined}
+            aria-describedby={error ? 'pause-until-error' : 'pause-until-echo'}
             onChange={(event) => {
               setUntil(event.target.value);
               setError(null);
             }}
           />
+
+          {until && !error && (
+            <p id="pause-until-echo" className="text-xs font-medium text-neutral-600">
+              {t('returnOn', { date: formatDate(until, locale, 'medium') })}
+            </p>
+          )}
+
           {error && (
             <p id="pause-until-error" className="text-danger text-xs font-medium">
               {t(`errors.${error}` as never)}
@@ -286,7 +345,9 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
         {staff.map((member) => (
           <li key={member.userId} className="flex items-center gap-3 py-2.5">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{member.name}</p>
+              <p className="text-sm font-medium" dir="auto">
+                {member.name}
+              </p>
               <p className="text-muted-foreground text-xs" dir="ltr">
                 {formatPhone(member.phone, locale)}
               </p>
@@ -332,13 +393,16 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="staff-phone">{t('phoneLabel')}</Label>
-              <Input
+              {/* The roster above prints every number in Persian digits
+                  (formatPhone), so the field that adds one has to read back the
+                  same way — see number-field.tsx. */}
+              <NumberField
                 id="staff-phone"
-                inputMode="tel"
-                dir="ltr"
+                format="phone"
+                maxLength={10}
                 placeholder="07XXXXXXXX"
                 value={phone}
-                onChange={(event) => setPhone(digitsOnly(event.target.value, 10))}
+                onChange={setPhone}
               />
             </div>
           </div>

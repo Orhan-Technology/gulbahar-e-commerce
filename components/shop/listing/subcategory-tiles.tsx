@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { getLocale } from 'next-intl/server';
 
+import { CategoryMark, categoryMarkSurface } from '@/components/shop/listing/category-mark';
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
@@ -76,7 +77,14 @@ export async function SubcategoryTiles({
                 active && 'outline-primary outline-2 outline-offset-2',
               )}
             >
-              {child.imagePath && (
+              {/*
+                A MARK, never an empty square. These images are derived from the
+                category's own products, so a sibling with nothing published in
+                it has none — and «خشکبار و شیرینی» beside «خوراکه» rendered as a
+                blank grey tile, which reads as a photograph that failed rather
+                than as a shelf not yet stocked.
+              */}
+              {child.imagePath ? (
                 <Image
                   src={child.imagePath}
                   alt=""
@@ -84,6 +92,10 @@ export async function SubcategoryTiles({
                   sizes="80px"
                   className="object-cover transition-transform duration-[420ms] ease-[var(--ease-settle)] group-hover:scale-105"
                 />
+              ) : (
+                <span className={categoryMarkSurface}>
+                  <CategoryMark slug={child.slug} className="h-7 w-7" />
+                </span>
               )}
             </span>
             <span

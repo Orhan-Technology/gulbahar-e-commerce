@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { RatingStars } from '@/components/custom/rating-stars';
+import { ChipScroller } from '@/components/dashboard/chip-scroller';
 import { ReviewCard } from '@/components/dashboard/reviews/review-card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,7 +14,7 @@ import { shopReviewCounts, shopReviews } from '@/lib/db/queries/shop-reviews';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
-type Query = { rating?: string; unanswered?: string; reply?: string };
+type Query = { rating?: string; unanswered?: string; reply?: string; all?: string };
 
 /** Reviews across the shop's products (PRD §6.5). */
 export default async function ShopReviewsPage({
@@ -31,18 +32,39 @@ export default async function ShopReviewsPage({
 
   const counts = await shopReviewCounts(user.shopId);
 
+  /*
+   * THE PAGE OPENS ON THE PROBLEM (Prompt C14).
+   *
+   * This shop had thirteen reviews and thirteen of them unanswered, and the
+   * screen opened calm: a chip row where «همه» was selected, a list in date
+   * order, and the one fact that mattered — nobody has replied to anything —
+   * available only by reading the small number on the second chip. The default
+   * view is now the unanswered ones whenever there are any.
+   *
+   * A REDIRECT would have been the obvious way to do it and is the wrong one:
+   * `/dashboard/reviews` is a link in the navigation and in the queue, and a
+   * 307 from it takes the page out of the dev action manifest that the check
+   * scripts drive the reply action through. So the URL stays and «همه» gets an
+   * explicit address instead — the state is stated by the active chip and by
+   * the line under it, which is what makes the default honest rather than
+   * hidden.
+   */
+  const defaultUnanswered =
+    !query.rating && !query.unanswered && !query.all && counts.unanswered > 0;
+  const unanswered = query.unanswered === '1' || defaultUnanswered;
+
   const chips = [
     {
       key: 'all',
-      href: '/dashboard/reviews',
+      href: '/dashboard/reviews?all=1',
       count: counts.all,
-      active: !query.rating && !query.unanswered,
+      active: !query.rating && !unanswered,
     },
     {
       key: 'unanswered',
       href: '/dashboard/reviews?unanswered=1',
       count: counts.unanswered,
-      active: query.unanswered === '1',
+      active: unanswered,
     },
     ...([5, 4, 3, 2, 1] as const).map((rating) => ({
       key: `star${rating}`,
@@ -60,17 +82,19 @@ export default async function ShopReviewsPage({
           <span className="flex items-center gap-2">
             <RatingStars value={counts.average} size="sm" />
             <span className="text-muted-foreground text-xs">
-              {t('averageOf', { count: formatNumber(counts.all, locale) })}
+              {t('averageOf', { n: counts.all, count: formatNumber(counts.all, locale) })}
             </span>
           </span>
         )}
       </div>
 
-      <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
+      <ChipScroller className="flex gap-2 pb-1">
         {chips.map((chip) => (
           <Link
             key={chip.key}
             href={chip.href}
+            data-chip-active={chip.active}
+            aria-current={chip.active ? 'page' : undefined}
             className={`rounded-pill flex shrink-0 items-center gap-1.5 border px-3 py-1.5 text-xs font-medium ${
               chip.active
                 ? 'border-primary bg-primary-50 text-primary'
@@ -83,10 +107,25 @@ export default async function ShopReviewsPage({
             </Badge>
           </Link>
         ))}
-      </div>
+      </ChipScroller>
+
+      {/* Says which list this is, and where the rest went. */}
+      {defaultUnanswered && (
+        <p className="rounded-card border-warning-border bg-warning-bg text-warning flex flex-wrap items-center gap-x-2 gap-y-1 border p-3 text-xs">
+          <span>
+            {t('defaultUnansweredNote', {
+              n: counts.unanswered,
+              count: formatNumber(counts.unanswered, locale),
+            })}
+          </span>
+          <Link href="/dashboard/reviews?all=1" className="font-bold underline">
+            {t('filters.all')}
+          </Link>
+        </p>
+      )}
 
       <Suspense fallback={<ReviewListSkeleton />}>
-        <ReviewList shopId={user.shopId} locale={locale} query={query} />
+        <ReviewList shopId={user.shopId} locale={locale} query={query} unanswered={unanswered} />
       </Suspense>
     </div>
   );
@@ -96,10 +135,12 @@ async function ReviewList({
   shopId,
   locale,
   query,
+  unanswered,
 }: {
   shopId: string;
   locale: string;
   query: Query;
+  unanswered: boolean;
 }) {
   const t = await getTranslations('shopReviews');
 
@@ -107,22 +148,32 @@ async function ReviewList({
   const rows = await shopReviews({
     shopId,
     rating: rating && rating >= 1 && rating <= 5 ? rating : undefined,
-    unanswered: query.unanswered === '1',
+    unanswered,
   });
 
   if (rows.length === 0) {
     return (
       <EmptyState
         illustration={<Star className="h-7 w-7" />}
-        title={query.unanswered === '1' ? t('emptyAnsweredTitle') : t('emptyTitle')}
-        description={query.unanswered === '1' ? t('emptyAnsweredBody') : t('emptyBody')}
+        title={unanswered ? t('emptyAnsweredTitle') : t('emptyTitle')}
+        description={unanswered ? t('emptyAnsweredBody') : t('emptyBody')}
       />
     );
   }
 
+  /*
+   * ANGRY AND UNANSWERED FIRST, then unanswered, then the rest — date order
+   * inside each band, which a stable sort preserves from the query.
+   *
+   * Strict date order is the right default for a log and the wrong one for a
+   * work queue: a one-star review from Tuesday that nobody has replied to is
+   * the most expensive thing on this screen, and it was fourth.
+   */
+  const ordered = [...rows].sort((a, b) => band(a) - band(b));
+
   return (
     <ul className="space-y-2">
-      {rows.map((row) => (
+      {ordered.map((row) => (
         <ReviewCard
           key={row.id}
           autoReply={row.id === query.reply}
@@ -142,6 +193,12 @@ async function ReviewList({
       ))}
     </ul>
   );
+}
+
+/** 0 = unanswered and 1–2★, 1 = unanswered, 2 = everything else. */
+function band(row: { rating: number; responseBody: string | null }) {
+  if (row.responseBody) return 2;
+  return row.rating <= 2 ? 0 : 1;
 }
 
 function ReviewListSkeleton() {

@@ -11,6 +11,7 @@ import { currentUser } from '@/lib/auth/guards';
 import { getCart } from '@/lib/cart';
 import { db } from '@/lib/db';
 import { pickLocale } from '@/lib/db/localized';
+import { defaultAddressId } from '@/lib/db/queries/account';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { addresses } from '@/lib/db/schema';
 import { KABUL_DISTRICTS } from '@/lib/districts';
@@ -63,17 +64,38 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
     );
   }
 
-  const saved = await db
-    .select({
-      id: addresses.id,
-      label: addresses.label,
-      district: addresses.district,
-      streetDetails: addresses.streetDetails,
-      phone: addresses.phone,
-    })
-    .from(addresses)
-    .where(eq(addresses.userId, user.id))
-    .orderBy(asc(addresses.createdAt));
+  const [saved, preferredAddressId] = await Promise.all([
+    db
+      .select({
+        id: addresses.id,
+        label: addresses.label,
+        district: addresses.district,
+        streetDetails: addresses.streetDetails,
+        phone: addresses.phone,
+      })
+      .from(addresses)
+      .where(eq(addresses.userId, user.id))
+      .orderBy(asc(addresses.createdAt)),
+    defaultAddressId(user.id),
+  ]);
+
+  /*
+   * WHICH ADDRESS IS ALREADY SELECTED when the screen opens.
+   *
+   * It used to be `addresses[0]` — the oldest row — chosen silently, which for
+   * anyone who has moved is the address they no longer live at, preselected on
+   * the one screen where getting it wrong sends a courier to the wrong door.
+   * The one they last had an order delivered to is a far better guess, and the
+   * radio it lands on is labelled so the guess is visible rather than implicit.
+   *
+   * Verified against the live list: an order may name an address the customer
+   * has since deleted, and preselecting an id that is not on screen would leave
+   * the form looking as though nothing were chosen.
+   */
+  const defaultId =
+    preferredAddressId && saved.some((address) => address.id === preferredAddressId)
+      ? preferredAddressId
+      : null;
 
   const pickupShops = cart.groups.map((group) => ({
     shopId: group.shopId,
@@ -88,6 +110,7 @@ export default async function CheckoutPage({ params }: { params: Promise<{ local
       <div className="mt-4">
         <CheckoutForm
           addresses={saved}
+          defaultAddressId={defaultId}
           districts={KABUL_DISTRICTS}
           pickupShops={pickupShops}
           cartTotal={cart.total}

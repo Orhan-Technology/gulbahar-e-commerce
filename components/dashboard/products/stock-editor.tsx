@@ -7,7 +7,7 @@ import { Check, Pencil, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { NumberField } from '@/components/dashboard/number-field';
 import { setProductStock } from '@/lib/actions/shop-products';
 import { digitsOnly } from '@/lib/digits';
 import { formatNumber } from '@/lib/format';
@@ -84,11 +84,14 @@ export function StockEditor({ productId, stock }: { productId: string; stock: nu
 
   return (
     <span className="inline-flex items-center gap-1">
-      <Input
+      {/* NumberField, not a bare Input: the number this control replaces was
+          «موجودی ۳۵» in Persian digits, and tapping it used to turn it into
+          `35`. The field reads back in the reader's own numerals the moment it
+          loses focus — which here is the same moment it saves. */}
+      <NumberField
         autoFocus
         value={value}
-        inputMode="numeric"
-        onChange={(event) => setValue(digitsOnly(event.target.value))}
+        onChange={setValue}
         onKeyDown={(event) => {
           if (event.key === 'Enter') commit();
           if (event.key === 'Escape') {
@@ -97,7 +100,7 @@ export function StockEditor({ productId, stock }: { productId: string; stock: nu
           }
         }}
         onBlur={commit}
-        aria-label={t('editStock')}
+        label={t('editStock')}
         className="h-7 w-16 text-xs"
         disabled={pending}
       />

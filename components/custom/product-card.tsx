@@ -6,10 +6,12 @@ import { useLocale, useTranslations } from 'next-intl';
 import { Heart, ImageOff } from 'lucide-react';
 
 import { Skeleton } from '@/components/ui/skeleton';
+import { BidiText } from '@/components/custom/bidi-text';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { LOW_STOCK_BADGE_THRESHOLD } from '@/lib/listing';
+import { MIN_RATING_REVIEWS } from '@/lib/ratings';
 import { discountFraction, formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -207,7 +209,11 @@ export function ProductCard({
 
         {/* Ribbons sit at the inline start so they never collide with the heart. */}
         <div className="absolute start-2.5 top-2.5 z-20 flex flex-col items-start gap-1">
-          {fraction !== null && (
+          {/* NOT WHEN IT CANNOT BE BOUGHT. "۷٪ تخفیف" over a card stamped
+              «موجود نیست» is the card arguing with itself, and the discount is
+              the half that is not actionable. The out-of-stock treatment stays;
+              only the promotion goes. */}
+          {fraction !== null && !outOfStock && (
             <span className="rounded-pill bg-accent text-accent-foreground text-2xs px-2.5 py-1.5 font-bold">
               {t('percentOff', { percent: formatPercent(fraction, locale) })}
             </span>
@@ -242,12 +248,19 @@ export function ProductCard({
        * and a button inside an anchor is invalid HTML that the parser hoists
        * out, which surfaces as a hydration error nowhere near its cause.
        */}
-      <h3 className="clamp-2 text-foreground min-h-[2.625rem] text-base leading-normal font-normal">
+      {/*
+       * `text-balance` + <bdi>, because a mixed-script title is the one that
+       * wraps badly: «سامسونگ گلکسی ۱۲۸ A54 گیگابایت» broke around the Latin
+       * token on a 390px screen and left it alone on the second line. Balancing
+       * evens the two lines so the break lands between words, and the isolation
+       * keeps the token where the markup put it either way.
+       */}
+      <h3 className="clamp-2 text-foreground min-h-[2.625rem] text-base leading-normal font-normal text-balance">
         <Link
           href={`/products/${slug}`}
           className="group-hover:text-primary transition-colors duration-150 after:absolute after:inset-0 after:z-10 after:content-['']"
         >
-          {title}
+          <BidiText text={title} />
         </Link>
       </h3>
 
@@ -258,8 +271,21 @@ export function ProductCard({
        * of alignment across a five-card row, but five grey stars and a "(۰)"
        * report an absence as though it were a score — which is how a young
        * catalogue talks itself down.
+       *
+       * `minCount` extends that to the thin evidence a young catalogue
+       * actually has: a single review draws five near-empty outlines and a
+       * "۱", which across a grid reads as a shop nobody buys from. Below the
+       * threshold the row stays blank; at three it is a score worth reading.
+       * Set HERE rather than in RatingStars' default so the review list and the
+       * composer, where one rating IS the subject, keep drawing it.
        */}
-      <RatingStars value={rating ?? 0} count={reviewCount} size="sm" reserveSpace />
+      <RatingStars
+        value={rating ?? 0}
+        count={reviewCount}
+        size="sm"
+        reserveSpace
+        minCount={MIN_RATING_REVIEWS}
+      />
 
       <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
 

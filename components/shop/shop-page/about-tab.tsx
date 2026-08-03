@@ -88,12 +88,15 @@ export async function AboutTab({ shop, now }: { shop: AboutShop; now: Date }) {
       <div className="space-y-6">
         <section className="rounded-card border-border bg-card space-y-3 border p-4">
           <h2 className="text-base font-bold">{t('storyTitle')}</h2>
+          {/* `dir="auto"` on both: this is the shopkeeper's own prose, and the
+              paragraph has to take its direction from the text rather than from
+              the page around it. */}
           {shop.story ? (
-            <p className="text-sm leading-relaxed text-neutral-700">
+            <p dir="auto" className="text-sm leading-relaxed text-neutral-700">
               {pickLocale(shop.story, locale)}
             </p>
           ) : shop.description ? (
-            <p className="text-sm leading-relaxed text-neutral-700">
+            <p dir="auto" className="text-sm leading-relaxed text-neutral-700">
               {pickLocale(shop.description, locale)}
             </p>
           ) : (

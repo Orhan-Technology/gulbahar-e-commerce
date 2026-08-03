@@ -150,11 +150,25 @@ export function DashboardSidebar({ counts }: { counts?: DashboardBadgeCounts }) 
  * the client would arrive after first paint — a badge that pops in a beat late
  * is worse than one that was always there.
  */
-export function DashboardTabBar({ pendingOrders = 0 }: { pendingOrders?: number }) {
+export function DashboardTabBar({
+  pendingOrders = 0,
+  counts,
+}: {
+  pendingOrders?: number;
+  /**
+   * The same counts the sidebar gets. The MORE TAB CARRIES THEM TOO (Prompt
+   * C21): on desktop the rail showed «۳ پرسش» and «۱۳ نظر» while the phone —
+   * the device this persona actually runs the shop from — showed a bare «…»,
+   * so the queues that live behind that tab were invisible on the only screen
+   * that matters. The badge is their sum, because a tab cannot say which.
+   */
+  counts?: DashboardBadgeCounts;
+}) {
   const t = useTranslations('dashboardNav');
   const locale = useLocale();
   const isActive = useActive();
   const moreActive = SECONDARY.some((item) => isActive(item.href));
+  const moreBadge = SECONDARY.reduce((sum, item) => sum + badgeFor(counts, item.key), 0);
 
   return (
     <nav
@@ -186,6 +200,12 @@ export function DashboardTabBar({ pendingOrders = 0 }: { pendingOrders?: number 
           icon={MoreHorizontal}
           label={t('more')}
           active={moreActive}
+          badge={moreBadge}
+          badgeLabel={
+            moreBadge > 0
+              ? t('waitingItems', { n: moreBadge, count: formatNumber(moreBadge, locale) })
+              : undefined
+          }
           locale={locale}
         />
       </ul>

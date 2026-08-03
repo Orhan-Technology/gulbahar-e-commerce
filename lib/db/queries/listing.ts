@@ -12,6 +12,7 @@ import {
 } from '../schema';
 import { firstProductImagePath, productRatingAvg, productReviewCount } from './fragments';
 import { productSearchMatch } from './search';
+import { MIN_RATING_REVIEWS } from '../../ratings';
 
 /**
  * Facets and promoted slots for the listing pages (PRD §5.1).
@@ -36,6 +37,13 @@ export type FacetScope = {
   shopIds?: string[];
   search?: string;
   onOfferOnly?: boolean;
+  /**
+   * A SURFACE rule, not a shopper's filter — the offers page never shows a
+   * sold-out product, so its facet counts must not promise one either. Kept
+   * apart from `query.inStock` so the availability checkbox stays unticked and
+   * a chip for a filter nobody applied never appears above the grid.
+   */
+  inStockOnly?: boolean;
 };
 
 /** Per-option result counts, keyed the way the URL keys them. */
@@ -96,8 +104,24 @@ function facetConditions(
   const effectivePrice = sql<number>`coalesce(${products.discountPrice}, ${products.price})`;
   if (query.priceMin) conditions.push(gte(effectivePrice, Number(query.priceMin)));
   if (query.priceMax) conditions.push(lte(effectivePrice, Number(query.priceMax)));
-  if (query.minRating) conditions.push(gte(productRatingAvg, Number(query.minRating)));
-  if (query.inStock === '1') conditions.push(sql`${products.stock} > 0`);
+  /*
+   * "FOUR STARS AND UP" MEANS FOUR STARS WORTH BELIEVING.
+   *
+   * A card hides its star row below MIN_RATING_REVIEWS (lib/ratings.ts) because
+   * one review is not a rating — so a rating filter that ignores the evidence
+   * threshold selects products the grid then renders with NO STARS ON THEM. The
+   * reader asked for the best-reviewed things in the mall and got a wall of
+   * cards saying nothing about reviews at all, which reads as a filter that did
+   * not run.
+   *
+   * The constant is IMPORTED, never restated: the card and the filter have to
+   * move together or the same contradiction comes straight back.
+   */
+  if (query.minRating) {
+    conditions.push(gte(productRatingAvg, Number(query.minRating)));
+    conditions.push(gte(productReviewCount, MIN_RATING_REVIEWS));
+  }
+  if (scope.inStockOnly || query.inStock === '1') conditions.push(sql`${products.stock} > 0`);
   if (scope.onOfferOnly || query.onOffer === '1') {
     conditions.push(
       sql`${products.discountPrice} is not null and ${products.discountPrice} < ${products.price}`,
@@ -175,9 +199,9 @@ export async function filterFacets(
    * meaningless without a scope: on a shoe shop it offered all twenty-eight
    * brands in the mall, twenty-seven of which lead to an empty grid.
    */
-  if (!counted) return { ...base, brands: [], counts: undefined };
+  if (!counted) return { ...base, brands: [], counts: undefined, total: undefined };
 
-  const [categoryRows, shopCountRows] = await Promise.all([
+  const [categoryRows, shopCountRows, totalRows] = await Promise.all([
     db
       .select({
         leaf: categories.slug,
@@ -195,6 +219,18 @@ export async function filterFacets(
       .innerJoin(shops, eq(products.shopId, shops.id))
       .where(and(...facetConditions(query, scope, 'shop')))
       .groupBy(shops.slug),
+    /*
+     * The result count under EVERY narrowing, which the grid computes for
+     * itself but the surrounding page cannot see — the listing resolves inside
+     * its own Suspense boundary. A page needs it to decide whether to render a
+     * filter rail at all: twenty facet groups beside a zero-result search is a
+     * form asking someone to narrow nothing.
+     */
+    db
+      .select({ total: sql<number>`count(*)::int` })
+      .from(products)
+      .innerJoin(shops, eq(products.shopId, shops.id))
+      .where(and(...facetConditions(query, scope, null))),
   ]);
 
   const categoryCounts: Record<string, number> = {};
@@ -212,7 +248,7 @@ export async function filterFacets(
     brands: Object.fromEntries(brands.map((row) => [row.value, row.count])),
   };
 
-  return { ...base, counts };
+  return { ...base, counts, total: Number(totalRows[0]?.total ?? 0) };
 }
 
 export type PromotedProduct = {

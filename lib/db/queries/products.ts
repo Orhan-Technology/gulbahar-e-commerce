@@ -1,6 +1,7 @@
 import { and, asc, avg, count, desc, eq, gte, inArray, lte, ne, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '..';
+import { MIN_RATING_REVIEWS } from '../../ratings';
 import { localizedColumn, searchKeyForInput } from '../localized';
 import { productSearchMatch, productSearchRelevance } from './search';
 import {
@@ -183,6 +184,16 @@ export async function productList(filters: ProductListFilters) {
   const ratingExpr = sql<number>`coalesce(avg(${reviews.rating}) filter (where ${reviews.status} = 'visible'), 0)`;
   const reviewCountExpr = sql<number>`count(${reviews.id}) filter (where ${reviews.status} = 'visible')`;
 
+  /*
+   * A minimum-rating filter has to agree with what the CARD is willing to show.
+   * Cards hide the star row below MIN_RATING_REVIEWS, so filtering on the
+   * average alone returned products displaying no stars at all under a heading
+   * that said "4 and above" — and the facet counts beside the grid, which apply
+   * the same threshold, disagreed with the grid itself.
+   */
+  const ratedAtLeast = (minimum: number) =>
+    and(gte(ratingExpr, minimum), gte(reviewCountExpr, MIN_RATING_REVIEWS));
+
   const orderBy = {
     /*
      * POPULARITY is the default, not newest.
@@ -236,7 +247,7 @@ export async function productList(filters: ProductListFilters) {
     .leftJoin(reviews, eq(reviews.productId, products.id))
     .where(where)
     .groupBy(products.id, shops.id)
-    .having(minRating !== undefined ? gte(ratingExpr, minRating) : undefined)
+    .having(minRating !== undefined ? ratedAtLeast(minRating) : undefined)
     .orderBy(...orderBy, desc(products.id))
     .limit(accumulate ? pageSize * page : pageSize)
     .offset(accumulate ? 0 : (page - 1) * pageSize);
@@ -256,7 +267,7 @@ export async function productList(filters: ProductListFilters) {
     .leftJoin(reviews, eq(reviews.productId, products.id))
     .where(where)
     .groupBy(products.id)
-    .having(minRating !== undefined ? gte(ratingExpr, minRating) : undefined)
+    .having(minRating !== undefined ? ratedAtLeast(minRating) : undefined)
     .as('matching_products');
 
   const [{ total } = { total: 0 }] = await db.select({ total: count() }).from(grouped);

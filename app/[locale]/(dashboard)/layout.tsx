@@ -136,7 +136,7 @@ export default async function DashboardLayout({
         </div>
       </StretchScroll>
 
-      <DashboardTabBar pendingOrders={orderCounts.placed} />
+      <DashboardTabBar pendingOrders={orderCounts.placed} counts={navCounts} />
     </div>
   );
 }

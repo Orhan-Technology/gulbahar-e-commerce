@@ -6,7 +6,7 @@ import { HeroCarousel, type HeroSlide } from '@/components/shop/home/hero-carous
 import { pickLocale } from '@/lib/db/localized';
 import { activeOffers, homeHeroCampaign } from '@/lib/db/queries/home';
 import { recordImpressions } from '@/lib/db/queries/promoted';
-import { formatPercent } from '@/lib/format';
+import { formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -28,8 +28,31 @@ import { Link } from '@/lib/i18n/navigation';
 export async function HeroBanner() {
   const locale = await getLocale();
   const t = await getTranslations('home');
+  const tCommon = await getTranslations('common');
   const [campaign, offers] = await Promise.all([homeHeroCampaign(), activeOffers(4)]);
   const offer = offers[0] ?? null;
+
+  /*
+   * MONEY IN PROSE TAKES THE WORD, money in a chip takes the symbol — the one
+   * rule this surface and /offers now share. «؋۵۶۴» inside a sentence reads as
+   * a code; «۵۶۴ افغانی» inside a 6-character badge does not fit.
+   */
+  const money = (value: number) => `${formatNumber(value, locale)} ${tCommon('currencyWord')}`;
+
+  /*
+   * A SUBTITLE THAT REPEATS THE HEADLINE IS NOT A SUBTITLE.
+   *
+   * A fixed-amount offer has no percentage to lead with, so its headline is the
+   * offer's own name — and the body line under it was that same name again,
+   * rendering «پیشکش بازگشت به مکتب» twice, once large and once small. Compared
+   * after normalising whitespace, because the two strings come from the same
+   * column and differ only by the odd trailing space.
+   */
+  const normalise = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase();
+  const subtitle = (title: string, body: string | undefined, fallback?: string) => {
+    if (body && normalise(body) !== normalise(title)) return body;
+    return fallback && normalise(fallback) !== normalise(title) ? fallback : undefined;
+  };
 
   const slides: HeroSlide[] = [];
 
@@ -37,18 +60,22 @@ export async function HeroBanner() {
     // Fire-and-forget; a failed counter must never break the page (PRD §15).
     void recordImpressions([campaign.campaignId]);
     const isProduct = Boolean(campaign.productId);
+    const title = isProduct
+      ? pickLocale(campaign.productTitle, locale)
+      : pickLocale(campaign.shopName, locale);
     slides.push({
       key: `campaign-${campaign.campaignId}`,
       href: isProduct ? `/products/${campaign.productSlug}` : `/shops/${campaign.shopSlug}`,
       eyebrow: pickLocale(campaign.shopName, locale),
       sponsored: true,
-      title: isProduct
-        ? pickLocale(campaign.productTitle, locale)
-        : pickLocale(campaign.shopName, locale),
-      body:
-        !isProduct && campaign.shopDescription
-          ? pickLocale(campaign.shopDescription, locale)
-          : undefined,
+      title,
+      // A shop slide whose title IS the shop name must not carry the shop name
+      // again as its description — which is what happens for a tenant whose
+      // description is little more than its own name.
+      body: subtitle(
+        title,
+        campaign.shopDescription ? pickLocale(campaign.shopDescription, locale) : undefined,
+      ),
       imagePath: isProduct ? campaign.productImagePath : campaign.shopBannerPath,
       ctaLabel: isProduct ? t('heroViewProduct') : t('heroVisitShop'),
     });
@@ -59,15 +86,32 @@ export async function HeroBanner() {
    * discount twice, side by side, is what an empty catalogue looks like.
    */
   for (const item of offers.slice(1, 4)) {
+    const title =
+      item.type === 'percent'
+        ? t('offerUpTo', { percent: formatPercent(item.value / 100, locale) })
+        : pickLocale(item.name, locale);
+
     slides.push({
       key: `offer-${item.id}`,
       href: `/shops/${item.shopSlug}`,
       eyebrow: pickLocale(item.shopName, locale),
-      title:
-        item.type === 'percent'
-          ? t('offerUpTo', { percent: formatPercent(item.value / 100, locale) })
-          : pickLocale(item.name, locale),
-      body: pickLocale(item.name, locale),
+      title,
+      /*
+       * The offer's name, unless the headline already IS the name — in which
+       * case the line says what the discount is worth and where, which is the
+       * pair of facts the headline could not carry.
+       */
+      body: subtitle(
+        title,
+        pickLocale(item.name, locale),
+        t('heroOfferSubtitle', {
+          discount:
+            item.type === 'percent'
+              ? formatPercent(item.value / 100, locale)
+              : money(item.value),
+          shop: pickLocale(item.shopName, locale),
+        }),
+      ),
       imagePath: item.imagePath,
       ctaLabel: t('heroVisitShop'),
     });
@@ -94,7 +138,14 @@ export async function HeroBanner() {
         >
           <span className="flex items-start justify-between gap-3 p-6 pb-4">
             <span className="flex min-w-0 flex-col">
-              <span className="text-foreground text-2xl leading-tight font-extrabold">
+              {/* `dir="auto"` because the offer's name is the shopkeeper's own
+                  text: a Dari catalogue holds "Black Friday" verbatim, and a
+                  Latin phrase inheriting RTL puts its punctuation on the wrong
+                  side. */}
+              <span
+                dir="auto"
+                className="text-foreground text-2xl leading-tight font-extrabold"
+              >
                 {offer.type === 'percent'
                   ? t('offerUpTo', { percent: formatPercent(offer.value / 100, locale) })
                   : pickLocale(offer.name, locale)}

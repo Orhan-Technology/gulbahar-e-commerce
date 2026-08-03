@@ -17,7 +17,7 @@ import { parseConsoleRange, type ConsoleRangeKey } from '@/lib/console-range';
 import { pickLocale } from '@/lib/db/localized';
 import { adminShopDirectory } from '@/lib/db/queries/admin';
 import { categoryTree, shopCountsByStatus } from '@/lib/db/queries/shops';
-import { formatDate, formatNumber, formatPhone } from '@/lib/format';
+import { formatCurrency, formatDate, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import type { ShopStatus } from '@/lib/db/schema';
 
@@ -154,7 +154,15 @@ export default async function AdminShopsPage({
 
 async function ShopList({ locale, query }: { locale: string; query: Query }) {
   const t = await getTranslations('adminShops');
-  const shops = await adminShopDirectory({ locale, status: query.status, search: query.q });
+  // Thirty days, matching the console's default range and the figure the floors
+  // page and the revenue report use — three screens with three windows would be
+  // three numbers nobody could reconcile (Prompt C2).
+  const shops = await adminShopDirectory({
+    locale,
+    status: query.status,
+    search: query.q,
+    revenueDays: 30,
+  });
 
   if (shops.length === 0) {
     return (
@@ -208,6 +216,18 @@ async function ShopList({ locale, query }: { locale: string; query: Query }) {
                   {pickLocale(shop.categoryName, locale)}
                 </span>
               )}
+              {/*
+                «نیاز به توجه» — the health view, folded back into the directory
+                as a chip (Prompt C12). A separate `?view=health` screen meant
+                the one list that says what to do about a tenant was invisible
+                from the one list an admin actually opens. The chip carries the
+                link, so the two views stop being alternatives.
+              */}
+              {shop.needsAttention && shop.status === 'approved' && (
+                <Link href="/admin/shops?view=health" data-needs-attention>
+                  <Badge variant="warning">{t('health.needsAttention')}</Badge>
+                </Link>
+              )}
             </div>
 
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -235,6 +255,27 @@ async function ShopList({ locale, query }: { locale: string; query: Query }) {
               {shop.ownerName && <span>{t('owner', { name: shop.ownerName })}</span>}
             </div>
           </div>
+
+          {/*
+            WHO MATTERS, not only who exists (Prompt C12). Fourteen rows of name,
+            floor and phone answered "is this tenant in the mall" and nothing
+            else, so the anchor tenant and the shop that has taken two orders all
+            year read identically. Approved shops only: a pending registration
+            has no trade to report and a zero there would look like a verdict.
+          */}
+          {shop.status === 'approved' && (
+            <div className="w-32 shrink-0 text-end">
+              <p className="text-sm font-bold tabular-nums">
+                {formatCurrency(shop.revenue, locale)}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {t('revenueWindow', {
+                  orders: formatNumber(shop.orderCount, locale),
+                  days: formatNumber(30, locale),
+                })}
+              </p>
+            </div>
+          )}
 
           <ShopActions shopId={shop.id} status={shop.status} size="sm" />
         </li>

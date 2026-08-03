@@ -8,10 +8,12 @@ import { OrderStatusTimeline } from '@/components/custom/order-status-timeline';
 import { Badge } from '@/components/ui/badge';
 import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
+import { adminOrderAging } from '@/lib/db/queries/admin';
 import { orderWithTimeline } from '@/lib/db/queries/orders';
 import { formatCurrency, formatDateTime, formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { parseReasonNote } from '@/lib/order-reject-reasons';
+import { SLA_HOURS } from '@/lib/queue-sla';
 import type { OrderStatus } from '@/lib/db/schema';
 
 /** The statuses an order can still be ended from — the same set the action enforces. */
@@ -47,6 +49,19 @@ export default async function AdminOrderPage({
 
   const order = await orderWithTimeline(id);
   if (!order) notFound();
+
+  /*
+   * HOW LATE THIS ORDER IS (Prompt C4). Read as a separate query rather than
+   * derived here: a component may not call the clock during render, and the
+   * hours have to be measured against the database's `now()` — the same one the
+   * overview's stalled-order rule uses — or the two screens can disagree about
+   * whether the same order is late.
+   */
+  const aging = await adminOrderAging(order.id);
+  const stalled =
+    aging !== null &&
+    order.status === 'placed' &&
+    aging.pendingHours >= SLA_HOURS.warning;
 
   // Grouped by shop, which is how a multi-shop order is actually fulfilled.
   const byShop = new Map<string, typeof order.items>();
@@ -88,6 +103,54 @@ export default async function AdminOrderPage({
           )}
         </div>
       </div>
+
+      {/*
+        THE STALL BANNER. The overview says an order has been unanswered for two
+        days and links here; before this the detail page said nothing at all, so
+        the one screen with the shop's phone number on it was also the one that
+        had forgotten why the admin opened it. Amber past 24 hours, red past 48
+        — the shared thresholds, never a number of its own (lib/queue-sla.ts).
+      */}
+      {stalled && (
+        <section
+          data-order-stalled={aging.pendingHours >= SLA_HOURS.danger ? 'danger' : 'warning'}
+          className={
+            aging.pendingHours >= SLA_HOURS.danger
+              ? 'rounded-card border-danger-border bg-danger-bg border-s-4 p-4'
+              : 'rounded-card border-warning-border bg-warning-bg border-s-4 p-4'
+          }
+        >
+          <p
+            className={
+              aging.pendingHours >= SLA_HOURS.danger
+                ? 'text-danger text-sm font-bold'
+                : 'text-warning-fg text-sm font-bold'
+            }
+          >
+            {/* The shared threshold, not a literal: the banner's own colour
+                switches on `SLA_HOURS.danger` two lines up, and the two must
+                never be able to disagree (lib/queue-sla.ts). */}
+            {aging.pendingHours >= SLA_HOURS.danger
+              ? t('stalledDays', {
+                  n: Math.floor(aging.pendingHours / 24),
+                  count: formatNumber(Math.floor(aging.pendingHours / 24), locale),
+                })
+              : t('stalledHours', {
+                  n: Math.floor(aging.pendingHours),
+                  count: formatNumber(Math.floor(aging.pendingHours), locale),
+                })}
+          </p>
+          <p
+            className={
+              aging.pendingHours >= SLA_HOURS.danger
+                ? 'text-danger/90 mt-1 text-xs leading-relaxed'
+                : 'text-warning-fg/80 mt-1 text-xs leading-relaxed'
+            }
+          >
+            {t('stalledBody')}
+          </p>
+        </section>
+      )}
 
       <section className="rounded-card border-border bg-card border p-4">
         {/*
@@ -180,10 +243,21 @@ export default async function AdminOrderPage({
                 <dd className="text-accent-700">−{formatCurrency(order.discountTotal, locale)}</dd>
               </div>
             )}
-            {order.deliveryFee > 0 && (
+            {/*
+              SHOWN FOR EVERY DELIVERY, INCLUDING A FREE ONE. Hidden at zero, the
+              totals silently stopped adding up for anyone checking them: the
+              subtotal, the discount and the total were on screen and the line
+              that reconciled them was not. «رایگان» is a fact about this order;
+              a missing row is a gap the reader has to explain to themselves.
+            */}
+            {(order.deliveryFee > 0 || order.fulfillment === 'delivery') && (
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">{t('deliveryFee')}</dt>
-                <dd>{formatCurrency(order.deliveryFee, locale)}</dd>
+                <dd>
+                  {order.deliveryFee > 0
+                    ? formatCurrency(order.deliveryFee, locale)
+                    : t('deliveryFree')}
+                </dd>
               </div>
             )}
             <div className="flex justify-between font-bold">
@@ -252,12 +326,30 @@ export default async function AdminOrderPage({
                         {formatDateTime(event.createdAt, locale)}
                         {event.actorName ? ` · ${event.actorName}` : ` · ${t('systemActor')}`}
                       </p>
-                      {code && (
-                        <p className="mt-1 text-xs font-medium">
-                          {tReasons(code as never)}
-                        </p>
+                      {/*
+                        THE REASON, AS PROMINENT AS THE DIALOG PROMISED IT WOULD
+                        BE (Prompt C7). Cancelling an order demands ten
+                        characters of written explanation and tells the admin it
+                        reaches the customer verbatim — and then the history
+                        rendered it as one more line of 12px grey, the same
+                        weight as the timestamp above it. A stated reason that is
+                        hard to find later is a form field, not a record.
+                      */}
+                      {(code || text) && (
+                        <div
+                          data-event-reason
+                          className="rounded-control border-border mt-1.5 border-s-2 bg-neutral-50 p-2"
+                        >
+                          {code && (
+                            <p className="text-xs font-bold">{tReasons(code as never)}</p>
+                          )}
+                          {text && (
+                            <p className={code ? 'mt-0.5 text-xs' : 'text-xs font-medium'}>
+                              «{text}»
+                            </p>
+                          )}
+                        </div>
                       )}
-                      {text && <p className="mt-1 text-xs">«{text}»</p>}
                     </div>
                   </li>
                 );

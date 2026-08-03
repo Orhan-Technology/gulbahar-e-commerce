@@ -87,15 +87,23 @@ export async function CheckoutItems({
 
                   <span className="min-w-0 flex-1">
                     <span className="clamp-1 block text-sm">{pickLocale(line.title, locale)}</span>
-                    <span className="text-muted-foreground block text-xs">
-                      {[
-                        line.variantSelection?.length
-                          ? line.variantSelection.join(' · ')
-                          : null,
-                        t('lineQuantity', { count: formatNumber(line.quantity, locale) }),
-                      ]
-                        .filter(Boolean)
-                        .join(' · ')}
+                    {/*
+                      CHIPS PLUS A COUNT, not one string joined by « · ». The
+                      middle dot ran straight into the Persian numeral that
+                      followed it and read as a leading zero, so «۲ عدد» after a
+                      separator looked like «۰۲ عدد» — on the screen whose whole
+                      job is confirming the basket is right.
+                    */}
+                    <span className="text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1 text-xs">
+                      {line.variantSelection?.map((value) => (
+                        <span
+                          key={value}
+                          className="rounded-pill text-2xs bg-neutral-100 px-1.5 py-0.5 text-neutral-600"
+                        >
+                          {value}
+                        </span>
+                      ))}
+                      <span>{t('lineQuantity', { count: formatNumber(line.quantity, locale) })}</span>
                     </span>
                   </span>
 

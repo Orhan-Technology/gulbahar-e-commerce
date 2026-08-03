@@ -6,7 +6,7 @@ import { OfferCountdown } from '@/components/shop/home/offer-countdown';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
 import { activeOffers } from '@/lib/db/queries/home';
-import { formatCurrency, formatPercent } from '@/lib/format';
+import { formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -34,15 +34,53 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
   const locale = await getLocale();
   const t = await getTranslations('home');
   const tOffers = await getTranslations('offers');
+  const tCategories = await getTranslations('categories');
+  const tCommon = await getTranslations('common');
   const offers = await activeOffers(limit);
 
   if (offers.length === 0) return null;
 
   const [lead, ...rest] = offers;
+
+  /*
+   * ONE CURRENCY NOTATION, AND THIS PAGE HAD TWO.
+   *
+   * A campaign card's discount read «؋۷۸۵» while the product card six pixels
+   * below it read «۲٬۴۰۰ افغانی» — the same fact, money in afghanis, written
+   * two different ways inside one viewport, and the symbol is the one an Afghan
+   * reader meets least often. The rule this file, the home hero and the shop's
+   * offers tab now share:
+   *
+   *   THE WORD wherever the money is a statement — a price, a discount, a
+   *   threshold. That is how every ProductCard in the storefront already
+   *   writes it, and it is what the page has most of.
+   *   THE SYMBOL only in dense numeric CONTROLS, where the amount is an axis
+   *   label rather than a sentence: the price-band chips and the price range in
+   *   the applied-filter row, both of which have four of them side by side.
+   *
+   * A percentage is neither — «٪۲۵» is the same in both registers.
+   */
   const badge = (offer: (typeof offers)[number]) =>
     offer.type === 'percent'
       ? formatPercent(offer.value / 100, locale)
-      : formatCurrency(offer.value, locale);
+      : `${formatNumber(offer.value, locale)} ${tCommon('currencyWord')}`;
+
+  /*
+   * HOW MUCH IS IN THE SALE. «۲۵٪ تخفیف» over a shop name could mean one
+   * clearance item or the whole floor, and the difference is the reason someone
+   * taps or does not. Counted in the query, so a shop-wide offer says the size
+   * of the catalogue and a product-scoped one says the size of its own list.
+   *
+   * Null at zero, never «۰ محصول»: a bare zero on a promotional card reads as a
+   * broken counter, and an offer whose product list is empty is better described
+   * by its name and its deadline than by the size of nothing.
+   */
+  const productCount = (offer: (typeof offers)[number]) => {
+    const total = Number(offer.productCount);
+    return total > 0
+      ? tCategories('productCount', { count: formatNumber(total, locale) })
+      : null;
+  };
 
   return (
     <section className="space-y-4" aria-labelledby="offers-showcase">
@@ -99,7 +137,8 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
               </span>
             </span>
 
-            <span className="clamp-2 block text-xl leading-tight font-bold text-white">
+            {/* `dir="auto"`: an offer's name is the shopkeeper's own text. */}
+            <span dir="auto" className="clamp-2 block text-xl leading-tight font-bold text-white">
               {pickLocale(lead.name, locale)}
             </span>
 
@@ -108,6 +147,9 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
                 <Store className="h-4 w-4 shrink-0" aria-hidden />
                 {pickLocale(lead.shopName, locale)}
               </span>
+              {productCount(lead) && (
+                <span className="text-sm tabular-nums">{productCount(lead)}</span>
+              )}
               <OfferCountdown endsAt={lead.endsAt.toISOString()} className="text-white" />
             </span>
           </span>
@@ -141,11 +183,17 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
                         className="text-muted-foreground"
                       />
                     </span>
-                    <span className="clamp-1 block text-sm font-semibold">
+                    <span dir="auto" className="clamp-1 block text-sm font-semibold">
                       {pickLocale(offer.name, locale)}
                     </span>
                     <span className="clamp-1 text-muted-foreground block text-xs">
                       {pickLocale(offer.shopName, locale)}
+                      {productCount(offer) && (
+                        <>
+                          <span aria-hidden> · </span>
+                          <bdi className="tabular-nums">{productCount(offer)}</bdi>
+                        </>
+                      )}
                     </span>
                   </span>
                 </Link>

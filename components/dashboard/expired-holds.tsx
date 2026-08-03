@@ -36,7 +36,9 @@ export async function ExpiredHolds({ shopId, now }: { shopId: string; now: Date 
       className="rounded-card border-accent-warm/40 bg-accent-warm/10 space-y-3 border p-4"
     >
       <div>
-        <h2 className="text-sm font-bold">{t('title', { count: formatNumber(holds.length, locale) })}</h2>
+        <h2 className="text-sm font-bold">
+          {t('title', { count: formatNumber(holds.length, locale) })}
+        </h2>
         <p className="text-muted-foreground text-xs leading-relaxed">{t('body')}</p>
       </div>
 
@@ -54,7 +56,7 @@ export async function ExpiredHolds({ shopId, now }: { shopId: string; now: Date 
                 {hold.reference}
               </Link>
               <p className="text-muted-foreground text-xs">
-                {hold.customerName}
+                <bdi>{hold.customerName}</bdi>
                 {' · '}
                 <span dir="ltr">{formatPhone(hold.customerPhone, locale)}</span>
               </p>

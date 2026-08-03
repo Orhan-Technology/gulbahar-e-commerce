@@ -1,8 +1,19 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Clock, MapPin, QrCode } from 'lucide-react';
+import { Clock, MapPin, MessageCircle, Phone, QrCode } from 'lucide-react';
 
 import { formatCollectionCode } from '@/lib/collection-code';
-import { formatDateTime, formatNumber, formatOpeningHours, formatUnitNumber } from '@/lib/format';
+import {
+  formatDateTime,
+  formatNumber,
+  formatOpeningHours,
+  formatPhone,
+  formatUnitNumber,
+} from '@/lib/format';
+import { cn } from '@/lib/utils';
+
+/** Same treatment the shop hero gives its call / WhatsApp pair. */
+const contactAction =
+  'rounded-control border-primary-300 bg-card text-primary-800 hover:border-primary hover:bg-primary-100 inline-flex flex-1 items-center justify-center gap-1.5 border px-3 py-2 text-xs font-semibold transition-colors duration-150';
 
 /**
  * The collection code, on the customer's own order (Prompt C11).
@@ -25,6 +36,7 @@ export async function CollectionPanel({
   code,
   expiresAt,
   shopName,
+  shopPhone,
   floor,
   unitNumber,
   mallHours,
@@ -32,6 +44,8 @@ export async function CollectionPanel({
   code: string;
   expiresAt: Date | null;
   shopName: string;
+  /** Nullable in the schema — the panel drops the buttons rather than dialling nothing. */
+  shopPhone: string | null;
   floor: number | null;
   unitNumber: string | null;
   mallHours: string;
@@ -89,6 +103,39 @@ export async function CollectionPanel({
         <p className="text-primary-900/70 text-xs">
           {t('expires', { when: formatDateTime(expiresAt, locale) })}
         </p>
+      )}
+
+      {/*
+        A WAY TO REACH THE SHOP (finding #13).
+
+        This panel's own expiry line warns that the shop may put the goods back
+        on the shelf — and offered nothing to do about it. "I am stuck in
+        traffic, hold it another hour" is a phone call, and in this mall it is
+        the call people actually make; the panel knew the shop's name, the floor
+        and the unit and stopped one field short of the number.
+
+        The same pair the shop page already offers, worded the same way: `tel:`
+        dials, and wa.me wants the international form because Afghan numbers are
+        written locally as 0XXXXXXXXX.
+      */}
+      {shopPhone && (
+        <div className="border-primary-200 flex gap-2 border-t pt-3">
+          <a href={`tel:${shopPhone}`} className={cn(contactAction)}>
+            <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            <span className="tabular-nums" dir="ltr">
+              {formatPhone(shopPhone, locale)}
+            </span>
+          </a>
+          <a
+            href={`https://wa.me/93${shopPhone.replace(/^0/, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(contactAction)}
+          >
+            <MessageCircle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            {t('whatsapp')}
+          </a>
+        </div>
       )}
     </section>
   );

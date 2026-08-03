@@ -57,9 +57,16 @@ function loadAllowances(file: string, source: string) {
      * Applies to the next line that is not itself a comment, so a marker whose
      * reason wraps onto a second line still exempts the code beneath it — the
      * off-by-one that made a two-line justification silently do nothing.
+     *
+     * JSX comments count. Inside markup a comment is `{/* … *\/}`, which starts
+     * with a brace, so the earlier test walked straight past it and pinned the
+     * allowance to the comment rather than to the element underneath — an
+     * `audit-allow` sitting directly above an `eslint-disable-next-line` did
+     * nothing at all, which is exactly where the two markers naturally pair up.
      */
     let target = index + 1;
-    while (target < lines.length && /^\s*(?:\/\/|\*|\/\*)/.test(lines[target])) target += 1;
+    const isComment = (line: string) => /^\s*(?:\/\/|\*|\/\*|\{\s*\/\*|\*\/\s*\}?)/.test(line);
+    while (target < lines.length && isComment(lines[target])) target += 1;
     rules.set(target, match[1]);
   });
 

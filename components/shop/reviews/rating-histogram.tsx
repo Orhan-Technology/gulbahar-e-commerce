@@ -119,7 +119,12 @@ export async function RatingHistogram({
                   className={cn(
                     pressable,
                     shared,
-                    'w-full transition-[background-color,scale] duration-150 ease-out',
+                    // The bar is a real filter control, so it has to show where
+                    // the keyboard is. No ring-OFFSET: rows are 4px apart and an
+                    // offset ring would overlap its neighbour (and CLAUDE.md's
+                    // note about offsets surviving `ring-0` applies the moment
+                    // one is introduced).
+                    'focus-visible:ring-ring w-full transition-[background-color,scale] duration-150 ease-out focus-visible:ring-2 focus-visible:outline-none',
                     isActive ? 'bg-primary-50 ring-primary-200 ring-1' : 'hover:bg-neutral-100',
                   )}
                 >

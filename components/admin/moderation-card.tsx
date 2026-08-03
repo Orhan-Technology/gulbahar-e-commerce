@@ -27,13 +27,23 @@ export type ModerationRow = {
   shopSlug: string;
   responseBody: string | null;
   /**
-   * The category the shop picked when it reported, and its free-text note.
+   * The category the shop picked when it reported — as an ENUM CODE, when the
+   * report carried one.
+   *
+   * `flagReview()` and the seed now record both shapes in the notification
+   * payload: `reasonCode` (the enum) and `reason` (the sentence the shopkeeper
+   * saw). Reports written before that change have only the second, so both
+   * fields travel and the card picks.
+   */
+  reportReasonCode: string | null;
+  /**
+   * The RENDERED label the reporter chose, and its free-text note.
    *
    * Null when the report cannot be tied to THIS review with certainty — the
    * schema records neither reporter nor reason on `reviews`, and the only trace
-   * is the notification `flagReview()` sends, which carries the product title
-   * but not the review id. See lib/db/queries/admin.ts for the exact rule.
-   * Blank beats a guess on a decision that removes somebody's words.
+   * is the notification `flagReview()` sends. See lib/db/queries/admin.ts for
+   * the exact rule. Blank beats a guess on a decision that removes somebody's
+   * words.
    */
   reportReason: string | null;
   reportNote: string | null;
@@ -68,6 +78,29 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
   const locale = useLocale();
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+
+  /*
+   * WHY THE REASON IS RESOLVED IN TWO STEPS.
+   *
+   * This line used to be `t('reportReasons.' + review.reportReason)`, which
+   * assumed the payload held an enum code. It held the RENDERED Dari label —
+   * from both the live action and the seed — so next-intl looked up a key that
+   * did not exist and did what it does with a miss: printed the path. The
+   * moderation queue, the one screen in the console whose whole argument is
+   * that a decision is made in context, carried the literal string
+   * «گزارش‌شده به دلیل: adminReviews.reportReasons.این شخص از ما خرید نکرده».
+   *
+   * Both shapes are now accepted, and the fallback is a LITERAL, never a key
+   * path: a code is translated, and anything else is shown exactly as the
+   * shopkeeper wrote it. `has()` rather than a try/catch, so an unknown code
+   * from a future enum value degrades to the stored sentence instead of
+   * reintroducing the same bug in a new place.
+   */
+  const reasonLabel = review.reportReasonCode
+    ? t.has(`reportReasons.${review.reportReasonCode}` as never)
+      ? t(`reportReasons.${review.reportReasonCode}` as never)
+      : (review.reportReason ?? review.reportReasonCode)
+    : review.reportReason;
 
   function decide(decision: 'remove' | 'uphold') {
     startTransition(async () => {
@@ -127,10 +160,10 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
         the charge afterwards is how an admin ends up deciding whether they
         personally like the review.
       */}
-      {review.reportReason && (
+      {reasonLabel && (
         <div className="rounded-control border-warning-border bg-warning-bg border-s-2 p-3">
           <p className="text-warning-fg text-xs font-bold">
-            {t('reportedFor', { reason: t(`reportReasons.${review.reportReason}` as never) })}
+            {t('reportedFor', { reason: reasonLabel })}
           </p>
           <p className="text-warning-fg/80 mt-1 text-xs">
             {t('reportedBy', {
@@ -154,7 +187,7 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
           visible: formatNumber(review.authorVisibleReviews, locale),
           removed: formatNumber(review.authorRemovedReviews, locale),
         })}
-        {review.status === 'reported' && !review.reportReason && (
+        {review.status === 'reported' && !reasonLabel && (
           <span className="text-muted-foreground"> · {t('noReasonRecorded')}</span>
         )}
       </p>

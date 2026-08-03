@@ -235,6 +235,22 @@ function Row({
         )}
         {/* A missing translation is visible but never blocking (PRD §11). */}
         {!node.nameEn && <Badge variant="outline">{t('noEnglish')}</Badge>}
+        {/*
+          WHY DELETE IS GREY, said out loud. The button was already disabled and
+          the only explanation was a `title` — which a disabled control does not
+          reliably surface on hover and never surfaces on touch, so the affordance
+          read as broken rather than as guarded. The badge names the blocker, so
+          the admin knows what to move before the node can go.
+        */}
+        {blocked && (
+          <Badge variant="outline" className="text-muted-foreground" data-delete-blocked>
+            {node.childCount > 0
+              ? t('lockedByChildren', { count: formatNumber(node.childCount, locale) })
+              : node.directProductCount > 0
+                ? t('lockedByProducts', { count: formatNumber(node.directProductCount, locale) })
+                : t('lockedByShops', { count: formatNumber(node.shopCount, locale) })}
+          </Badge>
+        )}
       </div>
 
       <div className="flex shrink-0 items-center gap-0.5">

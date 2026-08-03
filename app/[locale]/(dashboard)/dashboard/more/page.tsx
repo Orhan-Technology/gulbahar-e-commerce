@@ -10,9 +10,12 @@ import {
   Store,
 } from 'lucide-react';
 
+import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
+import { shopQuestionCounts } from '@/lib/db/queries/questions';
+import { shopReviewCounts } from '@/lib/db/queries/shop-reviews';
 import { siteSettings } from '@/lib/db/queries/settings';
-import { formatPhone } from '@/lib/format';
+import { formatNumber, formatPhone } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 /**
@@ -36,7 +39,24 @@ export default async function MorePage({ params }: { params: Promise<{ locale: s
   const t = await getTranslations('dashboardNav');
   const help = await getTranslations('dashboardNav.help');
 
-  const settings = await siteSettings();
+  const user = await requireShopkeeper(locale);
+
+  /*
+   * THE ROWS CARRY THE SAME COUNTS THE DESKTOP RAIL DOES (Prompt C21).
+   * This page is the phone's whole second half of the panel, and it listed
+   * «پرسش‌ها» and «نظرها» as two identical rows with nothing on them while the
+   * sidebar on a machine nobody in this mall uses said ۳ and ۱۳.
+   */
+  const [settings, questionCounts, reviewCounts] = await Promise.all([
+    siteSettings(),
+    shopQuestionCounts(user.shopId),
+    shopReviewCounts(user.shopId),
+  ]);
+
+  const counts: Record<string, number> = {
+    questions: questionCounts.pending,
+    reviews: reviewCounts.unanswered,
+  };
 
   return (
     <div className="space-y-4 p-4 md:hidden">
@@ -54,6 +74,11 @@ export default async function MorePage({ params }: { params: Promise<{ locale: s
                   <Icon className="h-4 w-4" aria-hidden />
                 </span>
                 <span className="flex-1 text-sm font-medium">{t(item.key)}</span>
+                {(counts[item.key] ?? 0) > 0 && (
+                  <span className="rounded-pill bg-danger text-primary-foreground text-2xs min-w-5 px-1.5 py-0.5 text-center font-bold tabular-nums">
+                    {formatNumber(counts[item.key], locale)}
+                  </span>
+                )}
                 <ChevronRight className="h-4 w-4 text-neutral-400 rtl:rotate-180" aria-hidden />
               </Link>
             </li>

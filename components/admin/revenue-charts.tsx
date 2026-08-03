@@ -16,10 +16,14 @@ export type MonthPoint = { month: string; revenue: number };
  * The current month is drawn solid so the eye lands on the figure the tile above
  * is quoting; the eleven behind it are the context for it.
  *
- * There is no Y axis — the panel header carries the twelve-month total and the
- * tooltip carries each month exactly, so an axis would restate both at the cost
- * of a tenth of the chart's width. Month labels come from `formatMonth`, which
- * yields the Afghan solar names a Kabul manager reads.
+ * THE SCALE IS STATED, IN WORDS, UNDER THE BARS. There is still no Y axis —
+ * one would cost a tenth of the chart's width to restate what the tooltip
+ * already says exactly — but a chart with neither an axis nor a value label is
+ * a shape, not a figure: nobody could tell whether the tallest bar was fifty
+ * thousand or five hundred, and nobody could quote it in a meeting without
+ * hovering. The best and worst months, named and priced, make the whole series
+ * readable at a glance and cost one line. Month labels come from `formatMonth`,
+ * which yields the Afghan solar names a Kabul manager reads.
  *
  * RTL: `reversed` makes time run right-to-left in Dari, so the newest month
  * sits at the reading end in both directions (PRD §10.3). Recharts does none of
@@ -36,7 +40,15 @@ export function MonthlyRevenueChart({ data }: { data: MonthPoint[] }) {
 
   const current = data.at(-1)?.month;
 
+  // The endpoints of the scale. Zero months are excluded from the LOW end: "the
+  // quietest month earned ؋۰" is true of any series with a gap in it and says
+  // nothing about the range the bars are drawn against.
+  const earning = data.filter((point) => point.revenue > 0);
+  const best = earning.reduce((a, b) => (b.revenue > a.revenue ? b : a), earning[0]);
+  const worst = earning.reduce((a, b) => (b.revenue < a.revenue ? b : a), earning[0]);
+
   return (
+    <div className="space-y-2">
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
@@ -94,6 +106,22 @@ export function MonthlyRevenueChart({ data }: { data: MonthPoint[] }) {
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+    </div>
+
+    <p className="text-2xs flex flex-wrap items-center gap-x-3 gap-y-1 text-neutral-500">
+      <span>
+        {t('chartPeak', {
+          month: formatMonth(best.month, locale),
+          amount: formatCurrency(best.revenue, locale),
+        })}
+      </span>
+      <span>
+        {t('chartTrough', {
+          month: formatMonth(worst.month, locale),
+          amount: formatCurrency(worst.revenue, locale),
+        })}
+      </span>
+    </p>
     </div>
   );
 }

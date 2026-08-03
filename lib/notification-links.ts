@@ -166,6 +166,19 @@ export const MUTABLE_CATEGORIES = [
 
 export type MutableCategory = (typeof MUTABLE_CATEGORIES)[number];
 
+/**
+ * The subset a CUSTOMER is offered (finding #18).
+ *
+ * `promotions` is dropped, not because a customer may not hold the preference —
+ * the column, the action and `MUTABLE_CATEGORIES` are unchanged — but because
+ * every event in that category (`campaign.approved`, `campaign.rejected`,
+ * `campaign.expiring`) is addressed to the shop that reserved the advertising
+ * slot. Its own hint in the message file says so: «مخصوص دکان‌داران». A switch
+ * that can only mute messages the reader can never receive is a control that
+ * does nothing, on the screen where every other control does something.
+ */
+export const CUSTOMER_CATEGORIES = ['orders', 'reviews', 'questions', 'shops'] as const;
+
 export type NotificationPreferences = Record<string, boolean>;
 
 /** Everything on, which is what an account with no stored preference means. */

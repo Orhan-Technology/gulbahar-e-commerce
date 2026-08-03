@@ -33,10 +33,20 @@ import { cn } from '@/lib/utils';
  */
 export function ShareButton({
   title,
+  iconOnly = false,
   className,
 }: {
   /** The product's localised title — what the share sheet shows as the subject. */
   title: string;
+  /**
+   * Square icon button instead of a labelled row.
+   *
+   * The phone layout stacks the buy controls, and a labelled share made a
+   * THIRD full-width button under "add to cart" and "buy now" — three bars of
+   * equal weight, one of which does not buy anything. As an icon beside the
+   * wishlist heart it reads as what it is: a secondary action on the product.
+   */
+  iconOnly?: boolean;
   className?: string;
 }) {
   const t = useTranslations('product.share');
@@ -80,8 +90,13 @@ export function ShareButton({
     <button
       type="button"
       onClick={onShare}
+      // The icon form loses its visible text, so the name has to come from
+      // somewhere — and it is the same word either way.
+      aria-label={iconOnly ? t('label') : undefined}
+      title={iconOnly ? t('label') : undefined}
       className={cn(
-        'rounded-control border-input bg-card focus-visible:ring-ring inline-flex h-10 items-center justify-center gap-2 border px-3 text-sm font-medium transition-colors duration-150 hover:bg-neutral-100 focus-visible:ring-2 focus-visible:outline-none',
+        'rounded-control border-input bg-card focus-visible:ring-ring inline-flex h-10 items-center justify-center gap-2 border text-sm font-medium transition-colors duration-150 hover:bg-neutral-100 focus-visible:ring-2 focus-visible:outline-none',
+        iconOnly ? 'w-10 shrink-0' : 'px-3',
         copied && 'border-success text-success',
         className,
       )}
@@ -91,7 +106,7 @@ export function ShareButton({
       ) : (
         <Share2 className="h-4 w-4" aria-hidden />
       )}
-      {copied ? t('copiedShort') : t('label')}
+      {!iconOnly && (copied ? t('copiedShort') : t('label'))}
     </button>
   );
 }

@@ -94,8 +94,19 @@ function SlotCard({ slot, locale }: { slot: SlotRow; locale: string }) {
     <li className="rounded-card border-border bg-card flex flex-wrap items-center gap-4 border p-4">
       <div className="min-w-40 flex-1">
         <p className="text-sm font-bold">{slot.name}</p>
-        <p className="text-muted-foreground text-xs" dir="ltr">
-          {slot.key}
+        {/*
+          WHERE THE SLOT ACTUALLY IS, not what it is called in the code. The row
+          printed `home_hero` under the name — an internal identifier, in Latin
+          script, on a screen a mall director is shown. It told them nothing they
+          could act on and quietly said "this is a developer tool". The
+          placement description says the same thing in a sentence they can repeat
+          to a tenant; the key survives as a data attribute for the check scripts,
+          where an identifier belongs.
+        */}
+        <p className="text-muted-foreground text-xs" data-slot-key={slot.key}>
+          {t.has(`placements.${slot.key}` as never)
+            ? t(`placements.${slot.key}` as never)
+            : t('placementUnknown')}
         </p>
       </div>
 

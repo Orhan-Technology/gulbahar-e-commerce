@@ -14,7 +14,7 @@ import { requireAdmin } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { adminUserCounts, adminUsers } from '@/lib/db/queries/admin';
 import { categoryTree } from '@/lib/db/queries/shops';
-import { formatDate, formatNumber, formatPhone } from '@/lib/format';
+import { formatNumber, formatPhone, formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 
 type Query = { role?: 'customer' | 'shopkeeper' | 'admin'; q?: string };
@@ -142,7 +142,12 @@ async function UserList({
             <th className="p-3 text-start font-normal">{t('colRole')}</th>
             <th className="p-3 text-start font-normal">{t('colShop')}</th>
             <th className="p-3 text-start font-normal">{t('colActivity')}</th>
-            <th className="p-3 text-start font-normal">{t('colJoined')}</th>
+            {/*
+              LAST ACTIVE, not join date. Every seeded account was created in
+              one import, so «تاریخ پیوستن» printed the same date fourteen times
+              — a column the eye learns to skip. See the query note.
+            */}
+            <th className="p-3 text-start font-normal">{t('colLastActive')}</th>
             <th className="p-3 text-end font-normal">{t('colActions')}</th>
           </tr>
         </thead>
@@ -202,8 +207,19 @@ async function UserList({
                   })}
                 </span>
               </td>
+              {/*
+                «بدون فعالیت», not a date. A shopkeeper who has never ordered or
+                reviewed has no activity to report, and printing their signup
+                timestamp here would put the same relative time on every such
+                row — which is precisely the failure this column replaced. The
+                blank is the answer.
+              */}
               <td className="text-muted-foreground p-3 text-xs">
-                {formatDate(user.createdAt, locale, 'medium')}
+                {user.lastActiveAt ? (
+                  formatRelative(user.lastActiveAt, locale)
+                ) : (
+                  <span className="text-neutral-400">{t('noActivity')}</span>
+                )}
               </td>
               <td className="p-3 text-end">
                 <UserRowActions
@@ -211,6 +227,23 @@ async function UserList({
                   role={user.role}
                   active={user.active}
                   isSelf={user.id === selfId}
+                  /*
+                    Formatted HERE, on the server: the dialog shows Persian
+                    digits, and every number in this product goes through
+                    lib/format rather than being toLocaleString'd in a client
+                    component that has no business knowing the locale rules.
+                  */
+                  shop={
+                    user.shopId && user.shopName
+                      ? {
+                          id: user.shopId,
+                          name: pickLocale(user.shopName, locale),
+                          publishedProducts: formatNumber(user.shopPublishedProducts, locale),
+                          openOrders: formatNumber(user.shopOpenOrders, locale),
+                          hasOpenOrders: user.shopOpenOrders > 0,
+                        }
+                      : null
+                  }
                 />
               </td>
             </tr>

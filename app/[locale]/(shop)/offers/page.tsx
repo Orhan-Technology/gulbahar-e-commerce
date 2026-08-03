@@ -28,9 +28,10 @@ export default async function OffersPage({
   const t = await getTranslations('offers');
 
   const [facets, tree] = await Promise.all([
-    // Permanently on offer, so the counts have to be too — otherwise the brand
-    // rail would advertise brands that carry no discount at all.
-    filterFacets(locale, { query, scope: { onOfferOnly: true } }),
+    // Permanently on offer AND permanently in stock, so the counts have to be
+    // too — otherwise the brand rail would advertise brands that carry no
+    // discount at all, or promise a number the grid then declines to show.
+    filterFacets(locale, { query, scope: { onOfferOnly: true, inStockOnly: true } }),
     categoryTree(locale),
   ]);
   const facetOptions = { ...facets, categories: tree };
@@ -67,6 +68,13 @@ export default async function OffersPage({
               query={{ ...query, onOffer: '1' }}
               locale={locale}
               facets={facetOptions}
+              /*
+               * A discount ribbon over a sold-out card is an advert for a
+               * disappointment, and this whole page is ribbons. Sold-out
+               * products stay visible on category and search listings, where
+               * the reader asked what exists rather than what to buy.
+               */
+              hideOutOfStock
               defaultSort="discount"
               emptyHref="/offers"
             />

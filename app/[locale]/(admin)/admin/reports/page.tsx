@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { Receipt, ShoppingBag, Store, Users, Wallet } from 'lucide-react';
 
+import { ChartScaleNote } from '@/components/admin/chart-scale-note';
 import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import { StatusDonut } from '@/components/dashboard/reports/status-donut';
 import { SalesChart } from '@/components/dashboard/sales-chart';
@@ -68,7 +69,7 @@ export default async function AdminReportsPage({
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Suspense key={`status-${period}`} fallback={<PanelSkeleton />}>
-          <StatusMix period={period} />
+          <StatusMix period={period} locale={locale} />
         </Suspense>
         <Suspense key={`shops-${period}`} fallback={<PanelSkeleton />}>
           <TopShops period={period} locale={locale} />
@@ -144,17 +145,52 @@ async function Series({ period }: { period: PlatformPeriod }) {
   return (
     <Panel title={t('seriesHeading')}>
       <SalesChart data={series} />
+      {/* Min, max and mean under a line with no Y axis — otherwise the chart is
+          a shape rather than a figure anyone can quote (Prompt C12). */}
+      <ChartScaleNote data={series} />
     </Panel>
   );
 }
 
-async function StatusMix({ period }: { period: PlatformPeriod }) {
+async function StatusMix({ period, locale }: { period: PlatformPeriod; locale: string }) {
   const t = await getTranslations('adminReports');
   const data = await platformStatusMix(period);
 
+  /*
+   * WHY THIS PANEL CARRIES A FOOTNOTE.
+   *
+   * The «سفارش‌ها» tile above counts business RECEIVED — `status not in
+   * ('rejected','cancelled')` — and this donut counts every order in the
+   * window, rejections included, because a rejection rate is exactly what
+   * platform reporting exists to surface. Both are right and they differ, and
+   * for as long as the difference was unexplained the page said ۱۲۰ in one
+   * place and ۱۲۵ in another eight centimetres away, which costs a reader their
+   * trust in both figures rather than teaching them the distinction.
+   *
+   * Reconciled rather than hidden: the donut states its own total and names the
+   * exact rows the KPI leaves out. Adjusting one of the two numbers to match
+   * would have thrown away a real measurement to end an apparent contradiction.
+   */
+  const total = data.reduce((sum, row) => sum + row.total, 0);
+  const excluded = data
+    .filter((row) => row.status === 'rejected' || row.status === 'cancelled')
+    .reduce((sum, row) => sum + row.total, 0);
+
   return (
-    <Panel title={t('statusHeading')}>
+    <Panel
+      title={t('statusHeading')}
+      note={t('statusTotal', { count: formatNumber(total, locale) })}
+    >
       <StatusDonut data={data} />
+      {excluded > 0 && (
+        <p className="text-muted-foreground text-2xs leading-relaxed" data-status-reconciliation>
+          {t('statusReconcile', {
+            total: formatNumber(total, locale),
+            excluded: formatNumber(excluded, locale),
+            counted: formatNumber(total - excluded, locale),
+          })}
+        </p>
+      )}
     </Panel>
   );
 }
@@ -231,10 +267,22 @@ async function TopCategories({ period, locale }: { period: PlatformPeriod; local
   );
 }
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({
+  title,
+  note,
+  children,
+}: {
+  title: string;
+  /** A one-line qualifier for what the panel counts — see StatusMix. */
+  note?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-card border-border bg-card space-y-3 border p-4">
-      <h2 className="text-sm font-bold">{title}</h2>
+      <div className="flex flex-wrap items-baseline gap-x-2">
+        <h2 className="text-sm font-bold">{title}</h2>
+        {note && <p className="text-muted-foreground text-xs tabular-nums">{note}</p>}
+      </div>
       {children}
     </section>
   );

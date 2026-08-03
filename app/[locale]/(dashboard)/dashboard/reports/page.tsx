@@ -1,9 +1,7 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { BarChart3, Heart, Receipt, ShoppingBag, Wallet } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
-import { EmptyState } from '@/components/custom/empty-state';
-import { StatCard, StatCardSkeleton } from '@/components/custom/stat-card';
 import { RatingTrendChart } from '@/components/dashboard/reports/rating-trend-chart';
 import { StatusDonut } from '@/components/dashboard/reports/status-donut';
 import { SalesChart } from '@/components/dashboard/sales-chart';
@@ -16,7 +14,6 @@ import {
   promotionPerformance,
   salesByProduct,
   salesSeries,
-  salesTotals,
   statusBreakdown,
   type ReportPeriod,
 } from '@/lib/db/queries/shop-reports';
@@ -31,12 +28,12 @@ import { StockReport } from '@/components/dashboard/reports/stock-report';
 import {
   SummaryStrip,
   SummaryStripSkeleton,
+  type SummaryCell,
 } from '@/components/dashboard/reports/summary-strip';
 import { TimingHeatmap } from '@/components/dashboard/reports/timing-heatmap';
 import { ViewsWithoutSales } from '@/components/dashboard/reports/views-without-sales';
-import { EXPORTABLE, parseShopReport } from '@/lib/shop-reports';
+import { EXPORTABLE, parseShopReport, type ShopReportKey } from '@/lib/shop-reports';
 import { Link } from '@/lib/i18n/navigation';
-
 
 /**
  * Shop reporting (PRD §6.7, Prompt C10).
@@ -47,11 +44,13 @@ import { Link } from '@/lib/i18n/navigation';
  * with the mall, and when somebody needs to be at the counter. Seller Central's
  * value was never its charts.
  *
- * Every one of them sits under the SAME summary strip, so a shopkeeper reading
- * "these forty products got eight hundred views and no sales" has the shop's
- * own conversion in the same eyeline — and every figure in that strip comes
- * from one helper, which is the only way C10's "same definitions as everywhere
- * else" survives a second author.
+ * Every one of them sits under a summary strip drawn from ONE helper —
+ * `periodSummary` — so a shopkeeper reading "these forty products got eight
+ * hundred views and no sales" has the shop's own conversion in the same
+ * eyeline, computed the same way. Which cells that strip shows is per tab
+ * (SUMMARY_CELLS below): the same five numbers on all five reports was a strip
+ * nobody read, and on the overview it was one of TWO number systems on the
+ * screen. There is now one.
  */
 export default async function ShopReportsPage({
   params,
@@ -89,18 +88,28 @@ export default async function ShopReportsPage({
 
       <ReportTabs active={report} range={range.key} />
 
-      <Suspense key={`summary-${period}`} fallback={<SummaryStripSkeleton />}>
-        <SummaryStrip shopId={user.shopId} period={period} />
+      {/*
+        ONE SET OF NUMBERS, AND THE ONES THIS TAB IS READ AGAINST.
+        The strip used to print the same five figures over all five reports —
+        which taught a reader to skip it — and on the overview it sat directly
+        above four StatCards computed from a SECOND query with a different money
+        predicate, so the screen showed ؋۸۰۴٬۱۰۰ and ؋۶۰۷٬۷۰۰ for the same
+        thirty days, neither of them labelled. The tiles are gone, the strip is
+        the overview's numbers, and each tab asks for the cells its table needs.
+      */}
+      <Suspense
+        key={`summary-${period}-${report}`}
+        fallback={<SummaryStripSkeleton count={SUMMARY_CELLS[report].length} />}
+      >
+        <SummaryStrip shopId={user.shopId} period={period} cells={SUMMARY_CELLS[report]} />
       </Suspense>
 
       {report === 'overview' && (
         <>
           {/* Suspense per section, so a slow aggregate never blocks the
-              headline numbers (PRD §10.5). */}
-          <Suspense key={`totals-${period}`} fallback={<TotalsSkeleton />}>
-            <Totals shopId={user.shopId} period={period} />
-          </Suspense>
-
+              headline numbers (PRD §10.5). A shop with nothing in the window is
+              told so by the strip above, which is where the zeroes are — see
+              summary-strip.tsx. */}
           <Suspense key={`sales-${period}`} fallback={<ChartSkeleton />}>
             <SalesSection shopId={user.shopId} period={period} />
           </Suspense>
@@ -156,50 +165,24 @@ export default async function ShopReportsPage({
   );
 }
 
-async function Totals({ shopId, period }: { shopId: string; period: ReportPeriod }) {
-  const t = await getTranslations('shopReports');
-  const totals = await salesTotals(shopId, period);
-
-  /*
-   * A shop with no sales in the window gets an EXPLANATION rather than four
-   * zeroes (Prompt C5). Four tiles reading ؋ ۰ look like a broken screen to
-   * someone who has never had a sale; a sentence saying what will be here, and
-   * when, does not.
-   */
-  if (totals.orderCount === 0) {
-    return (
-      <EmptyState
-        illustration={<BarChart3 className="h-7 w-7" />}
-        title={t('emptyTitle')}
-        description={t('emptyBody')}
-        action={{ label: t('emptyAction'), href: '/dashboard/products' }}
-      />
-    );
-  }
-
-  return (
-    <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      <StatCard
-        label={t('revenue')}
-        value={totals.revenue}
-        format="currency"
-        icon={<Wallet className="h-4 w-4" />}
-      />
-      <StatCard
-        label={t('orders')}
-        value={totals.orderCount}
-        icon={<ShoppingBag className="h-4 w-4" />}
-      />
-      <StatCard
-        label={t('aov')}
-        value={totals.averageOrderValue}
-        format="currency"
-        icon={<Receipt className="h-4 w-4" />}
-      />
-      <StatCard label={t('units')} value={totals.itemCount} />
-    </dl>
-  );
-}
+/**
+ * WHICH FIGURES EACH TAB IS READ AGAINST.
+ *
+ * Not a preference: every table below needs a shop-wide baseline in the same
+ * eyeline, and it is a different baseline per table. The views report is read
+ * against the shop's own views and conversion; the stock report against what
+ * actually sold; the timing grid against how many orders the whole period
+ * holds, which is the sample its verdict rests on. The responsiveness report
+ * compares against the mall inside its own panel and needs no strip figures
+ * beyond the volume behind them.
+ */
+const SUMMARY_CELLS: Record<ShopReportKey, SummaryCell[]> = {
+  overview: ['revenue', 'orders', 'units', 'aov', 'conversion'],
+  views: ['views', 'orders', 'conversion'],
+  stock: ['units', 'orders'],
+  responsiveness: ['orders', 'units'],
+  timing: ['orders', 'units'],
+};
 
 async function SalesSection({ shopId, period }: { shopId: string; period: ReportPeriod }) {
   const t = await getTranslations('shopReports');
@@ -256,7 +239,9 @@ async function TopProducts({
           {rows.map((row) => (
             <li key={row.id} className="space-y-1">
               <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="clamp-1">{pickLocale(row.title, locale)}</span>
+                <span className="clamp-1" dir="auto">
+                  {pickLocale(row.title, locale)}
+                </span>
                 <span className="shrink-0 font-medium">{formatCurrency(row.revenue, locale)}</span>
               </div>
               {/* A bar rather than a chart: it is a ranked list, and the bar only has
@@ -269,7 +254,7 @@ async function TopProducts({
                 />
               </div>
               <p className="text-muted-foreground text-xs">
-                {t('unitsSold', { count: formatNumber(row.units, locale) })}
+                {t('unitsSold', { n: row.units, count: formatNumber(row.units, locale) })}
               </p>
             </li>
           ))}
@@ -300,7 +285,9 @@ async function PromotionSection({
           {rows.map((row) => (
             <li key={pickLocale(row.slotName, locale)} className="space-y-1 py-2 first:pt-0">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm">{pickLocale(row.slotName, locale)}</span>
+                <span className="text-sm" dir="auto">
+                  {pickLocale(row.slotName, locale)}
+                </span>
                 <span className="text-xs font-medium">{formatCurrency(row.spend, locale)}</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -333,7 +320,11 @@ async function WishlistSection({ shopId, locale }: { shopId: string; locale: str
         <ul className="space-y-2">
           {rows.map((row) => (
             <li key={row.id} className="flex items-center justify-between gap-2 text-sm">
-              <Link href={`/products/${row.slug}`} className="hover:text-primary clamp-1">
+              <Link
+                href={`/products/${row.slug}`}
+                className="hover:text-primary clamp-1"
+                dir="auto"
+              >
                 {pickLocale(row.title, locale)}
               </Link>
               <Badge variant="secondary">
@@ -354,16 +345,6 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
       <h2 className="text-sm font-bold">{title}</h2>
       {children}
     </section>
-  );
-}
-
-function TotalsSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {Array.from({ length: 4 }, (_, index) => (
-        <StatCardSkeleton key={index} />
-      ))}
-    </div>
   );
 }
 

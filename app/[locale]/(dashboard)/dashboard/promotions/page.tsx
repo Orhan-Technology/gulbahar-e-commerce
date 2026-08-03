@@ -19,6 +19,7 @@ import {
   slotInventory,
 } from '@/lib/db/queries/shop-promotions';
 import { formatCurrency, formatNumber } from '@/lib/format';
+import { localeDirection } from '@/lib/i18n/routing';
 
 /**
  * Promotions (PRD §6.4).
@@ -75,7 +76,21 @@ export default async function ShopPromotionsPage({
         )}
       </div>
 
-      <Tabs defaultValue={tab === 'featured' ? 'featured' : 'offers'}>
+      {/*
+        `dir` IS NOT DECORATION HERE — WITHOUT IT THIS WHOLE PAGE IS LTR.
+
+        Radix's Tabs root writes `dir="ltr"` onto its own element whenever it is
+        given neither a `dir` prop nor a DirectionProvider, and that attribute
+        beats the `dir="rtl"` on <html>. Everything inside the panels therefore
+        inherited a left-to-right base direction while the header, the nav and
+        the rest of the console stayed right-to-left: flex rows ran backwards,
+        every logical `ms-`/`me-`/`text-start` resolved to the wrong edge, and
+        Dari sentences containing numbers resolved against an LTR paragraph and
+        shattered — «۲۵٪ تخفیف · ۱ محصول» rendered as «تخفیف ۱ محصول ۲۵٪» with
+        the percent sign orphaned onto the next line. That was read as a bidi
+        bug in the offer card; it was one attribute, three levels up.
+      */}
+      <Tabs dir={localeDirection(locale)} defaultValue={tab === 'featured' ? 'featured' : 'offers'}>
         <TabsList>
           <TabsTrigger value="offers">{t('tabs.offers')}</TabsTrigger>
           <TabsTrigger value="featured">{t('tabs.featured')}</TabsTrigger>
@@ -164,6 +179,7 @@ export default async function ShopPromotionsPage({
                 capacity: slot.capacity,
                 available: slot.available,
                 pricePerWeek: slot.pricePerWeek,
+                weeklyVisitors: slot.weeklyVisitors,
                 acceptsProduct: slot.acceptsProduct,
                 needsProduct: slot.needsProduct,
                 mine: slot.mine,

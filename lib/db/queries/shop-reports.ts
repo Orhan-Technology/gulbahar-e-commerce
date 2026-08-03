@@ -23,8 +23,25 @@ import type { LocalizedText } from '../schema/shared';
 
 export type ReportPeriod = 7 | 30 | 90;
 
+/**
+ * THE SAME WINDOW THE REST OF THE CONSOLE USES — `parseConsoleRange` in
+ * lib/console-range.ts.
+ *
+ * This used to be `now - period × 86_400_000`, a rolling instant thirty days
+ * back, while the dashboard home read the last thirty CALENDAR days from
+ * midnight. Same predicate, same shop, two different answers: the home screen
+ * said ۶۰۲٬۹۰۰ and this file said ۶۰۷٬۷۰۰ for "the last 30 days", and the extra
+ * ۴٬۸۰۰ was one order from the small hours of the thirty-first day back. A
+ * shopkeeper comparing the two screens has no way to discover that, so the
+ * window is defined once and both surfaces read it.
+ */
 function startOf(period: ReportPeriod): string {
-  return new Date(Date.now() - period * 86_400_000).toISOString();
+  const start = new Date();
+  start.setUTCHours(0, 0, 0, 0);
+  // Inclusive of today, exactly like parseConsoleRange: 30 days means today
+  // and the twenty-nine before it.
+  start.setUTCDate(start.getUTCDate() - (period - 1));
+  return start.toISOString();
 }
 
 /** Daily revenue and order count, zero-filled so the chart has no gaps. */
@@ -63,43 +80,20 @@ export async function salesSeries(shopId: string, period: ReportPeriod) {
   );
 }
 
-/** Headline numbers for the period, including average order value. */
-export async function salesTotals(shopId: string, period: ReportPeriod) {
-  const rows = await db.execute(sql`
-    select
-      coalesce(sum(t.revenue), 0)::int as revenue,
-      count(*)::int as order_count,
-      -- AOV over this shop's share of each order, not the basket total.
-      coalesce(round(avg(t.revenue))::int, 0) as average_order_value,
-      coalesce(sum(t.items), 0)::int as item_count
-    from (
-      select
-        o.id,
-        sum(oi.price_snapshot * oi.quantity)::int as revenue,
-        sum(oi.quantity)::int as items
-      from order_items oi
-      join orders o on o.id = oi.order_id
-      where oi.shop_id = ${shopId}
-        and o.created_at >= ${startOf(period)}::timestamptz
-        and o.status not in ('rejected', 'cancelled')
-      group by o.id
-    ) t
-  `);
-
-  const [row] = rows as unknown as Array<{
-    revenue: number;
-    order_count: number;
-    average_order_value: number;
-    item_count: number;
-  }>;
-
-  return {
-    revenue: Number(row?.revenue ?? 0),
-    orderCount: Number(row?.order_count ?? 0),
-    averageOrderValue: Number(row?.average_order_value ?? 0),
-    itemCount: Number(row?.item_count ?? 0),
-  };
-}
+/*
+ * THERE IS NO `salesTotals` HERE ANY MORE, AND NOTHING MAY REPLACE IT.
+ *
+ * It existed to feed four StatCards at the top of the overview, and it summed
+ * money over `not in ('rejected','cancelled')` — orders RECEIVED — while
+ * `periodSummary` below sums money over `fulfilled`. Both were rendered on the
+ * same screen, one strip above the other: ؋۸۰۴٬۱۰۰ under "فروش" and ؋۶۰۷٬۷۰۰
+ * under "عواید", for the same shop and the same thirty days, neither labelled.
+ *
+ * The overview now reads `periodSummary` like every other tab. If a future
+ * screen needs headline totals, call THAT — one money definition (fulfilled),
+ * one order definition (everything except rejected and cancelled), stated on
+ * screen by `shopReports.summary.basis`.
+ */
 
 /** Best sellers by revenue in the period. */
 export async function salesByProduct(shopId: string, period: ReportPeriod, limit = 8) {

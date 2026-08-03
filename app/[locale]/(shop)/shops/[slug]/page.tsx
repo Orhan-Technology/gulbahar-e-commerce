@@ -26,6 +26,7 @@ import {
   shopServiceRating,
 } from '@/lib/db/queries/shop-page';
 import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
+import { parseReviewSort, REVIEW_SORT_PARAM } from '@/lib/review-sort';
 import { decodeSlug } from '@/lib/utils';
 
 /**
@@ -54,7 +55,7 @@ export default async function ShopPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<ListingSearchParams & { tab?: string }>;
+  searchParams: Promise<ListingSearchParams & { tab?: string; reviewSort?: string }>;
 }) {
   const { locale, slug: rawSlug } = await params;
   // Non-ASCII slugs arrive percent-encoded (see decodeSlug).
@@ -117,7 +118,22 @@ export default async function ShopPage({
         )}
         {tab === 'offers' && <OffersTab shopId={shop.id} shopSlug={slug} />}
         {tab === 'about' && <AboutTab shop={shop} now={now} />}
-        {tab === 'reviews' && <ReviewsTab shopId={shop.id} />}
+        {tab === 'reviews' && (
+          <ReviewsTab
+            shopId={shop.id}
+            sort={parseReviewSort(query[REVIEW_SORT_PARAM])}
+            /*
+             * Everything currently in the URL, flattened — the sort control
+             * rebuilds the query string from this, and dropping `tab` would
+             * bounce the reader out of the tab they are sorting.
+             */
+            preserved={Object.fromEntries(
+              Object.entries(query).flatMap(([key, value]) =>
+                typeof value === 'string' ? [[key, value] as const] : [],
+              ),
+            )}
+          />
+        )}
       </div>
     </div>
   );
@@ -126,10 +142,9 @@ export default async function ShopPage({
 /**
  * The catalogue, with the shop's own merchandising above it.
  *
- * The IN-SHOP CATEGORY CHIPS list only the categories this shop actually
- * stocks. The global facet panel offers the whole tree, which on a shoe shop's
- * page means twenty-three categories that return nothing — the chips are the
- * fast path and the panel is the complete one.
+ * The IN-SHOP CATEGORY CHIPS are the ONLY category control here: they list what
+ * this shop actually stocks. The mall-wide tree used to sit in the facet rail
+ * beside them, offering twenty-odd departments this tenant does not sell.
  *
  * The merchandising rows are HIDDEN the moment a filter is applied. Someone who
  * has typed a search or picked a category is looking for a specific thing, and
@@ -159,10 +174,22 @@ async function ProductsTab({
     shopCategories(shopId),
   ]);
 
+  /*
+   * NEITHER THE SHOP AXIS NOR THE CATEGORY TREE.
+   *
+   * The shop axis can only navigate away from the shop this page is about. The
+   * CATEGORY axis is the whole mall's taxonomy — twenty-four rows — rendered
+   * beside a five-product grid that already has the shop's own category chips
+   * above it and its own search box beside them. Two of those three controls
+   * answer the same question, and the one that answered it worst was the tallest
+   * thing on the page. What is left in the rail — brand, price, rating,
+   * availability — narrows what this shop sells, which is the only job a filter
+   * rail has here.
+   */
   const facetOptions = {
     ...facets,
     categories: tree,
-    hide: ['shop'] as Array<'category' | 'shop'>,
+    hide: ['shop', 'category'] as Array<'category' | 'shop'>,
   };
 
   const browsing = !query.q && !query.category && !query.priceMin && !query.priceMax;

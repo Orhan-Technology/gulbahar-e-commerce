@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Check, Eye, MousePointerClick, Square, X } from 'lucide-react';
+import { Check, CircleStop, Eye, MousePointerClick, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -163,16 +163,24 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
             {formatCurrency(campaign.pricePaid, locale)}
           </p>
           {(campaign.status === 'active' || campaign.status === 'ended') && (
-            <p className="text-muted-foreground mt-1 flex flex-wrap items-center justify-end gap-2 text-xs">
+            /*
+              LABELLED, not three bare glyphs. An eye, a cursor and a bare
+              percentage next to each other are only decodable by someone who
+              already knows this screen — and the one number a mall director
+              quotes to a tenant is the click-through rate, which had no name on
+              it at all. The icons stay as scanning aids; the words are what make
+              the row readable out loud.
+            */
+            <p className="text-muted-foreground mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1 text-xs">
               <span className="inline-flex items-center gap-1">
                 <Eye className="h-3 w-3" aria-hidden />
-                {formatNumber(campaign.impressions, locale)}
+                {t('impressions', { count: formatNumber(campaign.impressions, locale) })}
               </span>
               <span className="inline-flex items-center gap-1">
                 <MousePointerClick className="h-3 w-3" aria-hidden />
-                {formatNumber(campaign.clicks, locale)}
+                {t('clicks', { count: formatNumber(campaign.clicks, locale) })}
               </span>
-              <span>{formatPercent(ctr, locale)}</span>
+              <span>{t('ctr', { value: formatPercent(ctr, locale) })}</span>
             </p>
           )}
         </div>
@@ -198,10 +206,12 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
  */
 function CampaignDecision({ campaign, fill = false }: { campaign: CampaignRow; fill?: boolean }) {
   const t = useTranslations('adminPromotions.campaigns');
+  const locale = useLocale();
   const router = useRouter();
 
   const [pending, startTransition] = React.useTransition();
   const [rejecting, setRejecting] = React.useState(false);
+  const [ending, setEnding] = React.useState(false);
   const [reason, setReason] = React.useState('');
 
   const decidable = campaign.status === 'requested';
@@ -216,6 +226,7 @@ function CampaignDecision({ campaign, fill = false }: { campaign: CampaignRow; f
       }
       toast.success(t(label as never));
       setRejecting(false);
+      setEnding(false);
       setReason('');
       router.refresh();
     });
@@ -251,18 +262,55 @@ function CampaignDecision({ campaign, fill = false }: { campaign: CampaignRow; f
         )}
 
         {running && (
+          /*
+            AN IRREVERSIBLE ACT, DRAWN AS ONE. This was a ghost button with a
+            `Square` glyph on it — which is to say, an empty checkbox — and it
+            fired immediately: one stray click took a paid placement off the
+            storefront with no confirmation and no way back, on a booking the
+            shop has already been charged for. A stop icon and a consequence
+            dialog are the minimum a one-way door deserves.
+          */
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             disabled={pending}
-            onClick={() => run('ended', () => endCampaign(campaign.id))}
-            className="hover:text-danger text-neutral-600"
+            onClick={() => setEnding(true)}
+            className="text-danger hover:bg-danger-bg"
           >
-            <Square />
+            <CircleStop />
             {t('endEarly')}
           </Button>
         )}
       </div>
+
+      <Dialog open={ending} onOpenChange={setEnding}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('endTitle')}</DialogTitle>
+            <DialogDescription>{t('endBody')}</DialogDescription>
+          </DialogHeader>
+
+          {/* The three facts that make this decision, named. */}
+          <ul className="rounded-control border-danger-border bg-danger-bg text-danger space-y-1 border-s-2 p-3 text-xs">
+            <li>{t('endConsequenceVisibility')}</li>
+            <li>{t('endConsequenceMoney', { price: formatCurrency(campaign.pricePaid, locale) })}</li>
+            <li>{t('endConsequenceSlot')}</li>
+          </ul>
+
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEnding(false)} disabled={pending}>
+              {t('cancel')}
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={pending}
+              onClick={() => run('ended', () => endCampaign(campaign.id))}
+            >
+              {pending ? t('working') : t('confirmEnd')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={rejecting} onOpenChange={setRejecting}>
         <DialogContent>

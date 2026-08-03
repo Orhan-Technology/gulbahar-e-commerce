@@ -90,6 +90,7 @@ export default async function AdminReviewsPage({
                 shopName: pickLocale(row.shopName, locale),
                 shopSlug: row.shopSlug,
                 responseBody: row.responseBody,
+                reportReasonCode: row.reportReasonCode,
                 reportReason: row.reportReason,
                 reportNote: row.reportNote,
                 reportedAt: row.reportedAt,

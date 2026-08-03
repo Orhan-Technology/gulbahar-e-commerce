@@ -105,6 +105,10 @@ export function WriteReviewDialog({
               <Label htmlFor="review-body">{t('bodyLabel')}</Label>
               <Textarea
                 id="review-body"
+                // The composer follows what is being TYPED, so an English
+                // review written on the Dari site does not read backwards while
+                // it is being written — the same rule the published body uses.
+                dir="auto"
                 value={body}
                 onChange={(event) => setBody(event.target.value)}
                 placeholder={t('bodyPlaceholder')}

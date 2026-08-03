@@ -20,7 +20,7 @@ import { homeProductModules, wishlistedProductIds } from '@/lib/db/queries/home'
  * Storefront home — quality-bar screen #1 (PRD §10.8).
  *
  * MODULE RHYTHM is the organising rule: no two adjacent bands share a shape.
- * Hero → circles → rail → panels → rail → rail → rich rail → feature → grid →
+ * Hero → circles → rail → panels → rail → rail → rich rail → feature → rail →
  * CTA. The page previously ran six near-identical category rails, which is how
  * a long page becomes an undifferentiated scroll however good each band is.
  *
@@ -141,9 +141,20 @@ async function ProductModules({ locale }: { locale: string }) {
               href="/products?sort=newest"
               description={t('newArrivalsHint')}
             />
-            {/* The ONLY grid on the page, and last: two full rows are a good
-                place to stop scrolling, and a rail here would be a fourth one. */}
-            <ProductGrid items={arrivals} savedIds={saved} />
+            {/*
+              A RAIL, not the fourteen-card grid this used to be.
+              Fourteen into three-or-four columns leaves a short final row —
+              two cards adrift under a full one — and the page's last
+              impression was that the catalogue had run out. Eight in a
+              scroller ends mid-card instead, which is a promise of more and
+              the same shape every other band on this page uses.
+            */}
+            <ProductGrid
+              items={arrivals}
+              savedIds={saved}
+              layout="row"
+              railLabel={t('newArrivals')}
+            />
           </section>
         </Reveal>
       )}
@@ -160,7 +171,7 @@ function ProductModulesSkeleton() {
       <CategoryRailSkeleton />
       <FeaturedShopsSkeleton />
       <ShopSpotlightSkeleton />
-      <ProductGridSkeleton count={8} />
+      <ProductGridSkeleton count={8} layout="row" />
     </div>
   );
 }

@@ -1,12 +1,12 @@
 'use client';
 
 import * as React from 'react';
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 
 import { pressable } from '@/components/motion/pressable';
-import { PRESERVED_KEYS } from '@/lib/listing';
+import { brandLabel, brandNamesFrom, PRESERVED_KEYS } from '@/lib/listing';
 import { formatCurrency, formatNumber } from '@/lib/format';
 import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
@@ -32,6 +32,7 @@ export type FilterLabels = {
 export function AppliedFilters({ labels }: { labels: FilterLabels }) {
   const t = useTranslations('filters');
   const locale = useLocale();
+  const brandNames = brandNamesFrom(useMessages());
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -60,12 +61,12 @@ export function AppliedFilters({ labels }: { labels: FilterLabels }) {
     });
   }
 
-  // A brand is its own label — no lookup table, because the URL already carries
-  // the display string rather than a slug.
+  // The URL carries the Latin token, which is the filter value; the chip shows
+  // the Dari name for it when there is one — see brandLabel in lib/listing.ts.
   for (const brand of params.getAll('brand')) {
     chips.push({
       id: `brand-${brand}`,
-      label: brand,
+      label: brandLabel(brand, brandNames).label,
       remove: () => {
         const next = new URLSearchParams(params.toString());
         const rest = next.getAll('brand').filter((value) => value !== brand);
@@ -163,7 +164,10 @@ export function AppliedFilters({ labels }: { labels: FilterLabels }) {
               'rounded-pill border-primary bg-primary-50 text-primary inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-primary-100',
             )}
           >
-            {chip.label}
+            {/* <bdi> because a chip's text is data — a brand token, a shop
+                name, a price range — and one Latin fragment inside an RTL row
+                otherwise reorders the × that removes it. */}
+            <bdi>{chip.label}</bdi>
             <X className="h-3.5 w-3.5" aria-hidden />
             <span className="sr-only">{t('removeFilter')}</span>
           </button>

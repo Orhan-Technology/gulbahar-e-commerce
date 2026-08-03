@@ -113,7 +113,13 @@ export function ShopCard({
 
         <span className="flex min-w-0 flex-col gap-1.5">
           <span className="flex items-center gap-2">
-            <span className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150">
+            {/* `dir="auto"`: a shop's name is the tenant's own text and this
+                directory holds both scripts. Left to inherit, a Latin name
+                dragged the verified tick to the far side of the row. */}
+            <span
+              dir="auto"
+              className="text-foreground group-hover:text-primary truncate text-base font-bold transition-colors duration-150"
+            >
               {name}
               <VerifiedBadge
                 verifiedAt={verifiedAt ?? null}
@@ -200,22 +206,33 @@ export function ShopCard({
           )}
         </div>
 
-        <h3 className="clamp-1 text-foreground flex items-center gap-1 text-sm font-semibold">
+        <h3
+          dir="auto"
+          className="clamp-1 text-foreground flex items-center gap-1 text-sm font-semibold"
+        >
           {name}
           <VerifiedBadge verifiedAt={verifiedAt ?? null} size="sm" />
         </h3>
         {categoryName && <p className="text-muted-foreground truncate text-xs">{categoryName}</p>}
 
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-          {rating !== undefined && rating > 0 && (
+        {/*
+          TWO LINES, NOT ONE ROW. The rating already ends in a number — its
+          review count — and putting «۵ محصول» three pixels after «(۸)» produced
+          «۸ ۵ محصول»: two unrelated quantities the eye reads as one broken
+          figure, and the commonest thing a reader gets wrong on a directory
+          card. They answer different questions (how good, how much) and are now
+          stacked, so neither can be mistaken for part of the other.
+        */}
+        {rating !== undefined && rating > 0 && (
+          <div className="mt-2">
             <RatingStars value={rating} count={reviewCount} size="sm" />
-          )}
-          {productCount !== undefined && (
-            <span className="text-muted-foreground text-xs">
-              {t('productCount', { count: formatNumber(productCount, locale) })}
-            </span>
-          )}
-        </div>
+          </div>
+        )}
+        {productCount !== undefined && (
+          <p className="text-muted-foreground mt-1.5 text-xs">
+            {t('productCount', { count: formatNumber(productCount, locale) })}
+          </p>
+        )}
 
         {/*
           Floor and unit as a neutral BADGE, not a line of text. It is metadata

@@ -147,7 +147,14 @@ async function main() {
     rich.includes('data-condensed="false"'),
   );
   report.check('the rating links to the reviews it summarises', rich.includes('href="#reviews"'));
-  report.check('brand and model print under the title', /Apple\s*·/.test(rich));
+  /*
+   * The separator is an EN DASH in fa, not an interpunct. A `·` sitting next to
+   * Persian numerals reads as the digit zero — «سبد خرید · ۴ قلم» was being read
+   * as "cart, 40 items" — so every fa string that put one beside a number now
+   * uses «–». Matched loosely here so the assertion is about brand and model
+   * appearing together, not about which glyph joins them.
+   */
+  report.check('brand and model print under the title', /Apple\s*[–·-]/.test(rich));
 
   const noComparison = await html(`/fa/products/${NO_COMPARISON}`);
   report.check(

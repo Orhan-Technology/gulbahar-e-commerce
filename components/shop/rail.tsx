@@ -132,6 +132,19 @@ export function Rail({
           // `-mx-4 px-4` lets the rail bleed to the screen edge on a phone while
           // its first card still lines up with the page gutter.
           '-mx-4 flex snap-x scrollbar-none gap-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0',
+          /*
+           * …and `scroll-ps-4` is what makes that gutter survive the snap.
+           *
+           * The SNAPPORT is the scrollport reduced by scroll-padding, NOT by
+           * padding — so with `scroll-padding: auto` the browser aligned the
+           * first card's start edge to the PADDING BOX and settled the rail at
+           * scrollLeft -16 on load. Every rail on a phone therefore opened with
+           * its first card sliced by the screen edge and no gutter at all,
+           * which reads as a row already scrolled — the reader assumes they
+           * have missed something above the fold. Only below `sm`, because that
+           * is where the bleed exists.
+           */
+          'scroll-ps-4 sm:scroll-ps-0',
           '[&>*]:shrink-0 [&>*]:snap-start',
           SIZES[size],
         )}

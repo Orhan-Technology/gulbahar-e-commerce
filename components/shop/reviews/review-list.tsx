@@ -66,7 +66,15 @@ export async function ReviewList({
           <li key={review.id} className="rounded-card border-border bg-card border p-4">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <RatingStars value={review.rating} size="sm" />
-              <span className="text-foreground text-sm font-medium">{review.customerName}</span>
+              {/* `dir="auto"` on everything a CUSTOMER wrote, here and below.
+                  A Dari review read on the English page inherited the page's
+                  LTR direction, which moved its full stop to the front of the
+                  line — «.دکاندار بسیار» — and an English review did the same
+                  inside the Dari page. The browser decides per string from its
+                  first strong character instead. */}
+              <span dir="auto" className="text-foreground text-sm font-medium">
+                {review.customerName}
+              </span>
               <span className="text-success inline-flex items-center gap-1 text-xs">
                 <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
                 {t('verifiedPurchase')}
@@ -79,7 +87,11 @@ export async function ReviewList({
               </time>
             </div>
 
-            {review.body && <p className="mt-2 text-sm leading-relaxed">{review.body}</p>}
+            {review.body && (
+              <p dir="auto" className="mt-2 text-sm leading-relaxed">
+                {review.body}
+              </p>
+            )}
 
             {review.responseBody && (
               <div className="rounded-control border-primary-300 bg-primary-50/60 mt-3 border-s-2 p-3">
@@ -89,7 +101,9 @@ export async function ReviewList({
                     ? t('shopReplied', { shop: pickLocale(review.responseShopName, locale) })
                     : t('shopReply')}
                 </p>
-                <p className="text-primary-900/90 mt-1 text-sm">{review.responseBody}</p>
+                <p dir="auto" className="text-primary-900/90 mt-1 text-sm">
+                  {review.responseBody}
+                </p>
               </div>
             )}
 
@@ -112,7 +126,7 @@ export async function ReviewList({
           {page > 1 && (
             <Link
               href={reviewHref(productSlug, { stars, sort, page: page - 1 })}
-              className="rounded-control border-border border px-3 py-1.5 hover:bg-neutral-100"
+              className="rounded-control border-border focus-visible:ring-ring border px-3 py-1.5 hover:bg-neutral-100 focus-visible:ring-2 focus-visible:outline-none"
               scroll={false}
             >
               {t('previousReviews')}
@@ -121,7 +135,7 @@ export async function ReviewList({
           {page < pageCount && (
             <Link
               href={reviewHref(productSlug, { stars, sort, page: page + 1 })}
-              className="rounded-control border-border border px-3 py-1.5 hover:bg-neutral-100"
+              className="rounded-control border-border focus-visible:ring-ring border px-3 py-1.5 hover:bg-neutral-100 focus-visible:ring-2 focus-visible:outline-none"
               scroll={false}
             >
               {t('moreReviews')}
