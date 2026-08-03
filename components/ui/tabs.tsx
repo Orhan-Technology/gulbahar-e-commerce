@@ -1,11 +1,32 @@
 'use client';
 
 import * as React from 'react';
+import { useLocale } from 'next-intl';
 import * as TabsPrimitive from '@radix-ui/react-tabs';
 
+import { localeDirection } from '@/lib/i18n/routing';
 import { cn } from '@/lib/utils';
 
-const Tabs = TabsPrimitive.Root;
+/**
+ * Radix defaults its own `dir` to "ltr" and STAMPS IT ON THE DOM, where it beats
+ * the `dir="rtl"` on <html>. Every tabbed screen therefore rendered
+ * left-to-right inside a right-to-left console: flex rows reversed, `ms-`/`me-`
+ * and `text-start` resolved to the wrong edge, and any Dari sentence containing
+ * a number came apart, because the number resolved against an LTR paragraph.
+ *
+ * It looked like a dozen unrelated "bidi bugs" on cards and headers. It was one
+ * attribute, several levels up. Defaulting from the active locale fixes all of
+ * them at once, and an explicit `dir` prop still wins for the rare case that
+ * genuinely wants the other direction.
+ */
+const Tabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
+>(({ dir, ...props }, ref) => {
+  const locale = useLocale();
+  return <TabsPrimitive.Root ref={ref} dir={dir ?? localeDirection(locale)} {...props} />;
+});
+Tabs.displayName = TabsPrimitive.Root.displayName;
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
