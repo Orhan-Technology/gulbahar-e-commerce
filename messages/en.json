@@ -1463,7 +1463,7 @@
   "shopOrders": {
     "title": "Orders",
     "needsAction": "{count} awaiting acceptance",
-    "itemCount": "{count} items",
+    "itemCount": "{n, plural, one {# item} other {{count} items}}",
     "shopSubtotal": "Your shop's subtotal",
     "sharedOrder": "Shared",
     "sharedOrderNote": "This order also contains items from other shops. A status change applies to the whole order and is recorded in the history under your name.",
@@ -1648,8 +1648,8 @@
     "publishSelected": "Publish selected",
     "unpublishSelected": "Unpublish",
     "clearSelection": "Clear selection",
-    "bulkPublished": "{count} products published",
-    "bulkUnpublished": "{count} products unpublished",
+    "bulkPublished": "{n, plural, one {# product published} other {{count} products published}}",
+    "bulkUnpublished": "{n, plural, one {# product unpublished} other {{count} products unpublished}}",
     "outOfStock": "Out of stock",
     "lowStock": "Low stock",
     "missingEnglish": "No English",
@@ -1880,7 +1880,7 @@
       "percentOff": "{value}% off",
       "fixedOff": "{value} off",
       "wholeShop": "Whole shop",
-      "productScope": "{count} products",
+      "productScope": "{n, plural, one {# product} other {{count} products}}",
       "notStarted": "Not started yet",
       "edit": "Edit offer",
       "end": "End now",
@@ -2019,7 +2019,7 @@
   },
   "shopReviews": {
     "title": "Reviews",
-    "averageOf": "average of {count} reviews",
+    "averageOf": "{n, plural, one {average of # review} other {average of {count} reviews}}",
     "filters": {
       "all": "All",
       "unanswered": "Unanswered",
@@ -2174,7 +2174,7 @@
     "wishlistHeading": "Most saved",
     "ordersLabel": "orders",
     "averageRating": "Average rating",
-    "unitsSold": "{count} units sold",
+    "unitsSold": "{n, plural, one {# unit sold} other {{count} units sold}}",
     "impressionsClicks": "{impressions} impressions · {clicks} clicks · CTR {ctr}",
     "noOrders": "No orders in this period.",
     "noReviews": "No reviews in this period.",
@@ -2262,7 +2262,8 @@
       "emptyTitle": "No orders in this period",
       "emptyBody": "Once orders come in, this grid shows which hours of which days they arrive, so you know when somebody needs to be at the counter.",
       "notEnough": "Not enough orders yet to name a busiest hour — you had {orders} in this period. The grid below shows the orders you did get."
-    }
+    },
+    "statusTotalNote": "This ring shows all {total} orders in the period, including rejected and cancelled. The count at the top of the page ({counted}) leaves those two out."
   },
   "shopSettings": {
     "title": "Settings",
@@ -2969,7 +2970,8 @@
       "emptyBody": "Every placement surface is free. Use “Book a placement” to sell one, or step forward a month.",
       "subtitleWithValue": "{vacant} of {total} slot-days are unsold this month — roughly {value} of unsold inventory.",
       "vacantValue": "≈ {value}"
-    }
+    },
+    "openSlotCalendar": "Slot calendar"
   },
   "adminRevenue": {
     "title": "Placement revenue",
@@ -3190,7 +3192,8 @@
     "viewShop": "View shop",
     "roleShopWarning": "This account owns “{shop}”. Changing the role removes their access to the shop panel.",
     "deactivateShopTitle": "“{shop}” would be left unattended",
-    "deactivateShopBody": "The shop keeps {products} live products and has {orders} open orders, but nobody would be able to sign in and accept them."
+    "deactivateShopBody": "The shop keeps {products} live products and has {orders} open orders, but nobody would be able to sign in and accept them.",
+    "noActivity": "No activity yet"
   },
   "demoLog": {
     "open": "Message log",
@@ -3843,7 +3846,21 @@
         "supportPhone": "Support phone",
         "supportEmail": "Support email",
         "address": "Address",
-        "mallHours": "Mall hours"
+        "mallHours": "Mall hours",
+        "mallName": "Mall name",
+        "hours": "Mall opening hours",
+        "pickupHoldHours": "Pickup hold (hours)",
+        "currencyLabel": "Currency label"
+      },
+      "values": {
+        "mode": {
+          "create": "Created",
+          "update": "Edited"
+        },
+        "decision": {
+          "remove": "Review removed",
+          "uphold": "Review kept"
+        }
       }
     }
   },

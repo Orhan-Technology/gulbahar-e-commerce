@@ -165,7 +165,15 @@ async function main() {
   `;
   check(
     'a new order is acceptable from the shop dashboard',
-    placed === 0 || /تایید سفارش/.test(visibleText(dashboard)),
+    /*
+     * «پذیرفتن», not «تایید». Three different things in this product were all
+     * called «تاییدشده» — mall management approving a shop, an admin verifying
+     * an identity, and a shopkeeper accepting an order — and at chip size the
+     * reader could not tell which had happened. The order action now has its
+     * own verb; matched loosely here so the assertion is about the action being
+     * on the page rather than about its exact wording.
+     */
+    placed === 0 || /(پذیرفتن|تایید)\s*سفارش/.test(visibleText(dashboard)),
     { placed },
   );
 
