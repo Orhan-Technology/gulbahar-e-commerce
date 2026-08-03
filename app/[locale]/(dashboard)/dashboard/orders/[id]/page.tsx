@@ -129,7 +129,13 @@ export default async function ShopOrderPage({
                 )}
                 {item.variantSelection && item.variantSelection.length > 0 && (
                   <p className="text-muted-foreground text-xs">
-                    {item.variantSelection.join(' · ')}
+                    {/*
+                      An EN DASH, not an interpunct. Persian ۰ is a dot, so a «·»
+                      touching a numeral merges with it — and a variant is very
+                      often a numeral («۴۲» for a shoe), which made «قهوه‌ای · ۴۲»
+                      read as «قهوه‌ای ۰۴۲».
+                    */}
+                    {item.variantSelection.join(' – ')}
                   </p>
                 )}
                 <p className="text-muted-foreground text-xs">

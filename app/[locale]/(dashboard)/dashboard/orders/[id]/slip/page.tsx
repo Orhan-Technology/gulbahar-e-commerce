@@ -122,7 +122,13 @@ export default async function OrderSlipPage({
                   {pickLocale(item.titleSnapshot, locale)}
                   {item.variantSelection && item.variantSelection.length > 0 && (
                     <span className="block text-xs text-neutral-500">
-                      {item.variantSelection.join(' · ')}
+                      {/*
+                        EN dash for the same reason as the order detail: a «·»
+                        beside a Persian numeral reads as a zero, and this one
+                        is printed onto the slip that goes in the bag — where
+                        «۴۲» becoming «۰۴۲» is picked off the wrong shelf.
+                      */}
+                      {item.variantSelection.join(' – ')}
                     </span>
                   )}
                 </td>

@@ -2656,7 +2656,7 @@
     "suspensionReason": "دلیل معطل‌شدن",
     "closureReason": "دلیل بستن دکان",
     "decidedBy": "{actor} – {date}",
-    "revenueWindow": "{orders} سفارش · {days} روز",
+    "revenueWindow": "{orders} سفارش – {days} روز",
     "verification": {
       "submitted": "اسناد هویت این دکان منتظر بررسی است",
       "under_review": "اسناد هویت این دکان در حال بررسی است",
@@ -3021,7 +3021,7 @@
     "monthToDateLabel": "درآمد تبلیغات از اول ماه تا امروز",
     "vsSamePeriodLastMonth": "نسبت به {days} روز نخست ماه گذشته",
     "bookedThisMonth": "{n, plural, one {ارزش در جریان این ماه {amount} از # کمپاین} other {ارزش در جریان این ماه {amount} از {count} کمپاین}}",
-    "periodsNote": "بازه‌ها: درآمد تبلیغات از اول ماه تا روز {day} · اشغال و کمپاین‌های فعال همین حالا · ارزش فروش پلتفرم ۳۰ روز گذشته · مجموع از آغاز {lifetime}.",
+    "periodsNote": "بازه‌ها: درآمد تبلیغات از اول ماه تا روز {day} – اشغال و کمپاین‌های فعال همین حالا – ارزش فروش پلتفرم ۳۰ روز گذشته – مجموع از آغاز {lifetime}.",
     "colBilledMonth": "صورت‌حساب این ماه",
     "colRunningMonth": "در جریان این ماه",
     "chartPeak": "بهترین ماه: {month} — {amount}",
