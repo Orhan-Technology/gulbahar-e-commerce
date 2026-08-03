@@ -2305,8 +2305,8 @@
     "brand": "Ariana",
     "model": null,
     "description": {
-      "fa": "پیراهن تنبان مردانه از تکه نخی صد در صد، دوخت‌شده در همین کابل. پارچه نخی در گرمای تابستان نفس می‌کشد و بعد از چند بار شستن نرم‌تر می‌شود. سایزها از مدیم تا دبل ایکس‌ال موجود است و تنگ‌کردن آن در دکان رایگان انجام می‌شود.",
-      "en": "A men's perahan tunban in 100% cotton, cut and sewn here in Kabul. Cotton breathes through the summer heat and softens after a few washes. Sizes run from medium to XXL, and we take it in at the shop free of charge."
+      "fa": "پیراهن تنبان مردانه از تکه نخی صد در صد، دوخت‌شده در همین کابل. پارچه نخی در گرمای تابستان نفس می‌کشد و بعد از چند بار شستن نرم‌تر می‌شود. سایزها از S تا XL موجود است و تنگ‌کردن آن در دکان رایگان انجام می‌شود.",
+      "en": "A men's perahan tunban in 100% cotton, cut and sewn here in Kabul. Cotton breathes through the summer heat and softens after a few washes. Sizes run from S to XL, and we take it in at the shop free of charge."
     },
     "attributes": [
       {
@@ -2326,15 +2326,15 @@
       {
         "key": "sizes",
         "value": {
-          "fa": "M، L، XL، XXL",
-          "en": "M, L, XL, XXL"
+          "fa": "S، M، L، XL",
+          "en": "S, M, L, XL"
         }
       },
       {
         "key": "colour",
         "value": {
-          "fa": "سفید، کریمی، خاکستری",
-          "en": "White, cream, grey"
+          "fa": "کریمی، خاکی، سفید",
+          "en": "Cream, khaki, white"
         }
       },
       {
@@ -5350,8 +5350,8 @@
       {
         "key": "sizes",
         "value": {
-          "fa": "M، L، XL، XXL",
-          "en": "M, L, XL, XXL"
+          "fa": "S، M، L، XL",
+          "en": "S, M, L, XL"
         }
       },
       {

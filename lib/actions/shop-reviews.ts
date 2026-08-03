@@ -139,6 +139,13 @@ export async function flagReview(
       shopName: shop ? pickLocale(shop.name, 'fa') : '',
       productTitle: pickLocale(review.productTitle, 'fa'),
       reason: reasons(parsed.data.reason),
+      /*
+       * The enum key beside the rendered label. The notification BODY needs the
+       * label (it is a sentence a person reads); the moderation queue needs the
+       * code (it translates it into whatever language the admin is reading).
+       * Sending only the label made that screen render a raw key path.
+       */
+      reasonCode: parsed.data.reason,
       note: parsed.data.note?.trim() || '',
       /*
        * Carried so the moderation queue can find THIS report rather than

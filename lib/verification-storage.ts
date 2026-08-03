@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /**
@@ -83,5 +83,38 @@ export async function readVerificationDocument(relativePath: string): Promise<Bu
     return await readFile(resolved);
   } catch {
     return null;
+  }
+}
+
+/**
+ * Can this document actually be opened?
+ *
+ * A ROW IS NOT A DOCUMENT. `shop_verification_documents` records that a file
+ * was meant to exist; whether the bytes are still on disk is a separate fact,
+ * and the two came apart badly — every seeded submission pointed at a path
+ * nothing had ever written, so both review panes rendered the route's bare
+ * «Not found» body inside an <embed> and an admin could approve an identity on
+ * zero evidence without noticing.
+ *
+ * The reviewer's screen and the decision action both ask this BEFORE offering
+ * approval, so "no evidence" is a state the UI names rather than a blank frame
+ * the reader has to interpret. It deliberately does NOT read the bytes: a
+ * `stat` answers the question at a fraction of the cost, and a queue page runs
+ * this once per document per render.
+ *
+ * The same traversal guard as the reader above, for the same reason — a check
+ * that trusts the column is not a check.
+ */
+export async function verificationDocumentExists(relativePath: string): Promise<boolean> {
+  const resolved = path.resolve(STORAGE_ROOT, relativePath);
+  if (!resolved.startsWith(path.resolve(STORAGE_ROOT) + path.sep)) return false;
+
+  try {
+    const info = await stat(resolved);
+    // An empty file is a failed write, not a document. Treating it as present
+    // would put a zero-byte PDF in front of a reviewer as if it were evidence.
+    return info.isFile() && info.size > 0;
+  } catch {
+    return false;
   }
 }

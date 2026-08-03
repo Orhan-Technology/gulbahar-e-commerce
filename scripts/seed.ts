@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import { readFile } from 'node:fs/promises';
+import sharp from 'sharp';
 import { and, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import path from 'node:path';
 
@@ -44,6 +45,7 @@ import {
 import { DEFAULT_SETTINGS } from '../lib/db/queries/settings';
 import { specTemplateFor } from '../lib/product-templates';
 import { generateCollectionCode } from '../lib/collection-code';
+import { storeVerificationDocument } from '../lib/verification-storage';
 import { renderTemplate, type NotificationEventKey } from '../lib/notify';
 import faMessages from '../messages/fa.json';
 import { formatCurrency } from '../lib/format';
@@ -811,7 +813,17 @@ async function main() {
     const values = {
       shopName: shopSeed.find((shop) => shop.slug === review.shopSlug)?.name.fa ?? '',
       productTitle: productBySlug.get(review.productSlug)?.title.fa ?? '',
+      /*
+       * BOTH the rendered label and the code it came from.
+       *
+       * `reason` is what the notification body reads, so it has to be the Dari
+       * label. `reasonCode` is what the moderation queue translates, and it has
+       * to be the enum key — storing only the label made that screen print the
+       * raw key path «adminReviews.reportReasons.این شخص از ما خرید نکرده» on
+       * the single most decision-relevant line it has.
+       */
       reason: flagReasonLabels[reasonKey],
+      reasonCode: reasonKey,
       note: '',
       reviewId: review.id,
     };
@@ -1194,11 +1206,17 @@ async function main() {
       total: orders.total,
       status: orders.status,
       createdAt: orders.createdAt,
+      fulfillment: orders.fulfillment,
+      collectionCode: orders.collectionCode,
+      holdExpiresAt: orders.holdExpiresAt,
+      shopName: shops.name,
     })
     .from(orders)
+    .innerJoin(orderItems, eq(orderItems.orderId, orders.id))
+    .innerJoin(shops, eq(orderItems.shopId, shops.id))
     .where(eq(orders.userId, demoCustomerRow.id))
     .orderBy(desc(orders.createdAt))
-    .limit(4);
+    .limit(6);
 
   const alreadyNotified = new Set(
     notificationValues
@@ -1206,32 +1224,77 @@ async function main() {
       .filter(Boolean),
   );
 
+  /*
+   * THE WHOLE CHAIN, not just "placed".
+   *
+   * This loop used to write one `order.placed` per order whatever the order's
+   * actual state was, so the customer's bell held four identical "your order
+   * was placed" cards while one of those orders was sitting READY behind the
+   * counter with a collection code — the single most demo-worthy message the
+   * product can send, and nothing announced it. The events now follow the
+   * order's real status, which is also what makes the bell's deep links land on
+   * something worth reading.
+   */
+  const holdHours = DEFAULT_SETTINGS.pickupHoldHours ?? 24;
+  const chainFor = (order: (typeof demoCustomerOrders)[number]) => {
+    const steps: Array<{ key: NotificationEventKey; values: Record<string, string | number> }> = [
+      {
+        key: 'order.placed',
+        values: { reference: order.reference, total: formatCurrency(order.total, 'fa') },
+      },
+    ];
+    const shopName = pickLocale(order.shopName, 'fa');
+
+    if (['accepted', 'ready', 'fulfilled'].includes(order.status)) {
+      steps.push({ key: 'order.accepted', values: { reference: order.reference, shopName } });
+    }
+    if (['ready', 'fulfilled'].includes(order.status)) {
+      steps.push({
+        key: 'order.ready',
+        values: {
+          reference: order.reference,
+          shopName,
+          fulfillment: order.fulfillment,
+          // Only a pickup order has these, and only the pickup branch reads them.
+          collectionCode: order.collectionCode ?? '',
+          holdHours,
+        },
+      });
+    }
+    if (order.status === 'fulfilled') {
+      steps.push({ key: 'order.fulfilled', values: { reference: order.reference } });
+    }
+    return steps;
+  };
+
   for (const [index, order] of demoCustomerOrders.entries()) {
     if (alreadyNotified.has(order.reference)) continue;
 
-    const values = {
-      reference: order.reference,
-      total: formatCurrency(order.total, 'fa'),
-    };
-    const rendered = renderTemplate('order.placed', 'fa', values);
+    for (const [step, event] of chainFor(order).entries()) {
+      const rendered = renderTemplate(event.key, 'fa', event.values);
 
-    notificationValues.push({
-      eventKey: 'order.placed',
-      recipientUserId: demoCustomerRow.id,
-      recipientRole: 'customer' as const,
-      // 'sms' is how it WOULD have gone out; nothing is ever really sent in
-      // this build, and the bell shows it regardless (Prompt C12).
-      channel: 'sms' as const,
-      locale: 'fa',
-      title: rendered.title,
-      body: rendered.body,
-      payload: { ...values, orderId: order.id },
-      // The newest stays unread so the storefront bell opens with a count.
-      read: index > 0,
-      createdAt: new Date(
-        Math.min(order.createdAt.getTime() + 60 * 1000, NOW.getTime() - 4 * 60 * 1000),
-      ),
-    });
+      notificationValues.push({
+        eventKey: event.key,
+        recipientUserId: demoCustomerRow.id,
+        recipientRole: 'customer' as const,
+        // 'sms' is how it WOULD have gone out; nothing is ever really sent in
+        // this build, and the bell shows it regardless (Prompt C12).
+        channel: 'sms' as const,
+        locale: 'fa',
+        title: rendered.title,
+        body: rendered.body,
+        payload: { ...event.values, orderId: order.id },
+        // The newest order's last message stays unread so the bell opens with a
+        // count on the thing the customer most wants to see.
+        read: !(index === 0 && step === chainFor(order).length - 1),
+        createdAt: new Date(
+          Math.min(
+            order.createdAt.getTime() + (step + 1) * 60 * 60 * 1000,
+            NOW.getTime() - (4 + (chainFor(order).length - step)) * 60 * 1000,
+          ),
+        ),
+      });
+    }
   }
 
   /*
@@ -1469,12 +1532,54 @@ async function main() {
    * Every badge state, so the admin queue and the storefront both have
    * something to show (Prompt C7).
    *
-   * No DOCUMENT FILES are written. The seed runs offline and a fabricated
-   * "business licence" image would be a fake identity document sitting in a
-   * repository — the rows carry a placeholder path that the authenticated route
-   * simply fails to read, which is the honest failure mode. The demo beat is
-   * the shopkeeper uploading a real file live.
+   * DOCUMENT FILES ARE WRITTEN, and they are deliberately NOT forgeries.
+   *
+   * The earlier seed wrote rows pointing at files that never existed, reasoning
+   * that a fabricated "business licence" would be a fake identity document
+   * sitting in a repository. The reasoning was right; the result was not. The
+   * admin's verification screen rendered a raw "Not found" inside both document
+   * frames while approve and reject stayed enabled — so the one screen whose
+   * entire job is judging evidence asked for a decision with no evidence, and
+   * the failure looked like a broken page rather than an honest gap.
+   *
+   * What gets written instead is an obvious PLACEHOLDER: a grey page that says
+   * SAMPLE — NOT A REAL DOCUMENT across it in Latin, with bars where text would
+   * be. It cannot be mistaken for a licence or a tazkira by anyone, including a
+   * screenshot. It gives the queue something to render, and the storage path,
+   * the authenticated route, the mime handling and the reviewer's flow all get
+   * exercised for real. Files land under storage/ (gitignored, outside the
+   * served tree), so nothing synthetic is committed.
+   *
+   * The demo beat is still the shopkeeper uploading a real file live.
    */
+
+  /**
+   * A visibly fake document page. PNG rather than PDF so it renders inline in
+   * every browser without a viewer, and so sharp — already a dependency for the
+   * catalogue — can draw it.
+   */
+  const placeholderDocument = async (label: string): Promise<Buffer> => {
+    const width = 1000;
+    const height = 1414; // A4 proportions.
+    const bar = (y: number, w: number) =>
+      `<rect x="90" y="${y}" width="${w}" height="16" rx="8" fill="#d7dbe3"/>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect width="${width}" height="${height}" fill="#f4f6fa"/>
+      <rect x="60" y="60" width="${width - 120}" height="${height - 120}" rx="18" fill="#ffffff" stroke="#c9d1de" stroke-width="3"/>
+      <rect x="90" y="110" width="420" height="30" rx="8" fill="#aeb8c8"/>
+      ${[210, 250, 290, 330, 370, 450, 490, 530, 570, 650, 690, 730]
+        .map((y, index) => bar(y, index % 3 === 2 ? 500 : 760))
+        .join('')}
+      <text x="${width / 2}" y="900" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="54" font-weight="bold" fill="#b42323" opacity="0.85">SAMPLE</text>
+      <text x="${width / 2}" y="960" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="30" fill="#8b98ab">NOT A REAL DOCUMENT</text>
+      <text x="${width / 2}" y="1010" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="26" fill="#8b98ab">${label}</text>
+      ${[1090, 1130, 1170].map((y) => bar(y, 620)).join('')}
+    </svg>`;
+    return sharp(Buffer.from(svg)).png().toBuffer();
+  };
   const verificationPlan: Array<{
     shopSlug: string;
     status: 'verified' | 'submitted' | 'rejected';
@@ -1522,14 +1627,20 @@ async function main() {
       .returning({ id: shopVerifications.id });
 
     for (const kind of ['business_licence', 'owner_id'] as const) {
+      // Written through the real storage helper, so the path shape, the
+      // per-shop directory and the traversal guard are the ones production uses.
+      const bytes = await placeholderDocument(
+        kind === 'business_licence' ? 'business licence' : 'owner ID',
+      );
+      const filePath = await storeVerificationDocument(shopId, bytes, 'image/png');
+
       await db.insert(shopVerificationDocuments).values({
         verificationId: record.id,
         kind,
-        // Points at nothing on purpose — see the note above.
-        filePath: `${shopId}/seed-${kind}.pdf`,
-        mime: 'application/pdf',
-        size: 128 * 1024,
-        originalName: `${kind}.pdf`,
+        filePath,
+        mime: 'image/png',
+        size: bytes.byteLength,
+        originalName: `${kind}.png`,
         uploadedAt: submittedAt,
       });
     }
@@ -1666,6 +1777,101 @@ async function main() {
       .where(eq(orders.id, order.id));
 
     holdsIssued += 1;
+  }
+
+  /*
+   * THE TWO ENDINGS THE DEMO CUSTOMER NEVER HAD: one rejected, one cancelled.
+   *
+   * Their order history was ten fulfilled, one placed and one ready — so the
+   * «رد شده» filter opened empty, and neither the rejection reason rendering
+   * nor the cancelled voice could be reached by walking the app. Both states
+   * carry translated, customer-facing consequences that were shipping unseen.
+   *
+   * Written HERE, after every draw that matters, and with explicit references:
+   * no rand() is consumed, so the references the runbook names cannot move
+   * (CLAUDE.md).
+   */
+  const closedOrderPlans = [
+    {
+      reference: 'GC-25301',
+      status: 'rejected' as const,
+      // The shop refusing at the door, in the enumerated form the customer's
+      // message is written from.
+      note: 'reason:out_of_stock',
+      hoursAgo: 52,
+    },
+    {
+      reference: 'GC-25302',
+      status: 'cancelled' as const,
+      // The customer changing their mind before the shop committed. The code
+      // must be one `isOrderRejectReason` recognises, or the tracking page
+      // renders the raw note instead of a translated sentence.
+      note: 'reason:customer_cancelled',
+      hoursAgo: 30,
+    },
+  ];
+
+  for (const plan of closedOrderPlans) {
+    const placedAt = new Date(NOW.getTime() - plan.hoursAgo * 60 * 60 * 1000);
+    const line = demoLines[0];
+    const price = line.discountPrice ?? line.price;
+
+    const [closed] = await db
+      .insert(orders)
+      .values({
+        reference: plan.reference,
+        userId: demoCustomer.id,
+        status: plan.status,
+        fulfillment: 'delivery',
+        paymentMethod: 'cod',
+        addressId: null,
+        addressSnapshot: {
+          label: 'خانه',
+          district: 'ناحیه چهارم',
+          street: 'سرک دوم، کوچه سوم',
+          phone: demoCustomer.phone,
+        },
+        subtotal: price,
+        discountTotal: 0,
+        deliveryFee: 0,
+        total: price,
+        createdAt: placedAt,
+      })
+      .returning({ id: orders.id });
+
+    await db.insert(orderItems).values({
+      orderId: closed.id,
+      shopId: shopIds.get(demoShopSlug)!,
+      productId: productIds.get(line.slug)!,
+      titleSnapshot: line.title,
+      priceSnapshot: price,
+      quantity: 1,
+    });
+
+    /*
+     * Stock is NOT decremented for these two. They ended without the goods
+     * leaving, so the units are back on the shelf — which is exactly the state
+     * the catalogue's stock numbers already describe (see the note on the
+     * product stock column above).
+     */
+    await db.insert(orderEvents).values([
+      {
+        orderId: closed.id,
+        fromStatus: null,
+        toStatus: 'placed' as const,
+        actorUserId: demoCustomer.id,
+        createdAt: placedAt,
+      },
+      {
+        orderId: closed.id,
+        fromStatus: 'placed' as const,
+        toStatus: plan.status,
+        // The customer cancels their own order; the shop rejects.
+        actorUserId: plan.status === 'cancelled' ? demoCustomer.id : null,
+        note: plan.note,
+        createdAt: new Date(placedAt.getTime() + 3 * 60 * 60 * 1000),
+      },
+    ]);
   }
 
   // ----------------------------------------------- shop reviews and follows
