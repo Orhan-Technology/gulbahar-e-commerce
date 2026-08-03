@@ -129,7 +129,12 @@
         "products": "Add your first three products",
         "verification": "Send documents for verification"
       }
-    }
+    },
+    "performanceHeading": "How it's going",
+    "salesChartHeadingRanged": "Sales, last {days} days",
+    "farAbovePrevious": "Far above the previous period",
+    "farBelowPrevious": "Far below the previous period",
+    "bestDay": "Best day in this period: {day} — {amount}"
   },
   "admin": {
     "heading": "Platform Administration",
@@ -492,6 +497,14 @@
     },
     "errors": {
       "shop_paused": "This shop is not taking orders right now."
+    },
+    "compareHintCategory": "Products in the same category — differences are highlighted.",
+    "reviewEmpty": {
+      "title": "No reviews yet",
+      "bodyBuyer": "You bought this one — tell the next buyer how it went.",
+      "bodySignedOut": "Bought this? Sign in and write the first review.",
+      "bodyNotBuyer": "Reviews come only from customers whose order has been delivered.",
+      "write": "Write a review"
     }
   },
   "shop": {
@@ -549,7 +562,8 @@
     },
     "errors": {
       "shop_paused": "This shop is not taking orders right now."
-    }
+    },
+    "popularTitle": "What people are buying"
   },
   "promotions": {
     "sponsored": "Sponsored"
@@ -780,7 +794,10 @@
     "signInToSave": "Sign in to save items",
     "signIn": "Sign in",
     "codePlaceholder": "123456",
-    "openLog": "Open the message log"
+    "openLog": "Open the message log",
+    "codeLifetime": "This code is valid for {minutes} minutes.",
+    "resendCode": "Send a new code",
+    "resendIn": "Send a new code in {seconds}s"
   },
   "nav": {
     "menu": "Menu",
@@ -845,7 +862,8 @@
     "browseHeading": "Shop by department",
     "yourShopHere": "Your shop here",
     "yourShopHereHint": "Buy this placement",
-    "offerEndsSoon": "Until the end of the week"
+    "offerEndsSoon": "Until the end of the week",
+    "heroOfferSubtitle": "{discount} off at {shop}"
   },
   "offers": {
     "title": "Offers",
@@ -924,12 +942,44 @@
     "removeFilter": "Remove this filter",
     "brand": "Brand",
     "showAllBrands": "Show all {count} brands",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "brandNames": {
+      "Alborz": "Alborz",
+      "Anker": "Anker",
+      "Apple": "Apple",
+      "Argan": "Argan",
+      "Ariana": "Ariana",
+      "Casio": "Casio",
+      "Classic": "Classic",
+      "Danesh": "Danesh",
+      "Essence": "Essence",
+      "Garnier": "Garnier",
+      "Golden": "Golden",
+      "JBL": "JBL",
+      "Jinko": "Jinko",
+      "Kudak": "Kudak",
+      "L'Oréal": "L'Oréal",
+      "LG": "LG",
+      "Maybelline": "Maybelline",
+      "Midea": "Midea",
+      "Moulinex": "Moulinex",
+      "Nike": "Nike",
+      "Nivea": "Nivea",
+      "Nokia": "Nokia",
+      "Noor": "Noor",
+      "Pamir": "Pamir",
+      "Salam": "Salam",
+      "Samsung": "Samsung",
+      "Seiko": "Seiko",
+      "Xiaomi": "Xiaomi",
+      "Zarin": "Zarin"
+    }
   },
   "categories": {
     "title": "Categories",
     "productCount": "{count} products",
-    "comingSoon": "Coming soon"
+    "comingSoon": "Coming soon",
+    "indexSubtitle": "Every department in Gulbahar Center, and what you will find in it."
   },
   "shops": {
     "title": "Shops at Gulbahar Center",
@@ -976,7 +1026,9 @@
     "didYouMean": "Did you mean <link>{term}</link>?",
     "tryCategories": "Try these categories",
     "tryShops": "Try these shops",
-    "categoryHasCount": "{count} products"
+    "categoryHasCount": "{count} products",
+    "shopResultCount": "{n, plural, one {# shop found} other {{count} shops found}}",
+    "alsoInProducts": "{count} products under Products"
   },
   "checkout": {
     "title": "Checkout",
@@ -1047,7 +1099,17 @@
     "multiShopPickup": "This basket comes from {count} shops — collect each parcel from its own shop.",
     "onlyLeft": "only {count} available",
     "soldOut": "sold out",
-    "editCart": "Edit cart"
+    "editCart": "Edit cart",
+    "defaultAddress": "Last used",
+    "deliveryEta": "1–2 working days",
+    "pickupEta": "Usually ready the same day",
+    "recapDelivery": "Deliver to {address}",
+    "recapPickup": "{n, plural, one {Collect it yourself at Gulbahar Center} other {Collect it yourself from {count} shops at Gulbahar Center}}",
+    "recapPayment": "Payment: {method}",
+    "recapMethod": {
+      "cod": "Cash on delivery",
+      "hesabpay": "HesabPay"
+    }
   },
   "confirmation": {
     "title": "Your order is placed!",
@@ -1065,7 +1127,15 @@
     "free": "Free",
     "total": "Total",
     "trackOrder": "Track order",
-    "keepShopping": "Keep shopping"
+    "keepShopping": "Keep shopping",
+    "copyReference": "Copy reference",
+    "copied": "Copied",
+    "copyFailed": "Could not copy — write the reference down instead.",
+    "deliveryEta": "Usually 1–2 working days.",
+    "pickupEta": "Usually ready the same day.",
+    "fulfillmentHeading": "Delivery and payment",
+    "cod": "Cash on delivery",
+    "hesabpay": "Paid with HesabPay"
   },
   "orders": {
     "title": "My orders",
@@ -1116,7 +1186,8 @@
       "whereLabel": "Where",
       "hoursLabel": "Mall hours",
       "where": "Floor {floor} · Unit {unit}",
-      "expires": "Held until {when}. After that the shop may put the items back on the shelf."
+      "expires": "Held until {when}. After that the shop may put the items back on the shelf.",
+      "whatsapp": "WhatsApp"
     },
     "cancel": {
       "action": "Cancel order",
@@ -1154,7 +1225,11 @@
       "invalid_input": "Invalid request",
       "unavailable": "This product is unavailable",
       "out_of_stock": "This product is out of stock"
-    }
+    },
+    "itemCount": "{count} items",
+    "moveToCartAction": "Move to cart",
+    "movedToCart": "Moved to your cart",
+    "goToCart": "View cart"
   },
   "account": {
     "title": "My account",
@@ -1348,7 +1423,9 @@
       "newSince": "{count} new",
       "noProducts": "This shop has no live products right now.",
       "visitShop": "See everything from {shop}"
-    }
+    },
+    "defaultAddress": "Default",
+    "defaultAddressHint": "The address your last order went to is preselected at checkout."
   },
   "dashboardNav": {
     "label": "Shop panel navigation",
@@ -1380,7 +1457,8 @@
       "body": "If something goes wrong with your shop or an order, call the Gulbahar management office.",
       "callOffice": "Call the management office",
       "address": "Management office: {address}"
-    }
+    },
+    "waitingItems": "{n, plural, one {# item waiting for you} other {{count} items waiting for you}}"
   },
   "shopOrders": {
     "title": "Orders",
@@ -1529,7 +1607,8 @@
         "not_ready": "Mark the order ready before handing it over.",
         "code_mismatch": "That code belongs to a different order. Check the customer’s screen.",
         "transition_not_allowed": "Someone else already completed this order."
-      }
+      },
+      "hint": "The code the customer shows you on their phone — five letters and digits."
     },
     "holds": {
       "title": "{count} reservations not collected",
@@ -1549,7 +1628,8 @@
         "not_expired": "The hold window has not passed yet.",
         "transition_not_allowed": "Someone else already dealt with this order."
       }
-    }
+    },
+    "cancelHint": "If you can no longer complete this order:"
   },
   "shopProducts": {
     "title": "Products",
@@ -1701,7 +1781,13 @@
         "price_positive": "Enter a price — it has to be more than zero",
         "discount_below_price": "The discounted price has to be lower than the normal price",
         "invalid_input": "That value is not valid"
-      }
+      },
+      "imagesFirstHint": "Start with the photos. Pick them now — they upload as soon as you save the product.",
+      "imagesStagedHint": "The first photo is the main one. They all upload when you save the product.",
+      "englishToggle": "Add English too?",
+      "specValue": "Value",
+      "featureTitle": "Title",
+      "featureBody": "Description"
     },
     "importWizard": {
       "step1": "1 — File",
@@ -1895,7 +1981,8 @@
         "product_not_publishable": "The chosen product is not published, or not yours",
         "not_withdrawable": "Only an undecided request can be withdrawn"
       },
-      "pickProductOptional": "Product for this slot (optional — leave empty to promote your shop)"
+      "pickProductOptional": "Product for this slot (optional — leave empty to promote your shop)",
+      "weeklyVisitors": "About {count} customers a week have reached shops from this slot"
     },
     "campaigns": {
       "none": "No campaigns yet.",
@@ -1924,7 +2011,10 @@
         "product_required": "This slot needs a product",
         "product_not_publishable": "The chosen product is not published, or not yours",
         "not_withdrawable": "Only an undecided request can be withdrawn"
-      }
+      },
+      "visitors": "{count} customers came from this ad",
+      "ctrLabel": "Click rate",
+      "bookAgain": "Book two weeks again"
     }
   },
   "shopReviews": {
@@ -1978,7 +2068,9 @@
       "wrong_product": "It is about a different product",
       "personal_info": "It contains a phone number or personal details",
       "other": "Another reason"
-    }
+    },
+    "defaultUnansweredNote": "You have {count} reviews with no reply, and that is what is listed. To see all of them:",
+    "moreActions": "More actions"
   },
   "shopProfile": {
     "title": "Shop profile",
@@ -2056,6 +2148,15 @@
         "thu": "Thursday",
         "fri": "Friday"
       }
+    },
+    "floorHint": "Choose the floor",
+    "unsavedChanges": "You have unsaved changes",
+    "allSaved": "Everything is saved",
+    "adminStatus": {
+      "pending": "Awaiting mall approval",
+      "approved": "Approved by mall management",
+      "suspended": "Suspended by mall management",
+      "closed": "Closed by mall management"
     }
   },
   "shopReports": {
@@ -2096,7 +2197,10 @@
       "orders": "Orders",
       "units": "Units",
       "aov": "Average order",
-      "conversion": "Conversion"
+      "conversion": "Conversion",
+      "views": "Views",
+      "basis": "Sales, units and average order count fulfilled orders only. The order count includes everything except rejected and cancelled.",
+      "empty": "No orders in this period, so every figure above is zero."
     },
     "views": {
       "product": "Product",
@@ -2111,7 +2215,8 @@
         "promote": "Listing looks fine — try an offer"
       },
       "emptyTitle": "Nothing is being ignored",
-      "emptyBody": "Every product with real traffic in this period is converting. Products with fewer than 20 views are left out — an absence of sales there means nobody has seen it yet, not that something is wrong."
+      "emptyBody": "Every product with real traffic in this period is converting. Products with fewer than 20 views are left out — an absence of sales there means nobody has seen it yet, not that something is wrong.",
+      "fixAction": "Fix this listing"
     },
     "stock": {
       "product": "Product",
@@ -2155,7 +2260,8 @@
         "6": "Saturday"
       },
       "emptyTitle": "No orders in this period",
-      "emptyBody": "Once orders come in, this grid shows which hours of which days they arrive, so you know when somebody needs to be at the counter."
+      "emptyBody": "Once orders come in, this grid shows which hours of which days they arrive, so you know when somebody needs to be at the counter.",
+      "notEnough": "Not enough orders yet to name a busiest hour — you had {orders} in this period. The grid below shows the orders you did get."
     }
   },
   "shopSettings": {
@@ -2240,7 +2346,13 @@
         "pause_date_past": "The day you are back has to be in the future",
         "pause_too_far": "A shop cannot be closed for more than six months",
         "not_found": "Shop not found"
-      }
+      },
+      "quick": {
+        "7": "One week",
+        "14": "Two weeks",
+        "30": "One month"
+      },
+      "returnOn": "The shop reopens on {date}."
     }
   },
   "shopRegistration": {
@@ -2285,7 +2397,13 @@
       "bad_phone": "The mobile number must start with 07 and be ten digits",
       "bad_hours": "The opening hours are incomplete — set both the opening and closing time",
       "invalid_input": "That value is not valid"
-    }
+    },
+    "nameEnOptional": "Optional — leave it blank if you do not have one.",
+    "floorHint": "Choose the floor",
+    "nextHeading": "What happens after you send this?",
+    "nextReview": "Gulbahar Center management checks your application and your unit.",
+    "nextHowLong": "That usually takes one to two working days.",
+    "nextNotified": "We text the result to this number, and you will see it in the panel too."
   },
   "adminNav": {
     "label": "Admin sections",
@@ -2356,14 +2474,25 @@
       "nudgedShort": "Nudge sent",
       "nudged": "The shop has been reminded",
       "verification": "Verification request — {shop}",
-      "verificationSub": "Documents sent, waiting on a review"
+      "verificationSub": "Documents sent, waiting on a review",
+      "openVerification": "Open documents",
+      "claimVerification": "I'll review this",
+      "verificationClaimed": "Assigned to you — the documents are on the verification page",
+      "verificationClaimedShort": "Yours"
     },
     "revenue": {
       "heading": "Promotion income this month",
       "viewAll": "Full report",
       "vsLastMonth": "Last month {amount}",
       "firstMonth": "First month of placement sales",
-      "occupancy": "{n, plural, one {# of {total} places sold} other {{sold} of {total} places sold}}"
+      "occupancy": "{n, plural, one {# of {total} places sold} other {{sold} of {total} places sold}}",
+      "recognisedLabel": "Billed month to date (day {day})",
+      "recognisedFullLabel": "Billed this month",
+      "vsSameStretch": "First {day} days of last month {amount}",
+      "noBaselineThisFar": "Nothing was booked in the same stretch last month",
+      "bookedLabel": "Placement running this month",
+      "bookedHint": "{n, plural, one {# campaign} other {{count} campaigns}}",
+      "topSlotsLifetime": "Highest-earning slots — all time · {total} total"
     },
     "health": {
       "heading": "Platform health — last 30 days",
@@ -2516,7 +2645,8 @@
         "no_owner": "This shop has no owner to notify."
       },
       "nudgeAll": "Send all issues",
-      "pausedUntil": "On holiday until {date}"
+      "pausedUntil": "On holiday until {date}",
+      "needsAttention": "Needs attention"
     },
     "searchPlaceholder": "Search by shop name",
     "emptySearchTitle": "Nothing found",
@@ -2524,7 +2654,19 @@
     "pausedUntil": "On holiday until {date}",
     "suspensionReason": "Reason for suspension",
     "closureReason": "Reason for closure",
-    "decidedBy": "{actor} · {date}"
+    "decidedBy": "{actor} · {date}",
+    "revenueWindow": "{orders} orders · {days} days",
+    "verification": {
+      "submitted": "This shop's identity documents are waiting for review",
+      "under_review": "This shop's identity documents are being reviewed",
+      "verified": "This shop's identity is verified",
+      "rejected": "This shop's identity documents were rejected",
+      "expired": "This shop's verification has expired",
+      "waitingBody": "{count} documents, submitted {date}. Read them before deciding on the shop.",
+      "validUntil": "Valid until {date}",
+      "decidedOn": "Decided {date}",
+      "open": "Verification queue"
+    }
   },
   "adminCategories": {
     "title": "Categories",
@@ -2586,7 +2728,10 @@
         "has_products": "Products are attached to this category",
         "has_shops": "Shops are attached to this category"
       }
-    }
+    },
+    "lockedByProducts": "{count} products",
+    "lockedByChildren": "{count} subcategories",
+    "lockedByShops": "{count} shops"
   },
   "adminProducts": {
     "title": "Platform products",
@@ -2621,7 +2766,24 @@
     "emptySearchBody": "No product matched “{term}”. Try another name.",
     "reasonLabel": "Reason for removing",
     "reasonPlaceholder": "e.g. The product photo does not match what the description says.",
-    "reasonNote": "This text is sent to the shop and appears beside the product in the shop's own list."
+    "reasonNote": "This text is sent to the shop and appears beside the product in the shop's own list.",
+    "sortLabel": "Sort",
+    "sorts": {
+      "newest": "Newest",
+      "views": "Most viewed",
+      "price": "Highest price",
+      "stock": "Lowest stock"
+    },
+    "rowMenu": "More actions",
+    "viewPublic": "View on the storefront",
+    "viewShop": "View shop",
+    "colProduct": "Product",
+    "colShop": "Shop",
+    "colStatus": "Status",
+    "colViews": "Views",
+    "colStock": "Stock",
+    "colPrice": "Price",
+    "unpublishedBecause": "Removed because: {reason}"
   },
   "adminReviews": {
     "title": "Review moderation",
@@ -2698,7 +2860,16 @@
         "not_running": "That campaign is not running",
         "slot_full": "The slot is full for this window",
         "reason_too_short": "The reason must be at least five characters"
-      }
+      },
+      "impressions": "{count} impressions",
+      "clicks": "{count} clicks",
+      "ctr": "CTR {value}",
+      "endTitle": "End this placement early?",
+      "endBody": "This cannot be undone. To continue, the shop has to request the slot again and it has to be sold again.",
+      "endConsequenceVisibility": "The placement disappears from the storefront immediately.",
+      "endConsequenceMoney": "The {price} already paid stays in revenue; nothing is refunded automatically.",
+      "endConsequenceSlot": "The freed place becomes available to sell again straight away.",
+      "confirmEnd": "Yes, end it"
     },
     "slots": {
       "priceNote": "A price change applies to new bookings only; existing campaigns keep the price they were sold at.",
@@ -2719,6 +2890,15 @@
         "capacity_min": "Capacity must be at least one",
         "price_min": "The price must be greater than zero",
         "capacity_below_sold": "Capacity cannot go below what is already sold"
+      },
+      "placementUnknown": "Placement not described",
+      "placements": {
+        "home_hero": "Large banner at the top of the home page",
+        "featured_shops": "Featured shops on the home page",
+        "search_top": "Above the search results",
+        "category_top": "Top of a category page",
+        "product_related": "Beside related products",
+        "directory_top": "Top of the shop directory"
       }
     },
     "manual": {
@@ -2786,7 +2966,9 @@
         "active": "Running"
       },
       "emptyTitle": "Nothing booked this month",
-      "emptyBody": "Every placement surface is free. Use “Book a placement” to sell one, or step forward a month."
+      "emptyBody": "Every placement surface is free. Use “Book a placement” to sell one, or step forward a month.",
+      "subtitleWithValue": "{vacant} of {total} slot-days are unsold this month — roughly {value} of unsold inventory.",
+      "vacantValue": "≈ {value}"
     }
   },
   "adminRevenue": {
@@ -2835,7 +3017,13 @@
     "guardrailLabel": "Guardrail",
     "guardrailBody": "A paid placement never changes organic ranking — a shop can buy the top spot, not a better score. Every paid result carries a Sponsored marker.",
     "monthToDateLabel": "Placement revenue, month to date",
-    "vsSamePeriodLastMonth": "vs the first {days} days of last month"
+    "vsSamePeriodLastMonth": "vs the first {days} days of last month",
+    "bookedThisMonth": "{n, plural, one {{amount} running this month across # campaign} other {{amount} running this month across {count} campaigns}}",
+    "periodsNote": "Periods: placement income is month to date (day {day}) · occupancy and active campaigns are as of now · platform GMV is the last 30 days · all-time total {lifetime}.",
+    "colBilledMonth": "Billed this month",
+    "colRunningMonth": "Running this month",
+    "chartPeak": "Best month: {month} — {amount}",
+    "chartTrough": "Weakest month: {month} — {amount}"
   },
   "adminReports": {
     "title": "Platform reports",
@@ -2855,7 +3043,9 @@
     "topCategoriesHeading": "Top categories",
     "orderCount": "{count} orders",
     "units": "{count} units",
-    "noData": "No data in this period."
+    "noData": "No data in this period.",
+    "statusTotal": "{count} orders in this period",
+    "statusReconcile": "This donut counts all {total} orders in the period, including the {excluded} rejected or cancelled. The “Orders” tile above counts only the {counted} that were accepted."
   },
   "adminOrders": {
     "title": "All orders",
@@ -2931,7 +3121,15 @@
         "not_cancellable": "This order has already ended and can no longer be cancelled.",
         "reason_too_short": "The reason must be at least ten characters."
       }
-    }
+    },
+    "colShop": "Shop",
+    "multiShopCell": "{count} shops",
+    "waitingHours": "{n, plural, one {# hour waiting} other {{count} hours waiting}}",
+    "waitingDays": "{n, plural, one {# day waiting} other {{count} days waiting}}",
+    "stalledHours": "{n, plural, one {Unanswered by the shop for # hour} other {Unanswered by the shop for {count} hours}}",
+    "stalledDays": "{n, plural, one {Unanswered by the shop for # day} other {Unanswered by the shop for {count} days}}",
+    "stalledBody": "The customer is still waiting. You can remind the shop, or — if nobody answers — end the order on behalf of the mall.",
+    "deliveryFree": "Free"
   },
   "adminUsers": {
     "title": "Users",
@@ -2986,7 +3184,13 @@
     "activityOrders": "{n, plural, one {# order} other {{count} orders}}",
     "activityReviews": "{n, plural, one {# review} other {{count} reviews}}",
     "emptySearchTitle": "Nothing found",
-    "emptySearchBody": "No account matched “{term}”. Try another name or phone number."
+    "emptySearchBody": "No account matched “{term}”. Try another name or phone number.",
+    "colLastActive": "Last active",
+    "rowMenu": "More actions",
+    "viewShop": "View shop",
+    "roleShopWarning": "This account owns “{shop}”. Changing the role removes their access to the shop panel.",
+    "deactivateShopTitle": "“{shop}” would be left unattended",
+    "deactivateShopBody": "The shop keeps {products} live products and has {orders} open orders, but nobody would be able to sign in and accept them."
   },
   "demoLog": {
     "open": "Message log",
@@ -3128,7 +3332,10 @@
     "promotedNote": "These products purchased placement — organic ranking is unchanged",
     "emptySearchTitle": "Nothing found for \"{term}\"",
     "emptySearchBody": "Try a different spelling, or browse everything in the mall.",
-    "browseAll": "Browse all products"
+    "browseAll": "Browse all products",
+    "showingOf": "Showing {shown} of {count} products",
+    "emptyUnfilteredTitle": "This category is filling up soon",
+    "emptyUnfilteredBody": "No shop has listed anything here yet. In the meantime, here is what the mall is looking at."
   },
   "adminSettings": {
     "title": "Platform settings",
@@ -3268,6 +3475,12 @@
       "sectionCategories": "Categories",
       "sectionLedger": "Sold placements",
       "sectionInventory": "Slot capacity"
+    },
+    "chartScale": {
+      "peak": "Best day: {date} — {amount}",
+      "trough": "Quietest trading day: {date} — {amount}",
+      "average": "Daily average {amount}",
+      "tradingDays": "{n, plural, one {# of {total} days had sales} other {{count} of {total} days had sales}}"
     }
   },
   "shopVerification": {
@@ -3358,8 +3571,16 @@
       "not_found": "Not found",
       "invalid_input": "That input is not valid",
       "reason_required": "The reason must be at least 10 characters",
-      "already_decided": "That submission has already been decided"
-    }
+      "already_decided": "That submission has already been decided",
+      "evidence_missing": "Identity cannot be approved without a readable document"
+    },
+    "decisionHeading": "Your decision",
+    "viewStorefront": "View storefront",
+    "noDocumentsTitle": "No documents submitted",
+    "noDocumentsBody": "This submission carries no documents at all. Identity cannot be verified without them — reject it and ask the shop to send a business licence and an ID.",
+    "documentUnavailableTitle": "Document unavailable",
+    "documentUnavailableBody": "The file for “{kind}” could not be found on the server. It may have been stored incompletely on upload. Ask the shop to send it again.",
+    "cannotApprove": "Approval is unavailable until these documents can be read: {documents}. You can still reject the submission with a written reason so the shop knows what to resend."
   },
   "verification": {
     "badgeLabel": "Verified shop",
@@ -3459,7 +3680,10 @@
     "hours": {
       "title": "Opening hours",
       "today": "Today",
-      "closed": "Closed"
+      "closed": "Closed",
+      "everyDay": "Every day",
+      "dayRange": "{from} to {to}",
+      "showEveryDay": "See day by day"
     }
   },
   "adminFloors": {
@@ -3495,7 +3719,11 @@
         "not_found": "That shop no longer exists.",
         "unit_taken": "Another shop is already at that unit."
       }
-    }
+    },
+    "legendTrading": "Trading",
+    "legendPending": "Awaiting approval",
+    "legendClosed": "Closed or suspended",
+    "legendVacant": "Vacant unit"
   },
   "adminSettlements": {
     "title": "Settlements",
@@ -3514,7 +3742,11 @@
     "emptyTitle": "No settlement periods",
     "emptyBody": "Rows would appear here once a period closes: one per shop, with the revenue it fulfilled, the mall’s commission at the agreed rate, and what is left to pay out.",
     "todayTitle": "How it works today",
-    "todayBody": "Every order in this build is cash on delivery or HesabPay direct to the shop, so the shop already holds the money and the mall is not in the payment path at all. Commission would be invoiced separately. If Gulbahar wants to collect payments centrally instead, that is a different flow — and a bigger conversation than a settlement table."
+    "todayBody": "Every order in this build is cash on delivery or HesabPay direct to the shop, so the shop already holds the money and the mall is not in the payment path at all. Commission would be invoiced separately. If Gulbahar wants to collect payments centrally instead, that is a different flow — and a bigger conversation than a settlement table.",
+    "sampleTag": "Sample",
+    "sampleShop": "Shop name",
+    "samplePeriod": "One week",
+    "sampleStatus": "Awaiting payment"
   },
   "adminAudit": {
     "title": "Audit log",
@@ -3579,6 +3811,40 @@
       "order": {
         "cancel": "Cancelled an order"
       }
+    },
+    "detail": {
+      "transition": "Change",
+      "change": "{from} → {to}",
+      "yes": "Yes",
+      "no": "No",
+      "keys": {
+        "owner": "Owner",
+        "phone": "Phone",
+        "ownerCreated": "New account created",
+        "expiresAt": "Valid until",
+        "mode": "Kind",
+        "slug": "Slug",
+        "count": "Count",
+        "decision": "Decision",
+        "active": "Active",
+        "flags": "Flags",
+        "capacity": "Capacity",
+        "pricePerWeek": "Weekly price",
+        "pricePaid": "Price paid",
+        "weeks": "Weeks",
+        "restoredUnits": "Units restored",
+        "shops": "Shops",
+        "locales": "Languages",
+        "deliveryFee": "Delivery fee",
+        "freeDeliveryThreshold": "Free delivery over",
+        "minOrderValue": "Minimum order",
+        "deliveryEtaMinutes": "Delivery time (minutes)",
+        "siteName": "Site name",
+        "supportPhone": "Support phone",
+        "supportEmail": "Support email",
+        "address": "Address",
+        "mallHours": "Mall hours"
+      }
     }
   },
   "floors": {
@@ -3596,7 +3862,9 @@
     "emptyTitle": "Nothing on this floor matches",
     "emptyBody": "Try another category, or another floor.",
     "shopsOnFloor": "{count} shops",
-    "viewShop": "Open shop page"
+    "viewShop": "Open shop page",
+    "shopsOnFloorHeading": "Shops on floor {floor}",
+    "openShop": "Open shop"
   },
   "notificationCentre": {
     "title": "Notifications",
@@ -3637,6 +3905,8 @@
         "requires_auth": "Sign in first.",
         "invalid_input": "Something was not right. Try again."
       }
-    }
+    },
+    "groupNew": "New",
+    "groupEarlier": "Earlier"
   }
 }

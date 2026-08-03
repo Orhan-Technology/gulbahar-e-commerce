@@ -46,7 +46,7 @@
       "allCaughtUpTitle": "همه چیز مرتب است",
       "allCaughtUpBody": "سفارش در انتظار یا محصول تمام‌شده‌ای ندارید.",
       "newOrder": "سفارش جدید — {reference}",
-      "newOrderSub": "{n, plural, other {{count} قلم}} · {total}",
+      "newOrderSub": "{n, plural, other {{count} قلم}} – {total}",
       "markReady": "آماده کنید — {reference}",
       "outOfStock": "تمام شده: {product}",
       "outOfStockSub": "موجودی را به‌روز کنید تا فروش از دست نرود",
@@ -98,7 +98,7 @@
     "lowStockHint": "{count} کم‌موجود",
     "allInStock": "همه موجود",
     "salesChartRange": "از {from} تا {to}",
-    "topProductsStats": "{views} بازدید · {no, plural, other {{orders} سفارش}} · {saves} نشان‌شده",
+    "topProductsStats": "{views} بازدید – {no, plural, other {{orders} سفارش}} – {saves} نشان‌شده",
     "noSalesYet": "هنوز فروشی ثبت نشده",
     "greeting": "سلام، {name}",
     "weekOrdersLabel": "سفارش‌های این هفته",
@@ -108,7 +108,7 @@
     "ratingCount": "{n, plural, one {از # نظر} other {از {count} نظر}}",
     "noReviewsYet": "هنوز نظری ثبت نشده",
     "topSellersHeading": "پرفروش‌ها این هفته",
-    "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} · {views} بازدید",
+    "topSellersUnits": "{n, plural, one {# فروش} other {{count} فروش}} – {views} بازدید",
     "topSellersHeadingRanged": "پرفروش‌ترین‌ها — {days} روز اخیر",
     "noBaseline": "دوره قبلی برای مقایسه وجود ندارد",
     "rangeOrdersLabel": "سفارش‌ها — {days} روز",
@@ -129,7 +129,12 @@
         "products": "افزودن سه محصول اول",
         "verification": "فرستادن اسناد برای تأیید هویت"
       }
-    }
+    },
+    "performanceHeading": "چطور پیش می‌رود",
+    "salesChartHeadingRanged": "فروش {days} روز گذشته",
+    "farAbovePrevious": "خیلی بیشتر از دورهٔ پیش",
+    "farBelowPrevious": "خیلی کمتر از دورهٔ پیش",
+    "bestDay": "بهترین روز این بازه: {day} — {amount}"
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -316,7 +321,7 @@
       "weekSales": "فروش این هفته",
       "ordersAwaiting": "سفارش‌های در انتظار",
       "queueNewOrder": "سفارش جدید — GC-24815",
-      "queueNewOrderSub": "۳ قلم · ۴٬۸۰۰ افغانی · تحویل در آدرس",
+      "queueNewOrderSub": "۳ قلم – ۴٬۸۰۰ افغانی – تحویل در آدرس",
       "queueOutOfStock": "۲ محصول تمام شده",
       "queueOutOfStockSub": "موجودی را به‌روز کنید تا فروش از دست نرود",
       "queueExpiring": "تبلیغ در حال ختم",
@@ -377,7 +382,7 @@
     "previousReviews": "نظرات قبلی",
     "relatedHeading": "محصولات مرتبط",
     "relatedHint": "از همین دکان و همین دسته‌بندی",
-    "shopFloorUnit": "طبقه {floor} · دکان {unit}",
+    "shopFloorUnit": "طبقه {floor} – دکان {unit}",
     "cartError": {
       "invalid_input": "درخواست نامعتبر بود",
       "unavailable": "این محصول فعلاً موجود نیست",
@@ -422,7 +427,7 @@
     "specsShowAll": "دیدن همه مشخصات",
     "specsShowLess": "بستن",
     "specsAllGroups": "همه",
-    "brandModel": "{brand} · مدل {model}",
+    "brandModel": "{brand} – مدل {model}",
     "helpLine": "سوالی درباره سفارش یا برگشت دارید؟ <link>با پشتیبانی در تماس شوید</link>.",
     "compareHeading": "مقایسه با محصولات مشابه",
     "compareHint": "محصولات هم‌دسته با قیمت نزدیک — تفاوت‌ها پررنگ شده‌اند.",
@@ -492,11 +497,19 @@
     },
     "errors": {
       "shop_paused": "این دکان فعلاً سفارش نمی‌گیرد."
+    },
+    "compareHintCategory": "محصولات هم‌دسته — تفاوت‌ها پررنگ شده‌اند.",
+    "reviewEmpty": {
+      "title": "هنوز نظری ثبت نشده",
+      "bodyBuyer": "شما این محصول را خریده‌اید. تجربه‌تان را بنویسید تا خریدار بعدی آسان‌تر تصمیم بگیرد.",
+      "bodySignedOut": "اگر این محصول را خریده‌اید، وارد حساب خود شوید و اولین نظر را بنویسید.",
+      "bodyNotBuyer": "نظر را تنها کسانی ثبت کرده می‌توانند که سفارش‌شان تحویل شده باشد.",
+      "write": "نوشتن نظر"
     }
   },
   "shop": {
     "productCount": "{count} محصول",
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "catalogue": "محصولات این دکان",
     "searchInShop": "جستجو در محصولات این دکان…",
     "allProducts": "همه محصولات",
@@ -509,8 +522,8 @@
       "open": "اکنون باز است",
       "closingSoon": "{minutes} دقیقه تا بسته شدن",
       "closed": "بسته است",
-      "opensAt": "· ساعت {time} باز می‌شود",
-      "opensOnDay": "· {day} ساعت {time} باز می‌شود"
+      "opensAt": "– ساعت {time} باز می‌شود",
+      "opensOnDay": "– {day} ساعت {time} باز می‌شود"
     },
     "pausedBadge": "تا {date} سفارش نمی‌گیرد"
   },
@@ -524,7 +537,7 @@
     "startShopping": "شروع خرید",
     "shopSubtotal": "جمع این دکان",
     "shopTotal": "قابل پرداخت این دکان",
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "lineOutOfStock": "این محصول تمام شده است",
     "summary": "خلاصه سفارش",
     "subtotal": "جمع اقلام",
@@ -549,7 +562,8 @@
     },
     "errors": {
       "shop_paused": "این دکان فعلاً سفارش نمی‌گیرد."
-    }
+    },
+    "popularTitle": "این‌ها را مردم بیشتر می‌خرند"
   },
   "promotions": {
     "sponsored": "تبلیغ شده"
@@ -780,7 +794,10 @@
     "signInToSave": "برای ذخیره کردن وارد شوید",
     "signIn": "ورود",
     "codePlaceholder": "۱۲۳۴۵۶",
-    "openLog": "دیدن پنل پیام‌ها"
+    "openLog": "دیدن پنل پیام‌ها",
+    "codeLifetime": "این کد {minutes} دقیقه اعتبار دارد.",
+    "resendCode": "ارسال دوباره کد",
+    "resendIn": "ارسال دوباره تا {seconds} ثانیه دیگر"
   },
   "nav": {
     "menu": "منو",
@@ -845,7 +862,8 @@
     "browseHeading": "خرید بر اساس بخش",
     "yourShopHere": "فروشگاه شما اینجا",
     "yourShopHereHint": "جایگاه تبلیغاتی بخرید",
-    "offerEndsSoon": "تا پایان هفته"
+    "offerEndsSoon": "تا پایان هفته",
+    "heroOfferSubtitle": "{discount} تخفیف در {shop}"
   },
   "offers": {
     "title": "تخفیف‌ها",
@@ -875,7 +893,7 @@
     "trustPickupTitle": "تسلیمی حضوری رایگان",
     "trustPickupBody": "از دکان، در مرکز گلبهار",
     "trustDeliveryTitle": "تحویل سریع در کابل",
-    "trustDeliveryBody": "۱ تا ۲ روز · {fee} افغانی، بالای {threshold} افغانی رایگان",
+    "trustDeliveryBody": "۱ تا ۲ روز – {fee} افغانی، بالای {threshold} افغانی رایگان",
     "trustPaymentTitle": "پرداخت آسان",
     "trustPaymentBody": "نقد هنگام تحویل یا حساب‌پی",
     "trustSupportTitle": "پشتیبانی هر روز",
@@ -924,12 +942,44 @@
     "removeFilter": "برداشتن این فیلتر",
     "brand": "برند",
     "showAllBrands": "دیدن هر {count} برند",
-    "showLess": "کمتر نشان بده"
+    "showLess": "کمتر نشان بده",
+    "brandNames": {
+      "Alborz": "البرز",
+      "Anker": "انکر",
+      "Apple": "اپل",
+      "Argan": "آرگان",
+      "Ariana": "آریانا",
+      "Casio": "کاسیو",
+      "Classic": "کلاسیک",
+      "Danesh": "دانش",
+      "Essence": "اسنس",
+      "Garnier": "گارنیه",
+      "Golden": "طلایی",
+      "JBL": "جی‌بی‌ال",
+      "Jinko": "جینکو",
+      "Kudak": "کودک",
+      "L'Oréal": "لورآل",
+      "LG": "ال‌جی",
+      "Maybelline": "میبلین",
+      "Midea": "میدیا",
+      "Moulinex": "مولینکس",
+      "Nike": "نایک",
+      "Nivea": "نیوآ",
+      "Nokia": "نوکیا",
+      "Noor": "نور",
+      "Pamir": "پامیر",
+      "Salam": "سلام",
+      "Samsung": "سامسونگ",
+      "Seiko": "سیکو",
+      "Xiaomi": "شیائومی",
+      "Zarin": "زرین"
+    }
   },
   "categories": {
     "title": "دسته‌بندی‌ها",
     "productCount": "{count} محصول",
-    "comingSoon": "به‌زودی"
+    "comingSoon": "به‌زودی",
+    "indexSubtitle": "هر بخش مرکز گلبهار و آنچه در آن پیدا می‌کنید."
   },
   "shops": {
     "title": "دکان‌های مرکز گلبهار",
@@ -976,7 +1026,9 @@
     "didYouMean": "شاید منظورتان <link>{term}</link> بوده باشد؟",
     "tryCategories": "این دسته‌بندی‌ها را ببینید",
     "tryShops": "این دکان‌ها را ببینید",
-    "categoryHasCount": "{count} محصول"
+    "categoryHasCount": "{count} محصول",
+    "shopResultCount": "{n, plural, one {# دکان پیدا شد} other {{count} دکان پیدا شد}}",
+    "alsoInProducts": "{count} محصول در تب محصولات"
   },
   "checkout": {
     "title": "پرداخت و تحویل",
@@ -1003,7 +1055,7 @@
     "addressSaved": "آدرس ذخیره شد",
     "pickupHeading": "محل دریافت",
     "pickupBody": "سفارش خود را از دکان‌های زیر در مرکز گلبهار بگیرید.",
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "paymentHeading": "روش پرداخت",
     "cod": "پرداخت در وقت تحویل",
     "codHint": "نقده به پیک بپردازید",
@@ -1047,7 +1099,17 @@
     "multiShopPickup": "این سبد از {count} دکان است؛ هر بسته را جداگانه از همان دکان بگیرید.",
     "onlyLeft": "تنها {count} عدد موجود است",
     "soldOut": "تمام شده",
-    "editCart": "اصلاح سبد"
+    "editCart": "اصلاح سبد",
+    "defaultAddress": "آخرین آدرس شما",
+    "deliveryEta": "۱ تا ۲ روز کاری",
+    "pickupEta": "معمولاً همان روز آماده می‌شود",
+    "recapDelivery": "تحویل به {address}",
+    "recapPickup": "{n, plural, one {دریافت خودتان از دکان در مرکز گلبهار} other {دریافت خودتان از {count} دکان در مرکز گلبهار}}",
+    "recapPayment": "پرداخت: {method}",
+    "recapMethod": {
+      "cod": "نقده در وقت تحویل",
+      "hesabpay": "حساب‌پی"
+    }
   },
   "confirmation": {
     "title": "سفارش شما ثبت شد!",
@@ -1058,14 +1120,22 @@
     "next3Delivery": "سفارش آماده و به آدرس شما تحویل داده می‌شود.",
     "next3Pickup": "وقتی آماده شد، از دکان در مرکز گلبهار بگیرید.",
     "collectHeading": "محل دریافت",
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "itemsTotal": "جمع اقلام",
     "discounts": "تخفیف‌ها",
     "deliveryFee": "هزینه تحویل",
     "free": "رایگان",
     "total": "مجموع",
     "trackOrder": "پیگیری سفارش",
-    "keepShopping": "ادامه خرید"
+    "keepShopping": "ادامه خرید",
+    "copyReference": "کاپی شماره سفارش",
+    "copied": "کاپی شد",
+    "copyFailed": "کاپی نشد — شماره را دستی یادداشت کنید.",
+    "deliveryEta": "معمولاً ۱ تا ۲ روز کاری.",
+    "pickupEta": "معمولاً همان روز آماده می‌شود.",
+    "fulfillmentHeading": "تحویل و پرداخت",
+    "cod": "پرداخت در وقت تحویل",
+    "hesabpay": "پرداخت با حساب‌پی"
   },
   "orders": {
     "title": "سفارش‌های من",
@@ -1085,7 +1155,7 @@
     "deliveryFee": "هزینه تحویل",
     "free": "رایگان",
     "total": "مجموع",
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "reorder": "سفارش دوباره",
     "reordering": "در حال افزودن…",
     "reorderDone": "{added} قلم به سبد اضافه شد",
@@ -1115,8 +1185,9 @@
       "body": "این کد را در {shop} نشان بدهید تا سفارش شما را تحویل بدهند.",
       "whereLabel": "موقعیت",
       "hoursLabel": "ساعات مرکز",
-      "where": "منزل {floor} · واحد {unit}",
-      "expires": "تا {when} نگه داشته می‌شود. پس از آن دکان می‌تواند اجناس را دوباره به قفسه برگرداند."
+      "where": "منزل {floor} – واحد {unit}",
+      "expires": "تا {when} نگه داشته می‌شود. پس از آن دکان می‌تواند اجناس را دوباره به قفسه برگرداند.",
+      "whatsapp": "واتس‌اپ"
     },
     "cancel": {
       "action": "لغو سفارش",
@@ -1154,7 +1225,11 @@
       "invalid_input": "درخواست نامعتبر",
       "unavailable": "این محصول موجود نیست",
       "out_of_stock": "موجودی تمام شده است"
-    }
+    },
+    "itemCount": "{count} قلم",
+    "moveToCartAction": "انتقال به سبد",
+    "movedToCart": "به سبد منتقل شد",
+    "goToCart": "دیدن سبد"
   },
   "account": {
     "title": "حساب من",
@@ -1348,7 +1423,9 @@
       "newSince": "{count} محصول نو",
       "noProducts": "این دکان فعلاً محصول فعالی ندارد.",
       "visitShop": "دیدن تمام محصولات {shop}"
-    }
+    },
+    "defaultAddress": "آدرس پیش‌فرض",
+    "defaultAddressHint": "آدرسی که آخرین سفارش خود را به آن فرستاده‌اید، در مرحله پرداخت از پیش انتخاب می‌شود."
   },
   "dashboardNav": {
     "label": "منوی پنل دکان",
@@ -1380,7 +1457,8 @@
       "body": "اگر در کار غرفه یا سفارش‌ها مشکلی پیش آمد، با دفتر مدیریت گلبهار تماس بگیرید.",
       "callOffice": "تماس با دفتر مدیریت",
       "address": "دفتر مدیریت: {address}"
-    }
+    },
+    "waitingItems": "{n, plural, one {# مورد منتظر شماست} other {{count} مورد منتظر شماست}}"
   },
   "shopOrders": {
     "title": "سفارش‌ها",
@@ -1498,7 +1576,7 @@
       "lineTotal": "مبلغ",
       "shopTotal": "جمع سهم این دکان",
       "collectAtShop": "تسلیمی حضوری از دکان",
-      "floorUnit": "طبقه {floor} · دکان {unit}",
+      "floorUnit": "طبقه {floor} – دکان {unit}",
       "sharedOrderNote": "این سفارش با دکان دیگری شریک است؛ مبلغ بالا فقط سهم این دکان است."
     },
     "bulk": {
@@ -1529,7 +1607,8 @@
         "not_ready": "پیش از تحویل، سفارش را آماده علامت بزنید.",
         "code_mismatch": "این کد به سفارش دیگری تعلق دارد. صفحه مشتری را ببینید.",
         "transition_not_allowed": "این سفارش را کسی دیگر پیش از شما تکمیل کرده است."
-      }
+      },
+      "hint": "کدی که مشتری روی گوشی‌اش نشان می‌دهد — ۵ حرف و رقم."
     },
     "holds": {
       "title": "{count} نگه‌داری گرفته‌نشده",
@@ -1549,7 +1628,8 @@
         "not_expired": "وقت نگه‌داری هنوز نگذشته است.",
         "transition_not_allowed": "این سفارش را کسی دیگر پیش از شما رسیدگی کرده است."
       }
-    }
+    },
+    "cancelHint": "اگر دیگر نمی‌توانید این سفارش را تکمیل کنید:"
   },
   "shopProducts": {
     "title": "محصولات",
@@ -1701,7 +1781,13 @@
         "price_positive": "قیمت را وارد کنید؛ باید بیشتر از صفر باشد",
         "discount_below_price": "قیمت تخفیف باید کمتر از قیمت اصلی باشد",
         "invalid_input": "این مقدار درست نیست"
-      }
+      },
+      "imagesFirstHint": "اول عکس بگیرید. عکس‌ها را همین حالا انتخاب کنید؛ با ثبت محصول خودشان بالا می‌روند.",
+      "imagesStagedHint": "عکس اول، عکس اصلی است. با ثبت محصول همه بالا می‌روند.",
+      "englishToggle": "انگلیسی هم دارید؟",
+      "specValue": "مقدار",
+      "featureTitle": "عنوان",
+      "featureBody": "توضیح"
     },
     "importWizard": {
       "step1": "۱ — پرونده",
@@ -1895,7 +1981,8 @@
         "product_not_publishable": "محصول گزیده‌شده نشرشده و از دکان شما نیست",
         "not_withdrawable": "تنها درخواست بررسی‌نشده را می‌شود پس گرفت"
       },
-      "pickProductOptional": "محصول برای این جایگاه (اختیاری — خالی بگذارید تا خود دکان تبلیغ شود)"
+      "pickProductOptional": "محصول برای این جایگاه (اختیاری — خالی بگذارید تا خود دکان تبلیغ شود)",
+      "weeklyVisitors": "هر هفته حدود {count} مشتری از این جایگاه به دکان‌ها رفته‌اند"
     },
     "campaigns": {
       "none": "هنوز کمپاینی ندارید.",
@@ -1924,7 +2011,10 @@
         "product_required": "برای این جایگاه گزینش یک محصول الزامی است",
         "product_not_publishable": "محصول گزیده‌شده نشرشده و از دکان شما نیست",
         "not_withdrawable": "تنها درخواست بررسی‌نشده را می‌شود پس گرفت"
-      }
+      },
+      "visitors": "{count} مشتری از این تبلیغ آمد",
+      "ctrLabel": "نرخ کلیک",
+      "bookAgain": "دوباره گرفتن ۲ هفته"
     }
   },
   "shopReviews": {
@@ -1978,7 +2068,9 @@
       "wrong_product": "مربوط به محصول دیگری است",
       "personal_info": "شمارهٔ تماس یا معلومات شخصی دارد",
       "other": "دلیل دیگر"
-    }
+    },
+    "defaultUnansweredNote": "{count} نظر بی‌پاسخ دارید و همان‌ها را نشان می‌دهیم. برای دیدن همه:",
+    "moreActions": "کارهای بیشتر"
   },
   "shopProfile": {
     "title": "نمای دکان",
@@ -2056,6 +2148,15 @@
         "thu": "پنجشنبه",
         "fri": "جمعه"
       }
+    },
+    "floorHint": "طبقه را انتخاب کنید",
+    "unsavedChanges": "تغییرات ثبت‌نشده دارید",
+    "allSaved": "همه چیز ثبت شده است",
+    "adminStatus": {
+      "pending": "در انتظار تایید مدیریت مرکز",
+      "approved": "مدیریت مرکز دکان را تایید کرده",
+      "suspended": "مدیریت مرکز دکان را معطل کرده",
+      "closed": "مدیریت مرکز دکان را بسته است"
     }
   },
   "shopReports": {
@@ -2074,7 +2175,7 @@
     "ordersLabel": "سفارش",
     "averageRating": "میانگین امتیاز",
     "unitsSold": "{count} قلم فروخته شد",
-    "impressionsClicks": "{impressions} نمایش · {clicks} کلیک · نرخ کلیک {ctr}",
+    "impressionsClicks": "{impressions} نمایش – {clicks} کلیک – نرخ کلیک {ctr}",
     "noOrders": "در این بازه سفارشی نبوده است.",
     "noReviews": "در این بازه نظری ثبت نشده است.",
     "noPromotions": "در این بازه کمپاینی نداشته‌اید.",
@@ -2096,7 +2197,10 @@
       "orders": "سفارش‌ها",
       "units": "تعداد اقلام",
       "aov": "میانگین سفارش",
-      "conversion": "نرخ تبدیل"
+      "conversion": "نرخ تبدیل",
+      "views": "بازدید",
+      "basis": "فروش، اقلام و میانگین سفارش تنها از سفارش‌های تحویل‌شده حساب می‌شود. شمار سفارش‌ها همه را دربر می‌گیرد، به‌جز رد و لغوشده.",
+      "empty": "در این بازه سفارشی ثبت نشده، پس همهٔ عددهای بالا صفر است."
     },
     "views": {
       "product": "محصول",
@@ -2111,7 +2215,8 @@
         "promote": "آگهی مشکلی ندارد — تخفیف را امتحان کنید"
       },
       "emptyTitle": "هیچ محصولی نادیده گرفته نمی‌شود",
-      "emptyBody": "هر محصولی که در این دوره بازدید واقعی داشته، فروش هم داشته است. محصولات با کمتر از ۲۰ بازدید در این فهرست نمی‌آیند — نبود فروش در آن‌ها یعنی هنوز کسی ندیده، نه اینکه مشکلی هست."
+      "emptyBody": "هر محصولی که در این دوره بازدید واقعی داشته، فروش هم داشته است. محصولات با کمتر از ۲۰ بازدید در این فهرست نمی‌آیند — نبود فروش در آن‌ها یعنی هنوز کسی ندیده، نه اینکه مشکلی هست.",
+      "fixAction": "این محصول را درست کنید"
     },
     "stock": {
       "product": "محصول",
@@ -2155,7 +2260,8 @@
         "6": "شنبه"
       },
       "emptyTitle": "در این دوره سفارشی نیست",
-      "emptyBody": "وقتی سفارش‌ها بیایند، این جدول نشان می‌دهد در کدام ساعت از کدام روز می‌رسند، تا بدانید چه وقت باید کسی پشت پیشخوان باشد."
+      "emptyBody": "وقتی سفارش‌ها بیایند، این جدول نشان می‌دهد در کدام ساعت از کدام روز می‌رسند، تا بدانید چه وقت باید کسی پشت پیشخوان باشد.",
+      "notEnough": "هنوز سفارش کافی نیست که بگوییم کدام ساعت شلوغ‌ترین است — در این دوره {orders} سفارش داشته‌اید. جدول پایین همان سفارش‌های واقعی را نشان می‌دهد."
     }
   },
   "shopSettings": {
@@ -2240,7 +2346,13 @@
         "pause_date_past": "روز بازگشت باید در آینده باشد",
         "pause_too_far": "بیشتر از شش ماه نمی‌شود غرفه را بست",
         "not_found": "غرفه پیدا نشد"
-      }
+      },
+      "quick": {
+        "7": "یک هفته",
+        "14": "دو هفته",
+        "30": "یک ماه"
+      },
+      "returnOn": "دکان روز {date} دوباره باز می‌شود."
     }
   },
   "shopRegistration": {
@@ -2285,7 +2397,13 @@
       "bad_phone": "شمارهٔ موبایل باید با ۰۷ شروع شود و ده رقم باشد",
       "bad_hours": "ساعت کاری کامل نیست؛ ساعت باز و بسته شدن را انتخاب کنید",
       "invalid_input": "این مقدار درست نیست"
-    }
+    },
+    "nameEnOptional": "اختیاری — اگر انگلیسی ندارید، خالی بگذارید.",
+    "floorHint": "طبقه را انتخاب کنید",
+    "nextHeading": "پس از فرستادن چه می‌شود؟",
+    "nextReview": "مدیریت مرکز گلبهار درخواست و جای دکان شما را بررسی می‌کند.",
+    "nextHowLong": "بررسی معمولاً یک تا دو روز کاری وقت می‌گیرد.",
+    "nextNotified": "نتیجه را با پیامک به همین شماره خبر می‌دهیم و در پنل هم می‌بینید."
   },
   "adminNav": {
     "label": "بخش‌های مدیریت",
@@ -2321,7 +2439,7 @@
       "pendingShop": "درخواست تایید دکان — {shop}",
       "pendingShopSub": "دسته‌بندی: {category}",
       "requestedCampaign": "درخواست جایگاه — {shop}",
-      "requestedCampaignSub": "{slot} · {price}",
+      "requestedCampaignSub": "{slot} – {price}",
       "reportedReview": "نظر گزارش‌شده روی «{product}»",
       "reportedReviewSub": "امتیاز {rating} از ۵ — نیاز به بررسی دارد",
       "staleOrder": "سفارش معطل — {reference}",
@@ -2356,14 +2474,25 @@
       "nudgedShort": "یادآوری فرستاده شد",
       "nudged": "یادآوری برای دکان فرستاده شد",
       "verification": "درخواست تأیید هویت — {shop}",
-      "verificationSub": "اسناد فرستاده شده و منتظر بررسی است"
+      "verificationSub": "اسناد فرستاده شده و منتظر بررسی است",
+      "openVerification": "دیدن اسناد",
+      "claimVerification": "من بررسی می‌کنم",
+      "verificationClaimed": "به نام شما ثبت شد؛ اسناد را در صفحه تأیید هویت ببینید",
+      "verificationClaimedShort": "به نام شما"
     },
     "revenue": {
       "heading": "درآمد تبلیغات این ماه",
       "viewAll": "گزارش کامل",
       "vsLastMonth": "ماه گذشته {amount}",
       "firstMonth": "اولین ماه فروش جایگاه",
-      "occupancy": "{n, plural, one {# جایگاه از {total} فروخته شده} other {{sold} جایگاه از {total} فروخته شده}}"
+      "occupancy": "{n, plural, one {# جایگاه از {total} فروخته شده} other {{sold} جایگاه از {total} فروخته شده}}",
+      "recognisedLabel": "صورت‌حساب‌شده از اول ماه تا امروز ({day})",
+      "recognisedFullLabel": "صورت‌حساب‌شده در این ماه",
+      "vsSameStretch": "{day} روز نخست ماه گذشته {amount}",
+      "noBaselineThisFar": "در همین بازهٔ ماه گذشته فروشی ثبت نشده بود",
+      "bookedLabel": "ارزش جایگاه‌های در جریان این ماه",
+      "bookedHint": "{n, plural, one {# کمپاین} other {{count} کمپاین}}",
+      "topSlotsLifetime": "پردرآمدترین جایگاه‌ها — از آغاز · مجموع {total}"
     },
     "health": {
       "heading": "وضعیت پلتفرم — ۳۰ روز گذشته",
@@ -2482,7 +2611,7 @@
     },
     "health": {
       "viewLabel": "نیاز به توجه",
-      "floorUnit": "منزل {floor} · واحد {unit}",
+      "floorUnit": "منزل {floor} – واحد {unit}",
       "allWellTitle": "چیزی نیاز به توجه شما ندارد",
       "allWellBody": "در {days} روز اخیر هیچ دکانی در قبول سفارش کند نبوده، سفارش را رد نکرده، امتیازش پایین نیامده، بدون محصول نمانده و اسنادش هم منقضی نشده است.",
       "nudge": "یادآوری به دکان",
@@ -2516,7 +2645,8 @@
         "no_owner": "این دکان مالکی برای اطلاع‌رسانی ندارد."
       },
       "nudgeAll": "یادآوری همه‌ی موارد",
-      "pausedUntil": "رخصتی تا {date}"
+      "pausedUntil": "رخصتی تا {date}",
+      "needsAttention": "نیاز به توجه"
     },
     "searchPlaceholder": "جست‌وجو با نام دکان",
     "emptySearchTitle": "چیزی پیدا نشد",
@@ -2524,7 +2654,19 @@
     "pausedUntil": "رخصتی تا {date}",
     "suspensionReason": "دلیل معطل‌شدن",
     "closureReason": "دلیل بستن دکان",
-    "decidedBy": "{actor} · {date}"
+    "decidedBy": "{actor} – {date}",
+    "revenueWindow": "{orders} سفارش · {days} روز",
+    "verification": {
+      "submitted": "اسناد هویت این دکان منتظر بررسی است",
+      "under_review": "اسناد هویت این دکان در حال بررسی است",
+      "verified": "هویت این دکان تأیید شده است",
+      "rejected": "اسناد هویت این دکان رد شده است",
+      "expired": "تأیید هویت این دکان منقضی شده است",
+      "waitingBody": "{count} سند، فرستاده‌شده در {date}. پیش از تصمیم درباره دکان، اسناد را ببینید.",
+      "validUntil": "اعتبار تا {date}",
+      "decidedOn": "تصمیم در {date}",
+      "open": "صف تأیید هویت"
+    }
   },
   "adminCategories": {
     "title": "دسته‌بندی‌ها",
@@ -2586,7 +2728,10 @@
         "has_products": "محصولاتی به این دسته وصل‌اند",
         "has_shops": "دکان‌هایی به این دسته وصل‌اند"
       }
-    }
+    },
+    "lockedByProducts": "{count} محصول دارد",
+    "lockedByChildren": "{count} زیرشاخه دارد",
+    "lockedByShops": "{count} دکان دارد"
   },
   "adminProducts": {
     "title": "محصولات پلتفرم",
@@ -2621,7 +2766,24 @@
     "emptySearchBody": "برای «{term}» محصولی یافت نشد. نام دیگری را بیازمایید.",
     "reasonLabel": "دلیل برداشتن",
     "reasonPlaceholder": "مثلاً: تصویر محصول با آنچه در توضیحات آمده یکی نیست.",
-    "reasonNote": "این متن برای دکان فرستاده می‌شود و در فهرست خود دکان کنار همین محصول دیده می‌شود."
+    "reasonNote": "این متن برای دکان فرستاده می‌شود و در فهرست خود دکان کنار همین محصول دیده می‌شود.",
+    "sortLabel": "ترتیب",
+    "sorts": {
+      "newest": "تازه‌ترین",
+      "views": "بیشترین بازدید",
+      "price": "گران‌ترین",
+      "stock": "کم‌ترین موجودی"
+    },
+    "rowMenu": "کارهای بیشتر",
+    "viewPublic": "دیدن در فروشگاه",
+    "viewShop": "دیدن دکان",
+    "colProduct": "محصول",
+    "colShop": "دکان",
+    "colStatus": "وضعیت",
+    "colViews": "بازدید",
+    "colStock": "موجودی",
+    "colPrice": "بها",
+    "unpublishedBecause": "دلیل برداشتن: {reason}"
   },
   "adminReviews": {
     "title": "بازبینی نظرها",
@@ -2646,7 +2808,7 @@
       "not_found": "این نظر یافت نشد"
     },
     "reportedFor": "گزارش‌شده به دلیل: {reason}",
-    "reportedBy": "گزارش‌دهنده: دکان {shop} · {date}",
+    "reportedBy": "گزارش‌دهنده: دکان {shop} – {date}",
     "authorRecord": "این حساب {visible} نظر دیده‌شدنی دارد و {removed} نظرش تا کنون برچیده شده است.",
     "noReasonRecorded": "دلیل گزارش برای همین نظر ثبت نشده است",
     "reportReasons": {
@@ -2698,7 +2860,16 @@
         "not_running": "این کمپاین در جریان نیست",
         "slot_full": "جایگاه در این بازه پر است",
         "reason_too_short": "دلیل باید کم‌ازکم پنج حرف باشد"
-      }
+      },
+      "impressions": "{count} نمایش",
+      "clicks": "{count} کلیک",
+      "ctr": "نرخ کلیک {value}",
+      "endTitle": "پایان‌دادن زودتر به این جایگاه؟",
+      "endBody": "این کار برگشت‌پذیر نیست. برای ادامه، دکان باید دوباره درخواست بدهد و جایگاه دوباره فروخته شود.",
+      "endConsequenceVisibility": "تبلیغ همین حالا از فروشگاه برداشته می‌شود.",
+      "endConsequenceMoney": "بهای پرداخت‌شده {price} در درآمد می‌ماند؛ چیزی به‌طور خودکار بازگردانده نمی‌شود.",
+      "endConsequenceSlot": "جای خالی‌شده بلافاصله برای فروش دوباره آزاد می‌شود.",
+      "confirmEnd": "بله، پایان بده"
     },
     "slots": {
       "priceNote": "تغییر بها تنها بر رزروهای تازه اثر می‌کند؛ کمپاین‌های موجود با بهای فروخته‌شده می‌مانند.",
@@ -2719,6 +2890,15 @@
         "capacity_min": "گنجایش باید کم‌ازکم یک باشد",
         "price_min": "بها باید بیشتر از صفر باشد",
         "capacity_below_sold": "گنجایش کمتر از جایگاه‌های فروخته‌شده نمی‌شود"
+      },
+      "placementUnknown": "جای نمایش تعریف‌نشده",
+      "placements": {
+        "home_hero": "بنر بزرگ بالای صفحه اول",
+        "featured_shops": "دکان‌های برگزیده صفحه اول",
+        "search_top": "بالای نتایج جستجو",
+        "category_top": "بالای صفحه دسته‌بندی",
+        "product_related": "کنار محصولات مرتبط",
+        "directory_top": "بالای فهرست دکان‌ها"
       }
     },
     "manual": {
@@ -2759,7 +2939,7 @@
     },
     "calendar": {
       "empty": "جایگاهی برای نمایش نیست.",
-      "legend": "هر خانه یک هفته است. سبز: جای خالی · زرد: نیمه‌پر · سرخ: پر.",
+      "legend": "هر خانه یک هفته است. سبز: جای خالی – زرد: نیمه‌پر – سرخ: پر.",
       "slot": "جایگاه",
       "capacity": "گنجایش {count}",
       "cellFull": "پر",
@@ -2786,7 +2966,9 @@
         "active": "در حال اجرا"
       },
       "emptyTitle": "این ماه چیزی رزرو نشده",
-      "emptyBody": "تمام جایگاه‌ها آزاد است. با «رزرو جایگاه» یکی را بفروشید یا به ماه بعد بروید."
+      "emptyBody": "تمام جایگاه‌ها آزاد است. با «رزرو جایگاه» یکی را بفروشید یا به ماه بعد بروید.",
+      "subtitleWithValue": "{vacant} روزِ جایگاه از {total} روز این ماه فروخته نشده — ارزش فروخته‌نشده حدود {value}.",
+      "vacantValue": "≈ {value}"
     }
   },
   "adminRevenue": {
@@ -2815,12 +2997,12 @@
     "pendingHint": "{n, plural, other {{count} درخواست منتظر تأیید}}",
     "noPendingHint": "درخواستی در انتظار نیست",
     "platformGmv": "ارزش کل فروش پلتفرم",
-    "gmvHint": "{orders} سفارش · {shops} دکان · ۳۰ روز",
-    "twelveMonths": "۱۲ ماه · {total}",
+    "gmvHint": "{orders} سفارش – {shops} دکان – ۳۰ روز",
+    "twelveMonths": "۱۲ ماه – {total}",
     "pendingHeading": "درخواست‌های منتظر",
     "noPending": "همه درخواست‌ها بررسی شده‌اند.",
     "inventoryHeading": "موجودی جایگاه‌ها",
-    "inventoryNote": "قیمت مقطوع هر جایگاه · نه مزایده",
+    "inventoryNote": "قیمت مقطوع هر جایگاه – نه مزایده",
     "colSlotName": "جایگاه",
     "colCapacity": "ظرفیت",
     "colOccupied": "اشغال",
@@ -2831,11 +3013,17 @@
     "full": "پر",
     "slotVacant": "خالی",
     "shopCount": "{count} دکان",
-    "reachSummary": "{impressions} نمایش · {clicks} کلیک · {ctr}",
+    "reachSummary": "{impressions} نمایش – {clicks} کلیک – {ctr}",
     "guardrailLabel": "حفاظ",
     "guardrailBody": "جایگاه پرداختی امتیاز ارگانیک را تغییر نمی‌دهد — دکان می‌تواند جای بالا را بخرد، نه نمره بهتر. هر نتیجه پرداختی نشان «تبلیغ شده» دارد.",
     "monthToDateLabel": "درآمد تبلیغات از اول ماه تا امروز",
-    "vsSamePeriodLastMonth": "نسبت به {days} روز نخست ماه گذشته"
+    "vsSamePeriodLastMonth": "نسبت به {days} روز نخست ماه گذشته",
+    "bookedThisMonth": "{n, plural, one {ارزش در جریان این ماه {amount} از # کمپاین} other {ارزش در جریان این ماه {amount} از {count} کمپاین}}",
+    "periodsNote": "بازه‌ها: درآمد تبلیغات از اول ماه تا روز {day} · اشغال و کمپاین‌های فعال همین حالا · ارزش فروش پلتفرم ۳۰ روز گذشته · مجموع از آغاز {lifetime}.",
+    "colBilledMonth": "صورت‌حساب این ماه",
+    "colRunningMonth": "در جریان این ماه",
+    "chartPeak": "بهترین ماه: {month} — {amount}",
+    "chartTrough": "کم‌درآمدترین ماه: {month} — {amount}"
   },
   "adminReports": {
     "title": "گزارش پلتفرم",
@@ -2855,7 +3043,9 @@
     "topCategoriesHeading": "پرفروش‌ترین دسته‌ها",
     "orderCount": "{count} سفارش",
     "units": "{count} قلم",
-    "noData": "در این بازه داده‌ای نیست."
+    "noData": "در این بازه داده‌ای نیست.",
+    "statusTotal": "{count} سفارش در این بازه",
+    "statusReconcile": "این نمودار هر {total} سفارش این بازه را می‌شمارد، از جمله {excluded} سفارش ردشده یا لغوشده. کارت «سفارش‌ها» در بالا فقط {counted} سفارش پذیرفته‌شده را می‌شمارد."
   },
   "adminOrders": {
     "title": "همه‌ی سفارش‌ها",
@@ -2931,7 +3121,15 @@
         "not_cancellable": "این سفارش پیش از این پایان یافته و دیگر لغو نمی‌شود.",
         "reason_too_short": "دلیل باید کم‌ازکم ده حرف باشد."
       }
-    }
+    },
+    "colShop": "دکان",
+    "multiShopCell": "{count} دکان",
+    "waitingHours": "{n, plural, one {# ساعت در انتظار} other {{count} ساعت در انتظار}}",
+    "waitingDays": "{n, plural, one {# روز در انتظار} other {{count} روز در انتظار}}",
+    "stalledHours": "{n, plural, one {# ساعت است که دکان این سفارش را قبول نکرده} other {{count} ساعت است که دکان این سفارش را قبول نکرده}}",
+    "stalledDays": "{n, plural, one {# روز است که دکان این سفارش را قبول نکرده} other {{count} روز است که دکان این سفارش را قبول نکرده}}",
+    "stalledBody": "مشتری هنوز منتظر است. می‌توانید به دکان یادآوری بفرستید یا اگر پاسخی نمی‌آید، سفارش را از طرف مرکز لغو کنید.",
+    "deliveryFree": "رایگان"
   },
   "adminUsers": {
     "title": "کاربران",
@@ -2986,7 +3184,13 @@
     "activityOrders": "{n, plural, other {{count} سفارش}}",
     "activityReviews": "{n, plural, other {{count} نظر}}",
     "emptySearchTitle": "چیزی پیدا نشد",
-    "emptySearchBody": "برای «{term}» حسابی یافت نشد. نام یا شماره تلفن دیگری را بیازمایید."
+    "emptySearchBody": "برای «{term}» حسابی یافت نشد. نام یا شماره تلفن دیگری را بیازمایید.",
+    "colLastActive": "آخرین فعالیت",
+    "rowMenu": "کارهای بیشتر",
+    "viewShop": "دیدن دکان",
+    "roleShopWarning": "این حساب صاحب دکان «{shop}» است. با تغییر نقش، دیگر به پنل دکان دسترسی نخواهد داشت.",
+    "deactivateShopTitle": "دکان «{shop}» بدون مسئول می‌ماند",
+    "deactivateShopBody": "{products} محصول این دکان روی فروشگاه می‌ماند و {orders} سفارش باز دارد، اما کسی نمی‌تواند وارد شود و آن‌ها را قبول کند."
   },
   "demoLog": {
     "open": "گزارش پیام‌ها",
@@ -3128,7 +3332,10 @@
     "promotedNote": "این محصولات جایگاه تبلیغاتی خریده‌اند — ترتیب نتایج عادی تغییر نکرده است",
     "emptySearchTitle": "چیزی برای «{term}» پیدا نشد",
     "emptySearchBody": "املای دیگری را امتحان کنید یا همهٔ محصولات را مرور کنید.",
-    "browseAll": "مرور همهٔ محصولات"
+    "browseAll": "مرور همهٔ محصولات",
+    "showingOf": "نمایش {shown} از {count} محصول",
+    "emptyUnfilteredTitle": "این دسته به‌زودی پر می‌شود",
+    "emptyUnfilteredBody": "هنوز دکانی در این دسته محصولی نگذاشته است. تا آن وقت، پرطرفدارترین‌های مرکز را ببینید."
   },
   "adminSettings": {
     "title": "تنظیمات پلتفرم",
@@ -3200,7 +3407,7 @@
     },
     "statusPending": "در انتظار پاسخ",
     "statusAnswered": "پاسخ داده شد",
-    "askedBy": "{name} · {date}",
+    "askedBy": "{name} – {date}",
     "answer": "پاسخ دادن",
     "edit": "ویرایش پاسخ",
     "yourAnswer": "پاسخ شما",
@@ -3231,7 +3438,7 @@
       "answered": "پاسخ داده‌شده",
       "hidden": "پنهان‌شده"
     },
-    "askedBy": "{name} · {date}",
+    "askedBy": "{name} – {date}",
     "shopAnswer": "پاسخ دکان",
     "hide": "پنهان کردن",
     "restore": "برگرداندن",
@@ -3268,6 +3475,12 @@
       "sectionCategories": "دسته‌بندی‌ها",
       "sectionLedger": "جایگاه‌های فروخته‌شده",
       "sectionInventory": "ظرفیت جایگاه‌ها"
+    },
+    "chartScale": {
+      "peak": "بیشترین روز: {date} — {amount}",
+      "trough": "کم‌ترین روز فروش: {date} — {amount}",
+      "average": "میانگین روزانه {amount}",
+      "tradingDays": "{n, plural, one {# روز از {total} روز فروش داشته} other {{count} روز از {total} روز فروش داشته}}"
     }
   },
   "shopVerification": {
@@ -3328,7 +3541,7 @@
       "rejected": "ردشده",
       "expired": "منقضی‌شده"
     },
-    "floorUnit": "طبقه {floor} · دکان {unit}",
+    "floorUnit": "طبقه {floor} – دکان {unit}",
     "submittedOn": "فرستاده‌شده در {date}",
     "openDocument": "باز کردن سند",
     "approve": "تأیید",
@@ -3358,8 +3571,16 @@
       "not_found": "پیدا نشد",
       "invalid_input": "ورودی معتبر نیست",
       "reason_required": "دلیل باید حداقل ۱۰ حرف باشد",
-      "already_decided": "این درخواست قبلاً تصمیم‌گیری شده"
-    }
+      "already_decided": "این درخواست قبلاً تصمیم‌گیری شده",
+      "evidence_missing": "بدون سند خوانا نمی‌توان هویت را تأیید کرد"
+    },
+    "decisionHeading": "تصمیم شما",
+    "viewStorefront": "دیدن صفحه دکان",
+    "noDocumentsTitle": "هیچ سندی فرستاده نشده",
+    "noDocumentsBody": "این درخواست هیچ سندی همراه ندارد. بدون سند نمی‌توان هویت را تأیید کرد؛ درخواست را رد کنید و از دکان بخواهید جواز کسب و تذکره را بفرستد.",
+    "documentUnavailableTitle": "سند در دسترس نیست",
+    "documentUnavailableBody": "فایل «{kind}» روی سرور پیدا نشد. شاید هنگام فرستادن ناقص ذخیره شده باشد. از دکان بخواهید دوباره بفرستد.",
+    "cannotApprove": "تا وقتی این سندها خوانده نشوند تأیید ممکن نیست: {documents}. می‌توانید درخواست را رد کنید و دلیلش را بنویسید تا دکان دوباره بفرستد."
   },
   "verification": {
     "badgeLabel": "دکان تأییدشده",
@@ -3414,7 +3635,7 @@
       "hoursLabel": "ساعات کاری",
       "phoneLabel": "شماره تماس",
       "locationLabel": "موقعیت در مرکز",
-      "floorUnitValue": "منزل {floor} · واحد {unit}",
+      "floorUnitValue": "منزل {floor} – واحد {unit}",
       "tenureLabel": "در مرکز گلبهار",
       "tenureValue": "{years} سال",
       "verifiedTitle": "تأییدشده توسط مدیریت مرکز",
@@ -3459,12 +3680,15 @@
     "hours": {
       "title": "ساعات کاری هفته",
       "today": "امروز",
-      "closed": "بسته"
+      "closed": "بسته",
+      "everyDay": "همه‌روزه",
+      "dayRange": "{from} تا {to}",
+      "showEveryDay": "دیدن روز به روز"
     }
   },
   "adminFloors": {
     "title": "اشغال منزل‌ها",
-    "subtitle": "{floors} منزل · {shops} دکان · {vacant} شماره واحد بدون مستأجر",
+    "subtitle": "{floors} منزل – {shops} دکان – {vacant} شماره واحد بدون مستأجر",
     "floorTitle": "منزل {floor}",
     "active": "فعال",
     "pending": "در انتظار",
@@ -3487,7 +3711,7 @@
       "edit": "تغییر واحد",
       "save": "ثبت",
       "cancel": "انصراف",
-      "unit": "منزل {floor} · واحد {unit}",
+      "unit": "منزل {floor} – واحد {unit}",
       "moved": "به واحد {unit} منتقل شد.",
       "errors": {
         "forbidden": "تنها مدیریت مرکز می‌تواند این کار را انجام دهد.",
@@ -3495,7 +3719,11 @@
         "not_found": "این دکان دیگر وجود ندارد.",
         "unit_taken": "دکان دیگری در همان واحد است."
       }
-    }
+    },
+    "legendTrading": "در حال کار",
+    "legendPending": "در انتظار تأیید",
+    "legendClosed": "بسته یا معلق",
+    "legendVacant": "واحد خالی"
   },
   "adminSettlements": {
     "title": "تصفیه حساب",
@@ -3514,7 +3742,11 @@
     "emptyTitle": "هیچ دوره تصفیه‌ای وجود ندارد",
     "emptyBody": "پس از بسته شدن هر دوره، برای هر دکان یک سطر اینجا می‌آید: عوایدی که تحویل داده، کمیشن مرکز طبق نرخ توافق‌شده، و مبلغی که باقی می‌ماند.",
     "todayTitle": "امروز چطور کار می‌کند",
-    "todayBody": "در این نسخه هر سفارش یا نقد هنگام تحویل است یا حساب‌پی مستقیم به خود دکان، پس پول از همان اول نزد دکان است و مرکز اصلاً در مسیر پرداخت قرار ندارد. کمیشن جداگانه فاکتور می‌شود. اگر گلبهار بخواهد پرداخت‌ها به‌صورت مرکزی جمع شود، آن یک جریان دیگر است — و بحثی بزرگ‌تر از یک جدول تصفیه."
+    "todayBody": "در این نسخه هر سفارش یا نقد هنگام تحویل است یا حساب‌پی مستقیم به خود دکان، پس پول از همان اول نزد دکان است و مرکز اصلاً در مسیر پرداخت قرار ندارد. کمیشن جداگانه فاکتور می‌شود. اگر گلبهار بخواهد پرداخت‌ها به‌صورت مرکزی جمع شود، آن یک جریان دیگر است — و بحثی بزرگ‌تر از یک جدول تصفیه.",
+    "sampleTag": "نمونه",
+    "sampleShop": "نام دکان",
+    "samplePeriod": "یک هفته",
+    "sampleStatus": "در انتظار پرداخت"
   },
   "adminAudit": {
     "title": "سابقه تصامیم",
@@ -3579,6 +3811,40 @@
       "order": {
         "cancel": "لغو یک سفارش توسط مرکز"
       }
+    },
+    "detail": {
+      "transition": "تغییر",
+      "change": "{from} ← {to}",
+      "yes": "بله",
+      "no": "نه",
+      "keys": {
+        "owner": "صاحب",
+        "phone": "تلفن",
+        "ownerCreated": "حساب تازه ساخته شد",
+        "expiresAt": "اعتبار تا",
+        "mode": "نوع",
+        "slug": "شناسه",
+        "count": "شمار",
+        "decision": "تصمیم",
+        "active": "فعال",
+        "flags": "نشانه‌ها",
+        "capacity": "گنجایش",
+        "pricePerWeek": "بها در هفته",
+        "pricePaid": "بهای پرداختی",
+        "weeks": "هفته",
+        "restoredUnits": "قلم بازگردانده‌شده",
+        "shops": "دکان",
+        "locales": "زبان‌ها",
+        "deliveryFee": "کرایه تحویل",
+        "freeDeliveryThreshold": "حد تحویل رایگان",
+        "minOrderValue": "کم‌ترین مبلغ سفارش",
+        "deliveryEtaMinutes": "زمان تحویل (دقیقه)",
+        "siteName": "نام سایت",
+        "supportPhone": "تلفن پشتیبانی",
+        "supportEmail": "ایمیل پشتیبانی",
+        "address": "آدرس",
+        "mallHours": "ساعات کار مرکز"
+      }
     }
   },
   "floors": {
@@ -3596,7 +3862,9 @@
     "emptyTitle": "در این منزل چیزی مطابقت ندارد",
     "emptyBody": "دسته دیگری یا منزل دیگری را امتحان کنید.",
     "shopsOnFloor": "{count} دکان",
-    "viewShop": "رفتن به صفحه دکان"
+    "viewShop": "رفتن به صفحه دکان",
+    "shopsOnFloorHeading": "دکان‌های منزل {floor}",
+    "openShop": "دیدن دکان"
   },
   "notificationCentre": {
     "title": "اطلاعیه‌ها",
@@ -3637,6 +3905,8 @@
         "requires_auth": "اول وارد حساب شوید.",
         "invalid_input": "معلومات درست نبود. دوباره کوشش کنید."
       }
-    }
+    },
+    "groupNew": "جدید",
+    "groupEarlier": "قبلی"
   }
 }

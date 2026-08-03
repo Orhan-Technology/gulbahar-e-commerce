@@ -76,12 +76,12 @@ async function main() {
       (select count(distinct o.id)::int
          from orders o join order_items oi on oi.order_id = o.id
         where oi.shop_id = ${shop.id}
-          and o.created_at >= now() - interval '30 days'
-          and o.status <> 'rejected') as orders,
+          and o.created_at >= date_trunc('day', now() at time zone 'utc') - interval '29 days'
+          and o.status not in ('rejected', 'cancelled')) as orders,
       (select coalesce(sum(v.views), 0)::int
          from product_view_days v join products p on p.id = v.product_id
         where p.shop_id = ${shop.id}
-          and v.day >= (now() - interval '30 days')::date) as views
+          and v.day >= (date_trunc('day', now() at time zone 'utc') - interval '29 days')::date) as views
   `);
 
   report.check(
@@ -130,7 +130,7 @@ async function main() {
     with placed as (
       select distinct o.id, o.created_at, oi.shop_id
       from orders o join order_items oi on oi.order_id = o.id
-      where o.created_at >= now() - interval '30 days'
+      where o.created_at >= date_trunc('day', now() at time zone 'utc') - interval '29 days'
     ),
     timings as (
       select placed.shop_id,
