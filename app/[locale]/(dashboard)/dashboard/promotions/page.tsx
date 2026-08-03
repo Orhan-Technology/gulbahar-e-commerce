@@ -164,6 +164,7 @@ export default async function ShopPromotionsPage({
                 capacity: slot.capacity,
                 available: slot.available,
                 pricePerWeek: slot.pricePerWeek,
+                weeklyVisitors: slot.weeklyVisitors,
                 acceptsProduct: slot.acceptsProduct,
                 needsProduct: slot.needsProduct,
                 mine: slot.mine,

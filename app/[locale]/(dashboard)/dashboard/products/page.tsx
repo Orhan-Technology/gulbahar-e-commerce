@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { PackagePlus, Upload } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
+import { ChipScroller } from '@/components/dashboard/chip-scroller';
 import { ProductTable } from '@/components/dashboard/products/product-table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -114,11 +115,17 @@ export default async function ShopProductsPage({
 
       <SearchBox placeholder={t('searchPlaceholder')} />
 
-      <div className="flex scrollbar-none gap-2 overflow-x-auto pb-1">
+      {/* The row scrolls, and the SELECTED chip is scrolled to — `?status=archived`
+          put the active chip seventh in a six-chip viewport at 390px, so the
+          screen showed a filtered catalogue with nothing on it explaining the
+          filter. See chip-scroller.tsx. */}
+      <ChipScroller className="flex gap-2 pb-1">
         {chips.map((chip) => (
           <Link
             key={chip.key}
             href={chip.href}
+            data-chip-active={chip.active}
+            aria-current={chip.active ? 'page' : undefined}
             className={`rounded-pill flex shrink-0 items-center gap-1.5 border px-3 py-1.5 text-xs font-medium ${
               chip.active
                 ? 'border-primary bg-primary-50 text-primary'
@@ -131,7 +138,7 @@ export default async function ShopProductsPage({
             </Badge>
           </Link>
         ))}
-      </div>
+      </ChipScroller>
 
       <Suspense fallback={<ListSkeleton />}>
         <ProductList shopId={user.shopId} locale={locale} query={query} />

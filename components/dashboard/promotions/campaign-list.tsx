@@ -75,11 +75,27 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
         <div className="min-w-0">
           <p className="text-sm font-medium">{campaign.slotName}</p>
           {campaign.productTitle && (
-            <p className="text-muted-foreground clamp-1 text-xs">{campaign.productTitle}</p>
+            // User-generated, so it sets its own base direction.
+            <p className="text-muted-foreground clamp-1 text-xs" dir="auto">
+              {campaign.productTitle}
+            </p>
           )}
-          <p className="text-muted-foreground text-xs">
-            {formatDate(campaign.startsAt, locale)} — {formatDate(campaign.endsAt, locale)} ·{' '}
-            {formatCurrency(campaign.pricePaid, locale)}
+          {/*
+            EVERY NUMERIC FRAGMENT IS ISOLATED (Prompt C15).
+            «۱۴ اسد — ۳۱ اسد · ؋۵٬۰۰۰» in one RTL text node let the bidi
+            algorithm reorder across the separators: the second date's «۳۱»
+            broke off and floated to the far end of the line, so the card
+            advertised a range that started nowhere. `<bdi>` is exactly the
+            element for a run of text whose direction must not leak into its
+            neighbours, and the separators are their own spans so nothing is
+            resolved across them.
+          */}
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-1.5 text-xs">
+            <bdi>{formatDate(campaign.startsAt, locale)}</bdi>
+            <span aria-hidden>—</span>
+            <bdi>{formatDate(campaign.endsAt, locale)}</bdi>
+            <span aria-hidden>·</span>
+            <bdi className="tabular-nums">{formatCurrency(campaign.pricePaid, locale)}</bdi>
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
@@ -103,13 +119,24 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span className="inline-flex items-center gap-1">
             <Eye className="h-3 w-3" aria-hidden />
-            {t('impressions', { count: formatNumber(campaign.impressions, locale) })}
+            <bdi>{t('impressions', { count: formatNumber(campaign.impressions, locale) })}</bdi>
           </span>
           <span className="inline-flex items-center gap-1">
             <MousePointerClick className="h-3 w-3" aria-hidden />
-            {t('clicks', { count: formatNumber(campaign.clicks, locale) })}
+            {/* CLICKS ARE PEOPLE WHO ARRIVED, and this line now says so in
+                those words — «۲۴ کلیک» is a metric, «۲۴ مشتری از این تبلیغ
+                آمدند» is a result (Prompt C15). */}
+            <bdi>{t('visitors', { count: formatNumber(campaign.clicks, locale) })}</bdi>
           </span>
-          <span>{t('ctr', { value: formatPercent(ctr, locale) })}</span>
+          {/*
+            The percentage is its OWN isolate. «نرخ کلیک ٪۲» rendered as
+            «٪نرخ کلیک ۲» — fa-AF puts the sign before the digits, and inside a
+            longer RTL run the sign resolved against the wrong neighbour.
+          */}
+          <span className="inline-flex items-center gap-1">
+            {t('ctrLabel')}
+            <bdi className="tabular-nums">{formatPercent(ctr, locale)}</bdi>
+          </span>
         </div>
       )}
 
@@ -132,7 +159,10 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
             }
           >
             <RefreshCw />
-            {t('renew')}
+            {/* A campaign that is still running is EXTENDED; one that has
+                finished is BOOKED AGAIN. «تمدید» on an ended card reads as if
+                the placement were still there to extend (Prompt C15). */}
+            {campaign.status === 'ended' ? t('bookAgain') : t('renew')}
           </Button>
         )}
 

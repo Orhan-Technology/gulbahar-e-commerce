@@ -7,7 +7,9 @@ import { ChevronDown, ChevronUp, Plus, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { specTemplateFor } from '@/lib/product-templates';
+import { cn } from '@/lib/utils';
 
 export type SpecRowValue = {
   key: string;
@@ -45,15 +47,31 @@ export type FeatureValue = {
  * A row with no Dari value is dropped on save, not rejected: filling six of
  * eight template rows is a normal thing to do, and an error message for the two
  * left blank would teach shopkeepers to delete the rows instead.
+ *
+ * TWO THINGS ARE HIDDEN BY DEFAULT, and both were noise for this persona:
+ *
+ *   - THE ENGLISH COLUMN. It doubled the height of the longest section of the
+ *     form for a language most tenants here do not write. One switch, shared
+ *     with the features editor below, brings it back.
+ *   - THE TECHNICAL KEY. A template row rendered its Dari label and its key
+ *     with nothing between them — «برندbrand», «ظرفیتcapacity» — which is not a
+ *     label, it is a bug that looks like a typo. The key is machinery: it
+ *     exists so two shops describe a phone with the same vocabulary, and a
+ *     shopkeeper never needs to read it. It appears with the English fields,
+ *     properly separated, for whoever is filling in both.
  */
 export function SpecEditor({
   categorySlug,
   rows,
   onChange,
+  showEnglish,
+  onShowEnglishChange,
 }: {
   categorySlug: string | null;
   rows: SpecRowValue[];
   onChange: (next: SpecRowValue[]) => void;
+  showEnglish: boolean;
+  onShowEnglishChange: (next: boolean) => void;
 }) {
   const t = useTranslations('shopProducts.form');
   const template = specTemplateFor(categorySlug);
@@ -97,12 +115,15 @@ export function SpecEditor({
           <p className="text-muted-foreground text-xs">{t('specsHint')}</p>
         </div>
 
-        {missingFromTemplate.length > 0 && (
-          <Button type="button" variant="outline" size="sm" onClick={applyTemplate}>
-            <Sparkles />
-            {t('specsUseTemplate')}
-          </Button>
-        )}
+        <div className="flex items-center gap-3">
+          {missingFromTemplate.length > 0 && (
+            <Button type="button" variant="outline" size="sm" onClick={applyTemplate}>
+              <Sparkles />
+              {t('specsUseTemplate')}
+            </Button>
+          )}
+          <EnglishToggle checked={showEnglish} onChange={onShowEnglishChange} id="specs-english" />
+        </div>
       </div>
 
       {rows.length === 0 ? (
@@ -116,27 +137,36 @@ export function SpecEditor({
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1 space-y-2">
                   {row.fromTemplate ? (
-                    <p className="text-sm font-medium">
+                    <p className="flex flex-wrap items-baseline gap-2 text-sm font-medium">
                       {row.labelFa}
-                      <span className="text-muted-foreground ms-2 text-xs" dir="ltr">
-                        {row.key}
-                      </span>
+                      {/* Machinery, and only for whoever is filling in both
+                          languages. Never glued to the label again. */}
+                      {showEnglish && (
+                        <span
+                          className="rounded-control text-2xs text-muted-foreground bg-neutral-100 px-1.5 py-0.5 font-normal"
+                          dir="ltr"
+                        >
+                          {row.key}
+                        </span>
+                      )}
                     </p>
                   ) : (
-                    <div className="grid gap-2 sm:grid-cols-3">
-                      <div className="space-y-1">
-                        <Label htmlFor={`spec-key-${index}`} className="text-2xs">
-                          {t('specKey')}
-                        </Label>
-                        <Input
-                          id={`spec-key-${index}`}
-                          value={row.key}
-                          dir="ltr"
-                          onChange={(event) =>
-                            update(index, { key: event.target.value.replace(/[^a-zA-Z0-9]/g, '') })
-                          }
-                        />
-                      </div>
+                    <div className={cn('grid gap-2', showEnglish && 'sm:grid-cols-3')}>
+                      {showEnglish && (
+                        <div className="space-y-1">
+                          <Label htmlFor={`spec-key-${index}`} className="text-2xs">
+                            {t('specKey')}
+                          </Label>
+                          <Input
+                            id={`spec-key-${index}`}
+                            value={row.key}
+                            dir="ltr"
+                            onChange={(event) =>
+                              update(index, { key: event.target.value.replace(/[^a-zA-Z0-9]/g, '') })
+                            }
+                          />
+                        </div>
+                      )}
                       <div className="space-y-1">
                         <Label htmlFor={`spec-label-fa-${index}`} className="text-2xs">
                           {t('specLabelFa')}
@@ -147,24 +177,26 @@ export function SpecEditor({
                           onChange={(event) => update(index, { labelFa: event.target.value })}
                         />
                       </div>
-                      <div className="space-y-1">
-                        <Label htmlFor={`spec-label-en-${index}`} className="text-2xs">
-                          {t('specLabelEn')}
-                        </Label>
-                        <Input
-                          id={`spec-label-en-${index}`}
-                          value={row.labelEn}
-                          dir="ltr"
-                          onChange={(event) => update(index, { labelEn: event.target.value })}
-                        />
-                      </div>
+                      {showEnglish && (
+                        <div className="space-y-1">
+                          <Label htmlFor={`spec-label-en-${index}`} className="text-2xs">
+                            {t('specLabelEn')}
+                          </Label>
+                          <Input
+                            id={`spec-label-en-${index}`}
+                            value={row.labelEn}
+                            dir="ltr"
+                            onChange={(event) => update(index, { labelEn: event.target.value })}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
 
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className={cn('grid gap-2', showEnglish && 'sm:grid-cols-2')}>
                     <div className="space-y-1">
                       <Label htmlFor={`spec-value-fa-${index}`} className="text-2xs">
-                        {t('specValueFa')}
+                        {showEnglish ? t('specValueFa') : t('specValue')}
                       </Label>
                       <Input
                         id={`spec-value-fa-${index}`}
@@ -172,17 +204,19 @@ export function SpecEditor({
                         onChange={(event) => update(index, { valueFa: event.target.value })}
                       />
                     </div>
-                    <div className="space-y-1">
-                      <Label htmlFor={`spec-value-en-${index}`} className="text-2xs">
-                        {t('specValueEn')}
-                      </Label>
-                      <Input
-                        id={`spec-value-en-${index}`}
-                        value={row.valueEn}
-                        dir="ltr"
-                        onChange={(event) => update(index, { valueEn: event.target.value })}
-                      />
-                    </div>
+                    {showEnglish && (
+                      <div className="space-y-1">
+                        <Label htmlFor={`spec-value-en-${index}`} className="text-2xs">
+                          {t('specValueEn')}
+                        </Label>
+                        <Input
+                          id={`spec-value-en-${index}`}
+                          value={row.valueEn}
+                          dir="ltr"
+                          onChange={(event) => update(index, { valueEn: event.target.value })}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -207,7 +241,21 @@ export function SpecEditor({
         onClick={() =>
           onChange([
             ...rows,
-            { key: '', labelFa: '', labelEn: '', valueFa: '', valueEn: '', fromTemplate: false },
+            {
+              /*
+               * AUTO-ASSIGNED, because the key field is hidden by default and a
+               * row without one is dropped on save. It cannot be derived from
+               * the Dari label — the column is ASCII — so it is a counter, and
+               * a shopkeeper who never opens the English fields never learns
+               * that this column exists.
+               */
+              key: nextCustomKey(rows),
+              labelFa: '',
+              labelEn: '',
+              valueFa: '',
+              valueEn: '',
+              fromTemplate: false,
+            },
           ])
         }
       >
@@ -228,9 +276,14 @@ export function SpecEditor({
 export function FeatureEditor({
   features,
   onChange,
+  showEnglish,
+  onShowEnglishChange,
 }: {
   features: FeatureValue[];
   onChange: (next: FeatureValue[]) => void;
+  /** Shared with the spec editor above — one switch governs both sections. */
+  showEnglish: boolean;
+  onShowEnglishChange: (next: boolean) => void;
 }) {
   const t = useTranslations('shopProducts.form');
 
@@ -248,9 +301,12 @@ export function FeatureEditor({
 
   return (
     <section className="rounded-card border-border bg-card space-y-3 border p-4">
-      <div>
-        <h2 className="text-sm font-bold">{t('featuresHeading')}</h2>
-        <p className="text-muted-foreground text-xs">{t('featuresHint')}</p>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-bold">{t('featuresHeading')}</h2>
+          <p className="text-muted-foreground text-xs">{t('featuresHint')}</p>
+        </div>
+        <EnglishToggle checked={showEnglish} onChange={onShowEnglishChange} id="features-english" />
       </div>
 
       <ul className="space-y-2">
@@ -258,10 +314,10 @@ export function FeatureEditor({
           <li key={index} className="rounded-control border-border border p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1 space-y-2">
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className={cn('grid gap-2', showEnglish && 'sm:grid-cols-2')}>
                   <div className="space-y-1">
                     <Label htmlFor={`feature-title-fa-${index}`} className="text-2xs">
-                      {t('featureTitleFa')}
+                      {showEnglish ? t('featureTitleFa') : t('featureTitle')}
                     </Label>
                     <Input
                       id={`feature-title-fa-${index}`}
@@ -269,23 +325,25 @@ export function FeatureEditor({
                       onChange={(event) => update(index, { titleFa: event.target.value })}
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor={`feature-title-en-${index}`} className="text-2xs">
-                      {t('featureTitleEn')}
-                    </Label>
-                    <Input
-                      id={`feature-title-en-${index}`}
-                      value={feature.titleEn}
-                      dir="ltr"
-                      onChange={(event) => update(index, { titleEn: event.target.value })}
-                    />
-                  </div>
+                  {showEnglish && (
+                    <div className="space-y-1">
+                      <Label htmlFor={`feature-title-en-${index}`} className="text-2xs">
+                        {t('featureTitleEn')}
+                      </Label>
+                      <Input
+                        id={`feature-title-en-${index}`}
+                        value={feature.titleEn}
+                        dir="ltr"
+                        onChange={(event) => update(index, { titleEn: event.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className={cn('grid gap-2', showEnglish && 'sm:grid-cols-2')}>
                   <div className="space-y-1">
                     <Label htmlFor={`feature-body-fa-${index}`} className="text-2xs">
-                      {t('featureBodyFa')}
+                      {showEnglish ? t('featureBodyFa') : t('featureBody')}
                     </Label>
                     <Input
                       id={`feature-body-fa-${index}`}
@@ -293,17 +351,19 @@ export function FeatureEditor({
                       onChange={(event) => update(index, { bodyFa: event.target.value })}
                     />
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor={`feature-body-en-${index}`} className="text-2xs">
-                      {t('featureBodyEn')}
-                    </Label>
-                    <Input
-                      id={`feature-body-en-${index}`}
-                      value={feature.bodyEn}
-                      dir="ltr"
-                      onChange={(event) => update(index, { bodyEn: event.target.value })}
-                    />
-                  </div>
+                  {showEnglish && (
+                    <div className="space-y-1">
+                      <Label htmlFor={`feature-body-en-${index}`} className="text-2xs">
+                        {t('featureBodyEn')}
+                      </Label>
+                      <Input
+                        id={`feature-body-en-${index}`}
+                        value={feature.bodyEn}
+                        dir="ltr"
+                        onChange={(event) => update(index, { bodyEn: event.target.value })}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -335,6 +395,48 @@ export function FeatureEditor({
       )}
     </section>
   );
+}
+
+/**
+ * The one switch that reveals English across both editors.
+ *
+ * Phrased as a QUESTION («انگلیسی هم دارید؟») rather than as a setting: the
+ * honest answer for most tenants in this mall is no, and a label that asks it
+ * makes leaving it off feel like an answer instead of a missing step.
+ */
+function EnglishToggle({
+  checked,
+  onChange,
+  id,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  id: string;
+}) {
+  const t = useTranslations('shopProducts.form');
+
+  return (
+    <div className="flex shrink-0 items-center gap-2">
+      <Switch id={id} checked={checked} onCheckedChange={onChange} />
+      <Label htmlFor={id} className="text-xs font-medium text-neutral-600">
+        {t('englishToggle')}
+      </Label>
+    </div>
+  );
+}
+
+/**
+ * A key for a hand-added row, unique within the rows already there.
+ *
+ * ASCII by necessity — the column is a machine key shared across shops — and a
+ * counter rather than a slug of the Dari label, because there is no honest
+ * transliteration and a wrong one is worse than a number.
+ */
+function nextCustomKey(rows: SpecRowValue[]): string {
+  const taken = new Set(rows.map((row) => row.key));
+  let index = rows.length + 1;
+  while (taken.has(`custom${index}`)) index += 1;
+  return `custom${index}`;
 }
 
 /** Reorder and remove, shared by both editors so the controls cannot diverge. */

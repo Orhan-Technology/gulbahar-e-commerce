@@ -32,6 +32,7 @@ export function OrderActions({
   status,
   fulfillment = 'delivery',
   size = 'default',
+  showCancel = false,
 }: {
   orderId: string;
   status: Status;
@@ -45,6 +46,11 @@ export function OrderActions({
    */
   fulfillment?: 'delivery' | 'pickup';
   size?: 'sm' | 'default';
+  /**
+   * Off everywhere by default — see the note beside the cancel control below.
+   * The order detail page renders its own, demoted, at the bottom of the page.
+   */
+  showCancel?: boolean;
 }) {
   const t = useTranslations('shopOrders.actions');
   const router = useRouter();
@@ -99,8 +105,16 @@ export function OrderActions({
         different word and a different reason list because the customer has
         already been told the order is coming (PRD §13.2). Without it an order
         the shop can no longer fulfil had nowhere to go but a false "delivered".
+
+        IT IS NOT IN THIS ROW ANY MORE (Prompt C13). Beside «تایید» and «آماده
+        شد» it was an equal-weight destructive control a thumb's width from the
+        primary one, on the screen a shopkeeper uses while a customer is
+        talking to them. It now lives at the FOOT OF THE ORDER DETAIL, past the
+        history — one deliberate scroll away, still one tap once you are there.
+        The list card does not offer it at all: cancelling an accepted order is
+        not a thing to do in passing while scanning a queue.
       */}
-      {(status === 'accepted' || status === 'ready') && (
+      {showCancel && (status === 'accepted' || status === 'ready') && (
         <OrderCancelButton orderId={orderId} size={size} />
       )}
     </div>

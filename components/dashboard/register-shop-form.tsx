@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { FieldError } from '@/components/custom/field-error';
+import { NumberField } from '@/components/dashboard/number-field';
 import { registerShop } from '@/lib/actions/shop-registration';
-import { digitsOnly } from '@/lib/digits';
+import { MALL_FLOORS } from '@/lib/mall-floors';
 import { formatOpeningHours } from '@/lib/format';
 import { useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
 
@@ -56,6 +57,7 @@ export function RegisterShopForm({
   rejectionReason: string | null;
 }) {
   const t = useTranslations('shopRegistration');
+  const common = useTranslations('common');
   const locale = useLocale();
   const router = useRouter();
   const localeRouter = useLocaleRouter();
@@ -169,7 +171,15 @@ export function RegisterShopForm({
               dir="ltr"
               value={values.nameEn}
               onChange={(event) => set('nameEn', event.target.value)}
+              aria-describedby="reg-name-en-hint"
             />
+            {/* SAID OUT LOUD (Prompt C23). Beside a required Dari name, an
+                unmarked English one reads as required too — and a tenant who
+                does not write English stops at the second field of the first
+                form on the platform. */}
+            <p id="reg-name-en-hint" className="text-muted-foreground text-xs">
+              {t('nameEnOptional')}
+            </p>
           </div>
         </div>
 
@@ -210,15 +220,23 @@ export function RegisterShopForm({
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="reg-floor">{t('floor')}</Label>
-            <Input
-              id="reg-floor"
-              inputMode="numeric"
-              dir="ltr"
-              value={values.floor}
-              onChange={(event) => set('floor', digitsOnly(event.target.value))}
-              aria-invalid={fieldError('floor') !== null}
-              aria-describedby={fieldError('floor') ? 'reg-floor-error' : undefined}
-            />
+            {/* The mall has three floors — see lib/mall-floors.ts. Same control
+                as the profile form, from the same list. */}
+            <Select
+              value={values.floor || undefined}
+              onValueChange={(value) => set('floor', value)}
+            >
+              <SelectTrigger id="reg-floor" aria-invalid={fieldError('floor') !== null}>
+                <SelectValue placeholder={t('floorHint')} />
+              </SelectTrigger>
+              <SelectContent>
+                {MALL_FLOORS.map((floor) => (
+                  <SelectItem key={floor} value={String(floor)}>
+                    {common('floorName', { floor })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <FieldError id="reg-floor-error" message={fieldError('floor')} />
           </div>
           <div className="space-y-1.5">
@@ -232,15 +250,15 @@ export function RegisterShopForm({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="reg-phone">{t('phone')}</Label>
-            <Input
+            <NumberField
               id="reg-phone"
-              inputMode="tel"
-              dir="ltr"
+              format="phone"
+              maxLength={10}
               placeholder="07XXXXXXXX"
               value={values.phone}
-              onChange={(event) => set('phone', digitsOnly(event.target.value, 10))}
-              aria-invalid={fieldError('phone') !== null}
-              aria-describedby={fieldError('phone') ? 'reg-phone-error' : undefined}
+              onChange={(next) => set('phone', next)}
+              invalid={fieldError('phone') !== null}
+              describedBy={fieldError('phone') ? 'reg-phone-error' : undefined}
             />
             <FieldError id="reg-phone-error" message={fieldError('phone')} />
           </div>
@@ -276,10 +294,22 @@ export function RegisterShopForm({
         </div>
       </section>
 
-      {/* Set the expectation clearly: pending is a working state, not a waiting room. */}
-      <p className="rounded-card border-primary-200 bg-primary-50 text-primary p-3 text-xs">
-        {t('pendingExplainer')}
-      </p>
+      {/*
+        WHAT HAPPENS AFTER THE BUTTON (Prompt C23).
+        The form ended with «ثبت» and a line about what you may do while you
+        wait — but not who looks at this, how long it takes, or whether anyone
+        will tell you. That silence is what makes a new tenant ring the office
+        the next morning. Three sentences, in the order the questions get asked.
+      */}
+      <section className="rounded-card border-primary-200 bg-primary-50 text-primary space-y-2 p-3 text-xs">
+        <p className="font-bold">{t('nextHeading')}</p>
+        <ol className="list-inside list-decimal space-y-1">
+          <li>{t('nextReview')}</li>
+          <li>{t('nextHowLong')}</li>
+          <li>{t('nextNotified')}</li>
+        </ol>
+        <p>{t('pendingExplainer')}</p>
+      </section>
 
       <Button onClick={submit} disabled={pending || values.nameFa.trim().length < 2}>
         {pending ? t('submitting') : rejectionReason ? t('resubmit') : t('submit')}

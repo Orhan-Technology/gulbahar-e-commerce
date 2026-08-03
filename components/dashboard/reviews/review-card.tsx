@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Flag, MessageSquareReply } from 'lucide-react';
+import { Flag, MessageSquareReply, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { RatingStars } from '@/components/custom/rating-stars';
@@ -17,6 +17,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { flagReview, respondToReview } from '@/lib/actions/shop-reviews';
@@ -96,12 +102,17 @@ export function ReviewCard({
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <RatingStars value={review.rating} size="sm" />
+          {/* A customer's name and a product title are user-generated: a Dari
+              name in the English UI (or the reverse) sets its own direction, or
+              the «·» and the date jump to the wrong end of the line. */}
           <p className="text-muted-foreground mt-1 text-xs">
-            {review.authorName} · {formatDate(review.createdAt, locale)}
+            <span dir="auto">{review.authorName}</span> ·{' '}
+            {formatDate(review.createdAt, locale)}
           </p>
           <Link
             href={`/products/${review.productSlug}`}
-            className="hover:text-primary clamp-1 text-xs font-medium"
+            dir="auto"
+            className="hover:text-primary clamp-1 block text-xs font-medium"
           >
             {review.productTitle}
           </Link>
@@ -110,13 +121,19 @@ export function ReviewCard({
         {review.status === 'reported' && <Badge variant="warning">{t('flagged')}</Badge>}
       </div>
 
-      {review.body && <p className="text-sm">{review.body}</p>}
+      {review.body && (
+        <p className="text-sm" dir="auto">
+          {review.body}
+        </p>
+      )}
 
       {/* The shop's answer, rendered exactly as customers see it. */}
       {review.responseBody ? (
         <div className="rounded-control border-primary-200 bg-primary-50 border-s-2 p-3">
           <p className="text-primary text-xs font-bold">{t('yourReply')}</p>
-          <p className="mt-1 text-sm">{review.responseBody}</p>
+          <p className="mt-1 text-sm" dir="auto">
+            {review.responseBody}
+          </p>
           {review.responseAt && (
             <p className="text-muted-foreground mt-1 text-xs">
               {formatDate(review.responseAt, locale)}
@@ -124,22 +141,38 @@ export function ReviewCard({
           )}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" onClick={() => setReplying(true)}>
+        /*
+         * REPLYING IS THE JOB (Prompt C14). It was an outline button sitting
+         * beside a report button of the same size, so the screen offered
+         * "answer your customer" and "complain to the mall about your customer"
+         * as equal choices. Reporting is rare, it is not urgent, and it belongs
+         * where rare things belong.
+         */
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" onClick={() => setReplying(true)}>
             <MessageSquareReply />
             {t('respond')}
           </Button>
 
           {review.status === 'visible' && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="hover:text-danger text-neutral-600"
-              onClick={() => setFlagging(true)}
-            >
-              <Flag />
-              {t('flag')}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="ms-auto h-8 w-8 text-neutral-500"
+                  aria-label={t('moreActions')}
+                >
+                  <MoreHorizontal />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setFlagging(true)}>
+                  <Flag />
+                  {t('flag')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
       )}

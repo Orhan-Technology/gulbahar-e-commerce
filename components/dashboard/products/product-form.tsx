@@ -4,7 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { ArchiveRestore, GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
+import { Archive, ArchiveRestore, GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +29,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { FieldError } from '@/components/custom/field-error';
+import { NumberField } from '@/components/dashboard/number-field';
 import { PriceDisplay } from '@/components/custom/price-display';
 import { digitsOnly } from '@/lib/digits';
 import {
@@ -87,10 +88,17 @@ export type ProductFormValues = {
  * one (PRD §11). A "missing translation" chip on the tab surfaces the gap without
  * blocking publication.
  *
- * Images can only be attached once the product exists, because they need a
- * product id to belong to — so a new product saves first, then reveals the
- * uploader. That is also why the save button reads "save and continue" when
- * creating.
+ * PHOTOS COME FIRST, and on a new product they are STAGED rather than deferred.
+ *
+ * The flow behind a counter is: photograph the thing, name it, price it,
+ * publish. The form used to end with an images panel six thousand pixels down
+ * that said "you can add images once the product is saved" — so the first step
+ * of the real task was the last step of the form, and it was disabled. The
+ * panel is now the first block, and on a new product it accepts files
+ * immediately: they are held in the browser (object URLs, exactly like
+ * verification-form.tsx) and uploaded the instant the insert returns an id,
+ * inside the same submit. A shopkeeper never sees the two-step nature of it
+ * unless the upload itself fails, which is reported on its own.
  */
 export function ProductForm({
   initial,
@@ -107,6 +115,30 @@ export function ProductForm({
 
   const [values, setValues] = React.useState(initial);
   const [pending, startTransition] = React.useTransition();
+
+  /*
+   * Photos chosen before the product exists. Held here, uploaded the moment it
+   * does — see `submit`. `StagedImages` owns the object URLs and their revoke.
+   */
+  const [staged, setStaged] = React.useState<StagedImage[]>([]);
+
+  /*
+   * ENGLISH IS OFF UNTIL SOMEBODY ASKS FOR IT (Prompt: the EN column doubles
+   * every spec and feature row).
+   *
+   * Dari is the required language and the default locale; English is a bonus
+   * this persona often cannot supply. Rendering an English input beside every
+   * Dari one doubled the height of the two longest sections of the form and
+   * made the shopkeeper scroll past thirty fields they will never fill. The
+   * switch starts ON when the product already HAS English content, because
+   * hiding data somebody has entered is worse than showing a field they don't
+   * need.
+   */
+  const [showEnglish, setShowEnglish] = React.useState(
+    () =>
+      initial.specs.some((row) => row.labelEn.trim() || row.valueEn.trim()) ||
+      initial.features.some((feature) => feature.titleEn.trim() || feature.bodyEn.trim()),
+  );
 
   /*
    * FIELD-LEVEL ERRORS (Prompt: errors have no field-level surface).
@@ -209,7 +241,31 @@ export function ProductForm({
       toast.success(values.id ? t('saved') : t('created'));
 
       if (!values.id) {
-        // Move to the edit URL so images can now be attached.
+        /*
+         * THE STAGED PHOTOS GO UP NOW, in the same transition, before the
+         * shopkeeper is moved anywhere. They cannot be sent with the insert —
+         * an image row needs a product id to belong to — but that is a fact
+         * about the database, not something a person behind a counter should
+         * have to know or be told twice.
+         */
+        if (staged.length > 0) {
+          const formData = new FormData();
+          for (const image of staged) formData.append('images', image.file);
+
+          const upload = await uploadProductImages(result.data.id, formData);
+          if (upload.ok) {
+            toast.success(t('imagesAdded', { count: upload.data.added }));
+          } else {
+            // The product IS saved; only the photos failed. Say exactly that,
+            // and leave the files staged so a retry is one tap on the next
+            // screen rather than a re-take.
+            toast.error(t(`errors.${upload.error}` as never));
+          }
+          for (const image of staged) URL.revokeObjectURL(image.url);
+          setStaged([]);
+        }
+
+        // Move to the edit URL, which now renders the saved images.
         localeRouter.replace(`/dashboard/products/${result.data.id}`);
       } else {
         set('status', nextStatus);
@@ -249,6 +305,17 @@ export function ProductForm({
           <p className="text-danger/90 text-sm">{values.unpublishReason}</p>
           <p className="text-danger/80 text-xs">{t('unpublishedHint')}</p>
         </section>
+      )}
+
+      {/*
+        PHOTOS FIRST — see the note at the top of this file. An existing product
+        gets the full manager (reorder, delete); a new one gets the staging
+        area, which behaves the same way and uploads on save.
+      */}
+      {values.id ? (
+        <ImageManager productId={values.id} images={images} />
+      ) : (
+        <StagedImages staged={staged} onChange={setStaged} />
       )}
 
       {/* Content, per language */}
@@ -377,18 +444,18 @@ export function ProductForm({
           </div>
         </div>
 
+        {/* NumberField, not Input: the value is read back in the reader's own
+            numerals the moment the field loses focus (see number-field.tsx). */}
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="price">{t('price')}</Label>
-            <Input
+            <NumberField
               id="price"
-              inputMode="numeric"
-              dir="ltr"
               value={values.price}
-              onChange={(event) => set('price', digitsOnly(event.target.value))}
+              onChange={(next) => set('price', next)}
               required
-              aria-invalid={fieldError('price') !== undefined}
-              aria-describedby={fieldError('price') ? 'price-error' : undefined}
+              invalid={fieldError('price') !== undefined}
+              describedBy={fieldError('price') ? 'price-error' : undefined}
             />
             <FieldError
               id="price-error"
@@ -397,14 +464,12 @@ export function ProductForm({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="discount">{t('discountPrice')}</Label>
-            <Input
+            <NumberField
               id="discount"
-              inputMode="numeric"
-              dir="ltr"
               value={values.discountPrice}
-              onChange={(event) => set('discountPrice', digitsOnly(event.target.value))}
-              aria-invalid={fieldError('discountPrice') !== undefined}
-              aria-describedby={fieldError('discountPrice') ? 'discount-error' : undefined}
+              onChange={(next) => set('discountPrice', next)}
+              invalid={fieldError('discountPrice') !== undefined}
+              describedBy={fieldError('discountPrice') ? 'discount-error' : undefined}
             />
             <FieldError
               id="discount-error"
@@ -417,14 +482,12 @@ export function ProductForm({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="stock">{t('stock')}</Label>
-            <Input
+            <NumberField
               id="stock"
-              inputMode="numeric"
-              dir="ltr"
               value={values.stock}
-              onChange={(event) => set('stock', digitsOnly(event.target.value))}
-              aria-invalid={fieldError('stock') !== undefined}
-              aria-describedby={fieldError('stock') ? 'stock-error' : undefined}
+              onChange={(next) => set('stock', next)}
+              invalid={fieldError('stock') !== undefined}
+              describedBy={fieldError('stock') ? 'stock-error' : undefined}
             />
             <FieldError
               id="stock-error"
@@ -452,24 +515,21 @@ export function ProductForm({
         categorySlug={categories.find((category) => category.id === values.categoryId)?.slug ?? null}
         rows={values.specs}
         onChange={(specs) => set('specs', specs)}
+        showEnglish={showEnglish}
+        onShowEnglishChange={setShowEnglish}
       />
 
-      <FeatureEditor features={values.features} onChange={(features) => set('features', features)} />
+      <FeatureEditor
+        features={values.features}
+        onChange={(features) => set('features', features)}
+        showEnglish={showEnglish}
+        onShowEnglishChange={setShowEnglish}
+      />
 
       <VariantEditor
         variants={values.variants}
         onChange={(variants) => set('variants', variants)}
       />
-
-      {/* Images — only once the product exists */}
-      {values.id ? (
-        <ImageManager productId={values.id} images={images} />
-      ) : (
-        <section className="rounded-card border-border bg-card border border-dashed p-4">
-          <h2 className="text-sm font-bold">{t('imagesHeading')}</h2>
-          <p className="text-muted-foreground mt-1 text-xs">{t('imagesAfterSave')}</p>
-        </section>
-      )}
 
       {/* Save bar */}
       {values.status !== 'archived' && (
@@ -524,7 +584,7 @@ function ArchiveProductButton({ productId, title }: { productId: string; title: 
         onClick={() => setOpen(true)}
         disabled={pending}
       >
-        <Trash2 />
+        <Archive />
         {t('action')}
       </Button>
 
@@ -556,7 +616,7 @@ function ArchiveProductButton({ productId, title }: { productId: string; title: 
                 })
               }
             >
-              <Trash2 />
+              <Archive />
               {pending ? t('archiving') : t('confirm')}
             </Button>
           </DialogFooter>
@@ -726,6 +786,126 @@ function VariantEditor({
           </div>
         </div>
       ))}
+    </section>
+  );
+}
+
+export type StagedImage = { key: string; file: File; url: string };
+
+/**
+ * Photos for a product that does not exist yet (Prompt: photos-first).
+ *
+ * Same panel, same position, same wording as the real manager — the difference
+ * is that these files live in the browser until the insert returns an id, at
+ * which point `submit` uploads them. A shopkeeper photographs the thing first
+ * and types afterwards, and the form has to allow that order.
+ *
+ * The previews are object URLs, revoked when a photo is removed and when the
+ * component unmounts. `<img>` rather than next/image for the reason spelled out
+ * in verification-form.tsx: the optimiser runs on the server and cannot see a
+ * blob URL.
+ */
+function StagedImages({
+  staged,
+  onChange,
+}: {
+  staged: StagedImage[];
+  onChange: (next: StagedImage[]) => void;
+}) {
+  const t = useTranslations('shopProducts.form');
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    // Unmount only: revoking on every change would kill the URL of a preview
+    // still on screen. Removal revokes its own, in `remove` below.
+    return () => {
+      for (const image of staged) URL.revokeObjectURL(image.url);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function add(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    const next = Array.from(files).map((file) => ({
+      key: `${file.name}-${file.size}-${Math.round(file.lastModified)}`,
+      file,
+      url: URL.createObjectURL(file),
+    }));
+    onChange([...staged, ...next]);
+    if (inputRef.current) inputRef.current.value = '';
+  }
+
+  function remove(key: string) {
+    const target = staged.find((image) => image.key === key);
+    if (target) URL.revokeObjectURL(target.url);
+    onChange(staged.filter((image) => image.key !== key));
+  }
+
+  return (
+    <section className="rounded-card border-border bg-card space-y-3 border p-4">
+      <div>
+        <h2 className="text-sm font-bold">{t('imagesHeading')}</h2>
+        <p className="text-muted-foreground text-xs">
+          {staged.length > 0 ? t('imagesStagedHint') : t('imagesFirstHint')}
+        </p>
+      </div>
+
+      {staged.length > 0 && (
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {staged.map((image, index) => (
+            <li
+              key={image.key}
+              className="rounded-control border-border relative overflow-hidden border"
+            >
+              <span className="block aspect-square bg-neutral-100">
+                {/*
+                 * A plain <img>: the source is a local object URL for a file
+                 * that has not left the browser, and next/image would ask the
+                 * server to optimise something it cannot see. The square box
+                 * above supplies the dimensions the audit rule wants.
+                 */}
+                {/* audit-allow raw-img — a local object URL, sized by its container */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image.url} alt="" className="h-full w-full object-cover" />
+              </span>
+
+              {index === 0 && (
+                <span className="rounded-pill bg-primary text-primary-foreground text-2xs absolute start-1 top-1 px-1.5 py-0.5 font-semibold">
+                  {t('mainImage')}
+                </span>
+              )}
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => remove(image.key)}
+                aria-label={t('deleteImage')}
+                className="bg-background/90 hover:text-danger absolute end-1 top-1 h-7 w-7 text-neutral-600"
+              >
+                <X />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="sr-only"
+        id="staged-images"
+        onChange={(event) => add(event.target.files)}
+      />
+      <label
+        htmlFor="staged-images"
+        className="rounded-control border-input text-muted-foreground hover:border-primary hover:text-primary flex cursor-pointer items-center justify-center gap-2 border border-dashed p-4 text-sm"
+      >
+        <Upload className="h-4 w-4" aria-hidden />
+        {t('chooseImages')}
+      </label>
     </section>
   );
 }

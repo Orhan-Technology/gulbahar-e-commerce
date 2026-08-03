@@ -31,6 +31,16 @@ import { cn } from '@/lib/utils';
 const WEEKDAY_ORDER = [6, 0, 1, 2, 3, 4, 5];
 const MIN_COLUMNS = 10;
 
+/**
+ * Orders in the busiest cell before the grid is willing to name it.
+ *
+ * Five is a judgement, not a statistic: below it the peak is as likely to be
+ * two coincidences as a pattern, and a 168-cell grid over a small sample will
+ * always have SOME cell in front. Better to show the grid and withhold the
+ * verdict than to send somebody to the counter on a Friday night.
+ */
+const CONFIDENT_PEAK = 5;
+
 function hourRange(hours: number[]): number[] {
   if (hours.length === 0) return Array.from({ length: MIN_COLUMNS }, (_, index) => index + 8);
 
@@ -71,16 +81,32 @@ export async function TimingHeatmap({
 
   // The busiest cell, named in words — the one sentence a shopkeeper acts on.
   const busiest = cells.reduce((best, cell) => (cell.orders > best.orders ? cell : best), cells[0]);
+  const total = cells.reduce((sum, cell) => sum + cell.orders, 0);
 
   return (
     <div className="space-y-4">
-      <p className="rounded-card border-primary-200 bg-primary-50 text-primary-900 border p-3 text-sm">
-        {t('busiest', {
-          day: t(`weekdays.${busiest.weekday}` as never),
-          hour: formatNumber(busiest.hour, locale),
-          orders: formatNumber(busiest.orders, locale),
-        })}
-      </p>
+      {/*
+        THE VERDICT IS GATED ON THE SAMPLE (Prompt: it overclaimed from n=2).
+        This shop's "busiest hour" was «جمعه ۲۳ — ۲ سفارش»: Friday, the day the
+        mall is closed, at eleven at night, on the strength of two orders that
+        happened to land in the same cell. Staffing advice from two data points
+        is not advice, and a shopkeeper who acts on it once stops believing the
+        rest of the reports. Below the threshold the grid still renders — the
+        numbers are true, only the CONCLUSION was not — with a line saying so.
+      */}
+      {busiest.orders >= CONFIDENT_PEAK ? (
+        <p className="rounded-card border-primary-200 bg-primary-50 text-primary-900 border p-3 text-sm">
+          {t('busiest', {
+            day: t(`weekdays.${busiest.weekday}` as never),
+            hour: formatNumber(busiest.hour, locale),
+            orders: formatNumber(busiest.orders, locale),
+          })}
+        </p>
+      ) : (
+        <p className="rounded-card border-border bg-neutral-50 p-3 text-sm text-neutral-600">
+          {t('notEnough', { orders: formatNumber(total, locale) })}
+        </p>
+      )}
 
       <div className="rounded-card border-border bg-card overflow-hidden border p-4">
         <div className="overflow-x-auto">

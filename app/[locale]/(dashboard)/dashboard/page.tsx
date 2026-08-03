@@ -37,9 +37,12 @@ import { cn } from '@/lib/utils';
  *
  *   1. who you are and whether the shop is live
  *   2. what needs you now, with the actions on the rows themselves
- *   3. how it is going — four KPIs, each a drill-down
- *   4. the thirty-day shape
+ *   3. how it is going — the range control, then four KPIs, each a drill-down
+ *   4. the shape of the period
  *   5. what is actually selling
+ *
+ * The range control belongs to band 3 and sits inside it. Bands 1 and 2 are
+ * "right now" and do not obey it.
  *
  * Every band is its own Suspense boundary so a slower query never delays the
  * queue, and each fallback matches its final layout exactly (PRD §10.5).
@@ -55,6 +58,7 @@ export default async function DashboardPage({
   setRequestLocale(locale);
   const { range: rangeKey } = await searchParams;
   const user = await requireShopkeeper(locale);
+  const t = await getTranslations('dashboard');
   const range = parseConsoleRange(rangeKey);
   // Read once on the server and passed down — a client component may not call
   // `new Date()` during render (React 19 purity, CLAUDE.md).
@@ -62,10 +66,11 @@ export default async function DashboardPage({
 
   return (
     /*
-     * TWO REGIONS FROM `xl` (Prompt C3): the work down the main column, the
-     * numbers in a rail beside it. The page used to centre a 1024px column on a
-     * 1440px screen, which left 40% of a shopkeeper's monitor empty while the
-     * best-seller list was three items long and scrolled off the bottom.
+     * ONE COLUMN OF BANDS, splitting into two regions only where the period's
+     * detail lives (Prompt C3): the chart beside the best-seller rail from
+     * `xl`. The page used to centre a 1024px column on a 1440px screen, which
+     * left 40% of a shopkeeper's monitor empty while the best-seller list was
+     * three items long and scrolled off the bottom.
      *
      * Below `xl` it is one column in the same reading order — queue, numbers,
      * chart, sellers — because on a phone the queue must not be pushed down by
@@ -84,49 +89,60 @@ export default async function DashboardPage({
       */}
       <LiveRefresh />
 
-      <ConsolePageHeader
-        title={<DashboardGreeting name={user.name ?? ''} />}
-        actions={<RangeControl current={range.key} />}
-      />
+      <ConsolePageHeader title={<DashboardGreeting name={user.name ?? ''} />} />
+
+      {/* Above the queue, because for a new tenant it IS the queue. It
+          returns null once every step is done (Prompt C5). */}
+      <Suspense fallback={<SetupGuideSkeleton />}>
+        <SetupGuide shopId={user.shopId} />
+      </Suspense>
+
+      {/*
+        Expired reservations sit ABOVE the queue: goods in the back that
+        nobody is coming for, and every hour they stay there is stock the
+        shop cannot sell (Prompt C11). Renders nothing when there are none.
+
+        NO SUSPENSE around it, deliberately. A boundary needs a designed
+        fallback and this section has nothing to fall back TO — its empty
+        state is absence — so `fallback={null}` would be a boundary that
+        renders a blank gap, which is the pattern check:design refuses.
+      */}
+      <ExpiredHolds shopId={user.shopId} now={now} />
+
+      <Suspense fallback={<QueueSkeleton />}>
+        <QueueSection shopId={user.shopId} locale={locale} />
+      </Suspense>
+
+      {/*
+        THE RANGE CONTROL SITS WITH WHAT IT CHANGES (Prompt: it was in the page
+        header). Up there it looked like a control over the page, and it is not:
+        the setup guide, the expired reservations and the action queue below it
+        are all "right now" and none of them moved when a shopkeeper pressed
+        ۷ روز. Everything from this line down does move, so the control is the
+        heading of that block and its scope is visible at a glance.
+      */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+        <h2 className="text-base font-bold">{t('performanceHeading')}</h2>
+        <RangeControl current={range.key} />
+      </div>
+
+      {/*
+        The four numbers first — full width, because after the queue the tiles
+        are the summary and the chart is the detail behind them. Below `xl` the
+        reading order is unchanged: numbers, shape of the period, what sold.
+      */}
+      <Suspense fallback={<KpiRowSkeleton />}>
+        <KpiRow shopId={user.shopId} locale={locale} range={range} />
+      </Suspense>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_21rem] xl:items-start">
-        <div className="space-y-5">
-          {/* Above the queue, because for a new tenant it IS the queue. It
-              returns null once every step is done (Prompt C5). */}
-          <Suspense fallback={<SetupGuideSkeleton />}>
-            <SetupGuide shopId={user.shopId} />
-          </Suspense>
+        <Suspense fallback={<ChartSkeleton />}>
+          <ChartSection shopId={user.shopId} locale={locale} range={range} />
+        </Suspense>
 
-          {/*
-            Expired reservations sit ABOVE the queue: goods in the back that
-            nobody is coming for, and every hour they stay there is stock the
-            shop cannot sell (Prompt C11). Renders nothing when there are none.
-
-            NO SUSPENSE around it, deliberately. A boundary needs a designed
-            fallback and this section has nothing to fall back TO — its empty
-            state is absence — so `fallback={null}` would be a boundary that
-            renders a blank gap, which is the pattern check:design refuses.
-          */}
-          <ExpiredHolds shopId={user.shopId} now={now} />
-
-          <Suspense fallback={<QueueSkeleton />}>
-            <QueueSection shopId={user.shopId} locale={locale} />
-          </Suspense>
-
-          <Suspense fallback={<ChartSkeleton />}>
-            <ChartSection shopId={user.shopId} locale={locale} range={range} />
-          </Suspense>
-        </div>
-
-        <div className="space-y-5">
-          <Suspense fallback={<KpiRowSkeleton />}>
-            <KpiRow shopId={user.shopId} locale={locale} range={range} />
-          </Suspense>
-
-          <Suspense fallback={<TopSellersSkeleton />}>
-            <TopSellers shopId={user.shopId} locale={locale} range={range} />
-          </Suspense>
-        </div>
+        <Suspense fallback={<TopSellersSkeleton />}>
+          <TopSellers shopId={user.shopId} locale={locale} range={range} />
+        </Suspense>
       </div>
     </div>
   );
@@ -159,9 +175,9 @@ async function KpiRow({
   const days = formatNumber(range.days, locale);
 
   return (
-    /* Two across on a phone, four on a tablet, ONE in the desktop rail — the
-       rail is 21rem wide and a tile has to stay readable in it. */
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-1">
+    /* Two across on a phone, four from `lg` — the row is full width now that
+       it leads the performance band rather than sitting in the 21rem rail. */
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard
         label={t('todaySales')}
         value={stats.todaySales}
@@ -198,8 +214,8 @@ async function KpiRow({
         value={stats.rangeOrderCount}
         icon={<ShoppingBag className="h-4 w-4" aria-hidden />}
         href={`/dashboard/orders?range=${range.key}`}
-        delta={stats.ordersDelta}
-        hint={stats.ordersDelta !== null ? t('vsPreviousRange') : t('noBaseline')}
+        delta={readableDelta(stats.ordersDelta)}
+        hint={t(deltaHintKey(stats.ordersDelta))}
         hintTone={(stats.ordersDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
@@ -217,8 +233,8 @@ async function KpiRow({
         // Views are a property of the catalogue, so the drill-down is the
         // product list ordered by exactly the number the tile is showing.
         href="/dashboard/products?sort=views"
-        delta={stats.viewsDelta}
-        hint={stats.viewsDelta !== null ? t('vsPreviousRange') : t('noBaseline')}
+        delta={readableDelta(stats.viewsDelta)}
+        hint={t(deltaHintKey(stats.viewsDelta))}
         hintTone={(stats.viewsDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
@@ -242,6 +258,31 @@ async function KpiRow({
   );
 }
 
+/**
+ * PERCENTAGES STOP BEING PERCENTAGES SOMEWHERE AROUND 300%.
+ *
+ * A five-product shop that took two orders last week and fifteen this week is a
+ * genuine ↑۶۵۱٪, and a green pill reading ۶۵۱٪ is read as a broken tile — the
+ * arithmetic is right and the communication is wrong, because the reader's
+ * question is "how am I doing" and no honest answer to that is a four-figure
+ * ratio off a baseline of two. Above the cap the pill is dropped and the hint
+ * line says which direction it moved, in words.
+ */
+const DELTA_CAP = 3;
+
+function readableDelta(delta: number | null) {
+  if (delta === null) return null;
+  return Math.abs(delta) > DELTA_CAP ? null : delta;
+}
+
+/** Returns the KEY rather than the string, so the caller's `t` stays typed. */
+function deltaHintKey(delta: number | null) {
+  if (delta === null) return 'noBaseline' as const;
+  if (delta > DELTA_CAP) return 'farAbovePrevious' as const;
+  if (delta < -DELTA_CAP) return 'farBelowPrevious' as const;
+  return 'vsPreviousRange' as const;
+}
+
 async function ChartSection({
   shopId,
   locale,
@@ -258,10 +299,29 @@ async function ChartSection({
   const first = stats.salesSeries.at(0);
   const last = stats.salesSeries.at(-1);
 
+  /*
+   * THE ONE READING A SPIKY LINE WILL NOT GIVE UP.
+   *
+   * A shop with five products sells on maybe eight of thirty days, so the line
+   * is a row of spikes over a flat floor — it has a shape only in the sense
+   * that noise has a shape, and nothing in it can be acted on. The best day, in
+   * words, is what a shopkeeper actually takes from a month of takings ("Friday
+   * was the big one"), and it costs one line under the chart.
+   */
+  const best = stats.salesSeries.reduce<(typeof stats.salesSeries)[number] | null>(
+    (top, point) => (top === null || point.revenue > top.revenue ? point : top),
+    null,
+  );
+
   return (
     <section className="rounded-card border-border bg-card space-y-3 border p-4">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="text-sm font-bold">{t('salesChartHeading')}</h2>
+        {/* RANGED, not «فروش ۳۰ روز گذشته» hardcoded: the heading claimed
+            thirty days while the control above it was set to seven, so the
+            total underneath was read as a month's takings. */}
+        <h2 className="text-sm font-bold">
+          {t('salesChartHeadingRanged', { days: formatNumber(range.days, locale) })}
+        </h2>
         <p className="text-sm font-semibold text-neutral-600 tabular-nums">
           {formatCurrency(total, locale)}
         </p>
@@ -269,6 +329,15 @@ async function ChartSection({
       </div>
 
       <SalesChart data={stats.salesSeries} />
+
+      {best && best.revenue > 0 && (
+        <p className="rounded-control bg-primary-50 text-primary-900 px-3 py-2 text-xs font-medium">
+          {t('bestDay', {
+            day: formatDate(best.day, locale, 'medium'),
+            amount: formatCurrency(best.revenue, locale),
+          })}
+        </p>
+      )}
 
       {first && last && (
         <p className="text-2xs text-neutral-400">
