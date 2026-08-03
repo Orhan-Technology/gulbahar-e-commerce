@@ -38,8 +38,13 @@ export function NumberField({
   className,
   placeholder,
   format = 'number',
+  autoFocus,
+  disabled,
+  label,
+  onBlur,
+  onKeyDown,
 }: {
-  id: string;
+  id?: string;
   /** ASCII digits, or empty. */
   value: string;
   onChange: (next: string) => void;
@@ -55,6 +60,22 @@ export function NumberField({
    * into thousands (see lib/format.ts).
    */
   format?: 'number' | 'phone';
+  autoFocus?: boolean;
+  disabled?: boolean;
+  /**
+   * For the inline editors, whose label is the number they replace rather than
+   * a `<Label>` element — the control still has to name itself to a screen
+   * reader.
+   */
+  label?: string;
+  /**
+   * The INLINE editors commit on blur and on Enter. Their handlers run AFTER
+   * the field has left focused mode, so the value they read is the same ASCII
+   * string `onChange` has been publishing all along — the formatting is display
+   * only and never reaches a caller.
+   */
+  onBlur?: () => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void;
 }) {
   const locale = useLocale();
   const [focused, setFocused] = React.useState(false);
@@ -78,11 +99,20 @@ export function NumberField({
       value={display}
       placeholder={placeholder}
       required={required}
+      disabled={disabled}
+      // The inline editors replace a number the shopkeeper has just tapped, so
+      // focus IS the interaction — nothing else on the row changed.
+      autoFocus={autoFocus}
+      aria-label={label}
       aria-invalid={invalid}
       aria-describedby={describedBy}
       className={className}
       onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
+      onBlur={() => {
+        setFocused(false);
+        onBlur?.();
+      }}
+      onKeyDown={onKeyDown}
       onChange={(event) => onChange(digitsOnly(event.target.value, maxLength))}
     />
   );

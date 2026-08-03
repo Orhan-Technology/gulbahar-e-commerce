@@ -127,7 +127,10 @@ export default async function AdminOrderPage({
                 : 'text-warning-fg text-sm font-bold'
             }
           >
-            {aging.pendingHours >= 48
+            {/* The shared threshold, not a literal: the banner's own colour
+                switches on `SLA_HOURS.danger` two lines up, and the two must
+                never be able to disagree (lib/queue-sla.ts). */}
+            {aging.pendingHours >= SLA_HOURS.danger
               ? t('stalledDays', {
                   n: Math.floor(aging.pendingHours / 24),
                   count: formatNumber(Math.floor(aging.pendingHours / 24), locale),

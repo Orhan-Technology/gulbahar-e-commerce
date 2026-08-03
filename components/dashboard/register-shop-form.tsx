@@ -22,6 +22,7 @@ import { NumberField } from '@/components/dashboard/number-field';
 import { registerShop } from '@/lib/actions/shop-registration';
 import { MALL_FLOORS } from '@/lib/mall-floors';
 import { formatOpeningHours } from '@/lib/format';
+import { localeDirection } from '@/lib/i18n/routing';
 import { useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
 
 export type RegistrationCategory = { id: string; label: string };
@@ -185,7 +186,11 @@ export function RegisterShopForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="reg-category">{t('category')}</Label>
+          {/* Radix defaults its Select to `dir="ltr"` and stamps it on the
+              trigger, which mirrors the control inside a right-to-left form —
+              the same omission as the Tabs on the product editor. */}
           <Select
+            dir={localeDirection(locale)}
             value={values.categoryId ?? undefined}
             onValueChange={(value) => set('categoryId', value)}
           >
@@ -223,6 +228,7 @@ export function RegisterShopForm({
             {/* The mall has three floors — see lib/mall-floors.ts. Same control
                 as the profile form, from the same list. */}
             <Select
+              dir={localeDirection(locale)}
               value={values.floor || undefined}
               onValueChange={(value) => set('floor', value)}
             >

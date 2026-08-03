@@ -35,7 +35,6 @@ import { ViewsWithoutSales } from '@/components/dashboard/reports/views-without-
 import { EXPORTABLE, parseShopReport, type ShopReportKey } from '@/lib/shop-reports';
 import { Link } from '@/lib/i18n/navigation';
 
-
 /**
  * Shop reporting (PRD §6.7, Prompt C10).
  *
@@ -240,7 +239,9 @@ async function TopProducts({
           {rows.map((row) => (
             <li key={row.id} className="space-y-1">
               <div className="flex items-baseline justify-between gap-2 text-xs">
-                <span className="clamp-1">{pickLocale(row.title, locale)}</span>
+                <span className="clamp-1" dir="auto">
+                  {pickLocale(row.title, locale)}
+                </span>
                 <span className="shrink-0 font-medium">{formatCurrency(row.revenue, locale)}</span>
               </div>
               {/* A bar rather than a chart: it is a ranked list, and the bar only has
@@ -253,7 +254,7 @@ async function TopProducts({
                 />
               </div>
               <p className="text-muted-foreground text-xs">
-                {t('unitsSold', { count: formatNumber(row.units, locale) })}
+                {t('unitsSold', { n: row.units, count: formatNumber(row.units, locale) })}
               </p>
             </li>
           ))}
@@ -284,7 +285,9 @@ async function PromotionSection({
           {rows.map((row) => (
             <li key={pickLocale(row.slotName, locale)} className="space-y-1 py-2 first:pt-0">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="text-sm">{pickLocale(row.slotName, locale)}</span>
+                <span className="text-sm" dir="auto">
+                  {pickLocale(row.slotName, locale)}
+                </span>
                 <span className="text-xs font-medium">{formatCurrency(row.spend, locale)}</span>
               </div>
               <p className="text-muted-foreground text-xs">
@@ -317,7 +320,11 @@ async function WishlistSection({ shopId, locale }: { shopId: string; locale: str
         <ul className="space-y-2">
           {rows.map((row) => (
             <li key={row.id} className="flex items-center justify-between gap-2 text-sm">
-              <Link href={`/products/${row.slug}`} className="hover:text-primary clamp-1">
+              <Link
+                href={`/products/${row.slug}`}
+                className="hover:text-primary clamp-1"
+                dir="auto"
+              >
                 {pickLocale(row.title, locale)}
               </Link>
               <Badge variant="secondary">

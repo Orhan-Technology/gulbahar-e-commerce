@@ -64,7 +64,8 @@ export function QuestionCard({
   const [sent, setSent] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
 
-  const answer = sent !== null ? { body: sent, createdAt: new Date(0).toISOString() } : question.answer;
+  const answer =
+    sent !== null ? { body: sent, createdAt: new Date(0).toISOString() } : question.answer;
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -113,6 +114,7 @@ export function QuestionCard({
             <Link
               href={`/products/${question.productSlug}`}
               className="hover:text-primary truncate text-sm font-semibold"
+              dir="auto"
             >
               {question.productTitle}
             </Link>
@@ -133,12 +135,18 @@ export function QuestionCard({
             })}
           </p>
 
-          <p className="mt-2 text-sm leading-relaxed">{question.body}</p>
+          {/* The customer wrote this, and the shopkeeper wrote the answer below;
+              either may be in the other language. */}
+          <p className="mt-2 text-sm leading-relaxed" dir="auto">
+            {question.body}
+          </p>
 
           {answer && !open && (
             <div className="rounded-control border-primary-200 bg-primary-50/50 mt-2 border-s-2 p-2.5">
               <p className="text-primary-800 text-xs font-semibold">{t('yourAnswer')}</p>
-              <p className="mt-0.5 text-sm leading-relaxed text-neutral-700">{answer.body}</p>
+              <p className="mt-0.5 text-sm leading-relaxed text-neutral-700" dir="auto">
+                {answer.body}
+              </p>
             </div>
           )}
 

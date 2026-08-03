@@ -7,7 +7,7 @@ import { MessageSquareReply, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { NumberField } from '@/components/dashboard/number-field';
 import { Textarea } from '@/components/ui/textarea';
 import { answerQuestion } from '@/lib/actions/questions';
 import { respondToReview } from '@/lib/actions/shop-reviews';
@@ -199,14 +199,13 @@ export function InlineStockUpdate({
       <label htmlFor={`stock-${productId}`} className="text-xs font-medium">
         {t('stockLabel')}
       </label>
-      <Input
+      {/* Persian digits on blur, tolerant parsing on the way in — the same
+          field as everywhere else in the panel (number-field.tsx). */}
+      <NumberField
         id={`stock-${productId}`}
         value={value}
-        onChange={(event) => setValue(digitsOnly(event.target.value))}
-        inputMode="numeric"
-        dir="ltr"
+        onChange={setValue}
         className="h-8 w-20"
-        placeholder="0"
       />
       <Button type="submit" size="sm" disabled={pending || !value}>
         <Package />

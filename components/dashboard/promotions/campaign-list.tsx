@@ -73,7 +73,9 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
     <li className="rounded-card border-border bg-card space-y-2 border p-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-medium">{campaign.slotName}</p>
+          <p className="text-sm font-medium" dir="auto">
+            {campaign.slotName}
+          </p>
           {campaign.productTitle && (
             // User-generated, so it sets its own base direction.
             <p className="text-muted-foreground clamp-1 text-xs" dir="auto">
@@ -103,7 +105,10 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
           {endingSoon && (
             <span className="text-warning inline-flex items-center gap-1 text-xs">
               <Timer className="h-3 w-3" aria-hidden />
-              {t('daysLeft', { count: formatNumber(campaign.daysLeft, locale) })}
+              {t('daysLeft', {
+                n: campaign.daysLeft,
+                count: formatNumber(campaign.daysLeft, locale),
+              })}
             </span>
           )}
         </div>
@@ -126,7 +131,12 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
             {/* CLICKS ARE PEOPLE WHO ARRIVED, and this line now says so in
                 those words — «۲۴ کلیک» is a metric, «۲۴ مشتری از این تبلیغ
                 آمدند» is a result (Prompt C15). */}
-            <bdi>{t('visitors', { count: formatNumber(campaign.clicks, locale) })}</bdi>
+            <bdi>
+              {t('visitors', {
+                n: campaign.clicks,
+                count: formatNumber(campaign.clicks, locale),
+              })}
+            </bdi>
           </span>
           {/*
             The percentage is its OWN isolate. «نرخ کلیک ٪۲» rendered as

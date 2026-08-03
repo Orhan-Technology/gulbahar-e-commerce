@@ -147,11 +147,37 @@ export function SignInForm({ redirectTo = '/' }: { redirectTo?: string }) {
             placeholder="0700000000"
             autoComplete="tel"
             required
+            /*
+              EDITING THE NUMBER CLEARS THE WAIT. The limiter's bucket is keyed
+              by phone (lib/auth/otp.ts), so a different number is a different
+              budget and must not inherit this one's refusal — otherwise a
+              customer who mistyped their own number is locked out of their
+              real one for a minute.
+            */
+            onChange={() => setCooldown(0)}
           />
           <p className="text-muted-foreground text-xs">{t('phoneHint')}</p>
         </div>
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? t('sending') : t('sendCode')}
+        {/*
+          THE REFUSAL, AS A WAIT RATHER THAN A TOAST THAT LEAVES.
+
+          `too_many_requests` on this step used to surface only as a toast: four
+          seconds later the screen was identical to a working one, and the only
+          way to learn the button was still going to be refused was to press it
+          again. The countdown is the same one the resend control uses — the
+          cooldown state was already being set here, it simply had nothing on
+          this step reading it.
+        */}
+        <Button type="submit" className="w-full" disabled={pending || cooldown > 0}>
+          {/* `resendIn`, the resend control's own countdown, rather than a
+              string of its own: the reader has just pressed send, so «ارسال
+              دوباره تا … ثانیه دیگر» is the same sentence in the same words,
+              and one string cannot drift from the other. */}
+          {cooldown > 0
+            ? t('resendIn', { seconds: formatNumber(cooldown, locale) })
+            : pending
+              ? t('sending')
+              : t('sendCode')}
         </Button>
       </form>
     );

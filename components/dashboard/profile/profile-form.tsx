@@ -26,6 +26,7 @@ import { MALL_FLOORS } from '@/lib/mall-floors';
 import { WeeklyHoursEditor } from '@/components/dashboard/profile/weekly-hours';
 import { saveShopProfile, uploadShopImage } from '@/lib/actions/shop-profile';
 import { formatOpeningHours } from '@/lib/format';
+import { localeDirection } from '@/lib/i18n/routing';
 
 export type ProfileCategory = { id: string; label: string };
 
@@ -179,7 +180,10 @@ export function ProfileForm({
           </Badge>
         </div>
 
-        <Tabs defaultValue="fa">
+        {/* Without an explicit `dir` Radix stamps `dir="ltr"` on its own root
+            and every panel below it inherits a left-to-right base direction,
+            whatever <html> says — see the note on the promotions page. */}
+        <Tabs dir={localeDirection(locale)} defaultValue="fa">
           <TabsList>
             <TabsTrigger value="fa">
               {t('langFa')}
@@ -249,7 +253,10 @@ export function ProfileForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="shop-category">{t('category')}</Label>
+          {/* Without `dir` Radix renders this trigger and its dropdown
+              left-to-right — see the note beside the language tabs above. */}
           <Select
+            dir={localeDirection(locale)}
             value={values.categoryId ?? undefined}
             onValueChange={(value) => set('categoryId', value)}
           >
@@ -277,6 +284,7 @@ export function ProfileForm({
               registration and this form cannot offer different buildings.
             */}
             <Select
+              dir={localeDirection(locale)}
               value={values.floor || undefined}
               onValueChange={(value) => set('floor', value)}
             >

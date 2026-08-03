@@ -207,8 +207,19 @@ async function UserList({
                   })}
                 </span>
               </td>
+              {/*
+                «بدون فعالیت», not a date. A shopkeeper who has never ordered or
+                reviewed has no activity to report, and printing their signup
+                timestamp here would put the same relative time on every such
+                row — which is precisely the failure this column replaced. The
+                blank is the answer.
+              */}
               <td className="text-muted-foreground p-3 text-xs">
-                {formatRelative(user.lastActiveAt, locale)}
+                {user.lastActiveAt ? (
+                  formatRelative(user.lastActiveAt, locale)
+                ) : (
+                  <span className="text-neutral-400">{t('noActivity')}</span>
+                )}
               </td>
               <td className="p-3 text-end">
                 <UserRowActions

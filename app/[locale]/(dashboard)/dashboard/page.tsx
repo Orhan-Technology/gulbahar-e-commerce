@@ -411,12 +411,18 @@ async function TopSellers({
 
               <span className="rounded-control relative h-11 w-11 shrink-0 overflow-hidden bg-neutral-100">
                 {product.imagePath && (
-                  <Image src={product.imagePath} alt="" fill sizes="44px" className="object-cover" />
+                  <Image
+                    src={product.imagePath}
+                    alt=""
+                    fill
+                    sizes="44px"
+                    className="object-cover"
+                  />
                 )}
               </span>
 
               <span className="min-w-0 flex-1">
-                <span className="clamp-1 text-sm font-medium">
+                <span className="clamp-1 text-sm font-medium" dir="auto">
                   {pickLocale(product.title as never, locale)}
                 </span>
                 <span className="text-2xs mt-0.5 block text-neutral-500">

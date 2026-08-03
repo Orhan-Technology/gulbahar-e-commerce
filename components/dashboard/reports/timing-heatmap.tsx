@@ -99,6 +99,8 @@ export async function TimingHeatmap({
           {t('busiest', {
             day: t(`weekdays.${busiest.weekday}` as never),
             hour: formatNumber(busiest.hour, locale),
+            // `n` selects the plural form, `orders` renders.
+            n: busiest.orders,
             orders: formatNumber(busiest.orders, locale),
           })}
         </p>
@@ -137,6 +139,7 @@ export async function TimingHeatmap({
                           title={t('cell', {
                             day: t(`weekdays.${weekday}` as never),
                             hour: formatNumber(hour, locale),
+                            n: orders,
                             orders: formatNumber(orders, locale),
                           })}
                           className={cn(

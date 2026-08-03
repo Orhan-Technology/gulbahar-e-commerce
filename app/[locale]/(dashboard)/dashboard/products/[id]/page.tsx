@@ -34,7 +34,9 @@ export default async function EditProductPage({
           {t('title')}
         </Link>
         <ChevronRight className="h-3 w-3 rtl:rotate-180" aria-hidden />
-        <span className="clamp-1 text-foreground">{pickLocale(product.title, locale)}</span>
+        <span className="clamp-1 text-foreground" dir="auto">
+          {pickLocale(product.title, locale)}
+        </span>
       </nav>
 
       <div className="flex flex-wrap items-center justify-between gap-2">

@@ -117,7 +117,10 @@ export async function StockReport({
                 <dd className="tabular-nums">
                   {row.daysSinceLastSale === null
                     ? t('neverSold')
-                    : t('daysAgo', { days: formatNumber(row.daysSinceLastSale, locale) })}
+                    : t('daysAgo', {
+                        n: row.daysSinceLastSale,
+                        days: formatNumber(row.daysSinceLastSale, locale),
+                      })}
                 </dd>
               </div>
             </dl>
@@ -196,7 +199,10 @@ export async function StockReport({
                   <td className="text-muted-foreground px-4 py-2.5 text-end text-xs tabular-nums">
                     {row.daysSinceLastSale === null
                       ? t('neverSold')
-                      : t('daysAgo', { days: formatNumber(row.daysSinceLastSale, locale) })}
+                      : t('daysAgo', {
+                          n: row.daysSinceLastSale,
+                          days: formatNumber(row.daysSinceLastSale, locale),
+                        })}
                   </td>
                 </tr>
               ))}

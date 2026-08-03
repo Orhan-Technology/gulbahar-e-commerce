@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Archive, ArchiveRestore, GripVertical, Plus, Trash2, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -41,6 +41,7 @@ import {
   uploadProductImages,
 } from '@/lib/actions/shop-products';
 import { useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
+import { localeDirection } from '@/lib/i18n/routing';
 import {
   FeatureEditor,
   SpecEditor,
@@ -110,6 +111,7 @@ export function ProductForm({
   images: ProductFormImage[];
 }) {
   const t = useTranslations('shopProducts.form');
+  const locale = useLocale();
   const router = useRouter();
   const localeRouter = useLocaleRouter();
 
@@ -254,7 +256,7 @@ export function ProductForm({
 
           const upload = await uploadProductImages(result.data.id, formData);
           if (upload.ok) {
-            toast.success(t('imagesAdded', { count: upload.data.added }));
+            toast.success(t('imagesAdded', { n: upload.data.added, count: upload.data.added }));
           } else {
             // The product IS saved; only the photos failed. Say exactly that,
             // and leave the files staged so a retry is one tap on the next
@@ -302,7 +304,9 @@ export function ProductForm({
       {values.status === 'unpublished' && values.unpublishReason && (
         <section className="rounded-card border-danger-border bg-danger-bg space-y-1 border p-4">
           <p className="text-danger text-sm font-bold">{t('unpublishedHeading')}</p>
-          <p className="text-danger/90 text-sm">{values.unpublishReason}</p>
+          <p className="text-danger/90 text-sm" dir="auto">
+            {values.unpublishReason}
+          </p>
           <p className="text-danger/80 text-xs">{t('unpublishedHint')}</p>
         </section>
       )}
@@ -322,7 +326,12 @@ export function ProductForm({
       <section className="rounded-card border-border bg-card space-y-3 border p-4">
         <h2 className="text-sm font-bold">{t('contentHeading')}</h2>
 
-        <Tabs defaultValue="fa">
+        {/* Radix writes `dir="ltr"` on its own root when it is given no
+            direction, and that attribute overrides the `dir="rtl"` on <html>
+            for everything inside the panels — see the long note on the
+            promotions page, where the same omission turned an entire screen
+            left-to-right. */}
+        <Tabs dir={localeDirection(locale)} defaultValue="fa">
           <TabsList>
             <TabsTrigger value="fa">
               {t('langFa')}
@@ -401,7 +410,12 @@ export function ProductForm({
 
         <div className="space-y-1.5">
           <Label htmlFor="category">{t('category')}</Label>
+          {/* Radix Select stamps `dir="ltr"` on its trigger and its dropdown
+              when it is given no direction, exactly as its Tabs does — which
+              put the chevron on the wrong edge and left-aligned the chosen
+              category inside an otherwise right-to-left form. */}
           <Select
+            dir={localeDirection(locale)}
             value={values.categoryId ?? undefined}
             onValueChange={(value) => set('categoryId', value)}
           >
@@ -459,7 +473,9 @@ export function ProductForm({
             />
             <FieldError
               id="price-error"
-              message={fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null}
+              message={
+                fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null
+              }
             />
           </div>
           <div className="space-y-1.5">
@@ -491,7 +507,9 @@ export function ProductForm({
             />
             <FieldError
               id="stock-error"
-              message={fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null}
+              message={
+                fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null
+              }
             />
           </div>
         </div>
@@ -512,7 +530,9 @@ export function ProductForm({
 
       {/* Specifications, features, then variants */}
       <SpecEditor
-        categorySlug={categories.find((category) => category.id === values.categoryId)?.slug ?? null}
+        categorySlug={
+          categories.find((category) => category.id === values.categoryId)?.slug ?? null
+        }
         rows={values.specs}
         onChange={(specs) => set('specs', specs)}
         showEnglish={showEnglish}
@@ -945,7 +965,7 @@ function ImageManager({ productId, images }: { productId: string; images: Produc
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
-      toast.success(t('imagesAdded', { count: result.data.added }));
+      toast.success(t('imagesAdded', { n: result.data.added, count: result.data.added }));
       router.refresh();
     });
   }

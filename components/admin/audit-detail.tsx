@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from 'next-intl/server';
 
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema/shared';
-import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDate, formatList, formatNumber } from '@/lib/format';
 
 /** The shape `lib/audit.ts` stores. Flat by schema — see the note in that file. */
 export type AuditDetail = Record<string, string | number | null>;
@@ -69,6 +69,12 @@ export async function AuditDetail({
   const tRoles = await getTranslations('adminUsers.roles');
   const tShopStatus = await getTranslations('adminShops.filters');
   const tOrderStatus = await getTranslations('adminOrders.status');
+  /*
+   * The health flags are authored once, under the screen that raises them, and
+   * read back here. A second copy under `adminAudit` would drift from the words
+   * the admin saw on the row when they pressed the button.
+   */
+  const tFlags = await getTranslations('adminShops.health.flags');
 
   if (!detail || Object.keys(detail).length === 0) return null;
 
@@ -91,19 +97,63 @@ export async function AuditDetail({
     if (raw === null || raw === '') return '—';
     const text = String(raw);
 
-    if (DATE_KEYS.has(key)) return formatDate(text, locale, 'medium');
-    if (CURRENCY_KEYS.has(key)) return formatCurrency(Number(text), locale);
-    if (COUNT_KEYS.has(key)) return formatNumber(Number(text), locale);
-
-    // A settings change arrives as "old → new"; each side goes through the same
-    // scalar rules, and the arrow itself belongs to the message file, which
-    // owns its direction in each script.
+    /*
+     * THE PAIR IS SPLIT BEFORE ANYTHING IS COERCED, and the order of these two
+     * blocks is the whole fix.
+     *
+     * A settings change arrives as the packed string "old → new" (see
+     * admin-settings.ts). With the key rules running first, `deliveryFee`
+     * matched CURRENCY_KEYS and the page ran `Number('150 → 777')` — NaN, which
+     * `formatCurrency` rendered as «؋ ناعدد» on the audit row for the one field
+     * whose whole point is that the reader can see it moved. The scalar rules
+     * still apply, to EACH SIDE, inside `scalar()`.
+     *
+     * The arrow itself belongs to the message file, which owns its direction in
+     * each script.
+     */
     if (text.includes(' → ')) {
       const [from, to] = text.split(' → ');
       return t('change', { from: scalar(key, from), to: scalar(key, to) });
     }
 
+    if (DATE_KEYS.has(key)) return formatDate(text, locale, 'medium');
+    if (CURRENCY_KEYS.has(key)) return formatCurrency(Number(text), locale);
+    if (COUNT_KEYS.has(key)) return formatNumber(Number(text), locale);
+
     if (key === 'from' || key === 'to') return term(text);
+
+    /*
+     * THE THREE PAYLOADS THAT WERE STILL ENGLISH.
+     *
+     * `mode`, `decision` and `flags` carry enum CODES, and the humanising pass
+     * that translated `from`/`to` walked past them — so a Dari audit log said
+     * «نوع: create», «تصمیم: remove» and «نشانه‌ها: slow_acceptance,
+     * falling_rating», which is the raw dump this component exists to replace,
+     * surviving in three rows out of the whole log.
+     *
+     * `flags` is a COMMA-JOINED SET, not a scalar, so it is translated
+     * member-by-member and re-joined by `formatList` — «الف، ب» in Dari and
+     * "A and B" in English are different joins, and an Arabic comma in an
+     * English sentence reads as a full stop.
+     */
+    if (key === 'flags') {
+      return formatList(
+        text
+          .split(',')
+          .map((flag) => flag.trim())
+          .filter(Boolean)
+          .map((flag) => (tFlags.has(flag as never) ? tFlags(flag as never) : flag)),
+        locale,
+      );
+    }
+    if (key === 'mode' || key === 'decision') {
+      const path = `values.${key}.${text}`;
+      // `has()` rather than try/catch: a future enum value degrades to the code
+      // as written instead of printing a key path, which is the failure this
+      // whole file was written to stop (CLAUDE.md).
+      return t.has(path as never) ? t(path as never) : text;
+    }
+
     return scalar(key, text);
   };
 

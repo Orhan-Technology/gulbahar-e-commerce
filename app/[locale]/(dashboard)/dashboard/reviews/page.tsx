@@ -82,7 +82,7 @@ export default async function ShopReviewsPage({
           <span className="flex items-center gap-2">
             <RatingStars value={counts.average} size="sm" />
             <span className="text-muted-foreground text-xs">
-              {t('averageOf', { count: formatNumber(counts.all, locale) })}
+              {t('averageOf', { n: counts.all, count: formatNumber(counts.all, locale) })}
             </span>
           </span>
         )}
@@ -113,7 +113,10 @@ export default async function ShopReviewsPage({
       {defaultUnanswered && (
         <p className="rounded-card border-warning-border bg-warning-bg text-warning flex flex-wrap items-center gap-x-2 gap-y-1 border p-3 text-xs">
           <span>
-            {t('defaultUnansweredNote', { count: formatNumber(counts.unanswered, locale) })}
+            {t('defaultUnansweredNote', {
+              n: counts.unanswered,
+              count: formatNumber(counts.unanswered, locale),
+            })}
           </span>
           <Link href="/dashboard/reviews?all=1" className="font-bold underline">
             {t('filters.all')}

@@ -35,32 +35,45 @@ const STATUSES = [
 ] as const satisfies readonly OrderStatus[];
 
 /**
+ * The tone each status wears: a badge variant, plus an optional tint.
+ *
  * A `Record<OrderStatus, …>` on purpose, so a new status in the enum is a
  * COMPILE error here rather than a chip that renders unstyled. That is exactly
  * what caught this map when `cancelled` landed.
+ *
+ * ACCEPTED AND READY WERE THE SAME BLUE, and they are the two statuses an admin
+ * most often has to tell apart at a glance — "the shop has seen it" and "the
+ * customer can come and collect it" are different facts about where an order
+ * physically is. Two solid primary badges differing only by their label made
+ * the column a wall of identical chips.
+ *
+ * THE FIRST ATTEMPT AT THAT MOVED THE COLLISION RATHER THAN FIXING IT. Accepted
+ * was given the `accent` variant — and `accent` in this product is the SALE RED
+ * family (`--color-accent-600` is «THE sale red»), so «تاییدشده» rendered as
+ * pale pink on a pale-pink border, one row above «ردشده» in `destructive`'s
+ * pale red. Two chips whose difference is a few degrees of hue, on the two
+ * statuses that mean "the shop took it" and "the shop refused it" — the worst
+ * pair in the table to confuse.
+ *
+ * So accepted is a LIGHT BLUE now: same family as ready, two steps down in
+ * weight. The pair reads as one journey at two stages, which is what it is,
+ * while amber (waiting), green (done), red (refused) and grey (ended) each keep
+ * a hue of their own.
  */
 const STATUS_BADGE: Record<
   OrderStatus,
-  'default' | 'accent' | 'success' | 'warning' | 'secondary' | 'destructive'
+  {
+    variant: 'default' | 'outline' | 'success' | 'warning' | 'secondary' | 'destructive';
+    className?: string;
+  }
 > = {
-  placed: 'warning',
-  /*
-   * ACCEPTED AND READY WERE THE SAME BLUE, and they are the two statuses an
-   * admin most often has to tell apart at a glance — "the shop has seen it" and
-   * "the customer can come and collect it" are different facts about where an
-   * order physically is. Two solid primary badges differing only by their label
-   * made the column a wall of identical chips.
-   *
-   * Accepted now takes the warm accent (work in progress); ready keeps the
-   * solid primary (the shop is done, the ball is with the customer). Both stay
-   * distinct from `placed`'s amber and `fulfilled`'s green.
-   */
-  accepted: 'accent',
-  ready: 'default',
-  fulfilled: 'success',
-  rejected: 'destructive',
+  placed: { variant: 'warning' },
+  accepted: { variant: 'outline', className: 'border-primary-200 bg-primary-50 text-primary-700' },
+  ready: { variant: 'default' },
+  fulfilled: { variant: 'success' },
+  rejected: { variant: 'destructive' },
   // Ended rather than refused — grey, because nobody did anything wrong.
-  cancelled: 'secondary',
+  cancelled: { variant: 'secondary' },
 };
 
 /**
@@ -307,7 +320,12 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                 </td>
                 <td className="p-3">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
+                    <Badge
+                      variant={STATUS_BADGE[order.status].variant}
+                      className={STATUS_BADGE[order.status].className}
+                    >
+                      {t(`status.${order.status}`)}
+                    </Badge>
                     {/*
                       AGE, WHERE THE ADMIN MEETS THE ORDER (Prompt C4).
                       The overview flags an order stalled past 48 hours and then
@@ -325,7 +343,11 @@ async function OrderTable({ locale, query }: { locale: string; query: Query }) {
                             : 'rounded-pill bg-warning-bg text-warning-fg px-2 py-0.5 text-2xs font-bold'
                         }
                       >
-                        {order.pendingHours >= 48
+                        {/* The shared threshold, never a number of its own — the
+                            colour above already switches on it and a literal 48
+                            here is one edit away from the chip saying "26 hours"
+                            in red (lib/queue-sla.ts, CLAUDE.md). */}
+                        {order.pendingHours >= SLA_HOURS.danger
                           ? t('waitingDays', {
                               n: Math.floor(order.pendingHours / 24),
                               count: formatNumber(Math.floor(order.pendingHours / 24), locale),

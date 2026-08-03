@@ -1,4 +1,5 @@
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { ChevronRight } from 'lucide-react';
 
 import { BookingCalendar } from '@/components/admin/booking-calendar';
 import { CampaignQueue } from '@/components/admin/campaign-queue';
@@ -10,6 +11,7 @@ import { pickLocale } from '@/lib/db/localized';
 import { bookingCalendar, campaignLedger, revenueBySlot } from '@/lib/db/queries/admin-revenue';
 import { adminProducts, adminShopDirectory } from '@/lib/db/queries/admin';
 import { formatNumber } from '@/lib/format';
+import { Link } from '@/lib/i18n/navigation';
 import { slotAcceptsProduct, slotRequiresProduct } from '@/lib/promotions';
 import type { PromotionSlotKey } from '@/lib/db/schema';
 
@@ -110,7 +112,29 @@ export default async function AdminPromotionsPage({
 
       {/* Who is booked when */}
       <section className="space-y-3">
-        <h2 className="text-sm font-bold">{t('calendarHeading')}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-bold">{t('calendarHeading')}</h2>
+          {/*
+            THE ROUTE NOTHING POINTED AT. /admin/promotions/calendar is the
+            day-by-day grid that prices the empty squares — «۴۴ روز جایگاه
+            فروخته نشده، ارزش حدود ؋۳۳,۷۸۶», which is the one number a mall
+            director would quote — and it was in no nav section and linked from
+            no page, reachable only by typing the path. This week strip is the
+            summary of it, so the link belongs on its heading.
+          */}
+          <Link
+            href="/admin/promotions/calendar"
+            className="text-primary inline-flex items-center gap-1 text-xs font-medium hover:underline"
+          >
+            {t('openSlotCalendar')}
+            {/* `ChevronRight` mirrored, not `ChevronLeft`: the arrow has to
+                point the way the page READS — right in English, left in Dari —
+                and this is the pairing the breadcrumbs already use. The other
+                pairing (`ChevronLeft` mirrored) is the BACK arrow, which is how
+                the month stepper on the calendar page is built. */}
+            <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+          </Link>
+        </div>
         <BookingCalendar
           slots={calendar.map((slot) => ({
             slotId: slot.slotId,

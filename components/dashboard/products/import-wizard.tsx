@@ -221,7 +221,9 @@ function ReviewRow({ row, locale }: { row: ImportRow; locale: string }) {
         {formatNumber(row.line, locale)}
       </TableCell>
       <TableCell className="max-w-56">
-        <span className="clamp-1 text-sm">{row.titleFa || '—'}</span>
+        <span className="clamp-1 text-sm" dir="auto">
+          {row.titleFa || '—'}
+        </span>
         {row.slug && (
           <span className="text-muted-foreground block text-xs" dir="ltr">
             {row.slug}

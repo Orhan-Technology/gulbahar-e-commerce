@@ -767,14 +767,23 @@ export async function adminUsers(filters: AdminUserFilters) {
        * width and answers nothing. "When did this person last do something
        * here" is the fact a role change or a deactivation actually turns on.
        *
-       * GREATEST over the three traces there are: an order, a review, and the
-       * signup itself as the floor, so a brand-new account reads as new rather
-       * than as never-seen.
+       * NULLABLE, AND THE SIGNUP IS NOT A FLOOR UNDER IT. Taking
+       * `greatest(lastOrder, lastReview, users.created_at)` swapped one useless
+       * column for another: `db:reset` stamps every account with the moment the
+       * import ran, which is by definition later than any order it then seeds,
+       * so GREATEST picked the signup for all forty-one rows and the table read
+       * «۶۰ دقیقه پیش» top to bottom — the identical-dates bug, wearing a new
+       * heading.
+       *
+       * So this is the ACTIVITY, or nothing. A customer gets the real date of
+       * their last order or review, spread across the window the way a directory
+       * of people should be; an account with no trace at all says so in words
+       * (see the page), which is a fact worth reading rather than a timestamp
+       * that only records when the database was built.
        */
-      lastActiveAt: sql<Date>`greatest(
-        coalesce((select max(o.created_at) from orders o where o.user_id = users.id), users.created_at),
-        coalesce((select max(r.created_at) from reviews r where r.user_id = users.id), users.created_at),
-        users.created_at
+      lastActiveAt: sql<Date | null>`greatest(
+        (select max(o.created_at) from orders o where o.user_id = users.id),
+        (select max(r.created_at) from reviews r where r.user_id = users.id)
       )`,
       /*
        * WHAT DEACTIVATING THIS ACCOUNT WOULD COST — the consequence preview

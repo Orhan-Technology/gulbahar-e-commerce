@@ -11,14 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { NumberField } from '@/components/dashboard/number-field';
 import { ResumeShopButton } from '@/components/dashboard/resume-shop-button';
-import {
-  addStaff,
-  pauseShop,
-  removeStaff,
-  setDashboardLocale,
-} from '@/lib/actions/shop-settings';
-import { digitsOnly } from '@/lib/digits';
+import { addStaff, pauseShop, removeStaff, setDashboardLocale } from '@/lib/actions/shop-settings';
 import { formatDate, formatPhone } from '@/lib/format';
 import { MALL_TIME_ZONE } from '@/lib/opening';
 import { usePathname, useRouter as useLocaleRouter } from '@/lib/i18n/navigation';
@@ -350,7 +345,9 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
         {staff.map((member) => (
           <li key={member.userId} className="flex items-center gap-3 py-2.5">
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{member.name}</p>
+              <p className="text-sm font-medium" dir="auto">
+                {member.name}
+              </p>
               <p className="text-muted-foreground text-xs" dir="ltr">
                 {formatPhone(member.phone, locale)}
               </p>
@@ -396,13 +393,16 @@ export function StaffPanel({ staff, canManage }: { staff: StaffMember[]; canMana
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="staff-phone">{t('phoneLabel')}</Label>
-              <Input
+              {/* The roster above prints every number in Persian digits
+                  (formatPhone), so the field that adds one has to read back the
+                  same way — see number-field.tsx. */}
+              <NumberField
                 id="staff-phone"
-                inputMode="tel"
-                dir="ltr"
+                format="phone"
+                maxLength={10}
                 placeholder="07XXXXXXXX"
                 value={phone}
-                onChange={(event) => setPhone(digitsOnly(event.target.value, 10))}
+                onChange={setPhone}
               />
             </div>
           </div>

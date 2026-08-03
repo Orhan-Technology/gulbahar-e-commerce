@@ -100,7 +100,9 @@ export function SlotGrid({
                 )}
               >
                 <span className="flex w-full items-start justify-between gap-2">
-                  <span className="text-sm font-bold">{slot.name}</span>
+                  <span className="text-sm font-bold" dir="auto">
+                    {slot.name}
+                  </span>
                   {slot.mine > 0 && (
                     <Badge variant="success">
                       <Check className="h-3 w-3" aria-hidden />
@@ -212,7 +214,7 @@ function BookingSheet({
     <Sheet open onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="max-h-[90vh] overflow-y-auto">
         <SheetHeader>
-          <SheetTitle>{slot.name}</SheetTitle>
+          <SheetTitle dir="auto">{slot.name}</SheetTitle>
           <SheetDescription>{t('bookingIntro')}</SheetDescription>
         </SheetHeader>
 
@@ -234,7 +236,9 @@ function BookingSheet({
                           checked={productId === product.id}
                           onChange={() => setProductId(product.id)}
                         />
-                        <span className="clamp-1 flex-1">{product.title}</span>
+                        <span className="clamp-1 flex-1" dir="auto">
+                          {product.title}
+                        </span>
                         <span className="text-muted-foreground shrink-0 text-xs">
                           {formatCurrency(product.price, locale)}
                         </span>

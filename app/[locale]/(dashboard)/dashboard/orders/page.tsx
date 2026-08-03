@@ -10,7 +10,12 @@ import { OrderActions } from '@/components/dashboard/orders/order-actions';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireShopkeeper } from '@/lib/auth/guards';
-import { isOrderRange, shopOrderCounts, shopOrderList, type OrderRange } from '@/lib/db/queries/shop-orders';
+import {
+  isOrderRange,
+  shopOrderCounts,
+  shopOrderList,
+  type OrderRange,
+} from '@/lib/db/queries/shop-orders';
 import { formatCurrency, formatNumber, formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { pressable } from '@/components/motion/pressable';
@@ -125,7 +130,7 @@ export default async function ShopOrdersPage({
             href="/dashboard/orders"
             className={cn(
               pressable,
-              'rounded-pill border-primary bg-primary-50 text-primary inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-[background-color,scale] duration-150 ease-out hover:bg-primary-100',
+              'rounded-pill border-primary bg-primary-50 text-primary hover:bg-primary-100 inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition-[background-color,scale] duration-150 ease-out',
             )}
           >
             {t(`ranges.${range}`)}
@@ -224,7 +229,7 @@ async function OrderList({
                     {order.reference}
                   </Link>
                   <p className="text-muted-foreground text-xs">
-                    {order.customerName} · {formatRelative(order.createdAt, locale)}
+                    <bdi>{order.customerName}</bdi> · {formatRelative(order.createdAt, locale)}
                   </p>
                 </div>
                 <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>

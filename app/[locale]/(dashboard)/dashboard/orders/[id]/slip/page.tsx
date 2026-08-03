@@ -6,7 +6,13 @@ import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { shopById } from '@/lib/db/queries/shops';
 import { shopOrderDetail } from '@/lib/db/queries/shop-orders';
-import { formatCurrency, formatDateTime, formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
+import {
+  formatCurrency,
+  formatDateTime,
+  formatNumber,
+  formatPhone,
+  formatUnitNumber,
+} from '@/lib/format';
 
 /**
  * The pick / pack slip (Prompt C6).
@@ -51,7 +57,9 @@ export default async function OrderSlipPage({
       <article className="border-border rounded-card border p-6 print:rounded-none print:border-0 print:p-0">
         <header className="border-border flex flex-wrap items-start justify-between gap-4 border-b pb-4">
           <div className="min-w-0">
-            <p className="text-lg font-bold">{shop ? pickLocale(shop.name, locale) : ''}</p>
+            <p className="text-lg font-bold" dir="auto">
+              {shop ? pickLocale(shop.name, locale) : ''}
+            </p>
             <p className="text-xs text-neutral-600">
               {shop?.floor !== null && shop?.floor !== undefined
                 ? t('floorUnit', {
@@ -74,7 +82,9 @@ export default async function OrderSlipPage({
         <section className="border-border grid gap-4 border-b py-4 sm:grid-cols-2">
           <div>
             <p className="text-2xs font-bold text-neutral-500 uppercase">{t('customer')}</p>
-            <p className="text-sm font-medium">{order.customerName}</p>
+            <p className="text-sm font-medium" dir="auto">
+              {order.customerName}
+            </p>
             <p className="text-sm tabular-nums" dir="ltr">
               {formatPhone(order.customerPhone, locale)}
             </p>
@@ -85,7 +95,7 @@ export default async function OrderSlipPage({
               {orders(`fulfillment.${order.fulfillment}`)}
             </p>
             {order.fulfillment === 'delivery' && order.addressDistrict ? (
-              <p className="text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed" dir="auto">
                 {order.addressLabel} — {order.addressDistrict}
                 <br />
                 {order.addressStreet}
@@ -108,7 +118,7 @@ export default async function OrderSlipPage({
           <tbody className="divide-border divide-y">
             {order.items.map((item) => (
               <tr key={item.id}>
-                <td className="py-2">
+                <td className="py-2" dir="auto">
                   {pickLocale(item.titleSnapshot, locale)}
                   {item.variantSelection && item.variantSelection.length > 0 && (
                     <span className="block text-xs text-neutral-500">
@@ -139,9 +149,7 @@ export default async function OrderSlipPage({
         </table>
 
         {/* A shared order: the paper must not imply the customer owes only this. */}
-        {order.shopCount > 1 && (
-          <p className="text-xs text-neutral-600">{t('sharedOrderNote')}</p>
-        )}
+        {order.shopCount > 1 && <p className="text-xs text-neutral-600">{t('sharedOrderNote')}</p>}
       </article>
     </div>
   );

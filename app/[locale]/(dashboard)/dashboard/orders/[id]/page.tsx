@@ -53,11 +53,7 @@ export default async function ShopOrderPage({
           <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt, locale)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <OrderActions
-            orderId={order.id}
-            status={order.status}
-            fulfillment={order.fulfillment}
-          />
+          <OrderActions orderId={order.id} status={order.status} fulfillment={order.fulfillment} />
 
           {/*
             PAPER FROM HERE TOO (Prompt: print exists only on the list card).
@@ -92,6 +88,8 @@ export default async function ShopOrderPage({
           <h2 className="text-sm font-bold">{t('itemsHeading')}</h2>
           <span className="text-muted-foreground text-xs">
             {t('itemCount', {
+              // `n` selects, `count` renders — otherwise English reads "1 items".
+              n: order.items.reduce((sum, item) => sum + item.quantity, 0),
               count: formatNumber(
                 order.items.reduce((sum, item) => sum + item.quantity, 0),
                 locale,
@@ -120,11 +118,12 @@ export default async function ShopOrderPage({
                   <Link
                     href={`/products/${item.productSlug}`}
                     className="hover:text-primary clamp-1 text-sm font-medium"
+                    dir="auto"
                   >
                     {pickLocale(item.titleSnapshot, locale)}
                   </Link>
                 ) : (
-                  <span className="clamp-1 text-sm font-medium">
+                  <span className="clamp-1 text-sm font-medium" dir="auto">
                     {pickLocale(item.titleSnapshot, locale)}
                   </span>
                 )}
@@ -158,7 +157,8 @@ export default async function ShopOrderPage({
           <h2 className="text-sm font-bold">{t('customerHeading')}</h2>
           <p className="flex items-center gap-2 text-sm">
             <User className="text-muted-foreground h-4 w-4" aria-hidden />
-            {order.customerName}
+            {/* The customer typed their own name and their own address. */}
+            <bdi>{order.customerName}</bdi>
           </p>
           <a
             href={`tel:${order.customerPhone}`}
@@ -183,7 +183,7 @@ export default async function ShopOrderPage({
           {order.fulfillment === 'delivery' && order.addressDistrict && (
             <p className="text-muted-foreground flex items-start gap-2 text-sm">
               <MapPin className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-              <span>
+              <span dir="auto">
                 {order.addressLabel && (
                   <span className="text-foreground">{order.addressLabel} · </span>
                 )}
