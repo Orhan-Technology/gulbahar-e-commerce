@@ -1,12 +1,13 @@
 import { Suspense } from 'react';
 import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
 
-import { AdminActionQueue } from '@/components/admin/admin-action-queue';
+import { AdminActionQueue, DONE_STATE_HOURS } from '@/components/admin/admin-action-queue';
 import { PlatformHealth, PlatformHealthSkeleton } from '@/components/admin/platform-health';
 import { RevenueBlock, RevenueBlockSkeleton } from '@/components/admin/revenue-block';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireAdmin } from '@/lib/auth/guards';
 import { adminActionQueue } from '@/lib/db/queries/admin-overview';
+import { auditRecentDecisions } from '@/lib/db/queries/audit';
 import { parseConsoleRange } from '@/lib/console-range';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { RangeControl } from '@/components/console/range-control';
@@ -87,8 +88,17 @@ export default async function AdminOverviewPage({
 
 async function QueueSection() {
   const locale = await getLocale();
-  const entries = await adminActionQueue(locale);
-  return <AdminActionQueue entries={entries} />;
+  // The done state's number is read here, beside the queue it describes: an
+  // empty queue and "six decided" are one sentence, not two panels.
+  const [entries, decisions] = await Promise.all([
+    adminActionQueue(locale),
+    auditRecentDecisions(DONE_STATE_HOURS),
+  ]);
+  // The clock is read HERE and handed down, so every row ages against one
+  // instant — see the prop's own note in AdminActionQueue.
+  return (
+    <AdminActionQueue entries={entries} decisionsToday={decisions.total} now={new Date()} />
+  );
 }
 
 function QueueSkeleton() {

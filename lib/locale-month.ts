@@ -80,3 +80,65 @@ export function parseMonthKey(value: string | undefined, locale: string, now: Da
   }
   return startOfLocaleMonth(now, locale);
 }
+
+/**
+ * THE MONEY MONTH — the current month, and the stretch of the previous one that
+ * matches it, in the calendar the reader is looking at.
+ *
+ * WHY THIS EXISTS. Every ad-revenue figure in the console was computed with
+ * `date_trunc('month', now())`, which is the GREGORIAN month, while every label
+ * around it is Afghan solar («اسد», «سنبله»). On the 4th of August the SQL said
+ * "this month began three days ago" and the chart beside it said "اسد", which
+ * began a fortnight earlier — so the overview and /admin/revenue each showed
+ * «۰ ؋ ↓۱۰۰٪» directly above their own non-zero اسد bar. The same page
+ * contradicting itself, on the number the console exists to sell.
+ *
+ * The booking calendar already solved this for the grid (see `parseMonthKey`);
+ * this is the same basis, given to the money. One helper, so the boundary
+ * cannot drift between the two.
+ *
+ * The clock is read by the CALLER and passed in: a component may not call
+ * `new Date()` during render (React 19 purity, CLAUDE.md), so the page reads it
+ * once on the server and everything downstream shares that instant.
+ */
+export type LocaleMonthBounds = {
+  /** Midnight UTC on the first day of the reader's current month. */
+  start: Date;
+  /** Midnight UTC on the first day of the NEXT month — exclusive upper bound. */
+  end: Date;
+  /** First day of the previous month. */
+  previousStart: Date;
+  /**
+   * The same elapsed stretch, measured from the previous month's own first day.
+   *
+   * This is what makes the delta honest: month-to-date against a WHOLE previous
+   * month is one day of trading against thirty, which is how the tile came to
+   * read −۱۰۰٪ every month for the first week of it.
+   */
+  previousEnd: Date;
+  /** Day-of-month `now` falls on, in the reader's calendar. */
+  dayOfMonth: number;
+  /** Length of the reader's current month — 29, 30 or 31 in solar Hijri. */
+  daysInMonth: number;
+  /** False on the last day of a month, where month-to-date IS the month. */
+  partial: boolean;
+};
+
+export function localeMonthBounds(locale: string, now: Date): LocaleMonthBounds {
+  const start = startOfLocaleMonth(now, locale);
+  const end = startOfNextLocaleMonth(start, locale);
+  const previousStart = startOfPreviousLocaleMonth(start, locale);
+
+  const dayOfMonth = localeDayOfMonth(now, locale);
+  const daysInMonth = Math.round((end.getTime() - start.getTime()) / DAY_MS);
+
+  return {
+    start,
+    end,
+    previousStart,
+    previousEnd: new Date(previousStart.getTime() + (now.getTime() - start.getTime())),
+    dayOfMonth,
+    daysInMonth,
+    partial: dayOfMonth < daysInMonth,
+  };
+}

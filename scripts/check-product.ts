@@ -154,7 +154,19 @@ async function main() {
    * uses «–». Matched loosely here so the assertion is about brand and model
    * appearing together, not about which glyph joins them.
    */
-  report.check('brand and model print under the title', /Apple\s*[–·-]/.test(rich));
+  /*
+   * The BRAND now reads in the reader's language, with the Latin token beside
+   * it — «اپل – مدل iPhone 13» plus a muted `Apple` — because the filter rail,
+   * the spec table and this line all route through one brand map, and a
+   * storefront that says «اپل» in the facet and "Apple" here is speaking two
+   * languages on one screen. So the assertion can no longer be "Apple followed
+   * by a dash"; it is that the localised brand, the model, and the Latin token
+   * all reach the page.
+   */
+  report.check(
+    'brand and model print under the title',
+    /اپل\s*[–-]\s*مدل/.test(rich) && rich.includes('iPhone 13') && rich.includes('Apple'),
+  );
 
   const noComparison = await html(`/fa/products/${NO_COMPARISON}`);
   report.check(

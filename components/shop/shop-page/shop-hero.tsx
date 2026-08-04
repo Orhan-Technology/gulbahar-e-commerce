@@ -9,7 +9,6 @@ import { PauseNotice, PausePill } from '@/components/shop/shop-page/pause-notice
 import { VerifiedBadge } from '@/components/shop/verified-badge';
 import { pickLocale } from '@/lib/db/localized';
 import type { LocalizedText } from '@/lib/db/schema';
-import { Link } from '@/lib/i18n/navigation';
 import { formatNumber, formatPhone, formatUnitNumber } from '@/lib/format';
 import { pauseState } from '@/lib/pause';
 import { cn } from '@/lib/utils';
@@ -71,7 +70,6 @@ export async function ShopHero({
 }) {
   const locale = await getLocale();
   const t = await getTranslations('shop');
-  const tPage = await getTranslations('shopPage');
   const name = pickLocale(shop.name, locale);
   const paused = pauseState(shop.pausedUntil, now)?.paused ?? false;
 
@@ -200,21 +198,14 @@ export async function ShopHero({
           </div>
 
           {/*
-            WHAT FOLLOWING DOES, said once, beside the button that does it.
-            The button existed for a long time with nothing explaining it and
-            nothing behind it — a heart that files a row in a table. It now
-            leads somewhere (the account's following view), and the sentence is
-            what makes pressing it a decision rather than a guess.
+            THE FOLLOW EXPLAINER MOVED INTO THE FOLLOW TOAST (FollowButton).
+            It was two lines of instructions inside the shop's identity card —
+            the block that has to answer who this shop is, how good it is and
+            where in the building it stands — spent describing a feature the
+            reader had not asked about yet, on every visit, forever. Told once,
+            at the moment somebody first presses the button, it is an answer;
+            printed under the button permanently it is a manual.
           */}
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {tPage.rich('followExplainer', {
-              link: (chunks) => (
-                <Link href="/account/following" className="text-primary hover:underline">
-                  {chunks}
-                </Link>
-              ),
-            })}
-          </p>
         </div>
       </div>
 

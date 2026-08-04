@@ -12,6 +12,7 @@ import { bookingCalendar, campaignLedger, revenueBySlot } from '@/lib/db/queries
 import { adminProducts, adminShopDirectory } from '@/lib/db/queries/admin';
 import { formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { localeMonthBounds } from '@/lib/locale-month';
 import { slotAcceptsProduct, slotRequiresProduct } from '@/lib/promotions';
 import type { PromotionSlotKey } from '@/lib/db/schema';
 
@@ -32,8 +33,13 @@ export default async function AdminPromotionsPage({
   await requireAdmin(locale);
   const t = await getTranslations('adminPromotions');
 
+  // The reader's month, so the slot rows' month figures match the calendar and
+  // the revenue page rather than a Gregorian boundary nothing on screen names.
+  const month = localeMonthBounds(locale, new Date());
+  const monthBounds = { start: month.start, end: month.end };
+
   const [slots, campaigns, calendar, shops, products] = await Promise.all([
-    revenueBySlot(),
+    revenueBySlot(monthBounds),
     campaignLedger(),
     bookingCalendar(8),
     adminShopDirectory({ locale, status: 'approved' }),
@@ -90,6 +96,7 @@ export default async function AdminPromotionsPage({
             impressions: campaign.impressions,
             clicks: campaign.clicks,
             rejectionReason: campaign.rejectionReason,
+            daysRemaining: campaign.daysRemaining,
           }))}
         />
       </section>
@@ -167,6 +174,7 @@ export default async function AdminPromotionsPage({
               impressions: campaign.impressions,
               clicks: campaign.clicks,
               rejectionReason: campaign.rejectionReason,
+              daysRemaining: campaign.daysRemaining,
             }))}
         />
       </section>

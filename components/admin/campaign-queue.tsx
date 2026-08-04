@@ -36,6 +36,14 @@ export type CampaignRow = {
   impressions: number;
   clicks: number;
   rejectionReason: string | null;
+  /**
+   * Whole days left on the run, and null when it is not running (Prompt C12).
+   *
+   * COMPUTED ON THE SERVER and passed down: a client component may not call
+   * `Date.now()` during render (React 19 purity, CLAUDE.md), and two cards
+   * measured against two instants would round to different days at midnight.
+   */
+  daysRemaining: number | null;
 };
 
 const BADGE: Record<
@@ -162,6 +170,33 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
           <p className="text-foreground text-base font-bold">
             {formatCurrency(campaign.pricePaid, locale)}
           </p>
+
+          {/*
+            THE MALL'S SIDE OF THE DEAL, beside the shop's (Prompt C12).
+            The card showed impressions, clicks and a CTR — which are the
+            TENANT's numbers, the ones they would ask about. What the seller
+            needs is when the money runs out and when the square comes back on
+            the market, because that is the next phone call. Rendered for a
+            running placement only: "0 days left" on an ended campaign is a
+            fact about the past dressed as a deadline.
+          */}
+          {campaign.daysRemaining !== null &&
+            (campaign.status === 'active' || campaign.status === 'approved') && (
+              <p
+                className={`text-2xs mt-1 ${
+                  campaign.daysRemaining <= 7 ? 'text-warning font-semibold' : 'text-muted-foreground'
+                }`}
+                data-days-remaining={campaign.daysRemaining}
+              >
+                {t('daysRemaining', {
+                  n: campaign.daysRemaining,
+                  count: formatNumber(campaign.daysRemaining, locale),
+                })}
+                {' · '}
+                {t('slotReopens', { date: formatDate(campaign.endsAt, locale, 'medium') })}
+              </p>
+            )}
+
           {(campaign.status === 'active' || campaign.status === 'ended') && (
             /*
               LABELLED, not three bare glyphs. An eye, a cursor and a bare

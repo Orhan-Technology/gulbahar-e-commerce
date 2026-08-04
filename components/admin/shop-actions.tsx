@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { Check, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
+import { Check, Eye, MoreHorizontal, PauseCircle, PlayCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,9 +15,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { approveShop, rejectShop, setShopStatus } from '@/lib/actions/admin-shops';
+import { Link } from '@/lib/i18n/navigation';
 
 type ShopStatus = 'pending' | 'approved' | 'suspended' | 'closed';
 
@@ -37,6 +45,19 @@ const MIN_REASON = 10;
  * the shopkeeper nothing. The dialog now looks like the rejection dialog on
  * purpose: same shape, same floor, same promise that the text reaches the owner
  * as written.
+ *
+ * AND THEY NOW LIVE BEHIND A KEBAB (Prompt C12). The directory rendered a
+ * «تعلیق» and a «بستن» on every one of fourteen approved rows — twenty-six red
+ * and grey verbs down a page an admin opens to READ, which is the same wall of
+ * demolition the products list had before its own row menu, and the users page
+ * before that. A destructive control repeated once per row is not a warning; it
+ * is wallpaper, and wallpaper is what people click through. Revealed at the
+ * moment of intent, it costs one extra click — the correct price for taking a
+ * trading tenant off the storefront.
+ *
+ * APPROVE STAYS OUT IN THE OPEN. It is the reversible, expected outcome and the
+ * live-demo moment; burying the one button an admin came to this filter to press
+ * would be the opposite mistake.
  */
 export function ShopActions({
   shopId,
@@ -83,44 +104,6 @@ export function ShopActions({
         </Button>
       )}
 
-      {status === 'pending' && (
-        <Button
-          size={size}
-          variant="outline"
-          onClick={() => setRejecting(true)}
-          disabled={pending}
-          className="text-danger hover:bg-danger-bg"
-        >
-          <XCircle />
-          {t('reject')}
-        </Button>
-      )}
-
-      {status === 'approved' && (
-        <Button
-          size={size}
-          variant="outline"
-          onClick={() => setConfirming('suspended')}
-          disabled={pending}
-        >
-          <PauseCircle />
-          {t('suspend')}
-        </Button>
-      )}
-
-      {status !== 'closed' && status !== 'pending' && (
-        <Button
-          size={size}
-          variant="ghost"
-          onClick={() => setConfirming('closed')}
-          disabled={pending}
-          className="hover:text-danger text-neutral-600"
-        >
-          <XCircle />
-          {t('close')}
-        </Button>
-      )}
-
       {status === 'closed' && (
         <Button
           size={size}
@@ -132,6 +115,74 @@ export function ShopActions({
           {t('reinstate')}
         </Button>
       )}
+
+      {/*
+        Everything that HARMS a tenant, one click in. The menu is never empty:
+        "open the shop record" is the thing an admin actually does with a row,
+        and it was previously only reachable from the shop's name in the text.
+      */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="shrink-0" aria-label={t('rowMenu')}>
+            <MoreHorizontal />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-48">
+          <DropdownMenuItem asChild>
+            {/* A uuid, never a slug: /admin/shops/[id] is a uuid column and a
+                slug reaching it is a Postgres type error (CLAUDE.md). */}
+            <Link href={`/admin/shops/${shopId}`}>
+              <Eye />
+              {t('openRecord')}
+            </Link>
+          </DropdownMenuItem>
+
+          {(status === 'pending' || status === 'approved' || status === 'suspended') && (
+            <DropdownMenuSeparator />
+          )}
+
+          {status === 'pending' && (
+            <DropdownMenuItem
+              className="text-danger focus:text-danger focus:bg-danger-bg"
+              // The dialog and the menu cannot both own focus; letting the menu
+              // close itself first leaves the dialog opening into a torn-down
+              // focus trap (the same note the product row menu carries).
+              onSelect={(event) => {
+                event.preventDefault();
+                setRejecting(true);
+              }}
+            >
+              <XCircle />
+              {t('reject')}
+            </DropdownMenuItem>
+          )}
+
+          {status === 'approved' && (
+            <DropdownMenuItem
+              onSelect={(event) => {
+                event.preventDefault();
+                setConfirming('suspended');
+              }}
+            >
+              <PauseCircle />
+              {t('suspend')}
+            </DropdownMenuItem>
+          )}
+
+          {status !== 'closed' && status !== 'pending' && (
+            <DropdownMenuItem
+              className="text-danger focus:text-danger focus:bg-danger-bg"
+              onSelect={(event) => {
+                event.preventDefault();
+                setConfirming('closed');
+              }}
+            >
+              <XCircle />
+              {t('close')}
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Rejection — reason required, and it reaches the shopkeeper verbatim. */}
       <Dialog open={rejecting} onOpenChange={setRejecting}>

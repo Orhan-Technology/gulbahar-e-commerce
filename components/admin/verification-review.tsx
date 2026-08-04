@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { Check, ExternalLink, FileText, FileWarning, X } from 'lucide-react';
+import { Check, ExternalLink, FileText, FileWarning, Hand, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,8 @@ import {
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { claimVerification, decideVerification } from '@/lib/actions/verification';
-import { formatList } from '@/lib/format';
+import { formatList, formatPhone } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 export type ReviewDocument = {
   id: string;
@@ -80,11 +81,24 @@ export function VerificationReview({
   status,
   documents,
   evidence,
+  claim,
+  claimedBy,
 }: {
   verificationId: string;
   status: 'submitted' | 'under_review' | 'verified' | 'rejected' | 'expired';
   documents: ReviewDocument[];
   evidence: ReviewEvidence;
+  /**
+   * WHAT THE PAPERS ARE MEANT TO MATCH (Prompt C12).
+   *
+   * The reviewer saw a licence and a tazkira and nothing that said whose they
+   * were supposed to be — the comparison that IS the job happened between the
+   * screen and their memory of the row above. Rendered between the two panes,
+   * so name, number and both documents are in one eyeline.
+   */
+  claim: { ownerName: string | null; ownerPhone: string | null; shopPhone: string | null };
+  /** The admin who took it, from the audit log. Null while nobody has. */
+  claimedBy: string | null;
 }) {
   const t = useTranslations('adminVerifications');
   const locale = useLocale();
@@ -120,6 +134,60 @@ export function VerificationReview({
     ...evidence.missingKinds.map((kind) => t(`kinds.${kind}` as never)),
   ];
 
+  /*
+   * The documents split in half, so the claim sits BETWEEN them rather than
+   * above or below. With two papers — the usual case, a licence and a tazkira
+   * — that is one on each side of the name they are supposed to carry, which is
+   * the comparison the reviewer is actually making. It generalises: four
+   * documents give two and two, one gives the claim as its neighbour.
+   */
+  const split = Math.ceil(documents.length / 2);
+  const leftDocuments = documents.slice(0, split);
+  const rightDocuments = documents.slice(split);
+
+  const claimPanel = (
+    <aside
+      className="rounded-control border-primary-200 bg-primary-50 shrink-0 space-y-2 border p-3 sm:w-48"
+      data-verification-claim
+    >
+      <p className="text-primary-800 text-2xs font-bold">{t('claimHeading')}</p>
+
+      <div>
+        <p className="text-muted-foreground text-2xs">{t('claimOwnerLabel')}</p>
+        <p className="text-sm font-semibold">{claim.ownerName || t('claimOwnerUnknown')}</p>
+      </div>
+
+      {claim.ownerPhone && (
+        <div>
+          <p className="text-muted-foreground text-2xs">{t('claimPhoneLabel')}</p>
+          {/* `dir="ltr"` and a `tel:` link: an Afghan number typed into an RTL
+              paragraph reverses at the bidi boundary, and this is the number
+              the reviewer rings when the tazkira and the licence disagree. */}
+          <a
+            href={`tel:${claim.ownerPhone}`}
+            dir="ltr"
+            className="hover:text-primary block text-sm font-semibold tabular-nums"
+          >
+            {formatPhone(claim.ownerPhone, locale)}
+          </a>
+        </div>
+      )}
+
+      {/* The SHOP's public number, when it is a different one — a licence in a
+          company name is checked against the business, not the person. */}
+      {claim.shopPhone && claim.shopPhone !== claim.ownerPhone && (
+        <div>
+          <p className="text-muted-foreground text-2xs">{t('claimShopPhoneLabel')}</p>
+          <span dir="ltr" className="block text-sm tabular-nums">
+            {formatPhone(claim.shopPhone, locale)}
+          </span>
+        </div>
+      )}
+
+      <p className="text-muted-foreground text-2xs leading-relaxed">{t('claimNote')}</p>
+    </aside>
+  );
+
   return (
     <div className="space-y-4">
       {/*
@@ -131,12 +199,29 @@ export function VerificationReview({
       */}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_18rem] xl:items-start">
         {documents.length === 0 ? (
-          <NoDocumentsPanel label={t('noDocumentsTitle')} body={t('noDocumentsBody')} />
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <NoDocumentsPanel label={t('noDocumentsTitle')} body={t('noDocumentsBody')} />
+            {/* The claim survives an empty submission: "no papers from Karim
+                Nabizada on 0700…" is a more useful sentence than "no papers". */}
+            {claimPanel}
+          </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {documents.map((document) => (
-              <DocumentFrame key={document.id} document={document} />
-            ))}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+            <div className="grid min-w-0 flex-1 gap-3">
+              {leftDocuments.map((document) => (
+                <DocumentFrame key={document.id} document={document} />
+              ))}
+            </div>
+
+            {claimPanel}
+
+            {rightDocuments.length > 0 && (
+              <div className="grid min-w-0 flex-1 gap-3">
+                {rightDocuments.map((document) => (
+                  <DocumentFrame key={document.id} document={document} />
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -167,6 +252,45 @@ export function VerificationReview({
                 </p>
               )}
 
+              {/*
+                THE CLAIM CONTROL, DRAWN AS AN ACTION (Prompt C12).
+                «من بررسی می‌کنم» was a ghost button sitting third behind approve
+                and reject — the quietest treatment this component has, on the
+                one control an admin is meant to press FIRST. It now leads the
+                panel as a bordered button on its own line, and once taken it is
+                replaced by the name of whoever holds it, because "someone is
+                reading this" is only useful if you can tell whether that
+                someone is you.
+              */}
+              {status === 'submitted' ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  disabled={pending}
+                  data-claim-control
+                  onClick={() =>
+                    startTransition(async () => {
+                      await claimVerification(verificationId);
+                      router.refresh();
+                    })
+                  }
+                >
+                  <Hand />
+                  {t('claim')}
+                </Button>
+              ) : (
+                status === 'under_review' && (
+                  <p
+                    className="rounded-control bg-primary-50 text-primary-800 flex items-center gap-1.5 p-2 text-xs font-medium"
+                    data-claim-holder
+                  >
+                    <Hand className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    {claimedBy ? t('claimedBy', { name: claimedBy }) : t('claimedUnknown')}
+                  </p>
+                )
+              )}
+
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
@@ -179,32 +303,26 @@ export function VerificationReview({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-danger hover:bg-danger-bg"
+                  className={cn('text-danger hover:bg-danger-bg')}
                   disabled={pending}
                   onClick={() => setRejecting(true)}
                 >
                   <X />
                   {t('reject')}
                 </Button>
-
-                {status === 'submitted' && (
-                  /* Says out loud that someone is reading it, so two admins do
-                     not review the same papers twice. */
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    disabled={pending}
-                    onClick={() =>
-                      startTransition(async () => {
-                        await claimVerification(verificationId);
-                        router.refresh();
-                      })
-                    }
-                  >
-                    {t('claim')}
-                  </Button>
-                )}
               </div>
+
+              {/*
+                WHAT REJECTION DOES, before it is pressed rather than inside the
+                dialog it opens. A reviewer looking at an unreadable licence
+                needs to know that rejecting is not a door closing on the tenant
+                — the message reaches them and they can send the papers again —
+                because the alternative is leaving the submission in the queue
+                to avoid being unfair.
+              */}
+              <p className="text-muted-foreground text-2xs leading-relaxed" data-reject-consequence>
+                {t('rejectConsequence')}
+              </p>
             </>
           )}
         </div>

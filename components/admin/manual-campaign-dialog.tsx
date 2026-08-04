@@ -31,7 +31,7 @@ import { createCampaignForShop } from '@/lib/actions/admin-promotions';
 // sanitiser deletes «۵۰۰» keystroke by keystroke and the field a Dari
 // admin types into stays empty. One shared helper, lib/digits.ts.
 import { digitsOnly } from '@/lib/digits';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { formatCurrency, formatDate, formatNumber } from '@/lib/format';
 import { CAMPAIGN_WEEK_OPTIONS } from '@/lib/promotions';
 
 export type ManualSlot = {
@@ -60,22 +60,77 @@ export function ManualCampaignDialog({
   slots,
   shops,
   products,
+  open: controlledOpen,
+  onOpenChange,
+  prefill,
 }: {
   slots: ManualSlot[];
   shops: ManualShop[];
   products: ManualProduct[];
+  /**
+   * CONTROLLED MODE, for the calendar's vacant cells (Prompt C12).
+   *
+   * The calendar drew «۳ خالی» in green on every unsold slot-day — the exact
+   * squares a shopkeeper rings the office about — and clicking one filtered a
+   * list. Now a vacant cell opens THIS dialog with the slot and the day already
+   * chosen, which is the difference between a report and a sales tool.
+   *
+   * Uncontrolled when these are omitted, so the page header's own «افزودن»
+   * button keeps working unchanged. There is exactly ONE booking path
+   * (`createCampaignForShop`); this is a second way to reach it, not a second
+   * implementation of it.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** Slot and start day to open with. The reader may still change both. */
+  prefill?: { slotId?: string; startsAt?: string } | null;
 }) {
   const t = useTranslations('adminPromotions.manual');
   const locale = useLocale();
   const router = useRouter();
 
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const controlled = controlledOpen !== undefined;
+  const open = controlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = React.useCallback(
+    (next: boolean) => {
+      if (controlled) onOpenChange?.(next);
+      else setUncontrolledOpen(next);
+    },
+    [controlled, onOpenChange],
+  );
+
   const [pending, startTransition] = React.useTransition();
   const [slotId, setSlotId] = React.useState('');
   const [shopId, setShopId] = React.useState('');
   const [productId, setProductId] = React.useState('');
   const [weeks, setWeeks] = React.useState(2);
   const [priceOverride, setPriceOverride] = React.useState('');
+
+  /*
+   * The prefill applied during RENDER, not in an effect.
+   *
+   * React 19's lint rule forbids a synchronous setState inside an effect
+   * (CLAUDE.md), and the adjust-during-render pattern is what the slot editor
+   * already uses for the same shape of problem. `lastPrefill` is the identity
+   * of the prefill we have already honoured, so a reader who deliberately
+   * changes the slot after opening does not have it snapped back on every
+   * keystroke elsewhere in the form.
+   */
+  const prefillKey = prefill ? `${prefill.slotId ?? ''}|${prefill.startsAt ?? ''}` : '';
+  const [lastPrefill, setLastPrefill] = React.useState(prefillKey);
+  if (prefillKey && lastPrefill !== prefillKey) {
+    setLastPrefill(prefillKey);
+    setSlotId(prefill?.slotId ?? '');
+    setProductId('');
+    // One week is the unit placement is sold in, and a cell click is a
+    // question about ONE gap — not an offer to fill the fortnight after it.
+    setWeeks(1);
+    setPriceOverride('');
+  }
+
+  /** Opened from a vacant calendar cell — see the SelectContent note below. */
+  const fromCalendar = Boolean(prefill?.startsAt);
 
   const slot = slots.find((entry) => entry.id === slotId) ?? null;
   const shopProducts = products.filter((product) => product.shopId === shopId);
@@ -96,6 +151,13 @@ export function ManualCampaignDialog({
     setProductId('');
     setWeeks(2);
     setPriceOverride('');
+    /*
+     * The honoured-prefill marker is cleared too, or clicking the SAME vacant
+     * cell twice opens an empty sheet: the key would still match the one we
+     * already applied, the guard above would skip, and the fields reset() just
+     * blanked would stay blank. A silent-wrong-state bug with no error.
+     */
+    setLastPrefill('');
   }
 
   function submit() {
@@ -103,6 +165,9 @@ export function ManualCampaignDialog({
       const result = await createCampaignForShop({
         slotId,
         shopId,
+        // The clicked day, when the dialog was opened from a calendar cell.
+        // Omitted otherwise, and the action starts the run today.
+        startsAt: prefill?.startsAt,
         // acceptsProduct, not needsProduct: an optional product chosen for the hero
         // must still be sent, or the picker silently does nothing.
         productId: acceptsProduct ? productId || null : null,
@@ -129,12 +194,17 @@ export function ManualCampaignDialog({
         if (!next) reset();
       }}
     >
-      <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
-          <Plus />
-          {t('trigger')}
-        </Button>
-      </DialogTrigger>
+      {/* No trigger in controlled mode: the vacant cell IS the trigger, and a
+          second button rendered inside the calendar grid would be a stray
+          control in a table cell. */}
+      {!controlled && (
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            <Plus />
+            {t('trigger')}
+          </Button>
+        </DialogTrigger>
+      )}
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
@@ -143,6 +213,29 @@ export function ManualCampaignDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {/*
+            WHAT WAS CLICKED, restated at the top of the sheet. A dialog that
+            opens with two selects already filled and no explanation looks like
+            a form that remembered the wrong thing; naming the day and the slot
+            makes it obviously the continuation of the click.
+          */}
+          {prefill?.startsAt && (
+            <p
+              className="rounded-control bg-primary-50 text-primary-800 p-3 text-xs"
+              data-booking-prefill
+            >
+              {t('fromCalendar', {
+                slot: slot?.name ?? '',
+                from: formatDate(prefill.startsAt, locale, 'medium'),
+                to: formatDate(
+                  new Date(new Date(prefill.startsAt).getTime() + weeks * 7 * 86_400_000),
+                  locale,
+                  'medium',
+                ),
+              })}
+            </p>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="manual-slot">{t('slot')}</Label>
             <Select
@@ -157,9 +250,30 @@ export function ManualCampaignDialog({
               </SelectTrigger>
               <SelectContent>
                 {slots.map((entry) => (
-                  <SelectItem key={entry.id} value={entry.id} disabled={entry.available <= 0}>
+                  /*
+                   * `available` IS TODAY'S OCCUPANCY, not the chosen week's.
+                   *
+                   * That is fine when the dialog is opened cold — "what can I
+                   * sell right now" — and actively wrong when it was opened
+                   * from a calendar cell, because the cell being green is proof
+                   * the slot is free on THAT day. Before this, clicking a vacant
+                   * square in Sonbola on a slot that happens to be full today
+                   * opened a sheet whose first line read «— پر» and whose slot
+                   * option was disabled: the screen contradicting the square the
+                   * reader had just clicked.
+                   *
+                   * `createCampaignForShop` re-checks `slotAvailability` for the
+                   * real window and refuses an oversold booking with
+                   * `slot_full`, so the authority is the action either way —
+                   * this only decides which of two true statements to show.
+                   */
+                  <SelectItem
+                    key={entry.id}
+                    value={entry.id}
+                    disabled={!fromCalendar && entry.available <= 0}
+                  >
                     {entry.name}
-                    {entry.available <= 0
+                    {!fromCalendar && entry.available <= 0
                       ? ` — ${t('slotFull')}`
                       : ` — ${formatCurrency(entry.pricePerWeek, locale)}`}
                   </SelectItem>

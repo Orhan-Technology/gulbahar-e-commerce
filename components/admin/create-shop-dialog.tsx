@@ -43,24 +43,44 @@ export type CreateShopCategory = { id: string; label: string };
 export function CreateShopDialog({
   categories,
   trigger,
+  defaultFloor,
+  defaultUnitNumber,
 }: {
   categories: CreateShopCategory[];
   trigger: React.ReactNode;
+  /**
+   * Prefill, for the invite affordance on the floor plan (Prompt C12).
+   *
+   * The floors page is where a landlord SEES a vacancy — a dashed square with
+   * a number on it — and the one thing they could do about it was navigate to
+   * the shops directory and retype the floor and the unit they were looking
+   * at. Carrying both across turns 73 dead rectangles into a pipeline.
+   *
+   * A PREFILL, NOT A LOCK: both fields stay editable, because the tenant
+   * standing at the office may want the unit next door.
+   */
+  defaultFloor?: number;
+  defaultUnitNumber?: string;
 }) {
   const t = useTranslations('adminShops.create');
   const router = useRouter();
 
+  const blank = React.useMemo(
+    () => ({
+      nameFa: '',
+      nameEn: '',
+      categoryId: '',
+      floor: defaultFloor === undefined ? '' : String(defaultFloor),
+      unitNumber: defaultUnitNumber ?? '',
+      ownerName: '',
+      ownerPhone: '',
+    }),
+    [defaultFloor, defaultUnitNumber],
+  );
+
   const [open, setOpen] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
-  const [form, setForm] = React.useState({
-    nameFa: '',
-    nameEn: '',
-    categoryId: '',
-    floor: '',
-    unitNumber: '',
-    ownerName: '',
-    ownerPhone: '',
-  });
+  const [form, setForm] = React.useState(blank);
 
   const set = <K extends keyof typeof form>(key: K, value: string) =>
     setForm((current) => ({ ...current, [key]: value }));
@@ -83,15 +103,7 @@ export function CreateShopDialog({
       }
       toast.success(result.data.ownerCreated ? t('createdWithOwner') : t('createdExistingOwner'));
       setOpen(false);
-      setForm({
-        nameFa: '',
-        nameEn: '',
-        categoryId: '',
-        floor: '',
-        unitNumber: '',
-        ownerName: '',
-        ownerPhone: '',
-      });
+      setForm(blank);
       router.refresh();
     });
   }
@@ -102,7 +114,15 @@ export function CreateShopDialog({
     /^07\d{8}$/.test(form.ownerPhone);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        // Closing restores the PREFILL, not an empty form: reopening the same
+        // vacant unit's invite and finding the floor gone would read as a bug.
+        if (!next) setForm(blank);
+      }}
+    >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">

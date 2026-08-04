@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
+import Image from 'next/image';
 import { useLocale } from 'next-intl';
-import { CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronRight, Phone, Quote } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { InlineDecision } from '@/components/admin/inline-decision';
@@ -40,6 +41,21 @@ export type AdminQueueRow = {
   href: string;
   at: string;
   tone: 'primary' | 'warning' | 'danger' | 'muted';
+  /**
+   * "waiting 3 days" — finished on the server, in the stalled order's grammar.
+   * See components/admin/admin-action-queue.tsx for why every row has one.
+   */
+  waited: string;
+  waitLevel: 'fine' | 'warning' | 'danger';
+  /** Short evidence facts, already formatted and localised. */
+  facts?: string[];
+  /** The reported review's own words, truncated by the query. */
+  excerpt?: string | null;
+  /** A pending shop's banner — what a shopper would land on. */
+  imagePath?: string | null;
+  /** Who to ring about a pending registration, and on what number. */
+  contactName?: string | null;
+  contactPhone?: string | null;
 };
 
 const TONES = {
@@ -47,6 +63,19 @@ const TONES = {
   warning: 'bg-warning',
   danger: 'bg-danger',
   muted: 'bg-neutral-400',
+} as const;
+
+/**
+ * The wait chip's colour, on the SHARED SLA scale (lib/queue-sla.ts).
+ *
+ * Deliberately quiet at `fine`: three amber chips and three red ones on a
+ * six-row list is a heat map; one red chip on a list of grey ones is a
+ * priority.
+ */
+const WAIT_TONES = {
+  fine: 'bg-neutral-100 text-neutral-600',
+  warning: 'bg-warning-bg text-warning-fg',
+  danger: 'bg-danger-bg text-danger font-semibold',
 } as const;
 
 /**
@@ -64,6 +93,7 @@ export function AdminActionQueueList({
   emptyTitle,
   emptyBody,
   showMoreLabel,
+  emptyAction,
   visibleRows,
 }: {
   rows: AdminQueueRow[];
@@ -71,6 +101,15 @@ export function AdminActionQueueList({
   emptyTitle: string;
   emptyBody: string;
   showMoreLabel: string;
+  /**
+   * The way OUT of the done state (Prompt C12).
+   *
+   * An empty queue that only says it is empty reads as "nothing happened here";
+   * an empty queue that says «۶ تصمیم در ۲۴ ساعت گذشته» and points at the log
+   * reads as "you finished". That is the difference between an inbox that
+   * shrinks and a ritual that completes.
+   */
+  emptyAction?: { label: string; href: string };
   /** Owned by the server half — a const exported from here would be a client
    *  reference by the time the server did arithmetic with it. */
   visibleRows: number;
@@ -99,6 +138,7 @@ export function AdminActionQueueList({
         illustration={<CheckCircle2 className="h-7 w-7" />}
         title={emptyTitle}
         description={emptyBody}
+        action={emptyAction}
       />
     );
   }
@@ -148,22 +188,38 @@ export function AdminActionQueueList({
                   />
 
                   {/*
-                    A monogram, not a logo image. Half these rows are about a
-                    shop that has not been approved yet and so has no artwork
-                    on the storefront; a mix of photographs and empty squares
-                    reads worse than a consistent set of initials.
+                    THE BANNER WHEN THERE IS ONE, the monogram otherwise.
+                    A monogram was the right default while these rows carried no
+                    evidence at all — a mix of photographs and empty squares
+                    reads worse than a consistent set of initials. Now that a
+                    pending shop's card is meant to answer "what is this tenant"
+                    without a click-through, the artwork the shopper would land
+                    on IS the answer, and the initials remain for every row that
+                    has no picture to show.
                   */}
-                  {row.monogram && (
-                    <span
-                      className="rounded-control bg-primary-50 text-primary flex h-10 w-10 shrink-0 items-center justify-center text-sm font-bold"
-                      aria-hidden
-                    >
-                      {row.monogram}
+                  {row.imagePath ? (
+                    <span className="rounded-control relative h-14 w-20 shrink-0 overflow-hidden bg-neutral-100">
+                      <Image
+                        src={row.imagePath}
+                        alt=""
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
                     </span>
+                  ) : (
+                    row.monogram && (
+                      <span
+                        className="rounded-control bg-primary-50 text-primary flex h-10 w-10 shrink-0 items-center justify-center text-sm font-bold"
+                        aria-hidden
+                      >
+                        {row.monogram}
+                      </span>
+                    )
                   )}
 
                   <div className="min-w-0 flex-1 space-y-2">
-                    <div className="flex flex-wrap items-baseline gap-x-2">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                       {actionable ? (
                         <Link href={row.href} className="hover:text-primary text-sm font-semibold">
                           {row.title}
@@ -171,16 +227,86 @@ export function AdminActionQueueList({
                       ) : (
                         <span className="text-foreground text-sm font-semibold">{row.title}</span>
                       )}
+
+                      {/*
+                        HOW LONG IT HAS WAITED, on every row and on one scale.
+                        The `<time>` keeps the machine-readable instant and the
+                        absolute date on hover; the visible words are the thing
+                        that lets the reader rank the list.
+                      */}
                       <time
                         dateTime={new Date(row.at).toISOString()}
-                        className="shrink-0 text-xs text-neutral-400"
+                        title={formatRelative(row.at, locale)}
+                        className={cn(
+                          'rounded-pill shrink-0 px-2 py-0.5 text-2xs tabular-nums',
+                          WAIT_TONES[row.waitLevel],
+                        )}
+                        data-wait-level={row.waitLevel}
                       >
-                        {formatRelative(row.at, locale)}
+                        {row.waited}
                       </time>
                     </div>
 
                     {row.subtitle && (
                       <p className="text-xs leading-relaxed text-neutral-600">{row.subtitle}</p>
+                    )}
+
+                    {/*
+                      THE EVIDENCE LINE. Dot-separated rather than chips: these
+                      are facts about one thing, and four pills would compete
+                      with the decision buttons directly underneath.
+                    */}
+                    {row.facts && row.facts.length > 0 && (
+                      <p className="text-2xs flex flex-wrap items-center gap-x-2 gap-y-1 text-neutral-500">
+                        {row.facts.map((fact, factIndex) => (
+                          <React.Fragment key={fact}>
+                            {factIndex > 0 && <span aria-hidden>·</span>}
+                            <span>{fact}</span>
+                          </React.Fragment>
+                        ))}
+                      </p>
+                    )}
+
+                    {/*
+                      THE OWNER'S NUMBER, as a real `tel:` link and `dir="ltr"`.
+                      A phone number is the one fact on an approval card that is
+                      an ACTION — half of what an approver does with an unclear
+                      registration is ring the applicant — and Afghan numbers
+                      typed into an RTL paragraph reverse at the bidi boundary
+                      unless the run is isolated.
+                    */}
+                    {row.contactPhone && (
+                      <p className="text-2xs flex flex-wrap items-center gap-x-1.5 text-neutral-500">
+                        <Phone className="h-3 w-3 shrink-0" aria-hidden />
+                        {row.contactName && <span>{row.contactName}</span>}
+                        <a
+                          href={`tel:${row.contactPhone.replace(/[^\d+]/g, '')}`}
+                          dir="ltr"
+                          className="hover:text-primary font-medium"
+                        >
+                          {row.contactPhone}
+                        </a>
+                      </p>
+                    )}
+
+                    {/*
+                      THE REPORTED TEXT ITSELF. A moderation decision is about
+                      the words and nothing else, and the card used to show a
+                      star rating instead — which is the one fact that cannot
+                      settle it. Clamped to three lines: enough to decide most
+                      of them, and the queue page has the rest.
+                    */}
+                    {row.excerpt && (
+                      <blockquote className="rounded-control border-border flex gap-1.5 border-s-2 bg-neutral-50 p-2 text-xs leading-relaxed text-neutral-700">
+                        <Quote
+                          className="mt-0.5 h-3 w-3 shrink-0 text-neutral-400 rtl:-scale-x-100"
+                          aria-hidden
+                        />
+                        {/* Two lines, not three: `clamp-2` is the utility this
+                            product has, and a third would push the decision
+                            buttons below the fold on a six-row queue. */}
+                        <span className="clamp-2">{row.excerpt}</span>
+                      </blockquote>
                     )}
 
                     {decidable && (

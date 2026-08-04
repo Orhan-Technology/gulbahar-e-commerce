@@ -89,7 +89,11 @@
       "toCollect": "منتظر مراجعهٔ مشتری — {reference}",
       "toCollectSub": "تا {date} نگه داشته می‌شود",
       "handedOver": "تحویل داده شد",
-      "handedOverToast": "سفارش {reference} تحویل داده شد"
+      "handedOverToast": "سفارش {reference} تحویل داده شد",
+      "viewsNoSales": "«{product}» را زیاد می‌بینند و کسی نمی‌خرد",
+      "viewsNoSalesSub": "{views} بازدید در این هفته، بدون فروش — ببینید چه چیزی را می‌شود بهتر کرد",
+      "slowReplies": "پاسخ شما به سفارش‌ها از دکان‌های دیگر کندتر است",
+      "slowRepliesSub": "شما {hours} ساعت · مرکز {mallHours} ساعت"
     },
     "vsYesterday": "نسبت به دیروز، همین ساعت",
     "weekOrders": "{n, plural, other {{count} سفارش}}",
@@ -128,13 +132,20 @@
         "phone": "افزودن شماره تماس",
         "products": "افزودن سه محصول اول",
         "verification": "فرستادن اسناد برای تأیید هویت"
-      }
+      },
+      "remainingOne": "یک کار مانده: {task}",
+      "remainingMany": "{count} کار مانده — بعدی: {task}"
     },
     "performanceHeading": "چطور پیش می‌رود",
     "salesChartHeadingRanged": "فروش {days} روز گذشته",
     "farAbovePrevious": "خیلی بیشتر از دورهٔ پیش",
     "farBelowPrevious": "خیلی کمتر از دورهٔ پیش",
-    "bestDay": "بهترین روز این بازه: {day} — {amount}"
+    "bestDay": "بهترین روز این بازه: {day} — {amount}",
+    "todayQuietVsYesterday": "دیروز همین ساعت {amount} فروخته بودید",
+    "todayQuietThisRange": "در {days} روز گذشته {amount} فروش داشته‌اید",
+    "manyTimesPrevious": "چند برابر دورهٔ پیش",
+    "topSellersLowStock": "پرفروش این هفته — فقط {count} عدد مانده",
+    "topSellersOutOfStock": "پرفروش این هفته و تمام شده — موجودی را بنویسید"
   },
   "admin": {
     "heading": "مدیریت پلتفرم",
@@ -505,7 +516,10 @@
       "bodySignedOut": "اگر این محصول را خریده‌اید، وارد حساب خود شوید و اولین نظر را بنویسید.",
       "bodyNotBuyer": "نظر را تنها کسانی ثبت کرده می‌توانند که سفارش‌شان تحویل شده باشد.",
       "write": "نوشتن نظر"
-    }
+    },
+    "newBadge": "جدید",
+    "quantityValue": "تعداد: {count}",
+    "shopReputation": "این دکان {rating} از {count} نظر"
   },
   "shop": {
     "productCount": "{count} محصول",
@@ -797,7 +811,8 @@
     "openLog": "دیدن پنل پیام‌ها",
     "codeLifetime": "این کد {minutes} دقیقه اعتبار دارد.",
     "resendCode": "ارسال دوباره کد",
-    "resendIn": "ارسال دوباره تا {seconds} ثانیه دیگر"
+    "resendIn": "ارسال دوباره تا {seconds} ثانیه دیگر",
+    "phonePlaceholder": "۰۷۰۰۰۰۰۰۰۰"
   },
   "nav": {
     "menu": "منو",
@@ -1548,7 +1563,9 @@
       "cancelBody": "این سفارش را قبلاً تایید کرده‌اید. با لغو، اجناس دوباره به موجودی برمی‌گردد و مشتری بی‌درنگ خبر می‌شود.",
       "cancelReasonLabel": "دلیل لغو",
       "confirmCancel": "لغو سفارش",
-      "cancelling": "در حال لغو…"
+      "cancelling": "در حال لغو…",
+      "callCustomer": "زنگ زدن به مشتری",
+      "callCustomerHint": "پیش از رد کردن، یک بار دیگر زنگ بزنید"
     },
     "filteredBy": "فیلتر شده:",
     "clearFilter": "برداشتن فیلتر",
@@ -1608,7 +1625,10 @@
         "code_mismatch": "این کد به سفارش دیگری تعلق دارد. صفحه مشتری را ببینید.",
         "transition_not_allowed": "این سفارش را کسی دیگر پیش از شما تکمیل کرده است."
       },
-      "hint": "کدی که مشتری روی گوشی‌اش نشان می‌دهد — ۵ حرف و رقم."
+      "hint": "کدی که مشتری روی گوشی‌اش نشان می‌دهد — ۵ حرف و رقم.",
+      "celebrateTitle": "تحویل شد — فروش ثبت شد",
+      "celebrateBody": "سفارش {reference} به نام مشتری بسته شد. پول این سفارش در فروش امروز شما آمد.",
+      "celebrateDismiss": "خوب است"
     },
     "holds": {
       "title": "{count} نگه‌داری گرفته‌نشده",
@@ -1629,7 +1649,8 @@
         "transition_not_allowed": "این سفارش را کسی دیگر پیش از شما رسیدگی کرده است."
       }
     },
-    "cancelHint": "اگر دیگر نمی‌توانید این سفارش را تکمیل کنید:"
+    "cancelHint": "اگر دیگر نمی‌توانید این سفارش را تکمیل کنید:",
+    "itemNamesMore": "{names} و {count} قلم دیگر"
   },
   "shopProducts": {
     "title": "محصولات",
@@ -1787,7 +1808,16 @@
       "englishToggle": "انگلیسی هم دارید؟",
       "specValue": "مقدار",
       "featureTitle": "عنوان",
-      "featureBody": "توضیح"
+      "featureBody": "توضیح",
+      "quickHeading": "محصول تازه",
+      "quickHint": "همین چهار چیز کافی است. باقی‌اش را بعداً می‌نویسید.",
+      "quickTitleLabel": "نام محصول (دری)",
+      "quickTitlePlaceholder": "مثلاً: سپیکر بلوتوث جی‌بی‌ال",
+      "quickPublish": "نشر محصول",
+      "quickDraft": "فعلاً پیش‌نویس بماند",
+      "quickLaterHeading": "بعداً می‌توانید اضافه کنید",
+      "quickLaterBody": "نام انگلیسی، مشخصات، ویژگی‌ها و رنگ و اندازه — پس از نشر، در همین محصول.",
+      "categoryPrefilled": "دستهٔ دکان شما از پیش گزیده شده — اگر این محصول جای دیگری می‌رود، عوضش کنید."
     },
     "importWizard": {
       "step1": "۱ — پرونده",
@@ -1905,7 +1935,12 @@
         "window": "در برابر همین {days} روز پیش از شروع تخفیف",
         "caveat": "فقط سفارش‌های تکمیل‌شده. این عدد نشان می‌دهد در این مدت چه فروخته شده، نه اینکه تخفیف چقدر اثر داشته.",
         "noData": "هنوز در این مدت سفارش تکمیل‌شده‌ای ثبت نشده تا مقایسه‌ای نشان داده شود.",
-        "notStarted": "این تخفیف هنوز شروع نشده؛ پس از شروع، فروش آن اینجا می‌آید."
+        "notStarted": "این تخفیف هنوز شروع نشده؛ پس از شروع، فروش آن اینجا می‌آید.",
+        "verdictMuchMore": "در جریان این تخفیف {times} برابر دورهٔ پیش فروختید",
+        "verdictMore": "در جریان این تخفیف بیشتر از دورهٔ پیش فروختید",
+        "verdictSame": "فروش تقریباً به اندازهٔ دورهٔ پیش بود",
+        "verdictLess": "فروش در جریان این تخفیف کمتر از دورهٔ پیش بود",
+        "verdictFromNothing": "پیش از این تخفیف هیچ نفروخته بودید؛ حالا {units} قلم"
       }
     },
     "offerForm": {
@@ -1944,7 +1979,13 @@
         "products_required": "کم‌ازکم یک محصول را بگزینید",
         "products_not_yours": "یکی از محصولات گزیده‌شده از دکان شما نیست",
         "end_after_start": "تاریخ پایان باید پس از تاریخ آغاز باشد"
-      }
+      },
+      "autoNameHint": "نام تخفیف از روی اندازه و دامنه‌اش ساخته می‌شود:",
+      "renameAction": "خودم نام می‌گذارم",
+      "autoNamePercentShop": "{value}٪ تخفیف کل دکان",
+      "autoNamePercentProducts": "{value}٪ تخفیف روی {count} محصول",
+      "autoNameFixedShop": "{value} تخفیف کل دکان",
+      "autoNameFixedProducts": "{value} تخفیف روی {count} محصول"
     },
     "featured": {
       "intro": "جایگاه ویژه را از مرکز گلبهار می‌خرید. هر درخواست پس از تایید مدیریت فعال می‌شود.",
@@ -2014,7 +2055,8 @@
       },
       "visitors": "{count} مشتری از این تبلیغ آمد",
       "ctrLabel": "نرخ کلیک",
-      "bookAgain": "دوباره گرفتن ۲ هفته"
+      "bookAgain": "دوباره گرفتن ۲ هفته",
+      "seenCount": "{count} بار دیده شد"
     }
   },
   "shopReviews": {
@@ -2070,7 +2112,21 @@
       "other": "دلیل دیگر"
     },
     "defaultUnansweredNote": "{count} نظر بی‌پاسخ دارید و همان‌ها را نشان می‌دهیم. برای دیدن همه:",
-    "moreActions": "کارهای بیشتر"
+    "moreActions": "کارهای بیشتر",
+    "replyUndoable": "پس از فرستادن چند لحظه فرصت دارید آن را پس بگیرید.",
+    "replyQueued": "پاسخ شما فرستاده می‌شود",
+    "replyUndo": "پس گرفتن",
+    "starters": {
+      "heading": "یک جواب آماده را بگیرید و به دلخواه خود تغییرش دهید",
+      "thanks": "از خرید و از نظر شما سپاسگزاریم. خوشحالیم که راضی بودید — باز هم منتظر شما هستیم.",
+      "sorry": "بابت این تجربه معذرت می‌خواهیم. موضوع را بررسی می‌کنیم و درستش می‌کنیم. اگر اجازه بدهید، برای جبران با شما تماس می‌گیریم.",
+      "clarify": "سپاس از نظر شما. برای اینکه بهتر کمک کنیم، بفرمایید مشکل دقیقاً از کجا بود تا پیگیری کنیم."
+    },
+    "starterLabels": {
+      "thanks": "تشکر",
+      "sorry": "عذرخواهی و پیگیری",
+      "clarify": "پرسیدن جزئیات"
+    }
   },
   "shopProfile": {
     "title": "نمای دکان",
@@ -2479,7 +2535,18 @@
       "openVerification": "دیدن اسناد",
       "claimVerification": "من بررسی می‌کنم",
       "verificationClaimed": "به نام شما ثبت شد؛ اسناد را در صفحه تأیید هویت ببینید",
-      "verificationClaimedShort": "به نام شما"
+      "verificationClaimedShort": "به نام شما",
+      "waitedOverThreshold": "بیش از {hours} ساعت در انتظار",
+      "waitedDays": "{n, plural, one {# روز در انتظار} other {{count} روز در انتظار}}",
+      "waitedHours": "{n, plural, one {# ساعت در انتظار} other {{count} ساعت در انتظار}}",
+      "waitedJustNow": "تازه رسیده",
+      "shopProducts": "{n, plural, =0 {هنوز محصولی منتشر نکرده — {total} پیش‌نویس} other {{count} محصول منتشرشده از {total}}}",
+      "shopFloorUnit": "منزل {floor} – واحد {unit}",
+      "verificationDocuments": "{n, plural, one {# سند فرستاده شده} other {{count} سند فرستاده شده}}",
+      "reviewOnShop": "دکان {shop}",
+      "staleOrderShop": "دکان {shop} هنوز پاسخ نداده است",
+      "allClearWithCount": "سرتان خلوت است — در {hours} ساعت گذشته {count} تصمیم گرفته شده است.",
+      "allClearAction": "سابقهٔ تصامیم"
     },
     "revenue": {
       "heading": "درآمد تبلیغات این ماه",
@@ -2493,7 +2560,11 @@
       "noBaselineThisFar": "در همین بازهٔ ماه گذشته فروشی ثبت نشده بود",
       "bookedLabel": "ارزش جایگاه‌های در جریان این ماه",
       "bookedHint": "{n, plural, one {# کمپاین} other {{count} کمپاین}}",
-      "topSlotsLifetime": "پردرآمدترین جایگاه‌ها — از آغاز · مجموع {total}"
+      "topSlotsLifetime": "پردرآمدترین جایگاه‌ها — از آغاز · مجموع {total}",
+      "sinceMonthStart": "از اول {month} تا امروز — روز {day}",
+      "wholeMonth": "تمام ماه {month}",
+      "recognisedShort": "صورت‌حساب‌شده",
+      "billingNotStarted": "{n, plural, one {# کمپاین در {month} روی دیوارهاست؛ صورت‌حساب هفتگی هنوز صادر نشده} other {{count} کمپاین در {month} روی دیوارهاست؛ صورت‌حساب هفتگی هنوز صادر نشده}}"
     },
     "health": {
       "heading": "وضعیت پلتفرم — ۳۰ روز گذشته",
@@ -2580,7 +2651,9 @@
       "closeReasonLabel": "دلیل بستن",
       "suspendReasonPlaceholder": "مثلاً: شکایت‌های پی‌درپی درباره‌ی جنس‌هایی که با تصویرشان یکی نیستند.",
       "closeReasonPlaceholder": "مثلاً: قرارداد کرایه‌ی واحد به پایان رسید و تمدید نشد.",
-      "statusReasonNote": "این متن همان‌گونه که می‌نویسید برای مالک دکان فرستاده می‌شود و در سابقه تصامیم می‌ماند."
+      "statusReasonNote": "این متن همان‌گونه که می‌نویسید برای مالک دکان فرستاده می‌شود و در سابقه تصامیم می‌ماند.",
+      "rowMenu": "کارهای بیشتر",
+      "openRecord": "دیدن پروندهٔ دکان"
     },
     "create": {
       "title": "ساختن دکان برای یک تاجر",
@@ -2647,7 +2720,21 @@
       },
       "nudgeAll": "یادآوری همه‌ی موارد",
       "pausedUntil": "رخصتی تا {date}",
-      "needsAttention": "نیاز به توجه"
+      "needsAttention": "نیاز به توجه",
+      "noShopsTitle": "هنوز دکان تاییدشده‌ای نیست",
+      "noShopsBody": "به‌محض تایید نخستین دکان، وضعیت آن همین‌جا دیده می‌شود.",
+      "rosterSummary": "{total} دکان تاییدشده · {flagged} دکان نیاز به توجه دارد · بر اساس {days} روز گذشته",
+      "colShop": "دکان",
+      "colLastOrder": "آخرین سفارش",
+      "colAccept": "میانهٔ پذیرش",
+      "colCatalogue": "فهرست محصولات",
+      "colRating": "امتیاز",
+      "colRevenue": "فروش",
+      "neverTraded": "هیچ سفارشی نداشته",
+      "tradedToday": "امروز",
+      "daysSinceOrder": "{n, plural, one {# روز پیش} other {{count} روز پیش}}",
+      "medianHours": "{hours} ساعت",
+      "catalogueTrend": "{published} منتشرشده · {added} تازه"
     },
     "searchPlaceholder": "جست‌وجو با نام دکان",
     "emptySearchTitle": "چیزی پیدا نشد",
@@ -2819,7 +2906,10 @@
       "wrong_product": "مربوط به محصول دیگری است",
       "personal_info": "افشای معلومات شخصی",
       "other": "دلیل دیگر"
-    }
+    },
+    "questionsTab": "پرسش‌های محصول",
+    "questionsIntro": "پرسش‌های بی‌پاسخ کار دکان است؛ این فهرست برای متنی است که نباید روی سایت بماند.",
+    "againstShopAverage": "این {rating} ستاره روی دکانی با میانگین {average} از {count} نظر"
   },
   "adminPromotions": {
     "title": "تبلیغات و جایگاه‌ها",
@@ -2870,7 +2960,9 @@
       "endConsequenceVisibility": "تبلیغ همین حالا از فروشگاه برداشته می‌شود.",
       "endConsequenceMoney": "بهای پرداخت‌شده {price} در درآمد می‌ماند؛ چیزی به‌طور خودکار بازگردانده نمی‌شود.",
       "endConsequenceSlot": "جای خالی‌شده بلافاصله برای فروش دوباره آزاد می‌شود.",
-      "confirmEnd": "بله، پایان بده"
+      "confirmEnd": "بله، پایان بده",
+      "daysRemaining": "{n, plural, one {# روز باقی مانده} other {{count} روز باقی مانده}}",
+      "slotReopens": "جایگاه در {date} آزاد می‌شود"
     },
     "slots": {
       "priceNote": "تغییر بها تنها بر رزروهای تازه اثر می‌کند؛ کمپاین‌های موجود با بهای فروخته‌شده می‌مانند.",
@@ -2936,7 +3028,8 @@
         "product_required": "برای این جایگاه گزینش محصول الزامی است",
         "product_not_publishable": "محصول گزیده‌شده نشرشده و از این دکان نیست"
       },
-      "productOptional": "محصول (اختیاری — خالی بگذارید تا خود دکان تبلیغ شود)"
+      "productOptional": "محصول (اختیاری — خالی بگذارید تا خود دکان تبلیغ شود)",
+      "fromCalendar": "از تقویم: {slot}، از {from} تا {to}"
     },
     "calendar": {
       "empty": "جایگاهی برای نمایش نیست.",
@@ -2969,7 +3062,10 @@
       "emptyTitle": "این ماه چیزی رزرو نشده",
       "emptyBody": "تمام جایگاه‌ها آزاد است. با «رزرو جایگاه» یکی را بفروشید یا به ماه بعد بروید.",
       "subtitleWithValue": "{vacant} روزِ جایگاه از {total} روز این ماه فروخته نشده — ارزش فروخته‌نشده حدود {value}.",
-      "vacantValue": "≈ {value}"
+      "vacantValue": "≈ {value}",
+      "sellThisDay": "این روز فروخته نشده — {price} در هفته. برای رزرو کلیک کنید.",
+      "vacantCellLabel": "{slot} — {date} فروخته نشده",
+      "legendVacantSellable": "فروخته‌نشده (برای رزرو کلیک کنید)"
     },
     "openSlotCalendar": "تقویم جایگاه‌ها"
   },
@@ -3025,7 +3121,15 @@
     "colBilledMonth": "صورت‌حساب این ماه",
     "colRunningMonth": "در جریان این ماه",
     "chartPeak": "بهترین ماه: {month} — {amount}",
-    "chartTrough": "کم‌درآمدترین ماه: {month} — {amount}"
+    "chartTrough": "کم‌درآمدترین ماه: {month} — {amount}",
+    "bookedValueLabel": "ارزش رزروشدهٔ {month}",
+    "monthToDateLabelNamed": "درآمد {month} تا امروز",
+    "monthRevenueLabelNamed": "درآمد ماه {month}",
+    "recognisedSoFar": "{n, plural, other {تا امروز {amount} صورت‌حساب شده – {count} کمپاین رزروشده}}",
+    "periodsNoteNamed": "«این ماه» یعنی {month} (روز {day}) – مجموع از آغاز {lifetime} – بازار در ۳۰ روز گذشته",
+    "inventoryNoteNamed": "قیمت هفتگی، پُری، و پول {month}",
+    "colBilledMonthNamed": "صورت‌حساب {month}",
+    "colRunningMonthNamed": "در جریان در {month}"
   },
   "adminReports": {
     "title": "گزارش پلتفرم",
@@ -3047,7 +3151,10 @@
     "units": "{count} قلم",
     "noData": "در این بازه داده‌ای نیست.",
     "statusTotal": "{count} سفارش در این بازه",
-    "statusReconcile": "این نمودار هر {total} سفارش این بازه را می‌شمارد، از جمله {excluded} سفارش ردشده یا لغوشده. کارت «سفارش‌ها» در بالا فقط {counted} سفارش پذیرفته‌شده را می‌شمارد."
+    "statusReconcile": "این نمودار هر {total} سفارش این بازه را می‌شمارد، از جمله {excluded} سفارش ردشده یا لغوشده. کارت «سفارش‌ها» در بالا فقط {counted} سفارش پذیرفته‌شده را می‌شمارد.",
+    "vsPrevious": "نسبت به {days} روز پیش از آن",
+    "noBaseline": "دورهٔ پیشین برای مقایسه وجود ندارد",
+    "monthlyReport": "گزارش ماه برای مالکان"
   },
   "adminOrders": {
     "title": "همه‌ی سفارش‌ها",
@@ -3338,7 +3445,8 @@
     "browseAll": "مرور همهٔ محصولات",
     "showingOf": "نمایش {shown} از {count} محصول",
     "emptyUnfilteredTitle": "این دسته به‌زودی پر می‌شود",
-    "emptyUnfilteredBody": "هنوز دکانی در این دسته محصولی نگذاشته است. تا آن وقت، پرطرفدارترین‌های مرکز را ببینید."
+    "emptyUnfilteredBody": "هنوز دکانی در این دسته محصولی نگذاشته است. تا آن وقت، پرطرفدارترین‌های مرکز را ببینید.",
+    "promotedNoteLabel": "چرا این محصول اینجاست؟"
   },
   "adminSettings": {
     "title": "تنظیمات پلتفرم",
@@ -3483,7 +3591,8 @@
       "peak": "بیشترین روز: {date} — {amount}",
       "trough": "کم‌ترین روز فروش: {date} — {amount}",
       "average": "میانگین روزانه {amount}",
-      "tradingDays": "{n, plural, one {# روز از {total} روز فروش داشته} other {{count} روز از {total} روز فروش داشته}}"
+      "tradingDays": "{n, plural, one {# روز از {total} روز فروش داشته} other {{count} روز از {total} روز فروش داشته}}",
+      "periodTotal": "مجموع این دوره {amount}"
     }
   },
   "shopVerification": {
@@ -3583,7 +3692,16 @@
     "noDocumentsBody": "این درخواست هیچ سندی همراه ندارد. بدون سند نمی‌توان هویت را تأیید کرد؛ درخواست را رد کنید و از دکان بخواهید جواز کسب و تذکره را بفرستد.",
     "documentUnavailableTitle": "سند در دسترس نیست",
     "documentUnavailableBody": "فایل «{kind}» روی سرور پیدا نشد. شاید هنگام فرستادن ناقص ذخیره شده باشد. از دکان بخواهید دوباره بفرستد.",
-    "cannotApprove": "تا وقتی این سندها خوانده نشوند تأیید ممکن نیست: {documents}. می‌توانید درخواست را رد کنید و دلیلش را بنویسید تا دکان دوباره بفرستد."
+    "cannotApprove": "تا وقتی این سندها خوانده نشوند تأیید ممکن نیست: {documents}. می‌توانید درخواست را رد کنید و دلیلش را بنویسید تا دکان دوباره بفرستد.",
+    "claimHeading": "ادعای دکان",
+    "claimOwnerLabel": "نام ثبت‌شدهٔ مالک",
+    "claimOwnerUnknown": "مالک ثبت نشده",
+    "claimPhoneLabel": "شمارهٔ مالک",
+    "claimShopPhoneLabel": "شمارهٔ دکان",
+    "claimNote": "اسناد باید با همین نام و شماره بخواند.",
+    "claimedBy": "{name} در حال بررسی این پرونده است",
+    "claimedUnknown": "یکی از همکاران در حال بررسی این پرونده است",
+    "rejectConsequence": "رد با پیام به دکان همراه است و دکان می‌تواند اسناد را دوباره بفرستد."
   },
   "verification": {
     "badgeLabel": "دکان تأییدشده",
@@ -3726,7 +3844,11 @@
     "legendTrading": "در حال کار",
     "legendPending": "در انتظار تأیید",
     "legendClosed": "بسته یا معلق",
-    "legendVacant": "واحد خالی"
+    "legendVacant": "واحد خالی",
+    "occupancyHeadline": "{online} واحد از {units} واحد آنلاین است — {percent} – {floors} منزل",
+    "vacantOnFloor": "{n, plural, one {# واحد این منزل دکان آنلاین ندارد} other {{count} واحد این منزل دکان آنلاین ندارد}}",
+    "vacantUnitList": "واحدهای {units}{more, plural, =0 {} other { و {more} واحد دیگر}}",
+    "inviteToFloor": "دعوت مستأجر به این منزل"
   },
   "adminSettlements": {
     "title": "تصفیه حساب",
@@ -3862,7 +3984,11 @@
           "uphold": "نگه‌داشتن نظر"
         }
       }
-    }
+    },
+    "shopFilterLabel": "پالایش بر اساس دکان",
+    "shopFilterAll": "همهٔ دکان‌ها",
+    "shopScope": "تصامیم دربارهٔ «{shop}» — {count} مورد",
+    "shopScopeClear": "برداشتن پالایه"
   },
   "floors": {
     "title": "نقشه منزل‌های مرکز",
@@ -3881,7 +4007,8 @@
     "shopsOnFloor": "{count} دکان",
     "viewShop": "رفتن به صفحه دکان",
     "shopsOnFloorHeading": "دکان‌های منزل {floor}",
-    "openShop": "دیدن دکان"
+    "openShop": "دیدن دکان",
+    "pickUnit": "روی یک واحد در نقشه بزنید تا دکان آن را اینجا ببینید."
   },
   "notificationCentre": {
     "title": "اطلاعیه‌ها",
@@ -3925,5 +4052,37 @@
     },
     "groupNew": "جدید",
     "groupEarlier": "قبلی"
+  },
+  "adminMonthlyReport": {
+    "title": "گزارش ماه {month}",
+    "coverage": "از {from} تا {to}",
+    "partialMonth": "ماه هنوز تمام نشده — تا روز {day}",
+    "backToReports": "بازگشت به گزارش‌ها",
+    "previousMonth": "ماه پیش",
+    "nextMonth": "ماه بعد",
+    "print": "چاپ",
+    "occupancyHeading": "۱ · پُری مرکز",
+    "occupancyLabel": "{online} واحد از {units} واحد آنلاین",
+    "occupancyNote": "{vacant} واحد در {floors} منزل هنوز دکان آنلاین ندارد.",
+    "tradeHeading": "۲ · داد و ستد دکان‌ها",
+    "gmvLabel": "ارزش کل فروش",
+    "ordersLabel": "سفارش‌ها",
+    "buyersLabel": "خریداران",
+    "vsPreviousMonth": "ماه پیش {amount}",
+    "vsPreviousMonthCount": "ماه پیش {count} سفارش",
+    "noPreviousMonth": "ماه پیش داده‌ای برای مقایسه نبود",
+    "placementHeading": "۳ · درآمد تبلیغات مرکز",
+    "adRevenueLabel": "صورت‌حساب‌شده",
+    "bookedLabel": "ارزش رزروشده",
+    "slotsLabel": "جایگاه‌های فروخته‌شده",
+    "slotsSold": "{sold} از {total}",
+    "placementNote": "کرایهٔ جایگاه هفتگی و پیشاپیش صورت‌حساب می‌شود؛ «رزروشده» ارزش هر کمپاینی است که در این ماه روی سایت دیده می‌شود.",
+    "topShopsHeading": "۴ · پرفروش‌ترین دکان‌ها",
+    "shopOrders": "{n, plural, one {# سفارش} other {{count} سفارش}}",
+    "noTrade": "در این ماه فروشی ثبت نشده است.",
+    "decisionsHeading": "۵ · تصامیم مدیریت",
+    "decisionLine": "{total} تصمیم توسط {actors} نفر ثبت شده است — {shops} دکان تایید، {verifications} تأیید هویت و {campaigns} جایگاه تبلیغاتی.",
+    "noDecisions": "در این ماه تصمیمی در سابقه ثبت نشده است.",
+    "footer": "ساخته‌شده در {generated} از داده‌های زندهٔ مرکز گلبهار."
   }
 }

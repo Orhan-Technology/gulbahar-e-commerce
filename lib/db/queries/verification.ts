@@ -209,6 +209,44 @@ export async function verificationDetail(verificationId: string) {
       shopUnitNumber: shops.unitNumber,
       shopPhone: shops.phone,
       shopStatus: shops.status,
+      /*
+       * THE CLAIM THE REVIEWER IS BEING ASKED TO CHECK (Prompt C12).
+       *
+       * The review screen put two scanned documents side by side and never said
+       * what they were supposed to MATCH — the reviewer had to remember the
+       * owner's name from the row above, or open the shop record in another
+       * tab. The comparison is the entire job; the claim belongs between the
+       * panes.
+       */
+      ownerName: sql<string | null>`(
+        select u.name from shop_members m join users u on u.id = m.user_id
+        where m.shop_id = shops.id and m.role = 'owner' limit 1
+      )`,
+      ownerPhone: sql<string | null>`(
+        select u.phone from shop_members m join users u on u.id = m.user_id
+        where m.shop_id = shops.id and m.role = 'owner' limit 1
+      )`,
+      /*
+       * WHO IS HOLDING THIS ONE, read back from the audit log.
+       *
+       * `claimVerification` moves the row to `under_review` and writes a
+       * `verification.claim` audit line with the actor's name — so the holder
+       * has always been recorded, and the screen that offers the control was
+       * the one place that could not see it. A mall with two staff needs the
+       * name, not merely the state.
+       *
+       * Bounded by this submission's `submitted_at`: the audit row's target is
+       * the SHOP, and a claim on last year's rejected submission must not
+       * appear against this year's papers.
+       */
+      claimedBy: sql<string | null>`(
+        select a.actor_name from admin_audit_log a
+        where a.action = 'verification.claim'
+          and a.target_id = shops.id
+          and (shop_verifications.submitted_at is null
+               or a.created_at >= shop_verifications.submitted_at)
+        order by a.created_at desc limit 1
+      )`,
     })
     .from(shopVerifications)
     .innerJoin(shops, eq(shopVerifications.shopId, shops.id))

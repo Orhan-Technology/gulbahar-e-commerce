@@ -2,16 +2,19 @@ import Image from 'next/image';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { BadgeCheck, Building2, Store } from 'lucide-react';
 
+import { CreateShopDialog } from '@/components/admin/create-shop-dialog';
 import { FloorPlanGrid } from '@/components/admin/floor-plan-grid';
 import { UnitEditor } from '@/components/admin/unit-editor';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { RangeControl } from '@/components/console/range-control';
 import { EmptyState } from '@/components/custom/empty-state';
+import { Button } from '@/components/ui/button';
 import { requireAdmin } from '@/lib/auth/guards';
 import { parseConsoleRange, type ConsoleRangeKey } from '@/lib/console-range';
 import { pickLocale } from '@/lib/db/localized';
 import { floorOccupancy } from '@/lib/db/queries/mall';
-import { formatCurrency, formatNumber } from '@/lib/format';
+import { categoryTree } from '@/lib/db/queries/shops';
+import { formatCurrency, formatNumber, formatPercent, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
@@ -48,7 +51,7 @@ export default async function AdminFloorsPage({
   const t = await getTranslations('adminFloors');
 
   const range = parseConsoleRange(query.range);
-  const floors = await floorOccupancy(range.days);
+  const [floors, tree] = await Promise.all([floorOccupancy(range.days), categoryTree(locale)]);
 
   const totals = floors.reduce(
     (sum, floor) => ({
@@ -59,14 +62,35 @@ export default async function AdminFloorsPage({
     { shops: 0, vacant: 0, revenue: 0 },
   );
 
+  /*
+   * OCCUPANCY AS THE HEADLINE (Prompt C12).
+   *
+   * Seventy-three empty units were drawn as dashed squares and then nothing
+   * happened — the mall's single biggest growth number, rendered as texture. As
+   * a ratio it is the sentence a director says in a meeting: «۱۴ از ۸۷ واحد
+   * آنلاین». The denominator is units the data can actually see (held plus the
+   * gaps between them), never an invented floor capacity — see the note in
+   * lib/db/queries/mall.ts about why vacancy is derived rather than listed.
+   */
+  const knownUnits = totals.shops + totals.vacant;
+  const occupancy = knownUnits > 0 ? totals.shops / knownUnits : 0;
+
+  // The category list is shared by every invite dialog on the page, so it is
+  // fetched once and passed down rather than per floor.
+  const categories = tree.map((root) => ({
+    id: root.id,
+    label: pickLocale(root.name, locale) ?? root.slug,
+  }));
+
   return (
     <div className="space-y-5 p-6">
       <ConsolePageHeader
         title={t('title')}
-        description={t('subtitle', {
+        description={t('occupancyHeadline', {
+          online: formatNumber(totals.shops, locale),
+          units: formatNumber(knownUnits, locale),
+          percent: formatPercent(occupancy, locale),
           floors: formatNumber(floors.length, locale),
-          shops: formatNumber(totals.shops, locale),
-          vacant: formatNumber(totals.vacant, locale),
         })}
         actions={<RangeControl current={range.key} />}
       />
@@ -107,6 +131,53 @@ export default async function AdminFloorsPage({
             </div>
 
             <FloorPlanGrid floor={floor} />
+
+            {/*
+              THE VACANCY, AS A PIPELINE (Prompt C12).
+              A floor's empty units were only ever a colour on the plan and a
+              count in the stat row. Stated as a sentence with an invite button
+              beside it, the same fact becomes the day's leasing work — and the
+              button carries the floor and the first free unit into the existing
+              invite-shop-owner flow, so nobody retypes what they are looking at.
+            */}
+            {floor.vacantUnits.length > 0 && (
+              <div
+                className="rounded-card border-border flex flex-wrap items-center justify-between gap-3 border border-dashed bg-neutral-50 p-3"
+                data-vacancy-pipeline={floor.vacantUnits.length}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">
+                    {t('vacantOnFloor', {
+                      n: floor.vacantUnits.length,
+                      count: formatNumber(floor.vacantUnits.length, locale),
+                      floor: formatNumber(floor.floor, locale),
+                    })}
+                  </p>
+                  {/* The first few numbers, so the sentence is about real doors
+                      rather than an abstraction. */}
+                  <p className="text-muted-foreground text-xs tabular-nums">
+                    {t('vacantUnitList', {
+                      units: floor.vacantUnits
+                        .slice(0, 6)
+                        .map((unit) => formatUnitNumber(String(unit), locale))
+                        .join('، '),
+                      more: formatNumber(Math.max(0, floor.vacantUnits.length - 6), locale),
+                    })}
+                  </p>
+                </div>
+
+                <CreateShopDialog
+                  categories={categories}
+                  defaultFloor={floor.floor}
+                  defaultUnitNumber={String(floor.vacantUnits[0])}
+                  trigger={
+                    <Button size="sm" variant="outline">
+                      {t('inviteToFloor')}
+                    </Button>
+                  }
+                />
+              </div>
+            )}
 
             <ul className="divide-border divide-y">
               {floor.shops.map((shop) => (

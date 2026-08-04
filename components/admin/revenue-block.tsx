@@ -5,8 +5,9 @@ import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pickLocale } from '@/lib/db/localized';
 import { revenueBySlot, revenueMonthToDate } from '@/lib/db/queries/admin-revenue';
-import { formatCurrency, formatNumber, formatPercent } from '@/lib/format';
+import { formatCurrency, formatMonth, formatNumber, formatPercent } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { localeMonthBounds } from '@/lib/locale-month';
 import { cn } from '@/lib/utils';
 
 /**
@@ -35,12 +36,25 @@ import { cn } from '@/lib/utils';
  *     the walls today is the thing a bare zero was denying;
  *   - the breakdown carries its own period label instead of borrowing the
  *     headline's by adjacency.
+ *
+ * AND THE MONTH IS NOW THE READER'S MONTH. All three of those repairs were
+ * made on top of a Gregorian `date_trunc('month', now())` while every label
+ * around them said «اسد» — so "this month" began on 1 August under a heading
+ * naming a solar month that began on 23 July, and the tile was measuring a
+ * fortnight the chart beside it was not. lib/locale-month.ts owns the boundary
+ * for the booking calendar already; the money uses the same one now, and the
+ * card NAMES the period rather than leaving "this month" to be interpreted.
  */
 export async function RevenueBlock() {
   const locale = await getLocale();
   const t = await getTranslations('adminOverview.revenue');
 
-  const [month, slots] = await Promise.all([revenueMonthToDate(), revenueBySlot()]);
+  // One clock read, on the server, shared by the bounds and both queries.
+  const month = localeMonthBounds(locale, new Date());
+  const [figures, slots] = await Promise.all([
+    revenueMonthToDate(month),
+    revenueBySlot({ start: month.start, end: month.end }),
+  ]);
 
   const capacity = slots.reduce((sum, slot) => sum + slot.capacity, 0);
   const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
@@ -53,7 +67,23 @@ export async function RevenueBlock() {
     .slice(0, 3);
   const lifetimeTotal = slots.reduce((sum, slot) => sum + slot.revenue, 0);
 
-  const positive = (month.delta ?? 0) >= 0;
+  const positive = (figures.delta ?? 0) >= 0;
+
+  /*
+   * THE OPENING DAYS OF A MONTH ARE NOT A COLLAPSE.
+   *
+   * A weekly placement fee is invoiced up front (PRD §8.3), so on the 2nd of a
+   * month almost nothing has been RECOGNISED even when the walls are full — and
+   * a bare «۰ ؋» under a red ↓۱۰۰٪ badge is the console telling its owner their
+   * advertising business died. Both figures are true; only the pair is honest.
+   * So when nothing has been billed yet and there IS placement running, the
+   * card leads with the booked value and the red badge is withheld: there is no
+   * meaningful percentage to draw between zero and a month that has not
+   * started billing.
+   */
+  const billingNotStarted = figures.current === 0 && figures.bookedThisMonth > 0;
+  const showDelta = !billingNotStarted && figures.delta !== null && figures.delta !== 0;
+  const monthName = formatMonth(month.start, locale);
 
   return (
     <section className="rounded-card bg-primary-700 text-primary-foreground p-5 sm:p-6">
@@ -71,66 +101,94 @@ export async function RevenueBlock() {
         </Link>
       </div>
 
-      {/* The period, on the figure rather than inferable from the heading. */}
-      <p className="text-primary-300 mt-3 text-2xs font-semibold">
+      {/*
+        THE PERIOD, NAMED — «از ۱ اسد تا امروز» — rather than "this month",
+        which on a Gregorian basis under a solar heading meant two different
+        fortnights depending on which line you read.
+      */}
+      <p className="text-primary-300 mt-3 text-2xs font-semibold" data-money-period>
         {month.partial
-          ? t('recognisedLabel', { day: formatNumber(month.dayOfMonth, locale) })
-          : t('recognisedFullLabel')}
-      </p>
-      <div className="mt-1 flex flex-wrap items-baseline gap-3">
-        <p className="text-3xl leading-none font-extrabold tabular-nums">
-          {formatCurrency(month.current, locale)}
-        </p>
-        {month.delta !== null && month.delta !== 0 && (
-          <span
-            className={cn(
-              'rounded-pill inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold',
-              // Not the success/danger tokens: this sits on solid blue, where a
-              // dark green pill is unreadable and a red one reads as an error
-              // banner rather than as a downward month.
-              positive ? 'bg-primary-foreground/15 text-primary-100' : 'bg-danger text-danger-fg',
-            )}
-          >
-            {positive ? (
-              <ArrowUpRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden />
-            ) : (
-              <ArrowDownRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden />
-            )}
-            {formatPercent(Math.abs(month.delta), locale)}
-          </span>
-        )}
-      </div>
-      <p className="text-primary-300 mt-1 text-xs">
-        {month.delta === null
-          ? t('noBaselineThisFar')
-          : month.partial
-            ? t('vsSameStretch', {
-                day: formatNumber(month.dayOfMonth, locale),
-                amount: formatCurrency(month.previous, locale),
-              })
-            : t('vsLastMonth', { amount: formatCurrency(month.previous, locale) })}
+          ? t('sinceMonthStart', {
+              month: monthName,
+              day: formatNumber(month.dayOfMonth, locale),
+            })
+          : t('wholeMonth', { month: monthName })}
       </p>
 
       {/*
-        BOOKED VALUE, on its own line and clearly a different measure.
-        Recognized income answers "what have we billed"; this answers "what is
-        on the walls", and at the start of a month the second is the only one
-        of the two with anything in it.
+        RECOGNISED BESIDE BOOKED, always — two figures of the same month, never
+        one of them alone. The larger type goes to whichever one the reader
+        should act on: billed money once billing has started, booked value in
+        the days before it has.
       */}
-      {month.bookedThisMonth > 0 && (
-        <p className="border-primary-foreground/15 mt-3 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 border-t pt-3 text-sm">
-          <span className="text-primary-200 text-xs">{t('bookedLabel')}</span>
-          <span className="font-bold tabular-nums">
-            {formatCurrency(month.bookedThisMonth, locale)}
-          </span>
-          <span className="text-primary-300 text-2xs">
-            {t('bookedHint', {
-              n: month.bookedCount,
-              count: formatNumber(month.bookedCount, locale),
-            })}
-          </span>
-        </p>
-      )}
+      <div className="mt-1 flex flex-wrap items-end gap-x-6 gap-y-2">
+        <div>
+          <p className="text-primary-200 text-2xs">{t('recognisedShort')}</p>
+          <div className="mt-0.5 flex flex-wrap items-baseline gap-2">
+            <p
+              className={cn(
+                'leading-none font-extrabold tabular-nums',
+                billingNotStarted ? 'text-xl' : 'text-3xl',
+              )}
+              data-recognised
+            >
+              {formatCurrency(figures.current, locale)}
+            </p>
+            {showDelta && (
+              <span
+                className={cn(
+                  'rounded-pill inline-flex items-center gap-0.5 px-2 py-0.5 text-xs font-bold',
+                  // Not the success/danger tokens: this sits on solid blue, where a
+                  // dark green pill is unreadable and a red one reads as an error
+                  // banner rather than as a downward month.
+                  positive
+                    ? 'bg-primary-foreground/15 text-primary-100'
+                    : 'bg-danger text-danger-fg',
+                )}
+              >
+                {positive ? (
+                  <ArrowUpRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden />
+                ) : (
+                  <ArrowDownRight className="h-3 w-3 rtl:-scale-x-100" aria-hidden />
+                )}
+                {formatPercent(Math.abs(figures.delta!), locale)}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {figures.bookedThisMonth > 0 && (
+          <div className="border-primary-foreground/20 border-s ps-6">
+            <p className="text-primary-200 text-2xs">{t('bookedLabel')}</p>
+            <p
+              className={cn(
+                'mt-0.5 leading-none font-extrabold tabular-nums',
+                billingNotStarted ? 'text-3xl' : 'text-xl',
+              )}
+              data-booked
+            >
+              {formatCurrency(figures.bookedThisMonth, locale)}
+            </p>
+          </div>
+        )}
+      </div>
+
+      <p className="text-primary-300 mt-2 text-xs">
+        {billingNotStarted
+          ? t('billingNotStarted', {
+              n: figures.bookedCount,
+              count: formatNumber(figures.bookedCount, locale),
+              month: monthName,
+            })
+          : figures.delta === null
+            ? t('noBaselineThisFar')
+            : month.partial
+              ? t('vsSameStretch', {
+                  day: formatNumber(month.dayOfMonth, locale),
+                  amount: formatCurrency(figures.previous, locale),
+                })
+              : t('vsLastMonth', { amount: formatCurrency(figures.previous, locale) })}
+      </p>
 
       {/* ---------------------------------------------------------------- */}
       <div className="mt-5">

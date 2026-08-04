@@ -25,7 +25,23 @@ import { Link, useRouter } from '@/lib/i18n/navigation';
  * disabled button, and not a dialog. Someone who wants to follow a shop has
  * already decided; the sign-in is the obstacle, so the fastest thing is to send
  * them through it and back.
+ *
+ * WHAT FOLLOWING DOES is told HERE, in the first success toast, and used to be
+ * a permanent paragraph under the button in the shop's identity card. Two
+ * different readers were being served badly by that: the one who never presses
+ * it read an explanation of a feature they did not ask about, on every shop
+ * page, forever; and the one who does press it got a confirmation that said
+ * nothing about where the thing they just followed had gone. Moved, it costs
+ * the first reader nothing and hands the second the link at the exact moment it
+ * is worth having.
+ *
+ * ONCE, remembered in localStorage. The second follow is a confirmation, not a
+ * lesson, and a toast that teaches the same thing every time is a toast people
+ * learn to dismiss unread. The flag is read inside the click handler rather
+ * than during render — a render that reads storage is a hydration mismatch, and
+ * this component has no reason to know the answer before it is pressed.
  */
+const EXPLAINED_KEY = 'gulbahar:follow-explained';
 export function FollowButton({
   shopId,
   shopSlug,
@@ -58,6 +74,32 @@ export function FollowButton({
     );
   }
 
+  /**
+   * The explainer, the first time only. `undefined` afterwards, which is what
+   * sonner wants for "no description" — the toast then collapses back to the
+   * one-line confirmation.
+   *
+   * Wrapped in try/catch because localStorage throws outright in a browser with
+   * site data blocked, and losing a follow over a preference nobody set would
+   * be an absurd trade. The fallback is to explain every time, which is the
+   * harmless direction to fail in.
+   */
+  function explainer() {
+    try {
+      if (window.localStorage.getItem(EXPLAINED_KEY)) return undefined;
+      window.localStorage.setItem(EXPLAINED_KEY, '1');
+    } catch {
+      // Ignored — see above.
+    }
+    return t.rich('followExplainer', {
+      link: (chunks) => (
+        <Link href="/account/following" className="font-semibold underline">
+          {chunks}
+        </Link>
+      ),
+    });
+  }
+
   function toggle() {
     const next = !following;
     setFollowing(next);
@@ -71,7 +113,7 @@ export function FollowButton({
         toast.error(t(`errors.${result.error}` as never));
         return;
       }
-      if (next) toast.success(t('followed'));
+      if (next) toast.success(t('followed'), { description: explainer() });
       router.refresh();
     });
   }

@@ -211,7 +211,16 @@ async function main() {
      */
     const leaked = [...text.matchAll(/(?<![A-Za-z\d-])\d{2,}/g)]
       .map((match) => match[0])
-      .filter((digits) => !text.includes(`GC-${digits}`));
+      .filter((digits) => !text.includes(`GC-${digits}`))
+      /*
+       * COLLECTION CODES are excused for exactly the reason order references
+       * are, and the check simply had not met one: «۴۳۹-UF» is not a quantity,
+       * it is an identifier a customer reads down a phone and a shopkeeper
+       * copies onto a paper bag (lib/collection-code.ts formats it `NNN-LL`).
+       * Rendering it in Persian numerals would make it unreadable back to the
+       * person holding the parcel.
+       */
+      .filter((digits) => !new RegExp(`${digits}-[A-Z]{2}\\b`).test(text));
     check(`${path} leaks no Latin digits`, leaked.length === 0, leaked.slice(0, 6));
   }
 

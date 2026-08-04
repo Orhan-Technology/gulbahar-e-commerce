@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 
 import { db } from '..';
+import type { LocaleMonthBounds } from '../../locale-month';
 import type { LocalizedText } from '../schema/shared';
 
 /**
@@ -58,7 +59,31 @@ export async function revenueTotals() {
  * as concurrent bookings against capacity RIGHT NOW, which is the number a manager
  * can act on today.
  */
-export async function revenueBySlot() {
+export async function revenueBySlot(month?: { start: Date; end: Date }) {
+  /*
+   * THE MONTH BOUNDS ARE PASSED IN, from lib/locale-month.ts.
+   *
+   * `date_trunc('month', now())` is the GREGORIAN month, and every month label
+   * on these screens is Afghan solar — so the two columns below were measuring
+   * a different fortnight from the header above them. See `localeMonthBounds`
+   * for the full account.
+   *
+   * The fallback survives for the two callers that are not this workstream's to
+   * change (the CSV export route and scripts/check-phase7b.ts). Every admin
+   * SCREEN passes bounds; nothing a mall director reads is on the old basis.
+   *
+   * `.toISOString()` with an explicit `::timestamptz`, never a bare JS Date: a
+   * Date interpolated into a raw fragment has no column to infer a type from
+   * and postgres.js rejects it with an unreadable "string argument" error
+   * (CLAUDE.md).
+   */
+  const monthStart = month
+    ? sql`${month.start.toISOString()}::timestamptz`
+    : sql`date_trunc('month', now())`;
+  const monthEnd = month
+    ? sql`${month.end.toISOString()}::timestamptz`
+    : sql`date_trunc('month', now()) + interval '1 month'`;
+
   const rows = await db.execute(sql`
     select
       ps.id::text as id,
@@ -68,7 +93,9 @@ export async function revenueBySlot() {
       ps.price_per_week::int as price_per_week,
       coalesce(sum(c.price_paid) filter (where ${SOLD}), 0)::int as revenue,
       coalesce(
-        sum(c.price_paid) filter (where ${SOLD} and c.starts_at >= date_trunc('month', now())),
+        sum(c.price_paid) filter (
+          where ${SOLD} and c.starts_at >= ${monthStart} and c.starts_at < ${monthEnd}
+        ),
         0
       )::int as month_revenue,
       /*
@@ -83,8 +110,8 @@ export async function revenueBySlot() {
       coalesce(
         sum(c.price_paid) filter (
           where ${SOLD}
-            and c.starts_at < date_trunc('month', now()) + interval '1 month'
-            and c.ends_at >= date_trunc('month', now())
+            and c.starts_at < ${monthEnd}
+            and c.ends_at >= ${monthStart}
         ),
         0
       )::int as month_running_revenue,
@@ -188,29 +215,24 @@ export async function revenueByMonth(months = 6) {
  * `partial` is false on the last day of a month, where month-to-date IS the
  * month and the honest caption is the plain one.
  */
-export async function revenueMonthToDate() {
+export async function revenueMonthToDate(month: LocaleMonthBounds) {
+  const monthStart = sql`${month.start.toISOString()}::timestamptz`;
+  const monthEnd = sql`${month.end.toISOString()}::timestamptz`;
+  const prevStart = sql`${month.previousStart.toISOString()}::timestamptz`;
+  const prevEnd = sql`${month.previousEnd.toISOString()}::timestamptz`;
+
   const rows = await db.execute(sql`
-    with bounds as (
-      select
-        date_trunc('month', now()) as month_start,
-        date_trunc('month', now()) - interval '1 month' as prev_start,
-        -- The same elapsed stretch, measured from each month's own first day, so
-        -- a 31-day month compared with a 30-day one still lines up day for day.
-        now() - date_trunc('month', now()) as elapsed,
-        extract(day from now())::int as day_of_month,
-        extract(day from (date_trunc('month', now()) + interval '1 month' - interval '1 day'))::int as days_in_month
-    )
     select
-      b.day_of_month,
-      b.days_in_month,
       (select coalesce(sum(c.price_paid), 0)::int from campaigns c
-        where ${SOLD} and c.starts_at >= b.month_start) as current,
+        where ${SOLD} and c.starts_at >= ${monthStart} and c.starts_at < ${monthEnd}) as current,
+      -- The same elapsed stretch of last month, so a 31-day month compared with
+      -- a 30-day one still lines up day for day.
       (select coalesce(sum(c.price_paid), 0)::int from campaigns c
-        where ${SOLD} and c.starts_at >= b.prev_start
-          and c.starts_at < b.prev_start + b.elapsed) as previous,
+        where ${SOLD} and c.starts_at >= ${prevStart}
+          and c.starts_at < ${prevEnd}) as previous,
       (select coalesce(sum(c.price_paid), 0)::int from campaigns c
-        where ${SOLD} and c.starts_at >= b.prev_start
-          and c.starts_at < b.month_start) as previous_full,
+        where ${SOLD} and c.starts_at >= ${prevStart}
+          and c.starts_at < ${monthStart}) as previous_full,
       /*
        * BOOKED VALUE FOR THIS MONTH — every sold campaign whose run touches it,
        * whenever it was billed.
@@ -222,20 +244,17 @@ export async function revenueMonthToDate() {
        */
       (select coalesce(sum(c.price_paid), 0)::int from campaigns c
         where ${SOLD}
-          and c.starts_at < b.month_start + interval '1 month'
-          and c.ends_at >= b.month_start) as booked_this_month,
+          and c.starts_at < ${monthEnd}
+          and c.ends_at >= ${monthStart}) as booked_this_month,
       (select count(*)::int from campaigns c
         where ${SOLD}
-          and c.starts_at < b.month_start + interval '1 month'
-          and c.ends_at >= b.month_start) as booked_count
-    from bounds b
+          and c.starts_at < ${monthEnd}
+          and c.ends_at >= ${monthStart}) as booked_count
   `);
 
   const [row] = rows as unknown as Array<Record<string, unknown>>;
   const current = Number(row?.current ?? 0);
   const previous = Number(row?.previous ?? 0);
-  const dayOfMonth = Number(row?.day_of_month ?? 1);
-  const daysInMonth = Number(row?.days_in_month ?? 30);
 
   return {
     current,
@@ -244,9 +263,15 @@ export async function revenueMonthToDate() {
     /** Sold placement running at any point this month — see the SQL note. */
     bookedThisMonth: Number(row?.booked_this_month ?? 0),
     bookedCount: Number(row?.booked_count ?? 0),
-    dayOfMonth,
-    daysInMonth,
-    partial: dayOfMonth < daysInMonth,
+    /*
+     * The calendar facts come from the BOUNDS, not from `extract(day from
+     * now())` — that would be the Gregorian day-of-month, which is the exact
+     * mismatch this rewrite exists to end. On 4 August it said «۴» under a
+     * heading that read «اسد», a month then thirteen days old.
+     */
+    dayOfMonth: month.dayOfMonth,
+    daysInMonth: month.daysInMonth,
+    partial: month.partial,
     // Null rather than −100% or Infinity when there is no baseline to divide by
     // — the same rule StatCard applies everywhere else.
     delta: previous > 0 ? (current - previous) / previous : null,
@@ -275,7 +300,20 @@ export async function campaignLedger(
       p.title as product_title,
       p.slug as product_slug,
       -- Whole weeks, so the table can show what was bought as well as paid.
-      greatest(1, round(extract(epoch from (c.ends_at - c.starts_at)) / 604800))::int as weeks
+      greatest(1, round(extract(epoch from (c.ends_at - c.starts_at)) / 604800))::int as weeks,
+      /*
+       * DAYS LEFT ON THE RUN — the seller's number, not the tenant's.
+       *
+       * Read HERE rather than in the component: the clock belongs to the query
+       * (CLAUDE.md), and a client component may not call Date.now() during
+       * render at all. Null for anything not currently running, so the card
+       * cannot print "0 days left" against a campaign that ended in Jawza.
+       */
+      case
+        when c.status in ('approved', 'active') and c.ends_at >= now()
+          then ceil(extract(epoch from (c.ends_at - now())) / 86400)::int
+        else null
+      end as days_remaining
     from campaigns c
     join shops s on s.id = c.shop_id
     join promotion_slots ps on ps.id = c.slot_id
@@ -304,6 +342,7 @@ export async function campaignLedger(
     productTitle: (row.product_title ?? null) as LocalizedText | null,
     productSlug: (row.product_slug ?? null) as string | null,
     weeks: Number(row.weeks),
+    daysRemaining: row.days_remaining === null ? null : Number(row.days_remaining),
   }));
 }
 
