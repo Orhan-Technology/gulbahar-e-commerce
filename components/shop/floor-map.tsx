@@ -1,10 +1,10 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 
+import { FloorUnitLink } from '@/components/shop/floor-unit';
 import { pressable } from '@/components/motion/pressable';
 import { pickLocale } from '@/lib/db/localized';
 import type { MapFloor } from '@/lib/db/queries/mall';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
-import { Link } from '@/lib/i18n/navigation';
 import { openState } from '@/lib/opening';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +33,7 @@ export async function FloorMap({
   now,
   mallHours,
   compact = false,
+  panelHref,
 }: {
   floor: MapFloor;
   /** Category slug to emphasise; everything else dims. */
@@ -43,6 +44,16 @@ export async function FloorMap({
   mallHours: string;
   /** Drops the legend and shrinks the cells, for the shop page embed. */
   compact?: boolean;
+  /**
+   * Builds the URL that opens a unit's panel BESIDE this map, for the surfaces
+   * that have one (/floors from `lg` up — see FloorUnitLink).
+   *
+   * A FUNCTION rather than a flag, because only the page knows what else is in
+   * its query string: dropping `?category=` while selecting a unit would clear
+   * the filter the reader is looking through. Omitted everywhere else, and a
+   * unit is then a plain link to its shop.
+   */
+  panelHref?: (unit: number) => string;
 }) {
   const locale = await getLocale();
   const t = await getTranslations('floors');
@@ -84,13 +95,14 @@ export async function FloorMap({
     const open = openState(entry.shop.hours, now)?.open && openState(mallHours, now)?.open;
 
     return (
-      <Link
+      <FloorUnitLink
         key={entry.unit}
         href={`/shops/${entry.shop.slug}`}
-        data-map-unit={entry.unit}
-        data-map-state={highlighted ? 'highlight' : dimmed ? 'dimmed' : 'shop'}
+        panelHref={panelHref?.(entry.unit)}
+        mapUnit={entry.unit}
+        mapState={highlighted ? 'highlight' : dimmed ? 'dimmed' : 'shop'}
         title={pickLocale(entry.shop.name, locale)}
-        aria-current={highlighted ? 'location' : undefined}
+        ariaCurrent={highlighted ? 'location' : undefined}
         className={cn(
           pressable,
           'rounded-control flex flex-col items-center justify-center gap-0.5 border px-1 text-center transition-[background-color,border-color,opacity,scale] duration-150 ease-out',
@@ -117,7 +129,7 @@ export async function FloorMap({
         <span className={cn('w-full truncate leading-tight', compact ? 'text-2xs' : 'text-xs')}>
           {pickLocale(entry.shop.name, locale)}
         </span>
-      </Link>
+      </FloorUnitLink>
     );
   };
 

@@ -1,19 +1,20 @@
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Building2, ChevronLeft } from 'lucide-react';
+import Image from 'next/image';
+import { getLocale, getTranslations, setRequestLocale } from 'next-intl/server';
+import { Building2, ChevronLeft, MapPin, Store } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
 import { FloorMap } from '@/components/shop/floor-map';
 import { ScrollFade } from '@/components/shop/listing/scroll-fade';
 import { pressable } from '@/components/motion/pressable';
 import { pickLocale } from '@/lib/db/localized';
-import { mallMap } from '@/lib/db/queries/mall';
+import { mallMap, type MapFloor } from '@/lib/db/queries/mall';
 import { siteSettings } from '@/lib/db/queries/settings';
 import { formatNumber, formatUnitNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { openState } from '@/lib/opening';
 import { cn } from '@/lib/utils';
 
-type Query = { floor?: string; category?: string };
+type Query = { floor?: string; category?: string; unit?: string };
 
 /**
  * The mall floor map (Prompt C11).
@@ -94,10 +95,31 @@ export default async function FloorsPage({
     }
   }
 
-  const href = (next: { floor?: number; category?: string | null }) => {
+  /*
+   * The unit whose panel is open, from `?unit=`.
+   *
+   * Read off the floor the page ALREADY loaded rather than queried: the panel's
+   * whole content is one entry of `active.units`, so selecting a unit costs
+   * nothing beyond the render it triggers. A stale or vacant unit number
+   * resolves to null and the panel falls back to its prompt, which is the right
+   * answer for a shared link to a shop that has since moved out.
+   */
+  const selected =
+    active.units.find(
+      (entry): entry is typeof entry & { shop: NonNullable<(typeof entry)['shop']> } =>
+        Boolean(entry.shop) && entry.unit === Number(query.unit),
+    ) ?? null;
+
+  const href = (next: { floor?: number; category?: string | null; unit?: number | null }) => {
     const floor = next.floor ?? active.floor;
     const category = next.category === null ? undefined : (next.category ?? query.category);
-    return `/floors?floor=${floor}${category ? `&category=${category}` : ''}`;
+    // A unit belongs to a floor and to a filter, so changing either drops it —
+    // otherwise switching floors leaves a panel open on a shop that is not on
+    // the floor being shown.
+    const unit = next.unit ?? undefined;
+    return `/floors?floor=${floor}${category ? `&category=${category}` : ''}${
+      unit ? `&unit=${unit}` : ''
+    }`;
   };
 
   const chip = (isActive: boolean) =>
@@ -154,14 +176,34 @@ export default async function FloorsPage({
         ))}
       </ScrollFade>
 
-      <section className="rounded-card border-border bg-card border p-4">
-        <FloorMap
-          floor={active}
-          category={query.category}
-          now={now}
-          mallHours={settings.hours}
-        />
-      </section>
+      {/*
+       * MAP AND PANEL, side by side from `lg`.
+       *
+       * The plan is about 400px tall and the page was a thousand pixels of
+       * nothing beside it — so the widest screen got the least out of the one
+       * feature Amazon cannot copy. The panel turns the plan from a diagram
+       * into a browsing surface: click a unit, read who is there, click the
+       * next one. Below `lg` the grid collapses to one column and the panel is
+       * not rendered at all (see FloorUnitLink for why a phone keeps
+       * navigating).
+       *
+       * `items-start` so the panel does not stretch to the map's height and
+       * float its content in the middle of an empty box.
+       */}
+      <div className="grid items-start gap-4 lg:grid-cols-[1fr_320px]">
+        <section className="rounded-card border-border bg-card border p-4">
+          <FloorMap
+            floor={active}
+            category={query.category}
+            highlightUnit={selected?.unit ?? null}
+            now={now}
+            mallHours={settings.hours}
+            panelHref={(unit) => href({ unit })}
+          />
+        </section>
+
+        <UnitPanel entry={selected} now={now} mallHours={settings.hours} />
+      </div>
 
       {/*
         THE MAP IS NOT A DIRECTORY, and this page shipped as though it were.
@@ -238,5 +280,96 @@ export default async function FloorsPage({
         )}
       </section>
     </div>
+  );
+}
+
+/**
+ * Who is in the selected unit — the panel beside the plan (`lg` and up).
+ *
+ * `hidden lg:block`: on a phone this content would sit under the map, pushing
+ * it off screen the moment somebody used it, and the shop list below already
+ * names every tenant in full. It is a desktop affordance for desktop space.
+ *
+ * Everything here comes from the unit the page already loaded. The one thing
+ * the design review asked for that is NOT here is the shop's star rating —
+ * `mallMap()` does not select it, and that query lives outside this pass's
+ * scope. The panel says what it can back: who, what they sell, how much of it,
+ * whether the doors are open right now, and the way in.
+ */
+async function UnitPanel({
+  entry,
+  now,
+  mallHours,
+}: {
+  entry: (MapFloor['units'][number] & { shop: NonNullable<MapFloor['units'][number]['shop']> }) | null;
+  now: Date;
+  mallHours: string;
+}) {
+  const locale = await getLocale();
+  const t = await getTranslations('floors');
+  const tShop = await getTranslations('shop');
+
+  const surface = 'rounded-card border-border bg-card hidden border p-4 lg:block';
+
+  if (!entry) {
+    return (
+      <aside className={cn(surface, 'text-muted-foreground text-sm')}>
+        <MapPin className="mb-2 h-5 w-5 text-neutral-300" aria-hidden />
+        {t('pickUnit')}
+      </aside>
+    );
+  }
+
+  const open = openState(entry.shop.hours, now)?.open && openState(mallHours, now)?.open;
+
+  return (
+    <aside className={cn(surface, 'space-y-3')}>
+      <div className="flex items-center gap-3">
+        <span className="rounded-control bg-primary-100 relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden">
+          {entry.shop.logoPath ? (
+            <Image src={entry.shop.logoPath} alt="" fill sizes="48px" className="object-cover" />
+          ) : (
+            <Store className="text-primary-700 h-5 w-5" aria-hidden />
+          )}
+        </span>
+        <div className="min-w-0">
+          {/* `dir="auto"`: the tenant's own name, in either script. */}
+          <p dir="auto" className="text-foreground truncate text-sm font-bold">
+            {pickLocale(entry.shop.name, locale)}
+          </p>
+          <p className="text-muted-foreground truncate text-xs">
+            {t('unitLabel', { unit: formatUnitNumber(String(entry.unit), locale) })}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {open && (
+          <span className="rounded-pill bg-success-bg text-success text-2xs inline-flex items-center gap-1 px-2 py-0.5 font-medium">
+            <span className="bg-success h-1.5 w-1.5 rounded-full" aria-hidden />
+            {t('legendOpen')}
+          </span>
+        )}
+        {entry.shop.categoryName && (
+          <span className="rounded-pill text-2xs bg-neutral-100 px-2 py-0.5 text-neutral-600">
+            {pickLocale(entry.shop.categoryName, locale)}
+          </span>
+        )}
+        <span className="text-muted-foreground text-2xs tabular-nums">
+          {tShop('productCount', { count: formatNumber(entry.shop.productCount, locale) })}
+        </span>
+      </div>
+
+      <Link
+        href={`/shops/${entry.shop.slug}`}
+        className={cn(
+          pressable,
+          'rounded-control bg-primary text-primary-foreground hover:bg-primary-700 flex w-full items-center justify-center gap-1 px-3 py-2 text-sm font-semibold transition-[background-color,scale] duration-150 ease-out',
+        )}
+      >
+        {t('openShop')}
+        <ChevronLeft className="h-4 w-4 ltr:rotate-180" aria-hidden />
+      </Link>
+    </aside>
   );
 }

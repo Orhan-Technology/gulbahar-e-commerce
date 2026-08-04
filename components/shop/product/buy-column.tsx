@@ -4,7 +4,6 @@ import * as React from 'react';
 import Image from 'next/image';
 
 import { usePrefersReducedMotion } from '@/components/custom/stat-card';
-import { ShareButton } from '@/components/shop/product/share-button';
 import { cn } from '@/lib/utils';
 
 /**
@@ -158,27 +157,18 @@ export function BuyColumn({
 
       {children}
 
+      {/*
+        NO SHARE CONTROL HERE ANY MORE. It was a full-width labelled bar from
+        `lg` up — a third stacked control under "add to cart" and "buy now",
+        equal in weight to both, and the only one of the three that does not buy
+        anything. The rule that already governed the phone layout was right at
+        every width: share is a secondary action ON the product, so it is an
+        icon beside the wishlist heart, in the row where the other secondary
+        action already lives (BuyPanel). One share control, one place, whatever
+        the window is doing.
+      */}
       <Collapsible open={!collapsed} instant={prefersReduced}>
-        <div className="space-y-5">
-          {/*
-            SHARE SITS WITH THE PURCHASE CONTROLS, under the price and the
-            add-to-cart row, because that is the moment someone decides to ask
-            a second person before buying. It collapses with the rest of the
-            secondary block: a reader who has scrolled past the top of the page
-            is reading, not forwarding.
-
-            The title comes from this component rather than from a prop on the
-            page — it already has it for the condensed identity line, so the
-            control needs nothing wired through.
-
-            FROM `lg` UP ONLY. Below that the column is not a sidebar, it is the
-            page, and a labelled share here became a third full-width bar under
-            "add to cart" and "buy now". The buy panel renders it as an icon
-            beside the wishlist heart at those widths instead.
-          */}
-          <ShareButton title={title} className="hidden w-full lg:inline-flex" />
-          {extras}
-        </div>
+        <div className="space-y-5">{extras}</div>
       </Collapsible>
     </div>
   );

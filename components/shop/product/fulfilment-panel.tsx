@@ -34,20 +34,34 @@ export async function FulfilmentPanel({
     .filter(Boolean)
     .join(' · ');
 
+  /*
+   * PICKUP LEADS.
+   *
+   * Delivery was first because that is the order every marketplace built for
+   * somewhere else puts them in — but those marketplaces do not own the
+   * building. Collecting from the counter is free, it is available today rather
+   * than in one to two working days, and the shop is a named unit on a named
+   * floor of a mall this reader can probably see from where they are standing.
+   * It is the strongest thing on this panel and it was second, under a paid
+   * option, which is the ordering of a courier business rather than a mall.
+   *
+   * The order of the other two is unchanged: delivery for whoever does not want
+   * the walk, then how they pay for either.
+   */
   const rows = [
-    {
-      icon: Truck,
-      title: t('deliveryTitle'),
-      body: t('deliveryBody'),
-      note: t('deliveryFee', { fee: formatNumber(DELIVERY_FEE, locale) }),
-      extra: t('deliveryFree', { threshold: formatNumber(FREE_DELIVERY_THRESHOLD, locale) }),
-    },
     {
       icon: Store,
       title: t('pickupTitle'),
       body: pickupWhere,
       note: t('pickupFree'),
       extra: null,
+    },
+    {
+      icon: Truck,
+      title: t('deliveryTitle'),
+      body: t('deliveryBody'),
+      note: t('deliveryFee', { fee: formatNumber(DELIVERY_FEE, locale) }),
+      extra: t('deliveryFree', { threshold: formatNumber(FREE_DELIVERY_THRESHOLD, locale) }),
     },
     {
       icon: CreditCard,
