@@ -181,6 +181,14 @@ async function Queue({
             status={record!.status}
             documents={record!.documents}
             evidence={record!.evidence}
+            // The claim the papers are meant to match, and who is holding the
+            // review — both already in the record, neither previously shown.
+            claim={{
+              ownerName: record!.ownerName,
+              ownerPhone: record!.ownerPhone,
+              shopPhone: record!.shopPhone,
+            }}
+            claimedBy={record!.claimedBy}
           />
         </li>
       ))}

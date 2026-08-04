@@ -10,11 +10,15 @@ import { DashboardGreeting } from '@/components/dashboard/dashboard-greeting';
 import { LiveRefresh } from '@/components/dashboard/live-refresh';
 import { SetupGuide, SetupGuideSkeleton } from '@/components/dashboard/setup-guide';
 import { SalesChart } from '@/components/dashboard/sales-chart';
+import { StockEditor } from '@/components/dashboard/products/stock-editor';
 import { pressable } from '@/components/motion/pressable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { actionQueueItems, shopDashboardStats } from '@/lib/db/queries/dashboard';
+// The CATALOGUE's own "nearly gone" number, so the warning on this rail fires at
+// exactly the stock the products list calls low and the storefront calls scarce.
+import { LOW_STOCK_THRESHOLD } from '@/lib/db/queries/shop-products';
 import { parseConsoleRange, type ConsoleRange } from '@/lib/console-range';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { RangeControl } from '@/components/console/range-control';
@@ -174,6 +178,29 @@ async function KpiRow({
   const stats = await shopDashboardStats(shopId, range);
   const days = formatNumber(range.days, locale);
 
+  /*
+   * The line under a ؋۰ morning — see the note on the tile below.
+   *
+   * Ordered by how close the number is to the question being asked: this time
+   * yesterday first, the selected window second, and the flat "nothing yet"
+   * only for a shop that genuinely has nothing to report. Built here rather
+   * than in a helper because `t` is key-typed and cannot be passed anywhere
+   * that would loosen it.
+   */
+  const todayHint =
+    stats.todaySales > 0
+      ? stats.todayDelta !== null
+        ? t('vsYesterday')
+        : t('noBaseline')
+      : stats.yesterdaySales > 0
+        ? t('todayQuietVsYesterday', { amount: formatCurrency(stats.yesterdaySales, locale) })
+        : stats.rangeSales > 0
+          ? t('todayQuietThisRange', {
+              amount: formatCurrency(stats.rangeSales, locale),
+              days,
+            })
+          : t('noSalesYet');
+
   return (
     /* Two across on a phone, four from `lg` — the row is full width now that
        it leads the performance band rather than sitting in the 21rem rail. */
@@ -198,15 +225,25 @@ async function KpiRow({
          * caption beside three populated ones reads as a rendering fault, and
          * "vs previous period" printed with no percentage beside it is worse
          * still, because it promises a comparison it did not make.
+         *
+         * AND AT ؋۰ IT STOPS SCOLDING. «فروش امروز ؋۰ — هنوز فروشی ثبت نشده»
+         * was the lead tile of every morning, in red, before a single customer
+         * had walked past the door — a true sentence that tells a shopkeeper
+         * nothing and costs them something. The zero stays (it is the day's
+         * honest figure) but the line under it now carries the nearest real
+         * number instead: what yesterday had taken by this hour, or failing
+         * that what the selected window has taken. Only a shop that has sold
+         * nothing at all still reads «هنوز فروشی ثبت نشده», where it is simply
+         * true.
          */
-        hint={
-          stats.todaySales === 0
-            ? t('noSalesYet')
-            : stats.todayDelta !== null
-              ? t('vsYesterday')
-              : t('noBaseline')
+        hint={todayHint}
+        /*
+         * Never red on a zero. A day that has not finished is not a loss, and
+         * the danger colour is spent on the one line nobody can act on faster.
+         */
+        hintTone={
+          stats.todaySales === 0 ? 'muted' : (stats.todayDelta ?? 0) >= 0 ? 'success' : 'danger'
         }
-        hintTone={(stats.todayDelta ?? 0) >= 0 ? 'success' : 'danger'}
       />
 
       <StatCard
@@ -259,16 +296,21 @@ async function KpiRow({
 }
 
 /**
- * PERCENTAGES STOP BEING PERCENTAGES SOMEWHERE AROUND 300%.
+ * PERCENTAGES STOP BEING PERCENTAGES SOMEWHERE AROUND 200%.
  *
  * A five-product shop that took two orders last week and fifteen this week is a
  * genuine ↑۶۵۱٪, and a green pill reading ۶۵۱٪ is read as a broken tile — the
  * arithmetic is right and the communication is wrong, because the reader's
  * question is "how am I doing" and no honest answer to that is a four-figure
  * ratio off a baseline of two. Above the cap the pill is dropped and the hint
- * line says which direction it moved, in words.
+ * line says which direction it moved, IN WORDS: «چند برابر دورهٔ پیش» is what a
+ * shopkeeper would actually say, and it cannot be misread as a fault.
+ *
+ * The cap was 300% and is now 200%, because ۲۴۷٪ reads exactly as broken as
+ * ۶۴۷٪ does — a tripling is already past the point where the ratio stops
+ * carrying meaning and starts carrying doubt.
  */
-const DELTA_CAP = 3;
+const DELTA_CAP = 2;
 
 function readableDelta(delta: number | null) {
   if (delta === null) return null;
@@ -278,7 +320,7 @@ function readableDelta(delta: number | null) {
 /** Returns the KEY rather than the string, so the caller's `t` stays typed. */
 function deltaHintKey(delta: number | null) {
   if (delta === null) return 'noBaseline' as const;
-  if (delta > DELTA_CAP) return 'farAbovePrevious' as const;
+  if (delta > DELTA_CAP) return 'manyTimesPrevious' as const;
   if (delta < -DELTA_CAP) return 'farBelowPrevious' as const;
   return 'vsPreviousRange' as const;
 }
@@ -388,59 +430,108 @@ async function TopSellers({
           they are styled, and the revenue figure is the only one that has to
           line up. */}
       <ul>
-        {stats.topProducts.map((product, index) => (
-          <li key={product.id}>
-            <Link
-              /*
-               * STRAIGHT TO THE PRODUCT, not to a search for its slug. The row
-               * used to link to `?q=<slug>`, and the catalogue search matches
-               * TITLES — so every Dari-slugged product (which is all of them,
-               * since slugs come from the Dari title) landed the shopkeeper on
-               * "no results" for their own best seller.
-               */
-              href={`/dashboard/products/${product.id}`}
-              className={cn(
-                pressable,
-                'rounded-control flex items-center gap-3 p-2 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-50',
-              )}
-            >
-              {/* Rank, so the ordering is stated rather than merely implied. */}
-              <span className="w-4 shrink-0 text-center text-xs font-bold text-neutral-400 tabular-nums">
-                {formatNumber(index + 1, locale)}
-              </span>
+        {stats.topProducts.map((product, index) => {
+          /*
+           * THE ONE BAND ON THIS SCREEN THAT WAS PURE INFORMATION NOW HAS A JOB.
+           *
+           * "These five sold the most" is a fact a shopkeeper can do nothing
+           * with. "This one sold the most AND there are three left" is the
+           * afternoon's work, and the two facts were sitting in different
+           * screens — the number here, the consequence in the stock report
+           * nobody opens. Joining them costs one column in the query.
+           *
+           * Only on a row that actually SOLD in the window: a product with no
+           * orders is on this list because the shop is quiet, and calling it a
+           * best seller because it is out of stock would be flattery.
+           */
+          const scarce = product.orderCount > 0 && product.stock <= LOW_STOCK_THRESHOLD;
 
-              <span className="rounded-control relative h-11 w-11 shrink-0 overflow-hidden bg-neutral-100">
-                {product.imagePath && (
-                  <Image
-                    src={product.imagePath}
-                    alt=""
-                    fill
-                    sizes="44px"
-                    className="object-cover"
-                  />
+          return (
+            <li key={product.id}>
+              <div
+                className={cn(
+                  'rounded-control flex items-start gap-3 p-2 transition-[background-color] duration-150 ease-out hover:bg-neutral-50',
                 )}
-              </span>
-
-              <span className="min-w-0 flex-1">
-                <span className="clamp-1 text-sm font-medium" dir="auto">
-                  {pickLocale(product.title as never, locale)}
+              >
+                {/* Rank, so the ordering is stated rather than merely implied. */}
+                <span className="w-4 shrink-0 pt-2 text-center text-xs font-bold text-neutral-400 tabular-nums">
+                  {formatNumber(index + 1, locale)}
                 </span>
-                <span className="text-2xs mt-0.5 block text-neutral-500">
-                  {t('topSellersUnits', {
-                    // `n` pluralises, `count` renders — see the query module.
-                    n: product.orderCount,
-                    count: formatNumber(product.orderCount, locale),
-                    views: formatNumber(product.viewCount, locale),
-                  })}
-                </span>
-              </span>
 
-              <span className="shrink-0 text-sm font-bold tabular-nums">
-                {formatCurrency(product.revenue, locale)}
-              </span>
-            </Link>
-          </li>
-        ))}
+                {/*
+                 * THE LINK IS NOW THE TITLE AND THE PHOTO, not the whole row.
+                 * The row carries an inline stock editor, and a button inside
+                 * an anchor is invalid markup that browsers resolve by
+                 * swallowing one of the two — here, always the one that
+                 * matters. Same destination as before: STRAIGHT TO THE
+                 * PRODUCT, never `?q=<slug>`, because the catalogue search
+                 * matches TITLES and every slug here is Dari.
+                 */}
+                <Link
+                  href={`/dashboard/products/${product.id}`}
+                  aria-hidden
+                  tabIndex={-1}
+                  className="rounded-control relative h-11 w-11 shrink-0 overflow-hidden bg-neutral-100"
+                >
+                  {product.imagePath && (
+                    <Image
+                      src={product.imagePath}
+                      alt=""
+                      fill
+                      sizes="44px"
+                      className="object-cover"
+                    />
+                  )}
+                </Link>
+
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <Link
+                      href={`/dashboard/products/${product.id}`}
+                      className={cn(pressable, 'hover:text-primary min-w-0 flex-1')}
+                    >
+                      <span className="clamp-1 text-sm font-medium" dir="auto">
+                        {pickLocale(product.title as never, locale)}
+                      </span>
+                      <span className="text-2xs mt-0.5 block text-neutral-500">
+                        {t('topSellersUnits', {
+                          // `n` pluralises, `count` renders — see the query module.
+                          n: product.orderCount,
+                          count: formatNumber(product.orderCount, locale),
+                          views: formatNumber(product.viewCount, locale),
+                        })}
+                      </span>
+                    </Link>
+
+                    <span className="shrink-0 text-sm font-bold tabular-nums">
+                      {formatCurrency(product.revenue, locale)}
+                    </span>
+                  </div>
+
+                  {scarce && (
+                    /* A div, not a p: the editor below renders inputs and
+                       buttons, and a form control inside a paragraph is markup
+                       the browser silently reshapes into a hydration error. */
+                    <div className="rounded-control bg-warning-bg text-warning-fg text-2xs mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 px-2 py-1.5 font-medium">
+                      <span>
+                        {product.stock === 0
+                          ? t('topSellersOutOfStock')
+                          : t('topSellersLowStock', {
+                              count: formatNumber(product.stock, locale),
+                            })}
+                      </span>
+                      {/* The fix, on the row that reported the problem — the
+                          same editor the product table and the stock report
+                          use, so the three cannot disagree about what Escape
+                          does or whether a toast appears. */}
+                      <StockEditor productId={product.id} stock={product.stock} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

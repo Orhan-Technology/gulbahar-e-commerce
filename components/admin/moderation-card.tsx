@@ -10,8 +10,10 @@ import { RatingStars } from '@/components/custom/rating-stars';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { moderateReview } from '@/lib/actions/admin-catalogue';
-import { formatDate, formatNumber, formatPhone } from '@/lib/format';
+import { formatDate, formatNumber, formatPhone, formatRating } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { hasRatingEvidence } from '@/lib/ratings';
+import { cn } from '@/lib/utils';
 
 export type ModerationRow = {
   id: string;
@@ -51,6 +53,15 @@ export type ModerationRow = {
   /** The author's standing: reviews of theirs still up, and ones already taken down. */
   authorVisibleReviews: number;
   authorRemovedReviews: number;
+  /**
+   * The SHOP's own average and how many reviews it rests on (Prompt C12).
+   *
+   * «این ۱ ستاره روی دکانی با میانگین ۴٫۶» is the one phrase that separates a
+   * grudge from a signal — and without it the card asked an admin to judge a
+   * score against nothing. Null when the shop has no visible reviews at all.
+   */
+  shopAverageRating: number | null;
+  shopReviewCount: number;
 };
 
 /**
@@ -114,11 +125,45 @@ export function ModerationCard({ review }: { review: ModerationRow }) {
     });
   }
 
+  /*
+   * THE CONTEXT SENTENCE, and when it is worth printing.
+   *
+   * Below `MIN_RATING_REVIEWS` a shop average is an anecdote dressed as a
+   * benchmark — the same threshold the storefront uses before it will draw
+   * stars at all (lib/ratings.ts) — so the card says nothing rather than
+   * inviting a decision to be made against a sample of two.
+   *
+   * `outlier` is the reading that matters: a low score on a well-reviewed shop
+   * is the review to read closely, and the phrase is toned to say so.
+   */
+  const hasShopAverage =
+    review.shopAverageRating !== null && hasRatingEvidence(review.shopReviewCount);
+  const outlier =
+    hasShopAverage && (review.shopAverageRating as number) - review.rating >= 1.5;
+
   return (
     <li className="rounded-card border-border bg-card space-y-3 border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <RatingStars value={review.rating} size="sm" />
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <RatingStars value={review.rating} size="sm" />
+            {hasShopAverage && (
+              <span
+                className={cn(
+                  'rounded-pill px-2 py-0.5 text-2xs',
+                  outlier ? 'bg-warning-bg text-warning-fg font-semibold' : 'bg-neutral-100 text-neutral-600',
+                )}
+                data-shop-average
+              >
+                {t('againstShopAverage', {
+                  rating: formatRating(review.rating, locale),
+                  average: formatRating(review.shopAverageRating as number, locale),
+                  n: review.shopReviewCount,
+                  count: formatNumber(review.shopReviewCount, locale),
+                })}
+              </span>
+            )}
+          </div>
           <p className="text-muted-foreground text-xs">
             {review.authorName} · <span dir="ltr">{formatPhone(review.authorPhone, locale)}</span> ·{' '}
             {formatDate(review.createdAt, locale)}

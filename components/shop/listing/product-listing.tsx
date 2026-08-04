@@ -2,17 +2,18 @@ import { getTranslations } from 'next-intl/server';
 import { PackageSearch } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
-import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { AppliedFilters } from '@/components/shop/listing/applied-filters';
 import type { FacetOptions } from '@/components/shop/listing/facet-controls';
 import { LoadMore } from '@/components/shop/listing/load-more';
 import { ListingToolbar } from '@/components/shop/listing/listing-toolbar';
+import { SponsoredNote } from '@/components/shop/listing/sponsored-note';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { promotedProductsForSlot, shopIdsBySlug } from '@/lib/db/queries/listing';
+import { categoryBySlug } from '@/lib/db/queries/shops';
 import { isProductSort, productList, type ProductSort } from '@/lib/db/queries/products';
 import { FILTER_KEYS } from '@/lib/listing';
 import { recordImpressions } from '@/lib/db/queries/promoted';
@@ -79,6 +80,7 @@ export async function ProductListing({
   defaultSort = 'popularity',
   emptyHref,
   emptyExtra,
+  hideFilters = false,
 }: {
   query: ListingSearchParams;
   locale: string;
@@ -120,6 +122,22 @@ export async function ProductListing({
    * this node when there are results, so its awaits never run.
    */
   emptyExtra?: React.ReactNode;
+  /**
+   * Drops the toolbar's filter entry point while keeping the toolbar itself.
+   *
+   * For a catalogue small enough to read whole (lib/listing SMALL_CATALOGUE_MAX)
+   * — a shop with five products — where narrowing cannot remove anything the
+   * reader has not already seen. The COUNT and the SORT stay: they are the
+   * shared listing vocabulary, and a surface that renders a different toolbar
+   * from every other listing is the drift `check:design` exists to catch. What
+   * goes is the mobile filter sheet, and the page above drops the rail beside
+   * it.
+   *
+   * `facets` is still needed for the applied-chip labels — a filter carried in
+   * from a link must still be nameable and removable even where the controls
+   * that set it are hidden.
+   */
+  hideFilters?: boolean;
 }) {
   const t = await getTranslations('listing');
 
@@ -130,10 +148,25 @@ export async function ProductListing({
   const facetShopIds = scope.shopIds ? [] : await shopIdsBySlug(facetShopSlugs);
   const brands = Array.isArray(query.brand) ? query.brand : query.brand ? [query.brand] : [];
 
+  /*
+   * The category FACET, resolved to an id the grid actually uses.
+   *
+   * The facet writes `?category=<slug>` and the facet-count side
+   * (facetConditions in queries/listing.ts) has always honoured it — but this
+   * component only ever passed `scope.categoryId`, which exists solely on the
+   * category ROUTE. So on /products, /search and /offers the chip lit up, the
+   * counts changed, and the grid ignored the filter entirely: an active
+   * «موبایل و تابلت» chip over a page of cricket bats. A surface scope still
+   * wins when both exist, for the same reason the shop scope does.
+   */
+  const facetCategorySlug = Array.isArray(query.category) ? query.category[0] : query.category;
+  const facetCategory =
+    !scope.categoryId && facetCategorySlug ? await categoryBySlug(facetCategorySlug) : null;
+
   const [result, promoted, user] = await Promise.all([
     productList({
       locale,
-      categoryId: scope.categoryId,
+      categoryId: scope.categoryId ?? facetCategory?.id,
       // A surface-level scope always wins over the facet: a shop page filtered
       // by "shop" could otherwise list another tenant's products.
       shopIds: scope.shopIds ?? (facetShopIds.length > 0 ? facetShopIds : undefined),
@@ -247,7 +280,7 @@ export async function ProductListing({
         // Clamped: a promoted product that the current page's organic slice
         // does not contain would otherwise make "showing 25 of 24".
         shown={Math.min(promoted.length + organic.length, result.total)}
-        facets={facets}
+        facets={hideFilters ? undefined : facets}
         defaultSort={defaultSort}
       />
 
@@ -266,12 +299,7 @@ export async function ProductListing({
         The note stays, above the grid, because the badge alone does not explain
         that the ordering underneath is untouched.
       */}
-      {promoted.length > 0 && (
-        <p className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
-          <SponsoredBadge />
-          {t('promotedNote')}
-        </p>
-      )}
+      {promoted.length > 0 && <SponsoredNote />}
 
       <ProductGrid
         items={[...promoted.map((item) => ({ ...item, sponsored: true as const })), ...organic]}

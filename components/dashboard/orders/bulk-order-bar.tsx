@@ -46,8 +46,21 @@ export type SelectableOrder = {
  * The checkbox column and the bar are one component because they share one
  * piece of state, and splitting them would mean lifting that state into the
  * page — which is a server component and cannot hold it.
+ *
+ * IT IS OFF ON A SHORT LIST, and the page decides (`offerSelection`). Below
+ * about six actionable orders nobody batches anything — they press accept on
+ * each row — so the checkbox column, the spacer and «انتخاب همه» are a tax on
+ * every glance at the screen a shopkeeper looks at most. The component still
+ * renders the rows, so the list has one shape and one owner either way.
  */
-export function BulkOrderSelection({ orders }: { orders: SelectableOrder[] }) {
+export function BulkOrderSelection({
+  orders,
+  offerSelection = true,
+}: {
+  orders: SelectableOrder[];
+  /** See the note above: the page counts, this component obeys. */
+  offerSelection?: boolean;
+}) {
   const t = useTranslations('shopOrders.bulk');
   const locale = useLocale();
   const router = useRouter();
@@ -110,7 +123,7 @@ export function BulkOrderSelection({ orders }: { orders: SelectableOrder[] }) {
 
   return (
     <>
-      {selectable.length > 1 && (
+      {offerSelection && selectable.length > 1 && (
         <div className="flex items-center gap-2 px-1">
           <Checkbox
             id="select-all-orders"
@@ -127,18 +140,19 @@ export function BulkOrderSelection({ orders }: { orders: SelectableOrder[] }) {
 
       {orders.map((order) => (
         <div key={order.id} className="rounded-card border-border bg-card flex gap-2 border p-3">
-          {order.status === 'placed' || order.status === 'accepted' ? (
-            <Checkbox
-              className="mt-1"
-              checked={selected.has(order.id)}
-              onCheckedChange={(value) => toggle(order.id, value === true)}
-              aria-label={order.reference}
-            />
-          ) : (
-            // A spacer, so rows that cannot be selected still line up with the
-            // ones that can — a ragged inline edge reads as a rendering fault.
-            <span className="w-4 shrink-0" aria-hidden />
-          )}
+          {offerSelection &&
+            (order.status === 'placed' || order.status === 'accepted' ? (
+              <Checkbox
+                className="mt-1"
+                checked={selected.has(order.id)}
+                onCheckedChange={(value) => toggle(order.id, value === true)}
+                aria-label={order.reference}
+              />
+            ) : (
+              // A spacer, so rows that cannot be selected still line up with the
+              // ones that can — a ragged inline edge reads as a rendering fault.
+              <span className="w-4 shrink-0" aria-hidden />
+            ))}
           <div className="min-w-0 flex-1 space-y-3">{order.content}</div>
         </div>
       ))}

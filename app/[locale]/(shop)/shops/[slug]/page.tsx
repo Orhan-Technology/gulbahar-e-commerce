@@ -26,6 +26,7 @@ import {
   shopServiceRating,
 } from '@/lib/db/queries/shop-page';
 import { categoryTree, shopDetail } from '@/lib/db/queries/shops';
+import { SMALL_CATALOGUE_MAX } from '@/lib/listing';
 import { parseReviewSort, REVIEW_SORT_PARAM } from '@/lib/review-sort';
 import { decodeSlug } from '@/lib/utils';
 
@@ -194,6 +195,26 @@ async function ProductsTab({
 
   const browsing = !query.q && !query.category && !query.priceMin && !query.priceMax;
 
+  /*
+   * A SMALL CATALOGUE GETS NO APPARATUS.
+   *
+   * Category chips, an in-shop search box, a filter rail and a mobile filter
+   * sheet, stacked above five products — four ways to narrow a set the reader
+   * can see all of without scrolling. On a phone that is most of a screen of
+   * controls before the first photograph, and every one of them can only ever
+   * hide something already visible. The threshold is shared
+   * (SMALL_CATALOGUE_MAX) so this page and anything else that grows the same
+   * problem agree about where "small" ends.
+   *
+   * The controls come BACK the moment a filter is in the URL, whatever the
+   * count: a shopper who arrived on `?category=…` from a link must be able to
+   * see what is applied and take it off, and an inert chip row is worse than a
+   * live one. That is why `facets` still reaches ProductListing — it is what
+   * names the applied chips — and why only the CONTROLS are dropped.
+   */
+  const narrowed = !browsing || Boolean(query.brand || query.minRating || query.inStock);
+  const compact = productCount <= SMALL_CATALOGUE_MAX && !narrowed;
+
   return (
     <div className="space-y-8">
       {browsing && <MerchandisingRows shopId={shopId} productCount={productCount} />}
@@ -201,7 +222,7 @@ async function ProductsTab({
       <div className="space-y-4">
         <h2 className="text-base font-bold">{t('catalogue')}</h2>
 
-        {inShopCategories.length > 1 && (
+        {!compact && inShopCategories.length > 1 && (
           <InShopCategories
             slug={slug}
             categories={inShopCategories}
@@ -209,12 +230,14 @@ async function ProductsTab({
           />
         )}
 
-        <SearchBox placeholder={t('searchInShop')} />
+        {!compact && <SearchBox placeholder={t('searchInShop')} />}
 
-        <div className="grid gap-6 lg:grid-cols-[240px_1fr]">
-          <aside className="hidden lg:block">
-            <FacetControls {...facetOptions} />
-          </aside>
+        <div className={compact ? '' : 'grid gap-6 lg:grid-cols-[240px_1fr]'}>
+          {!compact && (
+            <aside className="hidden lg:block">
+              <FacetControls {...facetOptions} />
+            </aside>
+          )}
 
           <div className="min-w-0">
             <Suspense fallback={<ProductListingSkeleton />}>
@@ -222,6 +245,7 @@ async function ProductsTab({
                 query={query}
                 locale={locale}
                 facets={facetOptions}
+                hideFilters={compact}
                 scope={{ shopIds: [shopId] }}
                 emptyHref={`/shops/${slug}`}
               />

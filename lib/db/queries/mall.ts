@@ -156,6 +156,26 @@ export type ShopHealth = {
   publishedProducts: number;
   ordersInWindow: number;
   /**
+   * Products this shop ADDED inside the window, and in the window before it.
+   *
+   * A count of published listings says how big the catalogue is; the pair says
+   * whether anyone is still tending it. A tenant with sixty products who has
+   * added nothing in ninety days is a shop that has stopped, and the single
+   * number cannot tell that apart from a shop that opened last week.
+   */
+  productsAdded: number;
+  productsAddedBefore: number;
+  /**
+   * Days since this shop last received an order. Null when it never has.
+   *
+   * The FIRST signal on the roster, because it is the one a landlord acts on:
+   * everything else on this list is a shop trading badly, and this is a shop
+   * not trading at all.
+   */
+  daysSinceLastOrder: number | null;
+  /** Fulfilled money in the window — the same figure the directory shows. */
+  revenue: number;
+  /**
    * Vacation mode, set by the SHOPKEEPER (`shops.pausedUntil`).
    *
    * Carried here so the health row can say so before the admin picks up the
@@ -197,7 +217,19 @@ const MIN_ORDERS_FOR_RATE = 5;
  * that fires on one rejected order out of two is worse than no flag: it teaches
  * the reader to ignore the column.
  */
-export async function shopHealth(days: number): Promise<ShopHealth[]> {
+export async function shopHealth(
+  days: number,
+  /**
+   * THE WHOLE ROSTER, NOT JUST THE SICK (Prompt C12).
+   *
+   * A view that shows only flagged tenants answers "who is broken" and hides
+   * the answer to "how is the mall doing" — and on a good week it renders an
+   * empty state, which is the least commanding thing a command screen can do.
+   * Ranked with the sick at the top, the same list says both: the reader sees
+   * the whole building, in order of who needs them.
+   */
+  options: { includeHealthy?: boolean } = {},
+): Promise<ShopHealth[]> {
   const rows = await db.execute(sql`
     with window_orders as (
       select distinct o.id, oi.shop_id, o.status, o.created_at
@@ -246,7 +278,32 @@ export async function shopHealth(days: number): Promise<ShopHealth[]> {
           and sr.created_at < ${since(days / 2)}::timestamptz) as rating_earlier,
       (select ver.expires_at from shop_verifications ver
         where ver.shop_id = s.id and ver.status = 'verified'
-        order by ver.decided_at desc limit 1) as verification_expires_at
+        order by ver.decided_at desc limit 1) as verification_expires_at,
+      /*
+       * CATALOGUE MOVEMENT, as two counts rather than one.
+       *
+       * products.created_at is the only listing timestamp this schema keeps,
+       * so "added" means created, not published — which is the honest reading
+       * and is what a landlord asking "are they still working on it" wants.
+       */
+      (select count(*)::int from products p
+        where p.shop_id = s.id and p.status <> 'archived'
+          and p.created_at >= ${since(days)}::timestamptz) as products_added,
+      (select count(*)::int from products p
+        where p.shop_id = s.id and p.status <> 'archived'
+          and p.created_at >= ${since(days * 2)}::timestamptz
+          and p.created_at < ${since(days)}::timestamptz) as products_added_before,
+      -- Whole days since the last order of ANY status: a rejected order is
+      -- still a customer who found them.
+      (select extract(day from (now() - max(o.created_at)))::int
+        from order_items oi join orders o on o.id = oi.order_id
+        where oi.shop_id = s.id) as days_since_last_order,
+      coalesce((
+        select sum(oi.price_snapshot * oi.quantity)::int
+        from order_items oi join orders o on o.id = oi.order_id
+        where oi.shop_id = s.id and o.status = 'fulfilled'
+          and o.created_at >= ${since(days)}::timestamptz
+      ), 0) as revenue
     from shops s
     where s.status = 'approved'
     order by s.floor asc nulls last, s.unit_number asc
@@ -298,13 +355,30 @@ export async function shopHealth(days: number): Promise<ShopHealth[]> {
         ratingEarlier,
         publishedProducts,
         ordersInWindow,
+        productsAdded: Number(row.products_added),
+        productsAddedBefore: Number(row.products_added_before),
+        daysSinceLastOrder:
+          row.days_since_last_order === null ? null : Number(row.days_since_last_order),
+        revenue: Number(row.revenue),
         pausedUntil: row.paused_until ? new Date(String(row.paused_until)) : null,
         paused: row.paused === true,
       };
     })
-    .filter((shop) => shop.flags.length > 0)
-    // Most flags first: a shop failing three ways is the one to call today.
-    .sort((a, b) => b.flags.length - a.flags.length);
+    .filter((shop) => options.includeHealthy || shop.flags.length > 0)
+    /*
+     * SICK AT THE TOP, then quiet, then the rest.
+     *
+     * Flag count first — a shop failing three ways is the one to call today —
+     * and silence as the tie-break, because a tenant with no flags who has not
+     * taken an order in six weeks is a problem the flags cannot see. Shops that
+     * have NEVER traded sort as maximally silent rather than as missing data.
+     */
+    .sort((a, b) => {
+      if (b.flags.length !== a.flags.length) return b.flags.length - a.flags.length;
+      const silence = (shop: ShopHealth) =>
+        shop.daysSinceLastOrder === null ? Number.MAX_SAFE_INTEGER : shop.daysSinceLastOrder;
+      return silence(b) - silence(a);
+    });
 }
 
 export type MapUnit = {

@@ -55,6 +55,17 @@ export async function ChartScaleNote({
       className={`text-2xs flex flex-wrap items-center gap-x-3 gap-y-1 text-neutral-500 ${className ?? ''}`}
       data-chart-scale
     >
+      {/*
+        THE PERIOD TOTAL, FIRST (Prompt C12).
+        Directors forward screenshots, and a line chart cropped out of a page
+        carries no total at all — the reader could reconstruct the axis from the
+        peak and the average but not the thing they actually wanted, which is
+        what the whole window came to. It leads the line and it is the only
+        figure here set in the foreground weight.
+      */}
+      <span className="text-foreground font-semibold" data-chart-total>
+        {t('periodTotal', { amount: formatCurrency(total, locale) })}
+      </span>
       <span>
         {t('peak', {
           date: formatDayMonth(peak.day, locale),

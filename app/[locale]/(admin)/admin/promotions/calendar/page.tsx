@@ -2,6 +2,10 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { CalendarRange, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { ManualCampaignDialog } from '@/components/admin/manual-campaign-dialog';
+import {
+  PlacementBookingProvider,
+  VacantSlotCell,
+} from '@/components/admin/placement-booking';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { EmptyState } from '@/components/custom/empty-state';
 import { requireAdmin } from '@/lib/auth/guards';
@@ -73,7 +77,7 @@ export default async function AdminPromotionCalendarPage({
   const [rows, bookings, slots, shops, products] = await Promise.all([
     slotMonth(monthStart, monthEnd),
     monthBookings(monthStart, monthEnd),
-    revenueBySlot(),
+    revenueBySlot({ start: monthStart, end: monthEnd }),
     adminShopDirectory({ locale, status: 'approved' }),
     adminProducts({ locale, status: 'published' }),
   ]);
@@ -106,6 +110,26 @@ export default async function AdminPromotionCalendarPage({
   const filtered = query.slot
     ? bookings.filter((booking) => booking.slotId === query.slot)
     : bookings;
+
+  /*
+   * The booking dialog's option lists, built once and shared by the header
+   * button and by every vacant cell in the grid (Prompt C12). One dialog, one
+   * action, two ways in.
+   */
+  const manualSlots = slots.map((slot) => ({
+    id: slot.id,
+    name: pickLocale(slot.name, locale),
+    pricePerWeek: slot.pricePerWeek,
+    acceptsProduct: slotAcceptsProduct(slot.key as PromotionSlotKey),
+    needsProduct: slotRequiresProduct(slot.key as PromotionSlotKey),
+    available: Math.max(slot.capacity - slot.occupied, 0),
+  }));
+  const manualShops = shops.map((shop) => ({ id: shop.id, name: pickLocale(shop.name, locale) }));
+  const manualProducts = products.map((product) => ({
+    id: product.id,
+    shopId: product.shopId,
+    title: pickLocale(product.title, locale),
+  }));
 
   const href = (next: { month?: string; slot?: string | null }) => {
     const month = next.month ?? monthKey(monthStart);
@@ -145,25 +169,21 @@ export default async function AdminPromotionCalendarPage({
             </Link>
 
             <ManualCampaignDialog
-              slots={slots.map((slot) => ({
-                id: slot.id,
-                name: pickLocale(slot.name, locale),
-                pricePerWeek: slot.pricePerWeek,
-                acceptsProduct: slotAcceptsProduct(slot.key as PromotionSlotKey),
-                needsProduct: slotRequiresProduct(slot.key as PromotionSlotKey),
-                available: Math.max(slot.capacity - slot.occupied, 0),
-              }))}
-              shops={shops.map((shop) => ({ id: shop.id, name: pickLocale(shop.name, locale) }))}
-              products={products.map((product) => ({
-                id: product.id,
-                shopId: product.shopId,
-                title: pickLocale(product.title, locale),
-              }))}
+              slots={manualSlots}
+              shops={manualShops}
+              products={manualProducts}
             />
           </div>
         }
       />
 
+      {/*
+        THE GRID IS STILL A SERVER COMPONENT. It is passed through the provider
+        as children, so day arithmetic, Persian numerals and slot names are all
+        resolved on the server; only the vacant cells and the one dialog above
+        them are client code.
+      */}
+      <PlacementBookingProvider slots={manualSlots} shops={manualShops} products={manualProducts}>
       <section className="rounded-card border-border bg-card overflow-hidden border">
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-xs" data-slot-calendar>
@@ -201,26 +221,48 @@ export default async function AdminPromotionCalendarPage({
                   {row.days.map((day) => {
                     const full = day.booked >= row.capacity;
                     const empty = day.booked === 0;
+
+                    /*
+                      A VACANT CELL IS NOW A SALE, not a filter (Prompt C12).
+                      Every other cell stays a link that narrows the list below,
+                      because for a sold day "who has it" is the question. For an
+                      unsold one the only useful question is "who could".
+                    */
+                    if (empty) {
+                      return (
+                        <td key={day.day} className="p-0.5">
+                          <VacantSlotCell
+                            slotId={row.slotId}
+                            pricePerWeek={row.pricePerWeek}
+                            day={day.day}
+                            label={t('vacantCellLabel', {
+                              slot: pickLocale(row.slotName, locale),
+                              date: formatDate(
+                                new Date(`${day.day}T00:00:00.000Z`),
+                                locale,
+                                'medium',
+                              ),
+                            })}
+                          />
+                        </td>
+                      );
+                    }
+
                     return (
                       <td key={day.day} className="p-0.5">
                         {/*
-                          A LINK on every cell, filtering the list below to that
-                          slot. "Click a cell to see or create a booking" —
-                          seeing is the common case, and the create dialog is
-                          one control away in the header rather than a modal
-                          that opens on a stray click.
+                          A LINK on a sold cell, filtering the list below to that
+                          slot — "who is in this square" is answered underneath.
                         */}
                         <Link
                           href={href({ slot: row.slotId })}
-                          data-slot-day={empty ? 'vacant' : full ? 'full' : 'partial'}
+                          data-slot-day={full ? 'full' : 'partial'}
                           title={`${day.day} · ${day.booked}/${row.capacity}`}
                           className={cn(
                             'block h-7 rounded-[3px] border transition-colors duration-150',
-                            empty
-                              ? 'border-dashed border-neutral-300 bg-white hover:border-primary'
-                              : full
-                                ? 'border-primary-700 bg-primary-600 hover:bg-primary-700'
-                                : 'border-primary-300 bg-primary-200 hover:bg-primary-300',
+                            full
+                              ? 'border-primary-700 bg-primary-600 hover:bg-primary-700'
+                              : 'border-primary-300 bg-primary-200 hover:bg-primary-300',
                           )}
                         >
                           <span className="sr-only">{`${day.day} — ${day.booked}/${row.capacity}`}</span>
@@ -252,9 +294,16 @@ export default async function AdminPromotionCalendarPage({
         <div className="border-border text-muted-foreground flex flex-wrap items-center gap-4 border-t px-3 py-2 text-2xs">
           <Legend className="bg-primary-600 border-primary-700" label={t('legendFull')} />
           <Legend className="bg-primary-200 border-primary-300" label={t('legendPartial')} />
-          <Legend className="border-dashed border-neutral-300 bg-white" label={t('legendVacant')} />
+          {/* The legend now says the vacant squares are for sale, because a
+              colour key that only names a state hides the one interaction on
+              this grid that earns money. */}
+          <Legend
+            className="border-dashed border-neutral-300 bg-white"
+            label={t('legendVacantSellable')}
+          />
         </div>
       </section>
+      </PlacementBookingProvider>
 
       <section className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

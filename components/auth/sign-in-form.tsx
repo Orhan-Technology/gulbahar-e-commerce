@@ -144,7 +144,15 @@ export function SignInForm({ redirectTo = '/' }: { redirectTo?: string }) {
             type="tel"
             inputMode="tel"
             dir="ltr"
-            placeholder="0700000000"
+            /*
+             * The placeholder is written in the READER's digits. The helper
+             * line one row below already says «۰۷۰۰۰۰۰۰۰۳», so a Latin
+             * `0700000000` here put two scripts on one field and made the fa
+             * page look like it had been half-translated. The field still
+             * ACCEPTS either script — normalizePhone folds Persian and
+             * Arabic-Indic digits before validating.
+             */
+            placeholder={t('phonePlaceholder')}
             autoComplete="tel"
             required
             /*

@@ -124,7 +124,11 @@ function CampaignCard({ campaign }: { campaign: CampaignRow }) {
         <div className="text-muted-foreground flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
           <span className="inline-flex items-center gap-1">
             <Eye className="h-3 w-3" aria-hidden />
-            <bdi>{t('impressions', { count: formatNumber(campaign.impressions, locale) })}</bdi>
+            {/* «۸۴۰ نمایش» is an advertising word for a reader who has never
+                bought advertising; «۸۴۰ بار دیده شد» is the same fact in the
+                language of a shop window. Same reasoning as the clicks line
+                below, which was fixed first (Prompt C15). */}
+            <bdi>{t('seenCount', { count: formatNumber(campaign.impressions, locale) })}</bdi>
           </span>
           <span className="inline-flex items-center gap-1">
             <MousePointerClick className="h-3 w-3" aria-hidden />

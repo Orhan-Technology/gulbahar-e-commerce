@@ -46,6 +46,37 @@ export type AdminQueueEntry = {
   at: Date;
   /** Initial for the monogram tile; empty when the row is not about a shop. */
   monogram: string;
+  /**
+   * THE EVIDENCE THE DECISION NEEDS, ON THE ROW (Prompt C12).
+   *
+   * A shop-approval card carried a category and nothing else; a reported-review
+   * card carried a score out of five. Both are labels for a decision, not
+   * grounds for one — so a ten-second judgement cost a forty-second
+   * click-through to the record and back, on the queue whose entire premise is
+   * that the decision happens here.
+   *
+   * Everything below is one extra column on a query that was already running.
+   * Optional per kind rather than a union, because the renderer wants to ask
+   * "is there a thumbnail" without first narrowing on the kind.
+   */
+  /** Banner or logo for a pending shop — what the tenant will look like. */
+  imagePath?: string | null;
+  /** Published + total products a pending shop has already built. */
+  productCount?: number;
+  totalProductCount?: number;
+  /** Who to ring. Formatted by the renderer, never stored formatted. */
+  ownerName?: string | null;
+  ownerPhone?: string | null;
+  /** Floor/unit, so an approver knows which door this is. */
+  floor?: number | null;
+  unitNumber?: string | null;
+  /** The reported review's own words — the only thing that decides it. */
+  excerpt?: string | null;
+  /** Star rating of the reported review, and the shop it lands on. */
+  rating?: number;
+  shopName?: string | null;
+  /** How many papers a verification submitted. */
+  documentCount?: number;
 };
 
 /**
@@ -60,9 +91,27 @@ export type AdminQueueEntry = {
  */
 export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[]> {
   const [shopRows, verificationRows, campaignRows, reviewRows, orderRows] = await Promise.all([
+    /*
+     * Pending shops, WITH THE EVIDENCE. The banner is what a shopper will see,
+     * the catalogue count is whether there is a shop behind the registration,
+     * and the owner's phone is how the approver resolves anything the two of
+     * them cannot answer. Three scalar sub-selects on a query capped at eight
+     * rows — the click-through this replaces cost far more.
+     */
     db.execute(sql`
       select s.id::text as id, s.slug, s.name, s.created_at,
-             c.name as category_name
+             c.name as category_name,
+             coalesce(s.banner_path, s.logo_path) as image_path,
+             s.floor::int as floor,
+             s.unit_number as unit_number,
+             (select count(*)::int from products p
+               where p.shop_id = s.id and p.status = 'published') as published_products,
+             (select count(*)::int from products p
+               where p.shop_id = s.id and p.status <> 'archived') as total_products,
+             (select u.name from shop_members m join users u on u.id = m.user_id
+               where m.shop_id = s.id and m.role = 'owner' limit 1) as owner_name,
+             (select u.phone from shop_members m join users u on u.id = m.user_id
+               where m.shop_id = s.id and m.role = 'owner' limit 1) as owner_phone
       from shops s
       left join categories c on c.id = s.category_id
       where s.status = 'pending'
@@ -77,7 +126,9 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
      * has learned something about how the mall runs.
      */
     db.execute(sql`
-      select v.id::text as id, v.submitted_at, s.name, s.slug
+      select v.id::text as id, v.submitted_at, s.name, s.slug,
+             (select count(*)::int from shop_verification_documents d
+               where d.verification_id = v.id) as document_count
       from shop_verifications v
       join shops s on s.id = v.shop_id
       where v.status in ('submitted', 'under_review')
@@ -94,8 +145,20 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       order by c.created_at asc
       limit 8
     `),
+    /*
+     * A reported review, WITH ITS WORDS. The card used to say «امتیاز ۱ از ۵ —
+     * نیاز به بررسی دارد», which is the one fact that cannot decide it: a
+     * one-star review is a customer's opinion until you read it, and the
+     * decision is entirely about whether the text breaks the rules.
+     *
+     * Truncated in SQL rather than in the renderer — 240 characters is what the
+     * card can show, and shipping a 2,000-character review to the browser to
+     * clip it with CSS is payload nobody reads.
+     */
     db.execute(sql`
-      select r.id::text as id, r.rating, r.created_at, p.title as product_title, sh.name as shop_name
+      select r.id::text as id, r.rating, r.created_at,
+             left(r.body, 240) as excerpt,
+             p.title as product_title, sh.name as shop_name
       from reviews r
       join products p on p.id = r.product_id
       join shops sh on sh.id = p.shop_id
@@ -126,6 +189,13 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
     name: LocalizedText;
     created_at: string;
     category_name: LocalizedText | null;
+    image_path: string | null;
+    floor: number | null;
+    unit_number: string | null;
+    published_products: number;
+    total_products: number;
+    owner_name: string | null;
+    owner_phone: string | null;
   }>;
   const campaigns = campaignRows as unknown as Array<{
     id: string;
@@ -140,6 +210,7 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
     id: string;
     rating: number;
     created_at: string;
+    excerpt: string | null;
     product_title: LocalizedText;
     shop_name: LocalizedText;
   }>;
@@ -158,6 +229,7 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
     submitted_at: string;
     name: LocalizedText;
     slug: string;
+    document_count: number;
   }>;
 
   return [
@@ -171,6 +243,13 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       href: `/admin/shops/${row.id}`,
       at: new Date(row.created_at),
       monogram: initial(row.name),
+      imagePath: row.image_path,
+      productCount: Number(row.published_products),
+      totalProductCount: Number(row.total_products),
+      ownerName: row.owner_name,
+      ownerPhone: row.owner_phone,
+      floor: row.floor === null ? null : Number(row.floor),
+      unitNumber: row.unit_number,
     })),
     ...verifications.map((row): AdminQueueEntry => ({
       kind: 'verification',
@@ -180,6 +259,7 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       href: '/admin/verifications',
       at: new Date(row.submitted_at),
       monogram: initial(row.name),
+      documentCount: Number(row.document_count),
     })),
     ...campaigns.map((row): AdminQueueEntry => ({
       kind: 'requested_campaign',
@@ -200,6 +280,9 @@ export async function adminActionQueue(locale: string): Promise<AdminQueueEntry[
       href: '/admin/reviews',
       at: new Date(row.created_at),
       monogram: initial(row.shop_name),
+      rating: Number(row.rating),
+      excerpt: row.excerpt,
+      shopName: pickLocale(row.shop_name, locale),
     })),
     ...orders.map((row): AdminQueueEntry => ({
       kind: 'stale_order',

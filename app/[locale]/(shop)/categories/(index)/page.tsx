@@ -16,17 +16,38 @@ import { cn } from '@/lib/utils';
  * PHOTOGRAPHY, because this page is the taxonomy and the taxonomy is how a
  * shopper who does not know what they want gets moving. It was a sitemap — nine
  * bordered rectangles of text — on a storefront whose every other surface leads
- * with a picture, and the tiles here now borrow the same derived imagery the
- * home circles use so a department looks the same in both places.
+ * with a picture.
+ *
+ * THE CHILDREN ARE THE HOME PAGE'S CIRCLES, exactly. Not a similar tile: the
+ * same disc, the same derived photograph, the same icon fallback, the same
+ * label — because a department a shopper met on the home page has to be
+ * recognisable here, and it was not: a 4/3 photo in a bordered card with a
+ * shadow is a different object from a circle, however identical the picture
+ * inside it.
+ *
+ * …AND IT IS WHAT FIXES THE STAGGERED GRID. The children sat in a four-column
+ * grid per group, so a department with one subcategory rendered one card and
+ * three empty cells — «خانه و آشپزخانه» and «ورزش» each read as a row that had
+ * failed to load, and every group started at a different rhythm down the page.
+ * A grid PROMISES equal cells and owes you the missing ones; a wrapped row of
+ * circles promises nothing, so a group of one is simply a group of one. Wrapped
+ * rather than scrolled, because this page's job is the taxonomy ENTIRE — a
+ * scroller that hides half of «پوشاک» is the one thing /categories may not do.
+ *
+ * ONE COUNT PER GROUP. The heading's count and every child's count were the
+ * same fact stated twice on one screen, and they do not even agree: a parent
+ * counts its descendants, so «الکترونیک ۱۱ محصول» sat above three tiles reading
+ * ۶, ۳ and ۲. The group states the size; the tiles say which departments exist.
  *
  * THE «دیدن همه» LINK SITS WITH ITS HEADING. Pushed to the far end by a spacer,
  * it was nine hundred pixels away from the words it belongs to across an empty
  * RTL field — a link nobody would ever find because nothing connects it to the
  * section it opens. Beside the title it is a phrase, not a stray control.
  *
- * AN EMPTY CATEGORY IS LABELLED AND INERT. «۰ محصول» on a card that navigates to
- * a page with nothing on it spends a tap to teach a shopper the mall is thin;
- * «به‌زودی» on a card that does not move says the same truth and costs nothing.
+ * AN EMPTY CATEGORY IS LABELLED AND INERT. Its tile does not navigate — there is
+ * nothing behind it — and it keeps «به‌زودی» under the name, which is a STATE
+ * and not the count this page just removed: without it a dead tile is
+ * indistinguishable from a live one that failed to respond.
  */
 export default async function CategoriesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -68,60 +89,60 @@ export default async function CategoriesPage({ params }: { params: Promise<{ loc
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            {/* The tile widths are the `tile` rail's own (components/shop/rail.tsx),
+                so a row here and a row on the home page break at the same
+                places at every width. */}
+            <div className="flex flex-wrap gap-4">
               {parent.children.map((child) => {
                 const childStocked = child.productCount > 0;
 
                 const body = (
                   <>
-                    <span className="rounded-media relative block aspect-[4/3] w-full overflow-hidden bg-neutral-100">
+                    <span className="rounded-pill relative flex aspect-square w-full items-center justify-center overflow-hidden bg-neutral-100">
                       {child.imagePath ? (
                         <Image
                           src={child.imagePath}
                           alt=""
                           fill
-                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 260px"
-                          className="object-cover transition-transform duration-[420ms] ease-[var(--ease-settle)] group-hover:scale-105"
+                          sizes="(max-width: 640px) 25vw, (max-width: 1024px) 15vw, 150px"
+                          className="object-cover"
                         />
                       ) : (
                         <span className={categoryMarkSurface}>
-                          <CategoryMark slug={child.slug} className="h-8 w-8" />
+                          <CategoryMark slug={child.slug} />
                         </span>
                       )}
                     </span>
 
-                    <span className="block px-3 pb-3 pt-2.5">
-                      <span
-                        className={cn(
-                          'text-foreground clamp-1 block text-sm font-semibold',
-                          childStocked && 'group-hover:text-primary transition-colors duration-150',
-                        )}
-                      >
-                        {pickLocale(child.name, locale)}
-                      </span>
-                      <span className="text-muted-foreground mt-0.5 block text-xs">
-                        {childStocked
-                          ? t('productCount', {
-                              count: formatNumber(child.productCount, locale),
-                            })
-                          : t('comingSoon')}
-                      </span>
+                    <span
+                      className={cn(
+                        'clamp-2 text-foreground block text-center text-sm leading-tight font-semibold',
+                        childStocked && 'group-hover:text-primary transition-colors duration-150',
+                      )}
+                    >
+                      {pickLocale(child.name, locale)}
                     </span>
+
+                    {!childStocked && (
+                      <span className="text-2xs -mt-1 block text-center text-neutral-500">
+                        {t('comingSoon')}
+                      </span>
+                    )}
                   </>
                 );
 
                 const surface =
-                  'rounded-card border-border bg-card shadow-card group block overflow-hidden border';
+                  'group flex w-[22%] flex-col gap-3 sm:w-[14%] lg:w-[11%]';
 
                 // Not a link, and not a disabled one either: there is nothing
-                // behind it to reach, so it is simply a card that states a fact.
+                // behind it to reach, so it is simply a tile that states a fact.
                 return childStocked ? (
                   <Link
                     key={child.id}
                     href={`/categories/${child.slug}`}
                     className={cn(
                       surface,
-                      'pressable hover:shadow-overlay transition-[box-shadow,translate,scale] duration-150 ease-out hover:-translate-y-0.5',
+                      'pressable [&>span:first-child]:transition-transform [&>span:first-child]:duration-150 hover:[&>span:first-child]:scale-105',
                     )}
                   >
                     {body}

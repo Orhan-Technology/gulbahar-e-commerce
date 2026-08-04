@@ -84,6 +84,7 @@ export function BuyPanel({
   const router = useRouter();
 
   const [quantity, setQuantity] = React.useState(1);
+  const [showQuantity, setShowQuantity] = React.useState(false);
   const [selection, setSelection] = React.useState<Record<string, string>>({});
   const [pending, startTransition] = React.useTransition();
   const [added, setAdded] = React.useState(false);
@@ -265,20 +266,48 @@ export function BuyPanel({
 
       {/* Quantity + actions */}
       <div className="space-y-3">
-        {!blocked && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm font-medium">{t('quantity')}</span>
-            <QuantityStepper value={quantity} onChange={setQuantity} max={stock} />
-          </div>
-        )}
+        {/*
+         * THE STEPPER IS FOLDED AWAY, and one is the answer almost every time.
+         *
+         * It was a permanent row between the variant chips and the add-to-cart
+         * button — a control that most buyers walk past and that pushed the one
+         * thing they came for a row further from the thumb. What replaces it is
+         * a line that STATES the quantity rather than offering to change it,
+         * which is the honest shape of a default: nothing is hidden, the number
+         * is on screen, and the reader can see it is 1 without being asked to
+         * confirm it.
+         *
+         * Not removed to "adjust it in the cart", which was the other option
+         * and is worse: someone buying six of something would have to add one,
+         * navigate to the cart and correct it there — a detour to undo a
+         * decision the page made for them. One tap opens the stepper in place
+         * and it stays open, so the second unit costs a tap and the first costs
+         * none.
+         */}
+        {!blocked &&
+          (showQuantity ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium">{t('quantity')}</span>
+              <QuantityStepper value={quantity} onChange={setQuantity} max={stock} />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowQuantity(true)}
+              className="rounded-control text-muted-foreground hover:text-primary focus-visible:ring-ring -mx-1 px-1 text-sm underline-offset-2 transition-colors duration-150 hover:underline focus-visible:ring-2"
+            >
+              {t('quantityValue', { count: formatNumber(quantity, locale) })}
+            </button>
+          ))}
 
         <div className="flex gap-2">
           {addButton}
           <WishlistButton productId={productId} initialSaved={initialSaved} variant="inline" />
-          {/* Below `lg` only: from there up the buy box is a sidebar and the
-              labelled share sits with the rest of the secondary block, where a
-              full-width control costs nothing. */}
-          {shareTitle && <ShareButton title={shareTitle} iconOnly className="lg:hidden" />}
+          {/* At EVERY width, beside the heart. The desktop column used to draw
+              its own full-width labelled share instead; two spellings of one
+              control is how a reader stops recognising it, and the icon is the
+              spelling that does not compete with the button that sells. */}
+          {shareTitle && <ShareButton title={shareTitle} iconOnly />}
         </div>
 
         {!blocked && (

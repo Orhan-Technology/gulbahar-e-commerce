@@ -235,3 +235,80 @@ export async function shopProductSlugs(shopId: string) {
     .where(eq(products.shopId, shopId));
   return new Map(rows.map((row) => [row.slug, row.id]));
 }
+
+/**
+ * The product names on a set of orders, this shop's lines only (Prompt: the
+ * order card says "۲ قلم" and not WHICH two).
+ *
+ * A shopkeeper reading the queue with a customer in front of them wants to start
+ * walking to the shelf, and «۲ قلم — ؋۶۹٬۸۰۰» does not tell them which shelf. The
+ * names do, and they cost one grouped read for the whole page rather than a
+ * query per card.
+ *
+ * A PRODUCT query rather than an order one, and scoped by shop for the reason
+ * every read in this file is: a shared order carries another shop's lines and
+ * this must never return them (PRD §3.1). Ordered by quantity so a truncated
+ * list keeps the item there is most of.
+ */
+export async function orderItemNames(
+  shopId: string,
+  orderIds: string[],
+  locale: string,
+): Promise<Map<string, string[]>> {
+  if (orderIds.length === 0) return new Map();
+
+  const rows = await db.execute(sql`
+    select
+      oi.order_id::text as order_id,
+      ${localizedColumn(products.title, locale)} as title
+    from order_items oi
+    -- products is NOT aliased here: drizzle renders an interpolated column
+    -- reference without knowing about a local alias, so the table has to stay
+    -- in scope under its own name (see lib/db/queries/fragments.ts).
+    join products on products.id = oi.product_id
+    where oi.shop_id = ${shopId}
+      and oi.order_id in (${sql.join(
+        orderIds.map((id) => sql`${id}::uuid`),
+        sql`, `,
+      )})
+    order by oi.quantity desc, title asc
+  `);
+
+  const names = new Map<string, string[]>();
+  for (const row of rows as unknown as Array<{ order_id: string; title: string | null }>) {
+    if (!row.title) continue;
+    const list = names.get(row.order_id) ?? [];
+    list.push(row.title);
+    names.set(row.order_id, list);
+  }
+  return names;
+}
+
+/**
+ * The category a new product should open on (Prompt: an electronics shop
+ * scrolls the whole mall tree for its fortieth electronics item).
+ *
+ * The shop's OWN most-used leaf category, not the category on the shop record:
+ * a shop is filed under "Electronics" and a product has to be filed under
+ * "Mobiles" or "Audio", so the shop's own row cannot answer the question. What
+ * can answer it is the catalogue — the fortieth product is almost always filed
+ * where the previous thirty-nine went, and where it is not, the picker is right
+ * there and the form says the value was chosen for them.
+ *
+ * Archived products are excluded: a category a shop has abandoned should not
+ * keep proposing itself. Returns null for a shop with no products yet, which is
+ * the one case where there is genuinely nothing to guess from.
+ */
+export async function defaultProductCategory(shopId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ categoryId: products.categoryId, used: count() })
+    .from(products)
+    .where(and(eq(products.shopId, shopId), sql`${products.status} <> 'archived'`))
+    .groupBy(products.categoryId)
+    // `used desc` picks the shop's habit; the id breaks a tie deterministically,
+    // so two equally-used categories cannot swap between renders.
+    .orderBy(desc(count()), asc(products.categoryId))
+    .limit(1);
+
+  return row?.categoryId ?? null;
+}

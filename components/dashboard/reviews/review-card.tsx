@@ -44,11 +44,45 @@ export type ShopReviewRow = {
 };
 
 /**
+ * The three replies that cover almost every review (Prompt: starter replies).
+ *
+ * A BLANK DARI TEXTAREA BETWEEN TWO CUSTOMERS IS WHY REPLIES DO NOT HAPPEN.
+ * The hard part of answering a review is not the opinion — the shopkeeper has
+ * that already — it is composing a public sentence, in writing, in the thirty
+ * seconds before the next person reaches the counter. The placeholder already
+ * contained a usable sentence and could not be used; these are the same idea
+ * made insertable.
+ *
+ * Three, not eight: thank, apologise-and-look-into-it, ask what went wrong.
+ * Every review a shop gets is one of those three conversations, and a list long
+ * enough to need reading is another thing to do rather than a way out of doing
+ * it.
+ *
+ * They INSERT EDITABLE TEXT and send nothing. A one-tap public reply would be a
+ * shop answering its customers with a form letter, which is worse than silence;
+ * this is a first draft with the shopkeeper's name on it, and the cursor is
+ * left in the box.
+ */
+const STARTERS = ['thanks', 'sorry', 'clarify'] as const;
+
+/** The same window the action queue offers, for the same reason. */
+const UNDO_MS = 5000;
+
+/**
  * One review with the shop's reply (PRD §6.5).
  *
  * Responding is a dialog, not an inline textarea: a public reply to a one-star
- * review deserves a beat of deliberation, and the dialog says out loud that it
- * cannot be edited afterwards.
+ * review deserves a beat of deliberation.
+ *
+ * IT IS NO LONGER AN IRREVERSIBLE ACT AT THE MOMENT OF PRESSING (Prompt: soften
+ * "it can only be written once"). The reply still cannot be edited once the
+ * customer has it — that is a property of a public answer, not a UI choice —
+ * but the send now goes through the same UNDO-BEFORE-COMMIT window the action
+ * queue uses (components/dashboard/inline-order-action.tsx): the dialog closes,
+ * the reply appears on the card, a toast offers to take it back for a few
+ * seconds, and only then is the server told. Press undo and nothing ever
+ * happened, because nothing had happened. A hesitant typist should not be
+ * facing a wall.
  */
 export function ReviewCard({
   review,
@@ -71,6 +105,52 @@ export function ReviewCard({
   const [body, setBody] = React.useState('');
   const [pending, startTransition] = React.useTransition();
 
+  /** Sent, shown, and not yet committed — see the undo window above. */
+  const [queued, setQueued] = React.useState<string | null>(null);
+  const composer = React.useRef<HTMLTextAreaElement>(null);
+
+  /*
+   * The pending commit lives in a ref rather than in state: it is read by an
+   * unmount cleanup that must see the LATEST value, and a stale closure over
+   * state would post a reply the shopkeeper had already withdrawn.
+   */
+  const commitRef = React.useRef<{ timer: number; commit: () => void } | null>(null);
+
+  const commit = React.useCallback(
+    async (text: string) => {
+      commitRef.current = null;
+      const result = await respondToReview({ reviewId: review.id, body: text });
+      if (!result.ok) {
+        // A prediction that turned out wrong has to be visibly retracted, not
+        // left standing on the card.
+        setQueued(null);
+        setBody(text);
+        setReplying(true);
+        toast.error(t(`errors.${result.error}` as never));
+        return;
+      }
+      toast.success(t('responded'));
+      router.refresh();
+    },
+    [review.id, router, t],
+  );
+
+  /*
+   * LEAVING THE PAGE COMMITS rather than dropping the reply. A shopkeeper who
+   * sends an answer and immediately taps the next review expects it to have
+   * been sent; discarding it because a timer had not finished would be the
+   * worst possible reading of "undo".
+   */
+  React.useEffect(() => {
+    return () => {
+      const current = commitRef.current;
+      if (!current) return;
+      window.clearTimeout(current.timer);
+      commitRef.current = null;
+      current.commit();
+    };
+  }, []);
+
   /*
    * Reporting now needs a REASON (Prompt: flagReview carries none, so admin
    * moderates context-free). It became a dialog for that: a category is a
@@ -84,16 +164,32 @@ export function ReviewCard({
   const [note, setNote] = React.useState('');
 
   function submit() {
-    startTransition(async () => {
-      const result = await respondToReview({ reviewId: review.id, body });
-      if (!result.ok) {
-        toast.error(t(`errors.${result.error}` as never));
-        return;
-      }
-      toast.success(t('responded'));
-      setReplying(false);
-      setBody('');
-      router.refresh();
+    const text = body.trim();
+    if (text.length < 3) return;
+
+    setReplying(false);
+    setBody('');
+    setQueued(text);
+
+    const timer = window.setTimeout(() => void commit(text), UNDO_MS);
+    commitRef.current = { timer, commit: () => void commit(text) };
+
+    toast.success(t('replyQueued'), {
+      duration: UNDO_MS,
+      action: {
+        label: t('replyUndo'),
+        onClick: () => {
+          const current = commitRef.current;
+          if (!current) return;
+          window.clearTimeout(current.timer);
+          commitRef.current = null;
+          // Back into the composer with the words still in it: the intent is
+          // almost always to change a sentence, not to abandon the reply.
+          setQueued(null);
+          setBody(text);
+          setReplying(true);
+        },
+      },
     });
   }
 
@@ -127,14 +223,17 @@ export function ReviewCard({
         </p>
       )}
 
-      {/* The shop's answer, rendered exactly as customers see it. */}
-      {review.responseBody ? (
+      {/* The shop's answer, rendered exactly as customers see it. The queued
+          reply uses the same block, so the undo window looks like what it will
+          become rather than like a separate "pending" state. */}
+      {(queued ?? review.responseBody) ? (
         <div className="rounded-control border-primary-200 bg-primary-50 border-s-2 p-3">
           <p className="text-primary text-xs font-bold">{t('yourReply')}</p>
           <p className="mt-1 text-sm" dir="auto">
-            {review.responseBody}
+            {queued ?? review.responseBody}
           </p>
-          {review.responseAt && (
+          {queued && <p className="text-muted-foreground mt-1 text-xs">{t('replyQueued')}</p>}
+          {!queued && review.responseAt && (
             <p className="text-muted-foreground mt-1 text-xs">
               {formatDate(review.responseAt, locale)}
             </p>
@@ -250,11 +349,37 @@ export function ReviewCard({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t('replyTitle')}</DialogTitle>
-            {/* Once, and public — say so before they write, not after. */}
+            {/* Public — say so before they write, not after. */}
             <DialogDescription>{t('replyBody')}</DialogDescription>
           </DialogHeader>
 
+          {/* And the softening: it is public, but it is not yet sent. */}
+          <p className="text-muted-foreground -mt-2 text-xs">{t('replyUndoable')}</p>
+
+          {/* Starter replies — see the note at the top of this file. */}
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-neutral-600">{t('starters.heading')}</p>
+            <div className="flex flex-wrap gap-2">
+              {STARTERS.map((starter) => (
+                <button
+                  key={starter}
+                  type="button"
+                  onClick={() => {
+                    setBody(t(`starters.${starter}` as never));
+                    // Focus lands in the box so the next thing that happens is
+                    // editing, not hunting for where the text went.
+                    composer.current?.focus();
+                  }}
+                  className="rounded-pill border-border bg-card hover:border-primary border px-3 py-1.5 text-xs font-medium transition-colors duration-150"
+                >
+                  {t(`starterLabels.${starter}` as never)}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Textarea
+            ref={composer}
             rows={4}
             value={body}
             onChange={(event) => setBody(event.target.value)}

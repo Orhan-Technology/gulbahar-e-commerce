@@ -53,7 +53,14 @@ export default async function ShopOrderPage({
           <p className="text-muted-foreground text-xs">{formatDateTime(order.createdAt, locale)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <OrderActions orderId={order.id} status={order.status} fulfillment={order.fulfillment} />
+          <OrderActions
+            orderId={order.id}
+            status={order.status}
+            fulfillment={order.fulfillment}
+            // The reject dialog offers to ring them once more before the order
+            // is turned away — see call-customer-link.tsx.
+            customerPhone={order.customerPhone}
+          />
 
           {/*
             PAPER FROM HERE TOO (Prompt: print exists only on the list card).
@@ -249,7 +256,7 @@ export default async function ShopOrderPage({
       {(order.status === 'accepted' || order.status === 'ready') && (
         <section className="flex flex-wrap items-center justify-between gap-2 pt-2">
           <p className="text-muted-foreground text-xs">{t('cancelHint')}</p>
-          <OrderCancelButton orderId={order.id} size="sm" />
+          <OrderCancelButton orderId={order.id} size="sm" customerPhone={order.customerPhone} />
         </section>
       )}
     </div>

@@ -645,6 +645,32 @@ export async function adminReviewQueue(status: 'reported' | 'removed' | 'visible
       productTitle: products.title,
       shopName: shops.name,
       shopSlug: shops.slug,
+      shopId: shops.id,
+      /*
+       * THE SHOP'S OWN AVERAGE, beside the reported review's rating (Prompt C12).
+       *
+       * «این ۱ ستاره روی دکانی با میانگین ۴٫۶» is one phrase that separates a
+       * grudge from a signal, and the moderation card previously had no way to
+       * tell them apart: a one-star review against a shop that averages 4.6 is
+       * an outlier worth reading closely, and the same review against a shop
+       * averaging 2.1 is the pattern, not the exception.
+       *
+       * Across the shop's PRODUCT reviews, visible ones only — the same
+       * population the reported review belongs to. Shop-level reviews
+       * (`shop_reviews`) are a different question customers answer separately,
+       * and averaging the two together would produce a number that appears
+       * nowhere else in the product.
+       */
+      shopAverageRating: sql<number | null>`(
+        select round(avg(r3.rating)::numeric, 2)::float8
+        from reviews r3 join products p3 on p3.id = r3.product_id
+        where p3.shop_id = shops.id and r3.status = 'visible'
+      )`,
+      shopReviewCount: sql<number>`(
+        select count(*)::int
+        from reviews r3 join products p3 on p3.id = r3.product_id
+        where p3.shop_id = shops.id and r3.status = 'visible'
+      )`,
       responseBody: reviewResponses.body,
       authorVisibleReviews: sql<number>`(
         select count(*)::int from reviews r2

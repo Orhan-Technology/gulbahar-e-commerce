@@ -2,16 +2,22 @@ import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { ScrollText } from 'lucide-react';
 
 import { AuditDetail, auditTargetHref } from '@/components/admin/audit-detail';
+import { AuditShopFilter } from '@/components/admin/audit-shop-filter';
 import { ExportCsvLink } from '@/components/admin/export-csv-link';
 import { ConsolePageHeader } from '@/components/console/page-header';
 import { EmptyState } from '@/components/custom/empty-state';
 import { requireAdmin } from '@/lib/auth/guards';
-import { auditActivity, auditEntries, auditTargetCounts } from '@/lib/db/queries/audit';
+import {
+  auditActivity,
+  auditEntries,
+  auditShopOptions,
+  auditTargetCounts,
+} from '@/lib/db/queries/audit';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/utils';
 
-type Query = { type?: string; before?: string };
+type Query = { type?: string; before?: string; shop?: string };
 
 const ACTIVITY_DAYS = 30;
 
@@ -60,18 +66,36 @@ export default async function AdminAuditPage({
   await requireAdmin(locale);
   const t = await getTranslations('adminAudit');
 
-  const [{ entries, nextCursor }, counts, activity] = await Promise.all([
-    auditEntries({ targetType: query.type, before: query.before }),
+  const [{ entries, nextCursor }, counts, activity, shopOptions] = await Promise.all([
+    auditEntries({ targetType: query.type, targetId: query.shop, before: query.before }),
     auditTargetCounts(),
     auditActivity(ACTIVITY_DAYS),
+    auditShopOptions(),
   ]);
 
+  // The tenant the filter is currently narrowed to, for the "clear" line — the
+  // options carry the label recorded at decision time, so a renamed shop still
+  // reads as it did in the entry.
+  const selectedShop = query.shop
+    ? (shopOptions.find((shop) => shop.id === query.shop) ?? null)
+    : null;
+
   const total = counts.reduce((sum, row) => sum + row.total, 0);
+  // The two filters compose: narrowing to one tenant and then to one KIND of
+  // decision about them is the second question a dispute produces. The cursor
+  // is dropped, because a keyset from the wider list pages into nothing.
+  const chipHref = (type?: string) => {
+    const next = new URLSearchParams();
+    if (type) next.set('type', type);
+    if (query.shop) next.set('shop', query.shop);
+    const search = next.toString();
+    return search ? `/admin/audit?${search}` : '/admin/audit';
+  };
   const chips = [
-    { key: 'all', href: '/admin/audit', count: total, active: !query.type },
+    { key: 'all', href: chipHref(), count: total, active: !query.type },
     ...counts.map((row) => ({
       key: row.targetType,
-      href: `/admin/audit?type=${row.targetType}`,
+      href: chipHref(row.targetType),
       count: row.total,
       active: query.type === row.targetType,
     })),
@@ -87,9 +111,50 @@ export default async function AdminAuditPage({
           actors: formatNumber(activity.actors, locale),
         })}
         actions={
-          total > 0 ? <ExportCsvLink report="audit" params={{ type: query.type }} /> : undefined
+          <>
+            {/*
+              THE SUBJECT FILTER (Prompt C12). Rendered whenever the log has
+              said anything about a shop at all — an empty control on an empty
+              log would be furniture.
+            */}
+            {shopOptions.length > 0 && (
+              <AuditShopFilter
+                shops={shopOptions.map((shop) => ({
+                  id: shop.id,
+                  label: shop.label,
+                  // Persian digits, through lib/format like every other number
+                  // on this surface — the option text is not exempt.
+                  count: formatNumber(shop.total, locale),
+                }))}
+                current={query.shop}
+              />
+            )}
+            {total > 0 ? <ExportCsvLink report="audit" params={{ type: query.type }} /> : undefined}
+          </>
         }
       />
+
+      {/*
+        WHAT THE LIST IS NARROWED TO, and the way out of it. A filtered log that
+        looks like the whole log is how somebody concludes a tenant was never
+        suspended.
+      */}
+      {selectedShop && (
+        <p
+          className="rounded-card border-primary-200 bg-primary-50 flex flex-wrap items-center gap-2 border p-3 text-xs"
+          data-audit-shop-scope
+        >
+          <span className="font-semibold">
+            {t('shopScope', {
+              shop: selectedShop.label,
+              count: formatNumber(selectedShop.total, locale),
+            })}
+          </span>
+          <Link href="/admin/audit" className="text-primary font-medium">
+            {t('shopScopeClear')}
+          </Link>
+        </p>
+      )}
 
       {total > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -187,7 +252,7 @@ export default async function AdminAuditPage({
             to send to somebody else.
           */}
           <Link
-            href={`/admin/audit?${query.type ? `type=${query.type}&` : ''}before=${encodeURIComponent(nextCursor)}`}
+            href={`/admin/audit?${query.type ? `type=${query.type}&` : ''}${query.shop ? `shop=${query.shop}&` : ''}before=${encodeURIComponent(nextCursor)}`}
             className="rounded-control border-border bg-card hover:border-primary border px-4 py-2 text-sm font-medium"
           >
             {t('older')}

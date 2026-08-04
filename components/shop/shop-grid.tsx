@@ -35,10 +35,24 @@ export type ShopGridItem = {
 export async function ShopGrid({
   items,
   columns = 'organic',
+  layout = 'card',
+  hideFloor = false,
   now,
 }: {
   items: ShopGridItem[];
   columns?: 'organic' | 'featured';
+  /**
+   * `row` is ShopCard's compact form — monogram, name, one metadata line.
+   *
+   * The directory uses it because it groups by FLOOR, and a floor heading over
+   * four banner-and-logo cards buries the heading under the photography it was
+   * meant to organise. A row states the same four facts in a quarter of the
+   * height, so a whole floor fits in one glance and the three floors read as
+   * three floors rather than as twelve cards.
+   */
+  layout?: 'card' | 'row';
+  /** Set when a floor heading already states it — see ShopCard's `hideFloor`. */
+  hideFloor?: boolean;
   /**
    * The server's clock, for the vacation-mode chip.
    *
@@ -54,9 +68,11 @@ export async function ShopGrid({
   return (
     <div
       className={
-        columns === 'featured'
-          ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
-          : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
+        layout === 'row'
+          ? 'grid gap-2 sm:grid-cols-2 lg:grid-cols-3'
+          : columns === 'featured'
+            ? 'grid gap-4 sm:grid-cols-2 lg:grid-cols-3'
+            : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
       }
     >
       {items.map((shop) => {
@@ -79,6 +95,8 @@ export async function ShopGrid({
             verifiedAt={shop.verifiedAt ? shop.verifiedAt.toISOString() : null}
             pausedUntil={paused?.paused ? paused.until.toISOString() : null}
             isSponsored={shop.sponsored}
+            layout={layout}
+            hideFloor={hideFloor}
           />
         );
       })}
@@ -86,11 +104,23 @@ export async function ShopGrid({
   );
 }
 
-export function ShopGridSkeleton({ count = 8 }: { count?: number }) {
+export function ShopGridSkeleton({
+  count = 8,
+  layout = 'card',
+}: {
+  count?: number;
+  layout?: 'card' | 'row';
+}) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div
+      className={
+        layout === 'row'
+          ? 'grid gap-2 sm:grid-cols-2 lg:grid-cols-3'
+          : 'grid gap-4 sm:grid-cols-2 lg:grid-cols-4'
+      }
+    >
       {Array.from({ length: count }, (_, index) => (
-        <ShopCardSkeleton key={index} />
+        <ShopCardSkeleton key={index} layout={layout} />
       ))}
     </div>
   );

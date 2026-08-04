@@ -22,10 +22,12 @@ import {
   formatCurrency,
   formatDate,
   formatList,
+  formatMonth,
   formatNumber,
   formatPercent,
 } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
+import { localeMonthBounds } from '@/lib/locale-month';
 
 /**
  * REVENUE VIEW — quality-bar screen #4 (PRD §7.3, §10.8).
@@ -134,10 +136,23 @@ export default async function AdminRevenuePage({
 async function Headline({ locale }: { locale: string }) {
   const t = await getTranslations('adminRevenue');
 
-  const [totals, month, slots, platform, shops] = await Promise.all([
+  /*
+   * THE READER'S MONTH, not January-to-December (Prompt C12).
+   *
+   * Every figure on this screen used to be cut on `date_trunc('month', now())`
+   * while the chart under it is labelled in Afghan solar months. On 4 August
+   * the tile said «۰ ؋ ↓۱۰۰٪» and the اسد bar beside it said a quarter of a
+   * million — the same page disagreeing with itself about what "this month"
+   * means. The clock is read once, here, and the bounds travel into every
+   * query so no two panels can pick different ones.
+   */
+  const month = localeMonthBounds(locale, new Date());
+  const monthName = formatMonth(month.start, locale);
+
+  const [totals, figures, slots, platform, shops] = await Promise.all([
     revenueTotals(),
-    revenueMonthToDate(),
-    revenueBySlot(),
+    revenueMonthToDate(month),
+    revenueBySlot({ start: month.start, end: month.end }),
     platformTotals(30),
     activeShopCount(30),
   ]);
@@ -145,38 +160,55 @@ async function Headline({ locale }: { locale: string }) {
   const capacity = slots.reduce((sum, slot) => sum + slot.capacity, 0);
   const occupied = slots.reduce((sum, slot) => sum + slot.occupied, 0);
 
+  /*
+   * See RevenueBlock for the full account: a weekly fee is billed up front, so
+   * the opening days of a month recognise almost nothing even with the walls
+   * full. The lead tile switches to BOOKED VALUE rather than showing a bare
+   * zero under a red badge, and says which measure it is showing.
+   */
+  const billingNotStarted = figures.current === 0 && figures.bookedThisMonth > 0;
+
   return (
     <>
     <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <StatCard
         variant="feature"
-        label={month.partial ? t('monthToDateLabel') : t('monthRevenueLabel')}
-        value={month.current}
-        format="currency"
-        delta={month.delta}
-        hint={
-          /*
-           * WHAT THE TILE SAYS WHEN IT IS ZERO.
-           *
-           * With no comparable stretch behind it, this used to fall back to the
-           * LIFETIME total — «مجموع تا امروز ۱٬۲۳۷٬۰۰۰» printed under a headline
-           * of ؋۰, two numbers about different periods stacked on each other.
-           * Booked value is the honest thing to put there: it is about the SAME
-           * month, and it is the reason the headline is not really zero.
-           */
-          month.delta === null
-            ? month.bookedThisMonth > 0
-              ? t('bookedThisMonth', {
-                  amount: formatCurrency(month.bookedThisMonth, locale),
-                  n: month.bookedCount,
-                  count: formatNumber(month.bookedCount, locale),
-                })
-              : t('lifetime', { amount: formatCurrency(totals.total, locale) })
+        label={
+          billingNotStarted
+            ? t('bookedValueLabel', { month: monthName })
             : month.partial
-              ? // Names the actual comparison. "vs last month" beside a
-                // part-month figure is the sentence that made the tile lie.
-                t('vsSamePeriodLastMonth', { days: formatNumber(month.dayOfMonth, locale) })
-              : t('vsLastMonth')
+              ? t('monthToDateLabelNamed', { month: monthName })
+              : t('monthRevenueLabelNamed', { month: monthName })
+        }
+        value={billingNotStarted ? figures.bookedThisMonth : figures.current}
+        format="currency"
+        // No percentage against a month that has not started billing: the only
+        // honest delta there is none.
+        delta={billingNotStarted ? null : figures.delta}
+        hint={
+          billingNotStarted
+            ? t('recognisedSoFar', {
+                amount: formatCurrency(figures.current, locale),
+                n: figures.bookedCount,
+                count: formatNumber(figures.bookedCount, locale),
+              })
+            : figures.bookedThisMonth > 0
+              ? // Recognised and booked ALWAYS travel together — one without the
+                // other is what made this tile read as a collapse.
+                t('bookedThisMonth', {
+                  amount: formatCurrency(figures.bookedThisMonth, locale),
+                  n: figures.bookedCount,
+                  count: formatNumber(figures.bookedCount, locale),
+                })
+              : figures.delta === null
+                ? t('lifetime', { amount: formatCurrency(totals.total, locale) })
+                : month.partial
+                  ? // Names the actual comparison. "vs last month" beside a
+                    // part-month figure is the sentence that made the tile lie.
+                    t('vsSamePeriodLastMonth', {
+                      days: formatNumber(month.dayOfMonth, locale),
+                    })
+                  : t('vsLastMonth')
         }
       />
       <StatCard
@@ -220,8 +252,9 @@ async function Headline({ locale }: { locale: string }) {
       each caption; a mall director quoting one of them out loud needs the
       period attached to it.
     */}
-    <p className="text-muted-foreground mt-2 text-xs">
-      {t('periodsNote', {
+    <p className="text-muted-foreground mt-2 text-xs" data-money-period>
+      {t('periodsNoteNamed', {
+        month: monthName,
         day: formatNumber(month.dayOfMonth, locale),
         lifetime: formatCurrency(totals.total, locale),
       })}
@@ -285,6 +318,7 @@ async function PendingRequests({ locale, className }: { locale: string; classNam
             impressions: campaign.impressions,
             clicks: campaign.clicks,
             rejectionReason: campaign.rejectionReason,
+            daysRemaining: campaign.daysRemaining,
           }))}
         />
       )}
@@ -299,10 +333,17 @@ async function PendingRequests({ locale, className }: { locale: string; classNam
  */
 async function SlotInventory({ locale }: { locale: string }) {
   const t = await getTranslations('adminRevenue');
-  const slots = await revenueBySlot();
+  // The same solar bounds the headline uses — two panels on one page cutting
+  // "this month" differently is the failure this whole change is about.
+  const month = localeMonthBounds(locale, new Date());
+  const slots = await revenueBySlot({ start: month.start, end: month.end });
 
   return (
-    <Panel title={t('inventoryHeading')} note={t('inventoryNote')} bleed>
+    <Panel
+      title={t('inventoryHeading')}
+      note={t('inventoryNoteNamed', { month: formatMonth(month.start, locale) })}
+      bleed
+    >
       <div className="overflow-x-auto">
         <table className="w-full min-w-3xl text-sm">
           <thead>
@@ -320,8 +361,12 @@ async function SlotInventory({ locale }: { locale: string }) {
                 sold campaign whose window touches the month, which is what is
                 actually on the walls. The header says which is which.
               */}
-              <th className="px-5 py-3 text-end font-semibold">{t('colBilledMonth')}</th>
-              <th className="px-5 py-3 text-end font-semibold">{t('colRunningMonth')}</th>
+              <th className="px-5 py-3 text-end font-semibold">
+                {t('colBilledMonthNamed', { month: formatMonth(month.start, locale) })}
+              </th>
+              <th className="px-5 py-3 text-end font-semibold">
+                {t('colRunningMonthNamed', { month: formatMonth(month.start, locale) })}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-border divide-y">

@@ -89,7 +89,11 @@
       "toCollect": "Waiting for the customer — {reference}",
       "toCollectSub": "Held until {date}",
       "handedOver": "Handed over",
-      "handedOverToast": "Order {reference} handed over"
+      "handedOverToast": "Order {reference} handed over",
+      "viewsNoSales": "Plenty of people look at “{product}” and nobody buys",
+      "viewsNoSalesSub": "{views} views this week with no sale — see what could be better",
+      "slowReplies": "You answer orders more slowly than the other shops",
+      "slowRepliesSub": "You {hours} h · the mall {mallHours} h"
     },
     "vsYesterday": "vs yesterday, same time",
     "weekOrders": "{n, plural, one {{count} order} other {{count} orders}}",
@@ -128,13 +132,20 @@
         "phone": "Add a contact number",
         "products": "Add your first three products",
         "verification": "Send documents for verification"
-      }
+      },
+      "remainingOne": "One task left: {task}",
+      "remainingMany": "{count} tasks left — next: {task}"
     },
     "performanceHeading": "How it's going",
     "salesChartHeadingRanged": "Sales, last {days} days",
     "farAbovePrevious": "Far above the previous period",
     "farBelowPrevious": "Far below the previous period",
-    "bestDay": "Best day in this period: {day} — {amount}"
+    "bestDay": "Best day in this period: {day} — {amount}",
+    "todayQuietVsYesterday": "By this hour yesterday you had sold {amount}",
+    "todayQuietThisRange": "{amount} over the last {days} days",
+    "manyTimesPrevious": "Several times the previous period",
+    "topSellersLowStock": "Best seller this week — only {count} left",
+    "topSellersOutOfStock": "Best seller this week, and it is out of stock"
   },
   "admin": {
     "heading": "Platform Administration",
@@ -505,7 +516,10 @@
       "bodySignedOut": "Bought this? Sign in and write the first review.",
       "bodyNotBuyer": "Reviews come only from customers whose order has been delivered.",
       "write": "Write a review"
-    }
+    },
+    "newBadge": "New",
+    "quantityValue": "Quantity: {count}",
+    "shopReputation": "This shop rates {rating} from {count} reviews"
   },
   "shop": {
     "productCount": "{count} products",
@@ -797,7 +811,8 @@
     "openLog": "Open the message log",
     "codeLifetime": "This code is valid for {minutes} minutes.",
     "resendCode": "Send a new code",
-    "resendIn": "Send a new code in {seconds}s"
+    "resendIn": "Send a new code in {seconds}s",
+    "phonePlaceholder": "0700000000"
   },
   "nav": {
     "menu": "Menu",
@@ -1548,7 +1563,9 @@
       "cancelBody": "You already accepted this order. Cancelling puts the items back in stock and tells the customer straight away.",
       "cancelReasonLabel": "Reason for cancelling",
       "confirmCancel": "Cancel order",
-      "cancelling": "Cancelling…"
+      "cancelling": "Cancelling…",
+      "callCustomer": "Call the customer",
+      "callCustomerHint": "Try one more call before you turn it down"
     },
     "filteredBy": "Filtered:",
     "clearFilter": "Clear filter",
@@ -1608,7 +1625,10 @@
         "code_mismatch": "That code belongs to a different order. Check the customer’s screen.",
         "transition_not_allowed": "Someone else already completed this order."
       },
-      "hint": "The code the customer shows you on their phone — five letters and digits."
+      "hint": "The code the customer shows you on their phone — five letters and digits.",
+      "celebrateTitle": "Handed over — the sale is recorded",
+      "celebrateBody": "Order {reference} is closed. Its money is in today's takings.",
+      "celebrateDismiss": "Good"
     },
     "holds": {
       "title": "{count} reservations not collected",
@@ -1629,7 +1649,8 @@
         "transition_not_allowed": "Someone else already dealt with this order."
       }
     },
-    "cancelHint": "If you can no longer complete this order:"
+    "cancelHint": "If you can no longer complete this order:",
+    "itemNamesMore": "{names} and {count} more"
   },
   "shopProducts": {
     "title": "Products",
@@ -1787,7 +1808,16 @@
       "englishToggle": "Add English too?",
       "specValue": "Value",
       "featureTitle": "Title",
-      "featureBody": "Description"
+      "featureBody": "Description",
+      "quickHeading": "New product",
+      "quickHint": "These four are enough. The rest can wait.",
+      "quickTitleLabel": "Product name (Dari)",
+      "quickTitlePlaceholder": "e.g. JBL Bluetooth speaker",
+      "quickPublish": "Publish product",
+      "quickDraft": "Keep it a draft for now",
+      "quickLaterHeading": "You can add these later",
+      "quickLaterBody": "English name, specifications, features, colours and sizes — on this product, after it is published.",
+      "categoryPrefilled": "Your shop's own category is pre-selected — change it if this product belongs elsewhere."
     },
     "importWizard": {
       "step1": "1 — File",
@@ -1905,7 +1935,12 @@
         "window": "vs the same {n, plural, one {day} other {{days} days}} before it started",
         "caveat": "Fulfilled orders only. This is what sold during the window, not a measure of what the discount caused.",
         "noData": "No fulfilled orders in either period yet, so there is nothing to compare.",
-        "notStarted": "This offer has not started — its sales will appear here once it does."
+        "notStarted": "This offer has not started — its sales will appear here once it does.",
+        "verdictMuchMore": "You sold {times} times as much during this offer as before it",
+        "verdictMore": "You sold more during this offer than before it",
+        "verdictSame": "Sales were about the same as the period before",
+        "verdictLess": "You sold less during this offer than before it",
+        "verdictFromNothing": "You had sold nothing before this offer; now {units} units"
       }
     },
     "offerForm": {
@@ -1944,7 +1979,13 @@
         "products_required": "Choose at least one product",
         "products_not_yours": "One of the chosen products is not from your shop",
         "end_after_start": "The end date must come after the start date"
-      }
+      },
+      "autoNameHint": "The offer is named after its size and scope:",
+      "renameAction": "I'll name it myself",
+      "autoNamePercentShop": "{value}% off the whole shop",
+      "autoNamePercentProducts": "{value}% off {count} products",
+      "autoNameFixedShop": "{value} off the whole shop",
+      "autoNameFixedProducts": "{value} off {count} products"
     },
     "featured": {
       "intro": "A featured slot is bought from Gulbahar Center. Each request goes live once management approves it.",
@@ -2014,7 +2055,8 @@
       },
       "visitors": "{count} customers came from this ad",
       "ctrLabel": "Click rate",
-      "bookAgain": "Book two weeks again"
+      "bookAgain": "Book two weeks again",
+      "seenCount": "Seen {count} times"
     }
   },
   "shopReviews": {
@@ -2070,7 +2112,21 @@
       "other": "Another reason"
     },
     "defaultUnansweredNote": "You have {count} reviews with no reply, and that is what is listed. To see all of them:",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "replyUndoable": "After you send it you have a few seconds to take it back.",
+    "replyQueued": "Your reply is being sent",
+    "replyUndo": "Take it back",
+    "starters": {
+      "heading": "Take a ready reply and change it to suit you",
+      "thanks": "Thank you for your purchase and for your review. We are glad you were happy — we look forward to serving you again.",
+      "sorry": "We are sorry about this experience. We are looking into it and will put it right. With your permission we will call you to make up for it.",
+      "clarify": "Thank you for your review. So we can help properly, please tell us exactly where the problem was and we will follow it up."
+    },
+    "starterLabels": {
+      "thanks": "Thank them",
+      "sorry": "Apologise and look into it",
+      "clarify": "Ask what happened"
+    }
   },
   "shopProfile": {
     "title": "Shop profile",
@@ -2479,7 +2535,18 @@
       "openVerification": "Open documents",
       "claimVerification": "I'll review this",
       "verificationClaimed": "Assigned to you — the documents are on the verification page",
-      "verificationClaimedShort": "Yours"
+      "verificationClaimedShort": "Yours",
+      "waitedOverThreshold": "waiting over {hours} hours",
+      "waitedDays": "{n, plural, one {waiting # day} other {waiting {count} days}}",
+      "waitedHours": "{n, plural, one {waiting # hour} other {waiting {count} hours}}",
+      "waitedJustNow": "just arrived",
+      "shopProducts": "{n, plural, =0 {nothing published yet — {total} drafts} other {{count} of {total} products published}}",
+      "shopFloorUnit": "Floor {floor} · unit {unit}",
+      "verificationDocuments": "{n, plural, one {# document submitted} other {{count} documents submitted}}",
+      "reviewOnShop": "at {shop}",
+      "staleOrderShop": "{shop} has not answered",
+      "allClearWithCount": "You are clear — {count} decisions taken in the last {hours} hours.",
+      "allClearAction": "Decision history"
     },
     "revenue": {
       "heading": "Promotion income this month",
@@ -2493,7 +2560,11 @@
       "noBaselineThisFar": "Nothing was booked in the same stretch last month",
       "bookedLabel": "Placement running this month",
       "bookedHint": "{n, plural, one {# campaign} other {{count} campaigns}}",
-      "topSlotsLifetime": "Highest-earning slots — all time · {total} total"
+      "topSlotsLifetime": "Highest-earning slots — all time · {total} total",
+      "sinceMonthStart": "From the 1st of {month} to today — day {day}",
+      "wholeMonth": "All of {month}",
+      "recognisedShort": "Invoiced",
+      "billingNotStarted": "{n, plural, one {# campaign is running in {month}; the weekly invoices have not gone out yet} other {{count} campaigns are running in {month}; the weekly invoices have not gone out yet}}"
     },
     "health": {
       "heading": "Platform health — last 30 days",
@@ -2580,7 +2651,9 @@
       "closeReasonLabel": "Reason for closing",
       "suspendReasonPlaceholder": "e.g. Repeated complaints that goods do not match their photos.",
       "closeReasonPlaceholder": "e.g. The unit's lease ended and was not renewed.",
-      "statusReasonNote": "This text is sent to the shop owner exactly as written, and stays in the decision log."
+      "statusReasonNote": "This text is sent to the shop owner exactly as written, and stays in the decision log.",
+      "rowMenu": "More actions",
+      "openRecord": "Open shop record"
     },
     "create": {
       "title": "Create a shop for a tenant",
@@ -2647,7 +2720,21 @@
       },
       "nudgeAll": "Send all issues",
       "pausedUntil": "On holiday until {date}",
-      "needsAttention": "Needs attention"
+      "needsAttention": "Needs attention",
+      "noShopsTitle": "No approved shops yet",
+      "noShopsBody": "As soon as the first shop is approved, its health shows up here.",
+      "rosterSummary": "{total} approved shops · {flagged} need attention · over the last {days} days",
+      "colShop": "Shop",
+      "colLastOrder": "Last order",
+      "colAccept": "Median accept",
+      "colCatalogue": "Catalogue",
+      "colRating": "Rating",
+      "colRevenue": "Revenue",
+      "neverTraded": "never traded",
+      "tradedToday": "today",
+      "daysSinceOrder": "{n, plural, one {# day ago} other {{count} days ago}}",
+      "medianHours": "{hours}h",
+      "catalogueTrend": "{published} published · {added} new"
     },
     "searchPlaceholder": "Search by shop name",
     "emptySearchTitle": "Nothing found",
@@ -2819,7 +2906,10 @@
       "wrong_product": "About a different product",
       "personal_info": "Reveals personal information",
       "other": "Other reason"
-    }
+    },
+    "questionsTab": "Product questions",
+    "questionsIntro": "Unanswered questions are the shop's job; this list is for text that should not stay on the site.",
+    "againstShopAverage": "This {rating}-star sits on a shop averaging {average} across {count} reviews"
   },
   "adminPromotions": {
     "title": "Promotions and slots",
@@ -2870,7 +2960,9 @@
       "endConsequenceVisibility": "The placement disappears from the storefront immediately.",
       "endConsequenceMoney": "The {price} already paid stays in revenue; nothing is refunded automatically.",
       "endConsequenceSlot": "The freed place becomes available to sell again straight away.",
-      "confirmEnd": "Yes, end it"
+      "confirmEnd": "Yes, end it",
+      "daysRemaining": "{n, plural, one {# day left} other {{count} days left}}",
+      "slotReopens": "slot reopens {date}"
     },
     "slots": {
       "priceNote": "A price change applies to new bookings only; existing campaigns keep the price they were sold at.",
@@ -2936,7 +3028,8 @@
         "product_required": "This slot needs a product",
         "product_not_publishable": "The chosen product is not published, or not from this shop"
       },
-      "productOptional": "Product (optional — leave empty to promote the shop itself)"
+      "productOptional": "Product (optional — leave empty to promote the shop itself)",
+      "fromCalendar": "From the calendar: {slot}, {from} to {to}"
     },
     "calendar": {
       "empty": "No slots to show.",
@@ -2969,7 +3062,10 @@
       "emptyTitle": "Nothing booked this month",
       "emptyBody": "Every placement surface is free. Use “Book a placement” to sell one, or step forward a month.",
       "subtitleWithValue": "{vacant} of {total} slot-days are unsold this month — roughly {value} of unsold inventory.",
-      "vacantValue": "≈ {value}"
+      "vacantValue": "≈ {value}",
+      "sellThisDay": "unsold — {price} per week. Click to book it.",
+      "vacantCellLabel": "{slot} — {date} unsold",
+      "legendVacantSellable": "Unsold (click to book)"
     },
     "openSlotCalendar": "Slot calendar"
   },
@@ -3025,7 +3121,15 @@
     "colBilledMonth": "Billed this month",
     "colRunningMonth": "Running this month",
     "chartPeak": "Best month: {month} — {amount}",
-    "chartTrough": "Weakest month: {month} — {amount}"
+    "chartTrough": "Weakest month: {month} — {amount}",
+    "bookedValueLabel": "{month} booked value",
+    "monthToDateLabelNamed": "{month} revenue to date",
+    "monthRevenueLabelNamed": "{month} revenue",
+    "recognisedSoFar": "{n, plural, other {{amount} invoiced so far · {count} campaigns booked}}",
+    "periodsNoteNamed": "“This month” means {month} (day {day}) · lifetime {lifetime} · marketplace over the last 30 days",
+    "inventoryNoteNamed": "Weekly price, occupancy, and the money for {month}",
+    "colBilledMonthNamed": "Invoiced in {month}",
+    "colRunningMonthNamed": "Running in {month}"
   },
   "adminReports": {
     "title": "Platform reports",
@@ -3047,7 +3151,10 @@
     "units": "{count} units",
     "noData": "No data in this period.",
     "statusTotal": "{count} orders in this period",
-    "statusReconcile": "This donut counts all {total} orders in the period, including the {excluded} rejected or cancelled. The “Orders” tile above counts only the {counted} that were accepted."
+    "statusReconcile": "This donut counts all {total} orders in the period, including the {excluded} rejected or cancelled. The “Orders” tile above counts only the {counted} that were accepted.",
+    "vsPrevious": "vs the {days} days before that",
+    "noBaseline": "no earlier period to compare with",
+    "monthlyReport": "Monthly report for owners"
   },
   "adminOrders": {
     "title": "All orders",
@@ -3338,7 +3445,8 @@
     "browseAll": "Browse all products",
     "showingOf": "Showing {shown} of {count} products",
     "emptyUnfilteredTitle": "This category is filling up soon",
-    "emptyUnfilteredBody": "No shop has listed anything here yet. In the meantime, here is what the mall is looking at."
+    "emptyUnfilteredBody": "No shop has listed anything here yet. In the meantime, here is what the mall is looking at.",
+    "promotedNoteLabel": "Why am I seeing this?"
   },
   "adminSettings": {
     "title": "Platform settings",
@@ -3483,7 +3591,8 @@
       "peak": "Best day: {date} — {amount}",
       "trough": "Quietest trading day: {date} — {amount}",
       "average": "Daily average {amount}",
-      "tradingDays": "{n, plural, one {# of {total} days had sales} other {{count} of {total} days had sales}}"
+      "tradingDays": "{n, plural, one {# of {total} days had sales} other {{count} of {total} days had sales}}",
+      "periodTotal": "{amount} this period"
     }
   },
   "shopVerification": {
@@ -3583,7 +3692,16 @@
     "noDocumentsBody": "This submission carries no documents at all. Identity cannot be verified without them — reject it and ask the shop to send a business licence and an ID.",
     "documentUnavailableTitle": "Document unavailable",
     "documentUnavailableBody": "The file for “{kind}” could not be found on the server. It may have been stored incompletely on upload. Ask the shop to send it again.",
-    "cannotApprove": "Approval is unavailable until these documents can be read: {documents}. You can still reject the submission with a written reason so the shop knows what to resend."
+    "cannotApprove": "Approval is unavailable until these documents can be read: {documents}. You can still reject the submission with a written reason so the shop knows what to resend.",
+    "claimHeading": "The claim",
+    "claimOwnerLabel": "Registered owner",
+    "claimOwnerUnknown": "No owner on record",
+    "claimPhoneLabel": "Owner's number",
+    "claimShopPhoneLabel": "Shop number",
+    "claimNote": "The documents should read against this name and number.",
+    "claimedBy": "{name} is reviewing this submission",
+    "claimedUnknown": "A colleague is reviewing this submission",
+    "rejectConsequence": "Rejecting sends the shop a message, and they can submit their documents again."
   },
   "verification": {
     "badgeLabel": "Verified shop",
@@ -3726,7 +3844,11 @@
     "legendTrading": "Trading",
     "legendPending": "Awaiting approval",
     "legendClosed": "Closed or suspended",
-    "legendVacant": "Vacant unit"
+    "legendVacant": "Vacant unit",
+    "occupancyHeadline": "{online} of {units} units are online — {percent} · {floors} floors",
+    "vacantOnFloor": "{n, plural, one {# unit on this floor has no online shop} other {{count} units on this floor have no online shop}}",
+    "vacantUnitList": "Units {units}{more, plural, =0 {} other { and {more} more}}",
+    "inviteToFloor": "Invite a tenant to this floor"
   },
   "adminSettlements": {
     "title": "Settlements",
@@ -3862,7 +3984,11 @@
           "uphold": "Review kept"
         }
       }
-    }
+    },
+    "shopFilterLabel": "Filter by shop",
+    "shopFilterAll": "All shops",
+    "shopScope": "Decisions about “{shop}” — {count} entries",
+    "shopScopeClear": "Clear filter"
   },
   "floors": {
     "title": "Mall floor map",
@@ -3881,7 +4007,8 @@
     "shopsOnFloor": "{count} shops",
     "viewShop": "Open shop page",
     "shopsOnFloorHeading": "Shops on floor {floor}",
-    "openShop": "Open shop"
+    "openShop": "Open shop",
+    "pickUnit": "Tap a unit on the plan to see its shop here."
   },
   "notificationCentre": {
     "title": "Notifications",
@@ -3925,5 +4052,37 @@
     },
     "groupNew": "New",
     "groupEarlier": "Earlier"
+  },
+  "adminMonthlyReport": {
+    "title": "{month} report",
+    "coverage": "{from} to {to}",
+    "partialMonth": "month still running — to day {day}",
+    "backToReports": "Back to reports",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "print": "Print",
+    "occupancyHeading": "1 · Occupancy",
+    "occupancyLabel": "{online} of {units} units online",
+    "occupancyNote": "{vacant} units across {floors} floors still have no online shop.",
+    "tradeHeading": "2 · What the tenants traded",
+    "gmvLabel": "Gross merchandise value",
+    "ordersLabel": "Orders",
+    "buyersLabel": "Buyers",
+    "vsPreviousMonth": "previous month {amount}",
+    "vsPreviousMonthCount": "previous month {count} orders",
+    "noPreviousMonth": "no previous month to compare with",
+    "placementHeading": "3 · The mall's advertising income",
+    "adRevenueLabel": "Invoiced",
+    "bookedLabel": "Booked value",
+    "slotsLabel": "Slots sold",
+    "slotsSold": "{sold} of {total}",
+    "placementNote": "Placement is billed weekly and up front; “booked value” is what is actually on the site this month.",
+    "topShopsHeading": "4 · Top shops",
+    "shopOrders": "{n, plural, one {# order} other {{count} orders}}",
+    "noTrade": "No trade recorded this month.",
+    "decisionsHeading": "5 · Management decisions",
+    "decisionLine": "{total} decisions recorded by {actors} people — {shops} shops approved, {verifications} verifications and {campaigns} placements.",
+    "noDecisions": "No decisions were recorded this month.",
+    "footer": "Generated {generated} from live Gulbahar Center data."
   }
 }

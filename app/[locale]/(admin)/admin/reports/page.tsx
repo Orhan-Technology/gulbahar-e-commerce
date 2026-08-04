@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { Receipt, ShoppingBag, Store, Users, Wallet } from 'lucide-react';
+import { FileText, Receipt, ShoppingBag, Store, Users, Wallet } from 'lucide-react';
 
 import { ChartScaleNote } from '@/components/admin/chart-scale-note';
 import { ExportCsvLink } from '@/components/admin/export-csv-link';
@@ -51,6 +51,20 @@ export default async function AdminReportsPage({
         title={t('title')}
         actions={
           <>
+            {/*
+              THE OWNERS' REPORT, linked from the screen that produces its
+              numbers (Prompt C12). A monthly artifact reachable only by typing
+              a path is an artifact nobody produces — and this page's range
+              control is exactly why it needs a separate home: an owners' report
+              is a calendar month, not a rolling 30 days.
+            */}
+            <Link
+              href="/admin/reports/monthly"
+              className="rounded-control border-border bg-card hover:border-primary inline-flex shrink-0 items-center gap-1.5 border px-3 py-2 text-xs font-medium transition-colors duration-150"
+            >
+              <FileText className="h-3.5 w-3.5" aria-hidden />
+              {t('monthlyReport')}
+            </Link>
             {/* The export mirrors the CURRENT range, so the file is the screen
                 rather than a differently-scoped set of numbers. */}
             <ExportCsvLink report="platform" params={{ range: range.key }} />
@@ -91,6 +105,24 @@ async function Totals({ period, locale }: { period: PlatformPeriod; locale: stri
       ? totals.rejectedCount / (totals.orderCount + totals.rejectedCount)
       : 0;
 
+  /*
+   * EVERY TILE CARRIES ITS COMPARISON (Prompt C12).
+   *
+   * Five bare figures answered "what happened" and nothing at all about
+   * whether it was good — «۱٬۶۷۳٬۷۳۰ ؋» is a number, «۱٬۶۷۳٬۷۳۰ ؋، ۱۲٪ بیشتر
+   * از ۳۰ روز پیش» is a sentence somebody repeats in a meeting. The baseline is
+   * the equally-long stretch before the selected window, derived from the same
+   * range control rather than configured here (lib/console-range.ts), and the
+   * hint NAMES it: a percentage with no stated period is a claim nobody can
+   * check.
+   */
+  const vsPrevious = (value: number | null) =>
+    value === null
+      ? t('noBaseline', { days: formatNumber(period, locale) })
+      : t('vsPrevious', { days: formatNumber(period, locale) });
+  const tone = (value: number | null) =>
+    value === null ? ('muted' as const) : value >= 0 ? ('success' as const) : ('danger' as const);
+
   return (
     <>
       <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
@@ -99,23 +131,42 @@ async function Totals({ period, locale }: { period: PlatformPeriod; locale: stri
           value={totals.gmv}
           format="currency"
           icon={<Wallet className="h-4 w-4" />}
+          delta={totals.delta.gmv}
+          hint={vsPrevious(totals.delta.gmv)}
+          hintTone={tone(totals.delta.gmv)}
         />
         <StatCard
           label={t('orders')}
           value={totals.orderCount}
           icon={<ShoppingBag className="h-4 w-4" />}
+          delta={totals.delta.orderCount}
+          hint={vsPrevious(totals.delta.orderCount)}
+          hintTone={tone(totals.delta.orderCount)}
         />
         <StatCard
           label={t('aov')}
           value={totals.averageOrderValue}
           format="currency"
           icon={<Receipt className="h-4 w-4" />}
+          delta={totals.delta.averageOrderValue}
+          hint={vsPrevious(totals.delta.averageOrderValue)}
+          hintTone={tone(totals.delta.averageOrderValue)}
         />
-        <StatCard label={t('buyers')} value={totals.buyers} icon={<Users className="h-4 w-4" />} />
+        <StatCard
+          label={t('buyers')}
+          value={totals.buyers}
+          icon={<Users className="h-4 w-4" />}
+          delta={totals.delta.buyers}
+          hint={vsPrevious(totals.delta.buyers)}
+          hintTone={tone(totals.delta.buyers)}
+        />
         <StatCard
           label={t('tradingShops')}
           value={shops.trading}
           icon={<Store className="h-4 w-4" />}
+          delta={shops.tradingDelta}
+          hint={vsPrevious(shops.tradingDelta)}
+          hintTone={tone(shops.tradingDelta)}
         />
       </dl>
 

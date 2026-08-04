@@ -9,6 +9,8 @@ import {
   productRatingAvg,
   productReviewCount,
   productWishlistCount,
+  shopRatingAvg,
+  shopReviewCount,
 } from './fragments';
 import {
   categories,
@@ -194,6 +196,21 @@ export async function productList(filters: ProductListFilters) {
   const ratedAtLeast = (minimum: number) =>
     and(gte(ratingExpr, minimum), gte(reviewCountExpr, MIN_RATING_REVIEWS));
 
+  /*
+   * AVAILABILITY IS THE OUTERMOST SORT KEY, under every user-chosen sort.
+   *
+   * "Most popular" ranked a sold-out phone first in electronics, in
+   * mobiles-tablets and in the search popular block, because view count is a
+   * record of past demand and stock is not part of it — so the first card a
+   * customer tapped said «موجود نیست». No sort a shopper picks means "show me
+   * things I cannot buy first"; availability is a precondition of the ranking,
+   * not a competitor to it. Out-of-stock products keep their place in the
+   * results and their relative order WITHIN the chosen sort, they simply stop
+   * leading. Placed here rather than in each listing page so /products,
+   * /categories/[slug], /search, the shop page and the rails cannot disagree.
+   */
+  const inStockFirst = sql`(${products.stock} > 0) desc`;
+
   const orderBy = {
     /*
      * POPULARITY is the default, not newest.
@@ -248,7 +265,7 @@ export async function productList(filters: ProductListFilters) {
     .where(where)
     .groupBy(products.id, shops.id)
     .having(minRating !== undefined ? ratedAtLeast(minRating) : undefined)
-    .orderBy(...orderBy, desc(products.id))
+    .orderBy(inStockFirst, ...orderBy, desc(products.id))
     .limit(accumulate ? pageSize * page : pageSize)
     .offset(accumulate ? 0 : (page - 1) * pageSize);
 
@@ -317,6 +334,22 @@ export async function productDetail(slug: string, locale: string) {
       shopFloor: shops.floor,
       shopUnitNumber: shops.unitNumber,
       shopStatus: shops.status,
+      /*
+       * The SHOP's reputation, for a product that has none of its own.
+       *
+       * A new listing under a shop with forty reviews is not an unknown
+       * quantity, but the page presented it as one: no stars, no count, no
+       * signal of any kind next to the price. Borrowing the seller's record —
+       * clearly labelled as the SHOP's, never the product's — is the honest
+       * version of the trust the reader is trying to establish, and it is what
+       * a market stall does by simply being the stall it has always been.
+       *
+       * Selected here rather than fetched separately: it is two aggregates on
+       * a row already joined, and the product page has no need of a fourth
+       * round trip to say one sentence.
+       */
+      shopRating: shopRatingAvg,
+      shopReviewCount,
     })
     .from(products)
     .innerJoin(shops, eq(products.shopId, shops.id))
@@ -356,6 +389,8 @@ export async function productDetail(slug: string, locale: string) {
     images,
     variants,
     rating: ratingSummary,
+    shopRating: Number(row.shopRating),
+    shopReviewCount: Number(row.shopReviewCount),
     wishlistCount: Number(saveCount[0]?.total ?? 0),
   };
 }
@@ -445,7 +480,12 @@ export async function trendingProducts(locale: string, limit = 12) {
     .from(products)
     .innerJoin(shops, eq(products.shopId, shops.id))
     .where(and(eq(products.status, 'published'), eq(shops.status, 'approved')))
-    .orderBy(desc(products.viewCount), desc(products.createdAt))
+    // Same availability-first rule as productList: this feeds the search page's
+    // popular block and every empty-state fallback, which are the screens a
+    // shopper reaches with no other idea of what to look at. Leading one of
+    // those with «موجود نیست» is the worst place to spend the only card they
+    // are certain to see.
+    .orderBy(sql`(${products.stock} > 0) desc`, desc(products.viewCount), desc(products.createdAt))
     .limit(limit);
 
   return rows.map((row) => ({

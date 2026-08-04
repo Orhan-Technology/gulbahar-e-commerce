@@ -1,6 +1,11 @@
-import { getTranslations } from 'next-intl/server';
+import Image from 'next/image';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { ChevronRight, Tag } from 'lucide-react';
 
 import { SectionHeader, SectionHeaderSkeleton } from '@/components/custom/section-header';
+import { pickLocale } from '@/lib/db/localized';
+import { formatPercent } from '@/lib/format';
+import { Link } from '@/lib/i18n/navigation';
 import {
   ProductGrid,
   ProductGridSkeleton,
@@ -33,6 +38,7 @@ export async function DealsRail({
   items: ProductGridItem[];
   savedIds: Set<string>;
 }) {
+  const locale = await getLocale();
   const t = await getTranslations('home');
   const offers = await activeOffers(1);
 
@@ -62,6 +68,63 @@ export async function DealsRail({
           ) : undefined
         }
       />
+
+      {/*
+       * THE HERO'S OLD SIDE CARD, folded in as one row.
+       *
+       * Same offer, same link, same two facts — the discount and whose shop it
+       * is — but a bar rather than a 380px panel. It belongs here because the
+       * countdown above it already ticks against this exact offer (both read
+       * `activeOffers`, ordered by soonest deadline), so at the top of the page
+       * it was a promise with its deadline a screen away, and here it is the
+       * sentence the clock beside it is about.
+       *
+       * The photograph is decorative and only appears from `sm`: on a phone the
+       * job of this row is to be short.
+       */}
+      {soonest && (
+        <Link
+          href={`/shops/${soonest.shopSlug}`}
+          className="pressable rounded-card bg-tint-warm group flex items-center gap-3 overflow-hidden pe-4 ps-4 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-100 sm:ps-5"
+        >
+          <span className="rounded-pill bg-card text-accent flex h-10 w-10 shrink-0 items-center justify-center">
+            <Tag className="h-4 w-4" aria-hidden />
+          </span>
+
+          <span className="flex min-w-0 flex-1 flex-col py-3 sm:flex-row sm:items-baseline sm:gap-2 sm:py-4">
+            {/* `dir="auto"` because the offer's name is the shopkeeper's own
+                text: a Dari catalogue holds "Black Friday" verbatim, and a
+                Latin phrase inheriting RTL puts its punctuation on the wrong
+                side. */}
+            <span dir="auto" className="text-foreground truncate text-base font-extrabold sm:text-xl">
+              {soonest.type === 'percent'
+                ? t('offerUpTo', { percent: formatPercent(soonest.value / 100, locale) })
+                : pickLocale(soonest.name, locale)}
+            </span>
+            <span className="text-primary truncate text-sm font-bold">
+              {pickLocale(soonest.shopName, locale)}
+            </span>
+          </span>
+
+          {soonest.imagePath && (
+            <span className="relative hidden h-16 w-24 shrink-0 self-stretch sm:block">
+              <Image
+                src={soonest.imagePath}
+                alt=""
+                fill
+                sizes="96px"
+                className="object-cover"
+              />
+            </span>
+          )}
+
+          <ChevronRight
+            className="text-primary h-5 w-5 shrink-0 rtl:rotate-180"
+            aria-hidden
+          />
+        </Link>
+      )}
+
       <ProductGrid
         items={items}
         savedIds={savedIds}

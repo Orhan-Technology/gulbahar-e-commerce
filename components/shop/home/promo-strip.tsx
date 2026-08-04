@@ -57,12 +57,25 @@ export async function PromoStrip() {
 
   return (
     /*
-     * A SCROLLER ON A PHONE, a three-up grid from `sm`.
+     * ONE COMPACT STRIP, AND IT SITS AT THE END OF THE PAGE — both changes, and
+     * they answer two different complaints.
      *
-     * Stacked, these were three 180px blocks of solid colour — over half a
-     * screen of promise before the next band of products, on the page where
-     * scroll depth is the whole game. Side by side they cost one screen-height
-     * and read as a strip, which is what they are. The scroller inherits
+     * PLACEMENT first. These are the mall's promises, not its goods, and mid-
+     * feed they cost a full screen of not-shopping between two product rails on
+     * a 390px phone. A promise is read at the moment of doubt, which is after
+     * the browsing rather than in the middle of it, so the strip now sits below
+     * the last product band. It could have stayed where it was purely as a
+     * shape break — that was its original job — but FeaturedShops and
+     * ShopSpotlight are shape breaks too, and neither of them stops the scroll.
+     *
+     * HEIGHT second, and it is why moving alone was not enough: three 180px
+     * blocks of solid colour immediately above the footer is still a screen of
+     * colour, just later. Each panel is one row now — mark, title, body, all on
+     * the same line — so the whole band is a strip a shopper can take in
+     * without stopping. The three surfaces still cycle green, cool grey-blue
+     * and warm cream so no two adjacent panels share a background.
+     *
+     * A SCROLLER ON A PHONE, a three-up grid from `sm`. The scroller inherits
      * document direction, so in Dari it starts at the right with no per-locale
      * duplication, and it bleeds to the screen edge exactly like the rails.
      *
@@ -78,27 +91,32 @@ export async function PromoStrip() {
           className={cn(
             // `scale` is in the list because `transition-*` is a utility and
             // .pressable is not — see components/ui/button.tsx for the same note.
-            'pressable rounded-card group flex flex-col gap-3 p-5 transition-[opacity,scale] duration-150 ease-out hover:opacity-95',
-            'w-[78%] shrink-0 snap-start sm:w-auto sm:min-h-[180px] sm:p-6',
+            'pressable rounded-card group flex items-center gap-3 p-4 transition-[opacity,scale] duration-150 ease-out hover:opacity-95',
+            'w-[78%] shrink-0 snap-start sm:w-auto',
             panel.surface,
           )}
         >
           <span
             className={cn(
-              'rounded-pill flex h-11 w-11 items-center justify-center',
+              'rounded-pill flex h-10 w-10 shrink-0 items-center justify-center',
               panel.mark,
             )}
           >
             <panel.icon className="h-5 w-5" aria-hidden />
           </span>
-          <span className="text-xl leading-tight font-extrabold">{panel.title}</span>
-          <span className="text-base opacity-80">{panel.body}</span>
-          <span
-            className={cn('mt-auto flex items-center gap-1 text-sm font-bold', panel.action)}
-          >
-            {t('promoAction')}
-            <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden />
+          <span className="flex min-w-0 flex-col">
+            <span className="truncate text-base leading-tight font-bold">{panel.title}</span>
+            <span className="truncate text-sm opacity-80">{panel.body}</span>
           </span>
+          {/*
+            The label goes, the arrow stays. "خرید کنید" under a panel that IS a
+            link said nothing the chevron does not, and at this height it was
+            the row that had to be cut for the other two to fit on one line.
+          */}
+          <ArrowRight
+            className={cn('ms-auto h-4 w-4 shrink-0 rtl:rotate-180', panel.action)}
+            aria-hidden
+          />
         </Link>
       ))}
     </section>
@@ -111,7 +129,7 @@ export function PromoStripSkeleton() {
       {Array.from({ length: 3 }, (_, index) => (
         <div
           key={index}
-          className="rounded-card h-[150px] w-[78%] shrink-0 animate-pulse bg-neutral-100 sm:h-auto sm:min-h-[180px] sm:w-auto"
+          className="rounded-card h-[72px] w-[78%] shrink-0 animate-pulse bg-neutral-100 sm:w-auto"
         />
       ))}
     </section>

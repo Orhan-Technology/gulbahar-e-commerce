@@ -20,9 +20,16 @@ import { homeProductModules, wishlistedProductIds } from '@/lib/db/queries/home'
  * Storefront home — quality-bar screen #1 (PRD §10.8).
  *
  * MODULE RHYTHM is the organising rule: no two adjacent bands share a shape.
- * Hero → circles → rail → panels → rail → rail → rich rail → feature → rail →
- * CTA. The page previously ran six near-identical category rails, which is how
- * a long page becomes an undifferentiated scroll however good each band is.
+ * Hero → circles → deals → rail → rail → rich rail → feature → rail → promises
+ * → CTA. The page previously ran six near-identical category rails, which is
+ * how a long page becomes an undifferentiated scroll however good each band is.
+ *
+ * GOODS BEFORE PROMOS. The first thing anyone can buy used to sit nearly two
+ * screens down a 390px viewport: the hero carried a second promo panel beneath
+ * it in the stack, and the mall's three value-prop panels sat between the deals
+ * band and the first category rail. The promo panel folded into the deals band
+ * (DealsRail) and the value props moved to the foot of the feed (PromoStrip),
+ * which puts the deals rail immediately under the category circles.
  *
  * ONE CATEGORY MODULE. The circles rail is the single category entry point
  * here; departments live in the header nav and on /categories, and
@@ -96,12 +103,6 @@ async function ProductModules({ locale }: { locale: string }) {
     <div className="space-y-12">
       <DealsRail items={deals} savedIds={saved} />
 
-      {/* Panels between rails — the shape break that stops the page reading as
-          one long scroller. */}
-      <Reveal>
-        <PromoStrip />
-      </Reveal>
-
       {rails.map((rail, index) => (
         <Reveal key={rail.slug}>
           <CategoryRail
@@ -158,6 +159,12 @@ async function ProductModules({ locale }: { locale: string }) {
           </section>
         </Reveal>
       )}
+
+      {/* The mall's own promises, after its goods — see PromoStrip for why they
+          left the middle of the feed. */}
+      <Reveal>
+        <PromoStrip />
+      </Reveal>
     </div>
   );
 }
@@ -166,12 +173,12 @@ function ProductModulesSkeleton() {
   return (
     <div className="space-y-12">
       <DealsRailSkeleton />
-      <PromoStripSkeleton />
       <CategoryRailSkeleton />
       <CategoryRailSkeleton />
       <FeaturedShopsSkeleton />
       <ShopSpotlightSkeleton />
       <ProductGridSkeleton count={8} layout="row" />
+      <PromoStripSkeleton />
     </div>
   );
 }

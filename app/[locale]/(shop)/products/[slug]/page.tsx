@@ -1,15 +1,17 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-import { MapPin, Store } from 'lucide-react';
+import { getLocale, getMessages, getTranslations, setRequestLocale } from 'next-intl/server';
+import { Store } from 'lucide-react';
 
 import { ImageGallery, ImageGallerySkeleton } from '@/components/custom/image-gallery';
 import { RatingStars } from '@/components/custom/rating-stars';
 import { VerifiedBadge } from '@/components/shop/verified-badge';
+import { FloorMap } from '@/components/shop/floor-map';
 import { BuyColumn } from '@/components/shop/product/buy-column';
 import { BuyPanel } from '@/components/shop/product/buy-panel';
 import { FulfilmentPanel } from '@/components/shop/product/fulfilment-panel';
+import { MallSheet } from '@/components/shop/product/mall-sheet';
 import { FeatureList } from '@/components/shop/product/feature-list';
 import { ComparisonTable, type ComparisonColumn } from '@/components/shop/product/comparison-table';
 import { QuestionSection } from '@/components/shop/product/question-section';
@@ -25,12 +27,16 @@ import { currentUser } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import { wishlistedProductIds } from '@/lib/db/queries/home';
 import { comparableProducts } from '@/lib/db/queries/comparison';
+import { mallMap } from '@/lib/db/queries/mall';
 import { productDetail } from '@/lib/db/queries/products';
+import { siteSettings } from '@/lib/db/queries/settings';
 import { productQuestionThreads } from '@/lib/db/queries/questions';
 import { recordProductView } from '@/lib/db/queries/reviews';
 import { shopPause } from '@/lib/db/queries/shops';
+import { openState } from '@/lib/opening';
 import { pauseState } from '@/lib/pause';
-import { formatNumber, formatUnitNumber } from '@/lib/format';
+import { formatNumber, formatRating, formatUnitNumber } from '@/lib/format';
+import { brandLabel, brandNamesFrom } from '@/lib/listing';
 import { SPEC_GROUPS, specTemplateFor } from '@/lib/product-templates';
 import { variantAxis, variantOptionLabel, type VariantAxis } from '@/lib/product-variants';
 import { Link } from '@/lib/i18n/navigation';
@@ -129,6 +135,16 @@ export default async function ProductPage({
   const title = pickLocale(product.title, locale);
 
   /*
+   * Read from the message TREE by key, not through `t()` — the brand is a data
+   * value, and `t('brandNames.Xiaomi')` on an unmapped brand logs a missing
+   * message and renders the path (see lib/listing.ts). Same source and same
+   * rule as the filter rail's brand list, so one brand reads the same way on
+   * both screens.
+   */
+  const brandNames = brandNamesFrom(await getMessages());
+  const brand = brandLabel(product.brand ?? '', brandNames);
+
+  /*
    * Localised HERE, on the server. The spec table and the feature list are
    * client components (they collapse and filter), and handing them the raw
    * LocalizedText would mean shipping every locale's copy of every row to the
@@ -139,10 +155,24 @@ export default async function ProductPage({
     // them; anything else is the shop's own text.
     const axis = variantAxis(row.key);
     const derived = axis ? axisValues.get(axis) : undefined;
+    /*
+     * The BRAND row comes from `products.brand`, not from the authored
+     * attribute text — the same reason the variant axes above override their
+     * spec rows. `products.brand` is the value the facet filters on and the
+     * one the brand map is keyed by, so routing the row through it is what
+     * makes «برند» read «پامیر» here and in the filter rail rather than
+     * "Pamir" in one place and «پامیر» in the other. The seed's attribute
+     * value is the same Latin token anyway; taking the column means a shop
+     * that later corrects its brand corrects this row too.
+     */
+    const brandValue =
+      row.key === 'brand' && product.brand
+        ? [brand.label, brand.token].filter(Boolean).join(' ')
+        : undefined;
     return {
       key: row.key,
       label: pickLocale(row.label, locale),
-      value: derived ?? pickLocale(row.value, locale),
+      value: brandValue ?? derived ?? pickLocale(row.value, locale),
       group: row.group,
     };
   });
@@ -243,17 +273,36 @@ export default async function ProductPage({
             <div className="space-y-2">
               <h1 className="text-xl leading-snug font-bold sm:text-2xl">{title}</h1>
 
-              {/* Brand and model, when the shop filled them (P1). One line, muted
-                  — it is identification, not a claim. */}
+              {/*
+                Brand and model, when the shop filled them (P1). One line, muted
+                — it is identification, not a claim.
+
+                THE DARI NAME LEADS, exactly as it does in the filter rail: half
+                these brands are Afghan businesses whose real name is written in
+                Persian script and whose Latin spelling is a transliteration, so
+                «پامیر» is the name and "Pamir" is the label on the box. This
+                line and the specification table's «برند» row were the last two
+                places in the fa storefront where the interface stopped speaking
+                Dari — on the flagship screen. An unmapped brand still renders
+                its raw token, so a newly imported one looks plain rather than
+                disappearing.
+              */}
               {product.brand && (
-                <p className="text-muted-foreground text-sm">
-                  {product.model
-                    ? t('brandModel', { brand: product.brand, model: product.model })
-                    : product.brand}
+                <p className="text-muted-foreground flex flex-wrap items-baseline gap-1.5 text-sm">
+                  <span dir="auto">
+                    {product.model
+                      ? t('brandModel', { brand: brand.label, model: product.model })
+                      : brand.label}
+                  </span>
+                  {brand.token && (
+                    <bdi dir="ltr" className="text-2xs shrink-0 text-neutral-400">
+                      {brand.token}
+                    </bdi>
+                  )}
                 </p>
               )}
 
-              {product.rating.total > 0 && (
+              {product.rating.total > 0 ? (
                 /* The rating LINKS to the reviews it summarises. It was a static
                    line, which made the one number on the page most likely to be
                    questioned the one thing you could not click. */
@@ -263,31 +312,67 @@ export default async function ProductPage({
                     {t('reviewCount', { count: formatNumber(product.rating.total, locale) })}
                   </span>
                 </a>
+              ) : (
+                product.shopReviewCount > 0 && (
+                  /*
+                   * NO REVIEWS YET IS NOT NO INFORMATION.
+                   *
+                   * With nothing to say the page said nothing, and a blank where
+                   * the stars go on the screen where somebody is deciding to
+                   * spend money reads as a warning. The shop's own record is
+                   * real, earned and directly relevant — this is who you would
+                   * be buying from — so it stands in, worded as the SHOP's
+                   * («این دکان …») so it can never be mistaken for the
+                   * product's, and linked to the reviews tab it summarises so
+                   * the claim is checkable in one tap.
+                   */
+                  <Link
+                    href={`/shops/${product.shopSlug}?tab=reviews`}
+                    className="group flex w-fit items-center gap-2"
+                  >
+                    <RatingStars value={product.shopRating} size="sm" />
+                    <span className="text-muted-foreground group-hover:text-primary text-sm underline-offset-2 group-hover:underline">
+                      {t('shopReputation', {
+                        rating: formatRating(product.shopRating, locale),
+                        count: formatNumber(product.shopReviewCount, locale),
+                      })}
+                    </span>
+                  </Link>
+                )
               )}
             </div>
           }
           shop={
-            /* Shop attribution — our version of "sold by", and better, because it
-               carries the floor and unit you would walk to (PRD §5.2). */
-            <Link
-              href={`/shops/${product.shopSlug}`}
-              className="rounded-card border-border bg-card hover:shadow-card flex items-center gap-3 border p-3 transition-shadow duration-150"
-            >
-              <span className="rounded-control bg-primary-100 relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
-                {product.shopLogoPath ? (
-                  <Image
-                    src={product.shopLogoPath}
-                    alt=""
-                    fill
-                    sizes="40px"
-                    className="object-cover"
-                  />
-                ) : (
-                  <Store className="text-primary-700 h-4 w-4" aria-hidden />
-                )}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="text-foreground flex items-center gap-1 truncate text-sm font-semibold">
+            /*
+             * Shop attribution — our version of "sold by", and better, because
+             * it carries the floor and unit you would walk to (PRD §5.2).
+             *
+             * TWO CONTROLS, NOT ONE, and the card is no longer a single link.
+             * The name goes to the shop; the location line opens the mall (see
+             * MallSheet). It had to be split rather than nested: a button inside
+             * an anchor is invalid HTML that the parser hoists out of it, which
+             * surfaces as a hydration error nowhere near its cause — the same
+             * trap the product card's stretched link exists to avoid.
+             */
+            <div className="rounded-card border-border bg-card hover:shadow-card border transition-shadow duration-150">
+              <Link
+                href={`/shops/${product.shopSlug}`}
+                className="flex items-center gap-3 p-3"
+              >
+                <span className="rounded-control bg-primary-100 relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden">
+                  {product.shopLogoPath ? (
+                    <Image
+                      src={product.shopLogoPath}
+                      alt=""
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <Store className="text-primary-700 h-4 w-4" aria-hidden />
+                  )}
+                </span>
+                <span className="text-foreground flex min-w-0 flex-1 items-center gap-1 truncate text-sm font-semibold">
                   {pickLocale(product.shopName, locale)}
                   {/* The mall's own confirmation, where the buyer is deciding
                       whether to trust this seller (Prompt C7). */}
@@ -296,17 +381,31 @@ export default async function ProductPage({
                     size="sm"
                   />
                 </span>
-                {product.shopFloor !== null && (
-                  <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                    <MapPin className="h-3 w-3 shrink-0" aria-hidden />
-                    {t('shopFloorUnit', {
+              </Link>
+
+              {product.shopFloor !== null && (
+                <div className="border-border border-t px-3 py-2">
+                  <MallSheet
+                    label={t('shopFloorUnit', {
                       floor: formatNumber(product.shopFloor, locale),
                       unit: formatUnitNumber(product.shopUnitNumber, locale) || '—',
                     })}
-                  </span>
-                )}
-              </span>
-            </Link>
+                    title={pickLocale(product.shopName, locale)}
+                  >
+                    {/* Streamed: the plan needs a query the rest of the buy
+                        column does not, and the price must not wait on a map. */}
+                    <Suspense fallback={<MallSheetSkeleton />}>
+                      <ShopLocation
+                        floor={product.shopFloor}
+                        unitNumber={product.shopUnitNumber}
+                        shopSlug={product.shopSlug}
+                        inStock={product.stock > 0}
+                      />
+                    </Suspense>
+                  </MallSheet>
+                </div>
+              )}
+            </div>
           }
           extras={
             <>
@@ -459,6 +558,114 @@ export default async function ProductPage({
           pauseNote={pauseNote}
         />
       </div>
+    </div>
+  );
+}
+
+/**
+ * What is inside the pocket-mall sheet (MallSheet).
+ *
+ * ONE QUERY, and it is the map the /floors page already draws — not a second
+ * plan built for this sheet. The floor is filtered in memory from `mallMap()`
+ * because the map is the whole building and a shop's floor is one row of it;
+ * writing a per-floor query would be a second definition of "what a floor is",
+ * and the two would drift the first time a unit moved.
+ *
+ * The OPEN state and the hours logic are the shop page's own (`openState` with
+ * the mall's hours), read on the server with the page's single clock. A shop is
+ * open when its own hours say so AND the building is open — the doors of
+ * Gulbahar close over the doors of every tenant in it.
+ *
+ * THE PICKUP LINE IS CONDITIONAL ON STOCK. "Collect from the counter" under a
+ * product nobody can collect is the promotional version of a sold-out card, and
+ * this sheet exists to be the reason someone walks over.
+ */
+async function ShopLocation({
+  floor,
+  unitNumber,
+  shopSlug,
+  inStock,
+}: {
+  floor: number;
+  unitNumber: string | null;
+  shopSlug: string;
+  inStock: boolean;
+}) {
+  const locale = await getLocale();
+  const t = await getTranslations('product');
+  const tFloors = await getTranslations('floors');
+  const [floors, settings] = await Promise.all([mallMap(), siteSettings()]);
+  // Read once here, on the server: a client component may not call new Date()
+  // during render (React 19 purity, CLAUDE.md).
+  const now = new Date();
+
+  const plan = floors.find((entry) => entry.floor === floor) ?? null;
+  const unit = unitNumber === null ? null : Number(unitNumber);
+  const shopHours = plan?.units.find((entry) => entry.unit === unit)?.shop?.hours ?? null;
+  const open = openState(shopHours, now)?.open && openState(settings.hours, now)?.open;
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-pill bg-primary-50 text-primary-800 text-2xs px-2.5 py-1 font-bold">
+          {t('shopFloorUnit', {
+            floor: formatNumber(floor, locale),
+            unit: formatUnitNumber(unitNumber, locale) || '—',
+          })}
+        </span>
+        {open && (
+          <span className="rounded-pill bg-success-bg text-success text-2xs inline-flex items-center gap-1 px-2.5 py-1 font-medium">
+            <span className="bg-success h-1.5 w-1.5 rounded-full" aria-hidden />
+            {tFloors('legendOpen')}
+          </span>
+        )}
+      </div>
+
+      {plan ? (
+        <FloorMap
+          floor={plan}
+          highlightUnit={unit}
+          now={now}
+          mallHours={settings.hours}
+          compact
+        />
+      ) : (
+        /* A shop whose floor is not in the public map — suspended, or a unit
+           number the plan cannot place. The actions below still work, so the
+           sheet degrades to what it can prove rather than to nothing. */
+        <p className="text-muted-foreground text-sm">{tFloors('emptyBody')}</p>
+      )}
+
+      {inStock && (
+        <div className="rounded-card border-border flex items-start gap-3 border p-3">
+          <span className="rounded-pill bg-primary-50 text-primary flex h-9 w-9 shrink-0 items-center justify-center">
+            <Store className="h-4 w-4" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-foreground text-sm font-bold">{t('pickupTitle')}</span>
+              <span className="text-success text-sm font-semibold">{t('pickupFree')}</span>
+            </span>
+          </span>
+        </div>
+      )}
+
+      <Link
+        href={`/shops/${shopSlug}`}
+        className="rounded-control bg-primary text-primary-foreground hover:bg-primary-700 flex w-full items-center justify-center px-3 py-2.5 text-sm font-semibold transition-colors duration-150"
+      >
+        {tFloors('openShop')}
+      </Link>
+    </>
+  );
+}
+
+function MallSheetSkeleton() {
+  return (
+    <div className="space-y-3" aria-busy>
+      <Skeleton className="rounded-pill h-6 w-40" />
+      <Skeleton className="rounded-card h-32 w-full" />
+      <Skeleton className="rounded-control h-10 w-full" />
     </div>
   );
 }

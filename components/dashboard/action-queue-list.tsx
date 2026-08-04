@@ -29,7 +29,10 @@ export type QueueRow = {
     | 'needs_reply'
     | 'needs_answer'
     | 'out_of_stock'
-    | 'expiring_promotion';
+    | 'expiring_promotion'
+    /** Report verdicts surfaced here rather than left in Reports. */
+    | 'views_no_sales'
+    | 'slow_replies';
   /** Which group the row sits in (Prompt C4). */
   urgency: QueueClass;
   title: string;

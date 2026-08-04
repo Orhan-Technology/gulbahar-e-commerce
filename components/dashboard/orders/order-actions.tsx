@@ -33,9 +33,16 @@ export function OrderActions({
   fulfillment = 'delivery',
   size = 'default',
   showCancel = false,
+  customerPhone,
 }: {
   orderId: string;
   status: Status;
+  /**
+   * Passed straight through to the reject and cancel dialogs, which offer a
+   * `tel:` link under «مشتری در دسترس نبود» (components/dashboard/orders/
+   * call-customer-link.tsx). Optional: the dashboard queue has no number.
+   */
+  customerPhone?: string | null;
   /**
    * A READY PICKUP ORDER HAS NO "mark fulfilled" BUTTON (Prompt C11).
    *
@@ -80,7 +87,7 @@ export function OrderActions({
             {t('accept')}
           </Button>
           {/* At the door it is a REJECTION — nothing was promised yet. */}
-          <OrderRejectButton orderId={orderId} size={size} />
+          <OrderRejectButton orderId={orderId} size={size} customerPhone={customerPhone} />
         </>
       )}
 
@@ -115,7 +122,7 @@ export function OrderActions({
         not a thing to do in passing while scanning a queue.
       */}
       {showCancel && (status === 'accepted' || status === 'ready') && (
-        <OrderCancelButton orderId={orderId} size={size} />
+        <OrderCancelButton orderId={orderId} size={size} customerPhone={customerPhone} />
       )}
     </div>
   );
