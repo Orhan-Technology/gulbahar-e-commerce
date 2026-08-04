@@ -143,7 +143,7 @@ export function SpecEditor({
                           languages. Never glued to the label again. */}
                       {showEnglish && (
                         <span
-                          className="rounded-control text-2xs text-muted-foreground bg-neutral-100 px-1.5 py-0.5 font-normal"
+                          className="rounded-control text-2xs text-muted-foreground hidden bg-neutral-100 px-1.5 py-0.5 font-normal sm:inline"
                           dir="ltr"
                         >
                           {row.key}
@@ -153,7 +153,23 @@ export function SpecEditor({
                   ) : (
                     <div className={cn('grid gap-2', showEnglish && 'sm:grid-cols-3')}>
                       {showEnglish && (
-                        <div className="space-y-1">
+                        /*
+                         * GONE ENTIRELY ON A PHONE (Prompt: software leaking
+                         * through the wallpaper).
+                         *
+                         * «کلید مشخصه فقط می‌تواند حروف انگلیسی باشد» is the
+                         * database explaining itself to a shopkeeper standing
+                         * behind a counter, and the field it belongs to has no
+                         * meaning they can act on — the key exists so two shops
+                         * describe a phone with the same vocabulary, and every
+                         * row that reaches this form already has one (from the
+                         * category template, or auto-assigned below). On a
+                         * phone the honest answer is that this control is not
+                         * for them, so `hidden sm:block` and not a smaller
+                         * font. Nothing is lost: a hidden key keeps whatever
+                         * value it already had.
+                         */
+                        <div className="hidden space-y-1 sm:block">
                           <Label htmlFor={`spec-key-${index}`} className="text-2xs">
                             {t('specKey')}
                           </Label>
@@ -234,10 +250,19 @@ export function SpecEditor({
         </ul>
       )}
 
+      {/*
+        ADD-YOUR-OWN-ROW IS A DESK JOB, and on a phone it is hidden with the
+        rest of the machinery: a hand-added row is the one kind that needs a
+        label typed from nothing and, on a wider screen, a key. On a phone the
+        category TEMPLATE is the only way rows appear — which is also the shape
+        that keeps two shops describing a phone with the same vocabulary, so the
+        narrow screen quietly enforces the thing the wide one only encourages.
+      */}
       <Button
         type="button"
         variant="ghost"
         size="sm"
+        className="hidden sm:inline-flex"
         onClick={() =>
           onChange([
             ...rows,

@@ -109,6 +109,37 @@ export function OfferDialog({
 
   const numericValue = Number(digitsOnly(draft.value)) || 0;
 
+  /*
+   * The name fields are hidden until they are wanted. An offer being EDITED
+   * always has a name, so it always shows them — hiding wording somebody chose
+   * behind a button is worse than showing a field they did not need.
+   */
+  const [renaming, setRenaming] = React.useState(false);
+  const showNameFields = renaming || draft.nameFa.trim().length > 0;
+
+  const scopedCount =
+    draft.scope === 'shop'
+      ? products.length
+      : products.filter((product) => draft.productIds.includes(product.id)).length;
+
+  /** The reader's-locale echo of the name the server will generate. */
+  const autoName = t(
+    draft.type === 'percent'
+      ? draft.scope === 'shop'
+        ? 'autoNamePercentShop'
+        : 'autoNamePercentProducts'
+      : draft.scope === 'shop'
+        ? 'autoNameFixedShop'
+        : 'autoNameFixedProducts',
+    {
+      value:
+        draft.type === 'percent'
+          ? formatNumber(numericValue, locale)
+          : formatCurrency(numericValue, locale),
+      count: formatNumber(scopedCount, locale),
+    },
+  );
+
   /** What the customer would pay, on the products actually in scope. */
   const preview = React.useMemo(() => {
     const inScope =
@@ -129,7 +160,9 @@ export function OfferDialog({
     startTransition(async () => {
       const result = await saveOffer({
         id: draft.id,
-        name: { fa: draft.nameFa, en: draft.nameEn || null },
+        // Both may be blank: the action generates them from the discount and
+        // its scope, in both locales, when the Dari one is empty.
+        name: { fa: draft.nameFa || null, en: draft.nameEn || null },
         type: draft.type,
         value: numericValue,
         scope: draft.scope,
@@ -167,26 +200,6 @@ export function OfferDialog({
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="offer-name-fa">{t('nameFa')}</Label>
-              <Input
-                id="offer-name-fa"
-                value={draft.nameFa}
-                onChange={(event) => set('nameFa', event.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="offer-name-en">{t('nameEn')}</Label>
-              <Input
-                id="offer-name-en"
-                dir="ltr"
-                value={draft.nameEn}
-                onChange={(event) => set('nameEn', event.target.value)}
-              />
-            </div>
-          </div>
-
           <div className="space-y-1.5">
             <Label>{t('type')}</Label>
             <RadioGroup
@@ -295,6 +308,56 @@ export function OfferDialog({
             </div>
           </div>
 
+          {/*
+            THE NAME, LAST AND OPTIONAL (Prompt: two decisions, not seven
+            fields).
+
+            The common offer is «۱۰٪ روی این سه محصول، همین هفته». Naming it was
+            the FIRST thing this dialog asked for and one of two writing tasks
+            it required before Save would enable — the second in a language most
+            tenants here do not write. The name is now generated from the two
+            decisions that were actually made, shown here so it is never a
+            surprise, and a shopkeeper who wants their own wording says so and
+            gets the fields back. The generated name is built on the SERVER, in
+            both locales; this line is the reader's own locale of the same
+            thing.
+          */}
+          {showNameFields ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="offer-name-fa">{t('nameFa')}</Label>
+                <Input
+                  id="offer-name-fa"
+                  value={draft.nameFa}
+                  onChange={(event) => set('nameFa', event.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="offer-name-en">{t('nameEn')}</Label>
+                <Input
+                  id="offer-name-en"
+                  dir="ltr"
+                  value={draft.nameEn}
+                  onChange={(event) => set('nameEn', event.target.value)}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-control flex flex-wrap items-center gap-x-2 gap-y-1 bg-neutral-50 p-3">
+              <span className="text-muted-foreground text-xs">{t('autoNameHint')}</span>
+              <bdi className="text-sm font-medium">{autoName}</bdi>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="ms-auto"
+                onClick={() => setRenaming(true)}
+              >
+                {t('renameAction')}
+              </Button>
+            </div>
+          )}
+
           {/* Preview on real prices, so a mistyped value is obvious before it ships. */}
           {numericValue > 0 && preview.length > 0 && (
             <div className="rounded-control space-y-1.5 bg-neutral-50 p-3">
@@ -323,7 +386,21 @@ export function OfferDialog({
           <Button variant="ghost" onClick={() => setOpen(false)} disabled={pending}>
             {t('cancel')}
           </Button>
-          <Button onClick={submit} disabled={pending || !draft.nameFa.trim() || numericValue <= 0}>
+          {/*
+            The name is no longer a gate — see the note beside it — but the
+            SCOPE is. It used to be the missing name that kept Save disabled on
+            a half-filled form, which meant an offer scoped to "these products"
+            with none ticked was only caught by the server. The two real
+            requirements now guard it themselves.
+          */}
+          <Button
+            onClick={submit}
+            disabled={
+              pending ||
+              numericValue <= 0 ||
+              (draft.scope === 'products' && draft.productIds.length === 0)
+            }
+          >
             {pending ? t('saving') : t('save')}
           </Button>
         </DialogFooter>

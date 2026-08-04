@@ -16,6 +16,7 @@ import {
   shopOrderList,
   type OrderRange,
 } from '@/lib/db/queries/shop-orders';
+import { orderItemNames } from '@/lib/db/queries/shop-products';
 import { formatCurrency, formatNumber, formatRelative } from '@/lib/format';
 import { Link } from '@/lib/i18n/navigation';
 import { pressable } from '@/components/motion/pressable';
@@ -23,6 +24,15 @@ import { cn } from '@/lib/utils';
 import type { OrderStatus } from '@/lib/db/schema';
 
 type Query = { status?: OrderStatus; range?: string; q?: string; order?: string };
+
+/**
+ * How many actionable orders it takes before bulk selection earns its keep.
+ *
+ * Six. Below that a shopkeeper presses accept on each row faster than they can
+ * tick boxes and find the bar, and the checkboxes are pure visual tax on the
+ * screen they look at most often.
+ */
+const BULK_SELECT_FROM = 6;
 
 const STATUS_BADGE: Record<
   OrderStatus,
@@ -204,6 +214,36 @@ async function OrderList({
     );
   }
 
+  /*
+   * WHAT IS IN THE BAG, on the card (Prompt C6 follow-up).
+   *
+   * «۲ قلم — ؋۶۹٬۸۰۰» is a fact about an order; «سپیکر JBL + پاور بانک انکر» is
+   * an instruction to a person standing beside a shelf. With the names on the
+   * card a shopkeeper starts pulling stock while the customer is still talking,
+   * instead of opening the order first and then walking. One grouped read for
+   * the whole page — see the query.
+   */
+  const itemNames = await orderItemNames(
+    shopId,
+    orders.map((order) => order.id),
+    locale,
+  );
+
+  /*
+   * BULK SELECTION IS FOR A BACKLOG, NOT FOR A COUNTER (Prompt C6 follow-up).
+   *
+   * Checkboxes and «انتخاب همه» on a five-order list tax every glance for a
+   * gesture nobody performs at that size — the shopkeeper simply presses accept
+   * on each of five rows. Past the threshold the arithmetic flips and the same
+   * machinery saves real time, so it appears then and only then.
+   *
+   * Counted over ACTIONABLE rows, not over everything on screen: forty
+   * fulfilled orders in a search result are not a batch to act on.
+   */
+  const actionable = orders.filter(
+    (order) => order.status === 'placed' || order.status === 'accepted',
+  ).length;
+
   return (
     <div className="space-y-2">
       {/*
@@ -213,6 +253,7 @@ async function OrderList({
         SelectableOrder.content).
       */}
       <BulkOrderSelection
+        offerSelection={actionable >= BULK_SELECT_FROM}
         orders={orders.map((order) => ({
           id: order.id,
           reference: order.reference,
@@ -234,6 +275,22 @@ async function OrderList({
                 </div>
                 <Badge variant={STATUS_BADGE[order.status]}>{t(`status.${order.status}`)}</Badge>
               </div>
+
+              {/* The shelf line. Two names, then a count — three product titles
+                  on a 390px card is a paragraph, and the third one is never the
+                  one you were looking for. `dir="auto"` per name: a Latin brand
+                  in a Dari list sets its own direction or the separator lands at
+                  the wrong end. */}
+              {(itemNames.get(order.id)?.length ?? 0) > 0 && (
+                <p className="text-foreground clamp-1 text-xs font-medium" dir="auto">
+                  {itemNames.get(order.id)!.length <= 2
+                    ? itemNames.get(order.id)!.join(' + ')
+                    : t('itemNamesMore', {
+                        names: itemNames.get(order.id)!.slice(0, 2).join(' + '),
+                        count: formatNumber(itemNames.get(order.id)!.length - 2, locale),
+                      })}
+                </p>
+              )}
 
               <div className="text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                 <span className="inline-flex items-center gap-1">
@@ -263,6 +320,9 @@ async function OrderList({
                   status={order.status}
                   fulfillment={order.fulfillment}
                   size="sm"
+                  // So the reject dialog can offer the call it asks them to
+                  // certify they already made — see order-reject-button.tsx.
+                  customerPhone={order.customerPhone}
                 />
 
                 {/* Paper, for the person walking to the shelf (Prompt C6). */}

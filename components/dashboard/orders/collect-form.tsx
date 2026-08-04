@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { PackageCheck } from 'lucide-react';
+import { Check, PackageCheck, PartyPopper } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -27,15 +27,51 @@ import { COLLECTION_CODE_LENGTH, normaliseCollectionCode } from '@/lib/collectio
  * A MISMATCH IS NOT AN ERROR STATE, it is information: the code belongs to a
  * different order. The toast says that rather than "invalid", and the field
  * keeps what was typed so the two can be compared.
+ *
+ * THE MATCH GETS A BEAT (Prompt: the signature moment).
+ *
+ * A code matching is the end of the whole loop — the customer walked in, the
+ * parcel goes over the counter, the money is earned — and it used to be
+ * acknowledged by a toast in a corner that was gone in four seconds. This is
+ * the interaction a shopkeeper shows the shop next door. So the card itself
+ * turns over: the form is replaced in place by a confirmation that says the
+ * sale is recorded and where the money went, and it STAYS until the shopkeeper
+ * says they are done or the timer below runs out. Nothing scrolls, nothing
+ * vanishes, and the toast is gone — a moment worth having is not a notification.
  */
+
+/**
+ * How long the confirmation holds the card before the row settles into its
+ * fulfilled state.
+ *
+ * Long enough to be read twice and looked up from; short enough that a card
+ * left alone behind a counter does not sit on a stale panel all afternoon. The
+ * shopkeeper can always end it sooner, and the poll is held off meanwhile
+ * (see `data-hold-refresh` in components/dashboard/live-refresh.tsx).
+ */
+const CELEBRATION_MS = 12_000;
+
 export function CollectForm({ orderId }: { orderId: string }) {
   const t = useTranslations('shopOrders.collect');
   const router = useRouter();
 
   const [code, setCode] = React.useState('');
+  const [collected, setCollected] = React.useState<string | null>(null);
   const [pending, startTransition] = React.useTransition();
 
   const ready = code.length >= COLLECTION_CODE_LENGTH;
+
+  /*
+   * The refresh is DEFERRED, not skipped: the row really is fulfilled now and
+   * the screen has to catch up eventually. `router.refresh()` is not a state
+   * write, so this effect breaks no React 19 rule; it is a timer that owns the
+   * end of the moment rather than a render that races it.
+   */
+  React.useEffect(() => {
+    if (collected === null) return;
+    const timer = window.setTimeout(() => router.refresh(), CELEBRATION_MS);
+    return () => window.clearTimeout(timer);
+  }, [collected, router]);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -48,9 +84,49 @@ export function CollectForm({ orderId }: { orderId: string }) {
         return;
       }
       setCode('');
-      toast.success(t('done', { reference: result.data.reference }));
-      router.refresh();
+      // No toast: the card below IS the confirmation, and two of them for one
+      // event reads as the screen saying the same thing twice.
+      setCollected(result.data.reference);
     });
+  }
+
+  if (collected !== null) {
+    return (
+      <div
+        /* Tells the ten-second poll to wait — without it a refresh landing here
+           would unmount this subtree (the order is fulfilled, so its controls
+           are gone) and the moment would be over before it was read. */
+        data-hold-refresh
+        role="status"
+        className="rounded-card border-success-border bg-success-bg motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 w-full space-y-2 border p-4 duration-200"
+      >
+        <p className="text-success flex items-center gap-2 text-sm font-bold">
+          {/*
+            THE ANIMATION IS GATED, NEVER THE FEEDBACK. `prefers-reduced-motion`
+            means remove the movement, not remove the confirmation — a reader
+            who has asked for less motion gets the identical card, held for the
+            identical time, without the rise.
+          */}
+          <PartyPopper className="h-5 w-5 shrink-0" aria-hidden />
+          {t('celebrateTitle')}
+        </p>
+        <p className="text-success/90 text-xs leading-relaxed">
+          {t('celebrateBody', { reference: collected })}
+        </p>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setCollected(null);
+            router.refresh();
+          }}
+        >
+          <Check />
+          {t('celebrateDismiss')}
+        </Button>
+      </div>
+    );
   }
 
   return (

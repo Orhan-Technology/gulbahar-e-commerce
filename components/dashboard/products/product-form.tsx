@@ -105,10 +105,17 @@ export function ProductForm({
   initial,
   categories,
   images,
+  categoryPrefilled = false,
 }: {
   initial: ProductFormValues;
   categories: ProductFormCategory[];
   images: ProductFormImage[];
+  /**
+   * The category arrived pre-chosen rather than picked (Prompt: an electronics
+   * shop scrolls the whole mall tree for its fortieth electronics item). Only
+   * changes whether the form SAYS so — the value itself is in `initial`.
+   */
+  categoryPrefilled?: boolean;
 }) {
   const t = useTranslations('shopProducts.form');
   const locale = useLocale();
@@ -171,6 +178,26 @@ export function ProductForm({
 
   const priceNumber = Number(digitsOnly(values.price)) || 0;
   const discountNumber = Number(digitsOnly(values.discountPrice)) || 0;
+
+  /*
+   * CREATING AND EDITING ARE DIFFERENT SCREENS (Prompt: photo-first creation).
+   *
+   * The products empty state promises three steps — photograph it, write the
+   * price and the stock, publish — and the form that opened on tapping it began
+   * with three language tabs, a brand field, a specification table with an
+   * English key column, features and variants. The persona starts with a camera
+   * pointed at a shelf; the form was the exact reverse of its own promise, and
+   * a shopkeeper who has to scroll past thirty inputs to reach "publish" does
+   * not add a fortieth product.
+   *
+   * So the CREATE screen is the promise, literally: photos, the Dari name, the
+   * price, the stock, publish. Everything else — the other two languages,
+   * specifications, features, variants — exists on the EDIT screen, which the
+   * shopkeeper lands on the moment the product is saved and can return to at
+   * any time. Nothing is removed from the product model and nothing is removed
+   * from the editor; the first two minutes simply stop containing it.
+   */
+  const creating = values.id === undefined;
 
   function submit(status?: 'draft' | 'published' | 'unpublished') {
     const nextStatus = status ?? (values.status === 'archived' ? 'draft' : values.status);
@@ -322,241 +349,350 @@ export function ProductForm({
         <StagedImages staged={staged} onChange={setStaged} />
       )}
 
+      {/*
+        THE CREATE SCREEN — four fields, in the order the promise names them.
+        See the note beside `creating` above.
+      */}
+      {creating && (
+        <section className="rounded-card border-border bg-card space-y-3 border p-4">
+          <div>
+            <h2 className="text-sm font-bold">{t('quickHeading')}</h2>
+            <p className="text-muted-foreground text-xs">{t('quickHint')}</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="quick-title">{t('quickTitleLabel')}</Label>
+            {/* NO TABS. Dari is the only required language (PRD §11) and the
+                other two are a job for a quiet afternoon, not for the minute a
+                product is being added. */}
+            <Input
+              id="quick-title"
+              dir="rtl"
+              value={values.titleFa}
+              placeholder={t('quickTitlePlaceholder')}
+              onChange={(event) => set('titleFa', event.target.value)}
+              required
+              aria-invalid={fieldError('titleFa') !== undefined}
+              aria-describedby={fieldError('titleFa') ? 'quick-title-error' : undefined}
+            />
+            <FieldError
+              id="quick-title-error"
+              message={
+                fieldError('titleFa') ? t(`fieldErrors.${fieldError('titleFa')}` as never) : null
+              }
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="quick-price">{t('price')}</Label>
+              <NumberField
+                id="quick-price"
+                value={values.price}
+                onChange={(next) => set('price', next)}
+                required
+                invalid={fieldError('price') !== undefined}
+                describedBy={fieldError('price') ? 'quick-price-error' : undefined}
+              />
+              <FieldError
+                id="quick-price-error"
+                message={
+                  fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="quick-stock">{t('stock')}</Label>
+              <NumberField
+                id="quick-stock"
+                value={values.stock}
+                onChange={(next) => set('stock', next)}
+                invalid={fieldError('stock') !== undefined}
+                describedBy={fieldError('stock') ? 'quick-stock-error' : undefined}
+              />
+              <FieldError
+                id="quick-stock-error"
+                message={
+                  fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null
+                }
+              />
+            </div>
+          </div>
+
+          <CategoryField
+            categories={categories}
+            value={values.categoryId}
+            onChange={(next) => set('categoryId', next)}
+            locale={locale}
+            prefilled={categoryPrefilled}
+          />
+        </section>
+      )}
+
+      {/*
+        WHAT WAITS ON THE OTHER SIDE, said before they publish rather than
+        discovered afterwards. A shopkeeper who knows the rest can be filled in
+        later stops treating the first save as a commitment they are not ready
+        to make — which is what a form with thirty empty inputs asks of them.
+      */}
+      {creating && (
+        <section className="rounded-card border-border bg-neutral-50 space-y-1 border p-4">
+          <h2 className="text-xs font-bold text-neutral-700">{t('quickLaterHeading')}</h2>
+          <p className="text-muted-foreground text-xs leading-relaxed">{t('quickLaterBody')}</p>
+        </section>
+      )}
+
       {/* Content, per language */}
-      <section className="rounded-card border-border bg-card space-y-3 border p-4">
-        <h2 className="text-sm font-bold">{t('contentHeading')}</h2>
+      {!creating && (
+        <section className="rounded-card border-border bg-card space-y-3 border p-4">
+          <h2 className="text-sm font-bold">{t('contentHeading')}</h2>
 
-        {/* Radix writes `dir="ltr"` on its own root when it is given no
-            direction, and that attribute overrides the `dir="rtl"` on <html>
-            for everything inside the panels — see the long note on the
-            promotions page, where the same omission turned an entire screen
-            left-to-right. */}
-        <Tabs dir={localeDirection(locale)} defaultValue="fa">
-          <TabsList>
-            <TabsTrigger value="fa">
-              {t('langFa')}
-              <Badge variant="destructive" className="ms-1.5">
-                {t('required')}
-              </Badge>
-            </TabsTrigger>
-            <TabsTrigger value="en">
-              {t('langEn')}
-              {missing.en && (
-                <Badge variant="outline" className="ms-1.5">
-                  {t('missing')}
+          {/* Radix writes `dir="ltr"` on its own root when it is given no
+              direction, and that attribute overrides the `dir="rtl"` on <html>
+              for everything inside the panels — see the long note on the
+              promotions page, where the same omission turned an entire screen
+              left-to-right. */}
+          <Tabs dir={localeDirection(locale)} defaultValue="fa">
+            <TabsList>
+              <TabsTrigger value="fa">
+                {t('langFa')}
+                <Badge variant="destructive" className="ms-1.5">
+                  {t('required')}
                 </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="ps">
-              {t('langPs')}
-              {missing.ps && (
-                <Badge variant="outline" className="ms-1.5">
-                  {t('missing')}
-                </Badge>
-              )}
-            </TabsTrigger>
-          </TabsList>
+              </TabsTrigger>
+              <TabsTrigger value="en">
+                {t('langEn')}
+                {missing.en && (
+                  <Badge variant="outline" className="ms-1.5">
+                    {t('missing')}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="ps">
+                {t('langPs')}
+                {missing.ps && (
+                  <Badge variant="outline" className="ms-1.5">
+                    {t('missing')}
+                  </Badge>
+                )}
+              </TabsTrigger>
+            </TabsList>
 
-          {(['fa', 'en', 'ps'] as const).map((lang) => {
-            const titleKey = `title${lang === 'fa' ? 'Fa' : lang === 'en' ? 'En' : 'Ps'}` as const;
-            const descKey =
-              `description${lang === 'fa' ? 'Fa' : lang === 'en' ? 'En' : 'Ps'}` as const;
-            return (
-              <TabsContent key={lang} value={lang} className="space-y-3 pt-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`title-${lang}`}>{t('titleLabel')}</Label>
-                  <Input
-                    id={`title-${lang}`}
-                    // Latin fields read left-to-right even inside an RTL page.
-                    dir={lang === 'en' ? 'ltr' : 'rtl'}
-                    value={values[titleKey]}
-                    onChange={(event) => set(titleKey, event.target.value)}
-                    required={lang === 'fa'}
-                    aria-invalid={lang === 'fa' && fieldError('titleFa') !== undefined}
-                    aria-describedby={
-                      lang === 'fa' && fieldError('titleFa') ? 'title-fa-error' : undefined
-                    }
-                  />
-                  {lang === 'fa' && (
-                    <FieldError
-                      id="title-fa-error"
-                      message={
-                        fieldError('titleFa')
-                          ? t(`fieldErrors.${fieldError('titleFa')}` as never)
-                          : null
+            {(['fa', 'en', 'ps'] as const).map((lang) => {
+              const titleKey = `title${lang === 'fa' ? 'Fa' : lang === 'en' ? 'En' : 'Ps'}` as const;
+              const descKey =
+                `description${lang === 'fa' ? 'Fa' : lang === 'en' ? 'En' : 'Ps'}` as const;
+              return (
+                <TabsContent key={lang} value={lang} className="space-y-3 pt-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`title-${lang}`}>{t('titleLabel')}</Label>
+                    <Input
+                      id={`title-${lang}`}
+                      // Latin fields read left-to-right even inside an RTL page.
+                      dir={lang === 'en' ? 'ltr' : 'rtl'}
+                      value={values[titleKey]}
+                      onChange={(event) => set(titleKey, event.target.value)}
+                      required={lang === 'fa'}
+                      aria-invalid={lang === 'fa' && fieldError('titleFa') !== undefined}
+                      aria-describedby={
+                        lang === 'fa' && fieldError('titleFa') ? 'title-fa-error' : undefined
                       }
                     />
-                  )}
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor={`desc-${lang}`}>{t('descriptionLabel')}</Label>
-                  <Textarea
-                    id={`desc-${lang}`}
-                    dir={lang === 'en' ? 'ltr' : 'rtl'}
-                    rows={3}
-                    value={values[descKey]}
-                    onChange={(event) => set(descKey, event.target.value)}
-                  />
-                </div>
-              </TabsContent>
-            );
-          })}
-        </Tabs>
-      </section>
+                    {lang === 'fa' && (
+                      <FieldError
+                        id="title-fa-error"
+                        message={
+                          fieldError('titleFa')
+                            ? t(`fieldErrors.${fieldError('titleFa')}` as never)
+                            : null
+                        }
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor={`desc-${lang}`}>{t('descriptionLabel')}</Label>
+                    <Textarea
+                      id={`desc-${lang}`}
+                      dir={lang === 'en' ? 'ltr' : 'rtl'}
+                      rows={3}
+                      value={values[descKey]}
+                      onChange={(event) => set(descKey, event.target.value)}
+                    />
+                  </div>
+                </TabsContent>
+              );
+            })}
+          </Tabs>
+        </section>
+      )}
 
       {/* Category, price, stock */}
-      <section className="rounded-card border-border bg-card space-y-3 border p-4">
-        <h2 className="text-sm font-bold">{t('detailsHeading')}</h2>
+      {!creating && (
+        <section className="rounded-card border-border bg-card space-y-3 border p-4">
+          <h2 className="text-sm font-bold">{t('detailsHeading')}</h2>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="category">{t('category')}</Label>
-          {/* Radix Select stamps `dir="ltr"` on its trigger and its dropdown
-              when it is given no direction, exactly as its Tabs does — which
-              put the chevron on the wrong edge and left-aligned the chosen
-              category inside an otherwise right-to-left form. */}
-          <Select
-            dir={localeDirection(locale)}
-            value={values.categoryId ?? undefined}
-            onValueChange={(value) => set('categoryId', value)}
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder={t('categoryHint')} />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.parentLabel ? `${category.parentLabel} › ` : ''}
-                  {category.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {/* Categories are admin-owned; a shop assigns, never creates (PRD §3.1). */}
-          <p className="text-muted-foreground text-xs">{t('categoryOwnedByAdmin')}</p>
-        </div>
+          <CategoryField
+            categories={categories}
+            value={values.categoryId}
+            onChange={(next) => set('categoryId', next)}
+            locale={locale}
+            prefilled={false}
+          />
 
-        {/* Brand and model are their own fields rather than two spec rows: the
-            brand drives a listing facet and both print under the title in the
-            buy box, so they exist whether or not the spec table is filled. */}
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="brand">{t('brand')}</Label>
-            <Input
-              id="brand"
-              value={values.brand}
-              onChange={(event) => set('brand', event.target.value)}
-            />
+          {/* Brand and model are their own fields rather than two spec rows: the
+              brand drives a listing facet and both print under the title in the
+              buy box, so they exist whether or not the spec table is filled. */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="brand">{t('brand')}</Label>
+              <Input
+                id="brand"
+                value={values.brand}
+                onChange={(event) => set('brand', event.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="model">{t('model')}</Label>
+              <Input
+                id="model"
+                value={values.model}
+                dir="ltr"
+                onChange={(event) => set('model', event.target.value)}
+              />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="model">{t('model')}</Label>
-            <Input
-              id="model"
-              value={values.model}
-              dir="ltr"
-              onChange={(event) => set('model', event.target.value)}
-            />
-          </div>
-        </div>
 
-        {/* NumberField, not Input: the value is read back in the reader's own
-            numerals the moment the field loses focus (see number-field.tsx). */}
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="price">{t('price')}</Label>
-            <NumberField
-              id="price"
-              value={values.price}
-              onChange={(next) => set('price', next)}
-              required
-              invalid={fieldError('price') !== undefined}
-              describedBy={fieldError('price') ? 'price-error' : undefined}
-            />
-            <FieldError
-              id="price-error"
-              message={
-                fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="discount">{t('discountPrice')}</Label>
-            <NumberField
-              id="discount"
-              value={values.discountPrice}
-              onChange={(next) => set('discountPrice', next)}
-              invalid={fieldError('discountPrice') !== undefined}
-              describedBy={fieldError('discountPrice') ? 'discount-error' : undefined}
-            />
-            <FieldError
-              id="discount-error"
-              message={
-                fieldError('discountPrice')
-                  ? t(`fieldErrors.${fieldError('discountPrice')}` as never)
-                  : null
-              }
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="stock">{t('stock')}</Label>
-            <NumberField
-              id="stock"
-              value={values.stock}
-              onChange={(next) => set('stock', next)}
-              invalid={fieldError('stock') !== undefined}
-              describedBy={fieldError('stock') ? 'stock-error' : undefined}
-            />
-            <FieldError
-              id="stock-error"
-              message={
-                fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null
-              }
-            />
-          </div>
-        </div>
+          {/* NumberField, not Input: the value is read back in the reader's own
+              numerals the moment the field loses focus (see number-field.tsx). */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="price">{t('price')}</Label>
+              <NumberField
+                id="price"
+                value={values.price}
+                onChange={(next) => set('price', next)}
+                required
+                invalid={fieldError('price') !== undefined}
+                describedBy={fieldError('price') ? 'price-error' : undefined}
+              />
+              <FieldError
+                id="price-error"
+                message={
+                  fieldError('price') ? t(`fieldErrors.${fieldError('price')}` as never) : null
+                }
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="discount">{t('discountPrice')}</Label>
+              <NumberField
+                id="discount"
+                value={values.discountPrice}
+                onChange={(next) => set('discountPrice', next)}
+                invalid={fieldError('discountPrice') !== undefined}
+                describedBy={fieldError('discountPrice') ? 'discount-error' : undefined}
+              />
+              <FieldError
+                id="discount-error"
+                message={
+                  fieldError('discountPrice')
+                    ? t(`fieldErrors.${fieldError('discountPrice')}` as never)
+                    : null
+                }
+              />
 
-        {/* Live preview, so the shopkeeper sees exactly what the customer will. */}
-        {priceNumber > 0 && (
-          <div className="rounded-control bg-neutral-50 p-3">
-            <p className="text-muted-foreground mb-1 text-xs">{t('pricePreview')}</p>
-            <PriceDisplay
-              price={priceNumber}
-              discountPrice={discountNumber || null}
-              size="lg"
-              showDiscountPercent
-            />
+              {/*
+                THE PREVIEW SITS UNDER THE FIELD THAT CHANGES IT (Prompt: cause
+                and effect should touch). It used to hang below the whole
+                three-column row, so on a phone a shopkeeper typing a discount had
+                the strike-through price a full field-height away and, with the
+                keyboard up, usually off screen entirely — they were editing a
+                number and taking the result on trust. Here it moves as they type,
+                in their eyeline.
+              */}
+              {priceNumber > 0 && (
+                <div className="rounded-control bg-neutral-50 p-3">
+                  <p className="text-muted-foreground mb-1 text-xs">{t('pricePreview')}</p>
+                  <PriceDisplay
+                    price={priceNumber}
+                    discountPrice={discountNumber || null}
+                    size="lg"
+                    showDiscountPercent
+                  />
+                </div>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="stock">{t('stock')}</Label>
+              <NumberField
+                id="stock"
+                value={values.stock}
+                onChange={(next) => set('stock', next)}
+                invalid={fieldError('stock') !== undefined}
+                describedBy={fieldError('stock') ? 'stock-error' : undefined}
+              />
+              <FieldError
+                id="stock-error"
+                message={
+                  fieldError('stock') ? t(`fieldErrors.${fieldError('stock')}` as never) : null
+                }
+              />
+            </div>
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      {/* Specifications, features, then variants */}
-      <SpecEditor
-        categorySlug={
-          categories.find((category) => category.id === values.categoryId)?.slug ?? null
-        }
-        rows={values.specs}
-        onChange={(specs) => set('specs', specs)}
-        showEnglish={showEnglish}
-        onShowEnglishChange={setShowEnglish}
-      />
+      {/* Specifications, features, then variants — the editor's work, not the
+          first two minutes' (see `creating`). */}
+      {!creating && (
+        <>
+          <SpecEditor
+            categorySlug={
+              categories.find((category) => category.id === values.categoryId)?.slug ?? null
+            }
+            rows={values.specs}
+            onChange={(specs) => set('specs', specs)}
+            showEnglish={showEnglish}
+            onShowEnglishChange={setShowEnglish}
+          />
 
-      <FeatureEditor
-        features={values.features}
-        onChange={(features) => set('features', features)}
-        showEnglish={showEnglish}
-        onShowEnglishChange={setShowEnglish}
-      />
+          <FeatureEditor
+            features={values.features}
+            onChange={(features) => set('features', features)}
+            showEnglish={showEnglish}
+            onShowEnglishChange={setShowEnglish}
+          />
 
-      <VariantEditor
-        variants={values.variants}
-        onChange={(variants) => set('variants', variants)}
-      />
+          <VariantEditor
+            variants={values.variants}
+            onChange={(variants) => set('variants', variants)}
+          />
+        </>
+      )}
 
       {/* Save bar */}
       {values.status !== 'archived' && (
         <div className="rounded-card border-border bg-background/95 sticky bottom-16 z-20 flex flex-wrap gap-2 border p-3 backdrop-blur-md md:bottom-0">
-          <Button onClick={() => submit()} disabled={pending}>
-            {pending ? t('saving') : values.id ? t('save') : t('saveAndContinue')}
-          </Button>
+          {/*
+            ON CREATE, PUBLISH IS THE BUTTON. The screen's whole promise ends in
+            «منتشر کنید», and it used to end in «ذخیره و ادامه» — a save that
+            left the product invisible to every customer and offered no hint
+            that a second, separate press was needed. Draft stays, demoted to
+            what it is: the answer for someone who is not ready yet.
+          */}
+          {creating ? (
+            <>
+              <Button variant="accent" onClick={() => submit('published')} disabled={pending}>
+                {pending ? t('saving') : t('quickPublish')}
+              </Button>
+              <Button variant="ghost" onClick={() => submit('draft')} disabled={pending}>
+                {t('quickDraft')}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => submit()} disabled={pending}>
+              {pending ? t('saving') : t('save')}
+            </Button>
+          )}
 
           {values.id && values.status !== 'published' && (
             <Button variant="accent" onClick={() => submit('published')} disabled={pending}>
@@ -579,6 +715,66 @@ export function ProductForm({
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The category picker, shared by the create screen and the editor.
+ *
+ * One component because the two screens must offer the same tree with the same
+ * ownership note — a picker that behaves differently depending on which screen
+ * you reached it from is how a product ends up filed in a category the
+ * shopkeeper did not mean.
+ */
+function CategoryField({
+  categories,
+  value,
+  onChange,
+  locale,
+  prefilled,
+}: {
+  categories: ProductFormCategory[];
+  value: string | null;
+  onChange: (next: string) => void;
+  locale: string;
+  /** Say out loud that the value was chosen for them — see the note below. */
+  prefilled: boolean;
+}) {
+  const t = useTranslations('shopProducts.form');
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor="category">{t('category')}</Label>
+      {/* Radix Select stamps `dir="ltr"` on its trigger and its dropdown
+          when it is given no direction, exactly as its Tabs does — which
+          put the chevron on the wrong edge and left-aligned the chosen
+          category inside an otherwise right-to-left form. */}
+      <Select dir={localeDirection(locale)} value={value ?? undefined} onValueChange={onChange}>
+        <SelectTrigger id="category">
+          <SelectValue placeholder={t('categoryHint')} />
+        </SelectTrigger>
+        <SelectContent>
+          {categories.map((category) => (
+            <SelectItem key={category.id} value={category.id}>
+              {category.parentLabel ? `${category.parentLabel} › ` : ''}
+              {category.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {/*
+        A PREFILLED VALUE HAS TO ANNOUNCE ITSELF. An electronics shop scrolls
+        the mall's whole category tree for its fortieth electronics product, so
+        the picker now opens on the category this shop actually files things
+        under — but a field that fills itself silently is a field a shopkeeper
+        stops reading, and one day it is wrong. The line says where the value
+        came from and that changing it is expected.
+      */}
+      {prefilled && <p className="text-muted-foreground text-xs">{t('categoryPrefilled')}</p>}
+      {/* Categories are admin-owned; a shop assigns, never creates (PRD §3.1). */}
+      <p className="text-muted-foreground text-xs">{t('categoryOwnedByAdmin')}</p>
     </div>
   );
 }

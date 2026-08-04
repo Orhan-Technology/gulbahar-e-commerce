@@ -5,6 +5,7 @@ import { parseConsoleRange, type ConsoleRange } from '../../console-range';
 import type { QueueClass } from '../../queue-sla';
 import { pickLocale } from '../localized';
 import { campaigns, orderItems, orders, products, wishlistItems } from '../schema';
+import { responsivenessSummary, viewsWithoutSales } from './shop-reports';
 
 /**
  * Everything the shop dashboard home needs in one call (PRD §6.1).
@@ -288,6 +289,10 @@ export async function shopDashboardStats(
         p.slug,
         p.title,
         p.view_count,
+        -- Carried so the best-seller rail can say what the number MEANS: a
+        -- product selling well with three units left is the one fact on that
+        -- panel a shopkeeper can act on this afternoon (see the rail).
+        p.stock,
         (
           select pi.path from product_images pi
           where pi.product_id = p.id
@@ -388,6 +393,7 @@ export async function shopDashboardStats(
         slug: string;
         title: Record<string, string>;
         view_count: number;
+        stock: number;
         image_path: string | null;
         order_count: number;
         revenue: number;
@@ -398,6 +404,7 @@ export async function shopDashboardStats(
       slug: row.slug,
       title: row.title,
       viewCount: Number(row.view_count),
+      stock: Number(row.stock),
       imagePath: row.image_path,
       orderCount: Number(row.order_count),
       revenue: Number(row.revenue),
@@ -485,7 +492,13 @@ export type ActionQueueEntry = {
     | 'needs_reply'
     | 'needs_answer'
     | 'out_of_stock'
-    | 'expiring_promotion';
+    | 'expiring_promotion'
+    /**
+     * The two REPORT VERDICTS worth interrupting someone for. See the note
+     * above the queries in `actionQueueItems`.
+     */
+    | 'views_no_sales'
+    | 'slow_replies';
   id: string;
   title: string;
   subtitle: string;
@@ -507,6 +520,28 @@ export async function actionQueueItems(
   now: Date = new Date(),
 ): Promise<ActionQueueEntry[]> {
   const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+  /*
+   * THE TWO REPORT VERDICTS WORTH INTERRUPTING SOMEONE FOR (Prompt: reports
+   * are written for a reader who never visits Reports).
+   *
+   * The reports produce real sentences — "eight hundred people looked at this
+   * and nobody bought", "you accept orders slower than the mall" — and this
+   * persona will not open a Reports tab unprompted in the middle of a working
+   * day. Stock already reaches them by riding into this queue; these two now
+   * follow exactly that pattern, as housekeeping rows that link back to the
+   * report they came from.
+   *
+   * ONLY TWO, and only over SEVEN DAYS. A queue that fills with advice stops
+   * being a list of things to do, and a verdict drawn over ninety days is not
+   * news. Started before the await below so they overlap the queue's own reads
+   * rather than adding a round trip to the screen's slowest band.
+   */
+  const reportReads = Promise.all([
+    viewsWithoutSales(shopId, 7, 1),
+    responsivenessSummary(shopId, 7),
+  ]);
 
   const [orderRows, reviewRows, questionRows, stockRows, promoRows] = await Promise.all([
     /*
@@ -637,6 +672,24 @@ export async function actionQueueItems(
     slot_name: Record<string, string>;
   }>;
 
+  const [viewLeaders, speed] = await reportReads;
+
+  /*
+   * SLOWER THAN THE MALL, and by enough to be a finding rather than noise.
+   *
+   * The mall median already excludes this shop (see the report), so the two
+   * figures are genuinely comparable. The margin is a QUARTER slower and at
+   * least an hour: without the absolute floor a shop answering in twelve
+   * minutes against the mall's ten would be told it is behind, which is true
+   * and useless. Both medians must exist — a shop with no accepted orders in
+   * the window has nothing to be slow at.
+   */
+  const slow =
+    speed.acceptHours !== null &&
+    speed.mallAcceptHours !== null &&
+    speed.acceptHours > speed.mallAcceptHours * 1.25 &&
+    speed.acceptHours - speed.mallAcceptHours >= 1;
+
   const entries: ActionQueueEntry[] = [
     ...orders_.map((row): ActionQueueEntry => {
       const kind =
@@ -712,6 +765,39 @@ export async function actionQueueItems(
       href: '/dashboard/promotions',
       at: new Date(row.ends_at),
     })),
+    /*
+     * Both verdicts are HOUSEKEEPING: nobody is waiting on them, and colouring
+     * a week-old observation like a customer standing at the counter is how a
+     * queue teaches people to ignore its colours. `at` is the start of the
+     * window they describe, so within the housekeeping group they sort behind
+     * anything with a real deadline.
+     */
+    ...viewLeaders.map((row): ActionQueueEntry => ({
+      urgency: 'housekeeping',
+      kind: 'views_no_sales',
+      id: row.id,
+      title: pickLocale(row.title as never, locale),
+      subtitle: String(row.views),
+      href: '/dashboard/reports?report=views&range=7d',
+      at: weekAgo,
+    })),
+    ...(slow
+      ? [
+          {
+            urgency: 'housekeeping',
+            kind: 'slow_replies',
+            // Not a row id — there is no row. The queue keys on kind+id, and
+            // the shop can only ever have one of these at a time.
+            id: shopId,
+            // Packed for the server half to format, the same shape the order
+            // rows use: this shop's median hours, then the mall's.
+            title: '',
+            subtitle: `${speed.acceptHours}|${speed.mallAcceptHours}`,
+            href: '/dashboard/reports?report=responsiveness&range=7d',
+            at: weekAgo,
+          } satisfies ActionQueueEntry,
+        ]
+      : []),
   ];
 
   /*
@@ -733,6 +819,9 @@ export async function actionQueueItems(
     to_collect: 5,
     out_of_stock: 6,
     expiring_promotion: 7,
+    // Advice ranks below everything with a date on it.
+    views_no_sales: 8,
+    slow_replies: 9,
   };
 
   return entries.sort(

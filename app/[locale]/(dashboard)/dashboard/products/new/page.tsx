@@ -4,17 +4,30 @@ import { ChevronRight } from 'lucide-react';
 import { ProductForm } from '@/components/dashboard/products/product-form';
 import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
-import { selectableCategories } from '@/lib/db/queries/shop-products';
+import { defaultProductCategory, selectableCategories } from '@/lib/db/queries/shop-products';
 import { Link } from '@/lib/i18n/navigation';
 
 /** New product (PRD §6.2). */
 export default async function NewProductPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  await requireShopkeeper(locale);
+  const user = await requireShopkeeper(locale);
   const t = await getTranslations('shopProducts');
 
-  const categories = await selectableCategories(locale);
+  const [categories, defaultCategoryId] = await Promise.all([
+    selectableCategories(locale),
+    // Where this shop files things — see the query, and the note on the picker.
+    defaultProductCategory(user.shopId),
+  ]);
+
+  /*
+   * Only offered if it is still a real choice: a category the shop used before
+   * the mall retired it would otherwise arrive as a value the picker cannot
+   * display, which reads as an empty field that will not stay empty.
+   */
+  const prefill = categories.some((category) => category.id === defaultCategoryId)
+    ? defaultCategoryId
+    : null;
 
   return (
     <div className="space-y-4 p-4">
@@ -30,6 +43,7 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
 
       <ProductForm
         images={[]}
+        categoryPrefilled={prefill !== null}
         categories={categories.map((category) => ({
           id: category.id,
           slug: category.slug,
@@ -43,7 +57,7 @@ export default async function NewProductPage({ params }: { params: Promise<{ loc
           descriptionFa: '',
           descriptionEn: '',
           descriptionPs: '',
-          categoryId: null,
+          categoryId: prefill,
           price: '',
           discountPrice: '',
           stock: '0',

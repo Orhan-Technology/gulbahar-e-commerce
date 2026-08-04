@@ -156,6 +156,35 @@ export async function ActionQueue({ entries }: { entries: ActionQueueEntry[] }) 
           title: t('expiring', { slot: entry.title }),
           subtitle: t('expiringSub', { date: formatDate(entry.subtitle, locale) }),
         };
+      /*
+       * THE REPORT VERDICTS. No inline action — the action IS the report, and
+       * the row is a door to it. Muted, because a week-old observation must not
+       * wear the same colour as a customer standing at the counter.
+       */
+      case 'views_no_sales':
+        return {
+          ...base,
+          tone: 'muted' as const,
+          title: t('viewsNoSales', { product: entry.title }),
+          subtitle: t('viewsNoSalesSub', {
+            views: formatNumber(Number(entry.subtitle), locale),
+          }),
+        };
+      case 'slow_replies': {
+        // subtitle is packed as "acceptHours|mallAcceptHours" by the query.
+        const [mine, mall] = entry.subtitle.split('|');
+        return {
+          ...base,
+          tone: 'muted' as const,
+          title: t('slowReplies'),
+          subtitle: t('slowRepliesSub', {
+            // Rounded to whole hours: a median of 4.28 hours is precision the
+            // reader has no use for and cannot act on.
+            hours: formatNumber(Math.round(Number(mine)), locale),
+            mallHours: formatNumber(Math.round(Number(mall)), locale),
+          }),
+        };
+      }
     }
   });
 

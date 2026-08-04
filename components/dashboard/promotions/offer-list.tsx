@@ -44,6 +44,12 @@ export type OfferPerformanceView = {
   baselineRevenue: string;
   /** "compared with the ۷ days before" — the window, stated. */
   windowLabel: string;
+  /**
+   * The one-line reading of the four numbers, or null when they do not support
+   * one. Built on the server (see the promotions page) like everything else
+   * here.
+   */
+  verdict: string | null;
 };
 
 /**
@@ -222,11 +228,15 @@ function OfferCard({
 /**
  * What the offer sold, beside what the same stretch of time sold before it.
  *
- * TWO COLUMNS AND A CAPTION, no lift percentage. The caption says these are
- * fulfilled orders in the window and that the shop is being shown a comparison,
- * not an attribution — a "+34%" here would be read as "the discount earned
- * this", which nothing in the data supports. The honest empty state is a
- * sentence, not two zeros in a grid: zeros look like a broken readout.
+ * A SENTENCE, THEN TWO COLUMNS AND A CAPTION — still no lift percentage. The
+ * panel used to open with four figures, which made a shopkeeper do the
+ * arithmetic to reach the one thing they came for; the verdict line does that
+ * reading for them and the numbers stay underneath as its evidence. The caption
+ * says these are fulfilled orders in the window and that the shop is being shown
+ * a comparison, not an attribution — a "+34%" here would be read as "the
+ * discount earned this", which nothing in the data supports. The honest empty
+ * state is a sentence, not two zeros in a grid: zeros look like a broken
+ * readout.
  */
 function OfferPerformanceBlock({ performance }: { performance: OfferPerformanceView }) {
   const t = useTranslations('shopPromotions.offers.performance');
@@ -241,7 +251,11 @@ function OfferPerformanceBlock({ performance }: { performance: OfferPerformanceV
 
   return (
     <div className="rounded-control space-y-1.5 bg-neutral-50 p-3">
-      <p className="text-2xs font-bold text-neutral-500">{t('heading')}</p>
+      {performance.verdict ? (
+        <p className="text-foreground text-sm font-semibold">{performance.verdict}</p>
+      ) : (
+        <p className="text-2xs font-bold text-neutral-500">{t('heading')}</p>
+      )}
 
       <dl className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         <div>

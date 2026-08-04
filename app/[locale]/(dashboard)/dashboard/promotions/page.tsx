@@ -12,6 +12,7 @@ import { requireShopkeeper } from '@/lib/auth/guards';
 import { pickLocale } from '@/lib/db/localized';
 import {
   offerPerformance,
+  type OfferPerformance,
   shopCampaignTotals,
   shopCampaigns,
   shopOffers,
@@ -147,6 +148,22 @@ export default async function ShopPromotionsPage({
                     baselineUnits: formatNumber(row?.baselineUnits ?? 0, locale),
                     baselineRevenue: formatCurrency(row?.baselineRevenue ?? 0, locale),
                     windowLabel: tPerf('window', { days, n: row?.measuredDays ?? 0 }),
+                    /*
+                     * THE PANEL LEADS WITH A SENTENCE (Prompt: four numbers
+                     * answer a question nobody asked in that form).
+                     *
+                     * A shopkeeper reading «۱۲ · ؋۴۸٬۰۰۰ · ۵ · ؋۲۰٬۰۰۰» has to
+                     * do the arithmetic themselves to learn the one thing they
+                     * came for — did the discount move anything. The four
+                     * figures stay underneath, because they are the evidence
+                     * for the sentence and a claim with no numbers beside it is
+                     * a slogan.
+                     *
+                     * Still no attribution and still no lift percentage: the
+                     * sentence describes what HAPPENED in the window, in the
+                     * same careful voice as the caveat below it.
+                     */
+                    verdict: verdictFor(row, tPerf, locale),
                   };
                 })(),
               }))}
@@ -220,4 +237,42 @@ function Stat({ label, value }: { label: string; value: string }) {
       <dd className="mt-0.5 text-sm font-bold">{value}</dd>
     </div>
   );
+}
+
+/**
+ * One sentence saying how the offer went — see the note where it is built.
+ *
+ * The thresholds are deliberately coarse. A 6% difference between two windows
+ * of a five-product shop is noise, and a sentence that reports it as movement
+ * teaches a shopkeeper to distrust the panel; "about the same" is the honest
+ * reading of anything inside a tenth either way. Above DOUBLE the wording drops
+ * the ratio and says «چند برابر», for the same reason the dashboard's growth
+ * badges do: past a point a multiple stops informing and starts looking broken.
+ */
+function verdictFor(
+  row: OfferPerformance | undefined,
+  tPerf: Awaited<ReturnType<typeof getTranslations<'shopPromotions.offers.performance'>>>,
+  locale: string,
+): string | null {
+  if (!row || row.notStarted || row.empty) return null;
+
+  // Sold something out of nothing: a ratio against zero is not a number, and
+  // "you had sold none" is the more useful sentence anyway.
+  if (row.baselineUnits === 0) {
+    return row.units > 0
+      ? tPerf('verdictFromNothing', { units: formatNumber(row.units, locale) })
+      : null;
+  }
+
+  const ratio = row.units / row.baselineUnits;
+  if (ratio >= 2) {
+    return tPerf('verdictMuchMore', {
+      // One decimal would be false precision on counts this small; the whole
+      // multiple is what a shopkeeper would say out loud.
+      times: formatNumber(Math.round(ratio), locale),
+    });
+  }
+  if (ratio > 1.1) return tPerf('verdictMore');
+  if (ratio >= 0.9) return tPerf('verdictSame');
+  return tPerf('verdictLess');
 }

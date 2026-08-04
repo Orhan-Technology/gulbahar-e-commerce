@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CallCustomerLink } from '@/components/dashboard/orders/call-customer-link';
 import { advanceOrderStatus } from '@/lib/actions/shop-orders';
 import { ORDER_REJECT_REASONS, type OrderRejectReason } from '@/lib/order-reject-reasons';
 import { cn } from '@/lib/utils';
@@ -38,10 +39,18 @@ export function OrderRejectButton({
   orderId,
   size = 'default',
   className,
+  customerPhone,
 }: {
   orderId: string;
   size?: 'sm' | 'default';
   className?: string;
+  /**
+   * The customer's number, when the caller has it.
+   *
+   * Optional because the dashboard queue does not carry one — see the call
+   * below for why the dialog wants it.
+   */
+  customerPhone?: string | null;
 }) {
   const t = useTranslations('shopOrders.actions');
   const router = useRouter();
@@ -122,6 +131,11 @@ export function OrderRejectButton({
               ))}
             </div>
           </fieldset>
+
+          {/* Ring them once more before turning them away — see the component. */}
+          {reasonCode === 'customer_unreachable' && customerPhone && (
+            <CallCustomerLink phone={customerPhone} />
+          )}
 
           <div className="space-y-1.5">
             <Label htmlFor={`reason-${orderId}`}>{t('reasonLabel')}</Label>

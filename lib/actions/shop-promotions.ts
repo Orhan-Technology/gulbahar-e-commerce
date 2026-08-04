@@ -2,12 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { and, eq, inArray } from 'drizzle-orm';
+import { getTranslations } from 'next-intl/server';
 import { z } from 'zod';
 
 import { currentUser } from '../auth/guards';
 import { db } from '../db';
 import { pickLocale } from '../db/localized';
 import { campaigns, offers, products, promotionSlots } from '../db/schema';
+import { formatCurrency, formatNumber } from '../format';
 import { slotAvailability } from '../db/queries/shop-promotions';
 import { shopNameFor } from '../db/queries/shop-orders';
 import { notify } from '../notify';
@@ -38,8 +40,19 @@ async function requireShopContext() {
 const offerSchema = z
   .object({
     id: z.string().uuid().optional(),
+    /*
+     * THE NAME IS OPTIONAL NOW (Prompt: two decisions, not seven fields).
+     *
+     * The common offer is «۱۰٪ روی این سه محصول، همین هفته» and it used to
+     * require a Dari name and an English one before Save would even enable —
+     * two writing tasks for a decision that has already been made, in a
+     * language most tenants here do not write for the second one. When the fa
+     * name comes back empty BOTH are generated below from the discount and its
+     * scope, in each locale properly, which is the name a shopkeeper would have
+     * typed anyway. Anything they DO type still wins.
+     */
     name: z.object({
-      fa: z.string().trim().min(1, { message: 'fa_required' }),
+      fa: z.string().trim().optional().nullable(),
       en: z.string().trim().optional().nullable(),
     }),
     type: z.enum(['percent', 'fixed']),
@@ -72,6 +85,46 @@ const KNOWN_OFFER_CODES = new Set([
   'end_after_start',
 ]);
 
+/**
+ * «۱۰٪ تخفیف روی ۳ محصول» / "10% off 3 products", in both locales.
+ *
+ * The numbers go through `formatNumber` per locale like every other number in
+ * the product, so the Dari name carries Persian digits and the English one does
+ * not — a stored name is read on the storefront by both audiences, and one of
+ * them would otherwise be reading the other's numerals.
+ */
+async function generatedOfferName(offer: {
+  type: 'percent' | 'fixed';
+  value: number;
+  scope: 'shop' | 'products';
+  productCount: number;
+}): Promise<{ fa: string; en: string }> {
+  const key =
+    offer.type === 'percent'
+      ? offer.scope === 'shop'
+        ? 'autoNamePercentShop'
+        : 'autoNamePercentProducts'
+      : offer.scope === 'shop'
+        ? 'autoNameFixedShop'
+        : 'autoNameFixedProducts';
+
+  const build = async (locale: 'fa' | 'en') => {
+    const t = await getTranslations({ locale, namespace: 'shopPromotions.offerForm' });
+    return t(key, {
+      // A fixed discount is money and reads as «؋۵۰۰»; a percentage is a bare
+      // number with the sign in the string.
+      value:
+        offer.type === 'percent'
+          ? formatNumber(offer.value, locale)
+          : formatCurrency(offer.value, locale),
+      count: formatNumber(offer.productCount, locale),
+    });
+  };
+
+  const [fa, en] = await Promise.all([build('fa'), build('en')]);
+  return { fa, en };
+}
+
 export async function saveOffer(input: OfferInput): Promise<PromotionActionResult<{ id: string }>> {
   const context = await requireShopContext();
   if (!context) return { ok: false, error: 'forbidden' };
@@ -103,8 +156,30 @@ export async function saveOffer(input: OfferInput): Promise<PromotionActionResul
     productIds = owned.map((row) => row.id);
   }
 
+  /*
+   * The auto-name is built HERE rather than in the dialog, and that is the
+   * whole reason it can exist: a client component only has the reader's own
+   * locale, so a Dari shopkeeper naming an offer could never produce the
+   * English name the same offer needs on the English storefront. On the server
+   * `getTranslations({ locale })` gives both.
+   */
+  const generated = data.name.fa?.trim()
+    ? null
+    : await generatedOfferName({
+        type: data.type,
+        value: data.value,
+        scope: data.scope,
+        productCount: productIds?.length ?? 0,
+      });
+
   const values = {
-    name: { fa: data.name.fa, en: data.name.en ?? null, ps: null },
+    name: {
+      fa: data.name.fa?.trim() || generated!.fa,
+      // A shopkeeper who named it in Dari and left English blank keeps that
+      // shape — `pickLocale` falls back to fa, which is the existing contract.
+      en: data.name.en?.trim() || generated?.en || null,
+      ps: null,
+    },
     type: data.type,
     value: data.value,
     scope: data.scope,
