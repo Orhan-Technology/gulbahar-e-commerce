@@ -128,7 +128,21 @@ function Slide({
         active ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
     >
-      <div className="relative z-10 flex flex-col justify-center gap-3 p-6 sm:p-10">
+      {/*
+       * ONE POSTER ON A PHONE, two-up from `lg`.
+       *
+       * Below `lg` this grid stacked a solid blue text block over a 180px strip
+       * of photograph, which is two half-panels rather than one banner — and on
+       * the mall's most expensive placement the photograph, the only part with
+       * anything to look at, got the smaller half. The image is lifted out of
+       * flow and fills the slide instead, with the copy resting on the lower
+       * third over a scrim. Nothing changes at `lg`, where two columns have the
+       * width to be two columns.
+       *
+       * `justify-end` puts the copy at the bottom so the product is not covered
+       * by its own headline; the gradient is strongest exactly there.
+       */}
+      <div className="relative z-10 flex flex-col justify-end gap-3 p-6 sm:p-10 lg:justify-center">
         {(slide.sponsored || slide.eyebrow) && (
           <span className="flex items-center gap-2">
             {slide.sponsored && <SponsoredBadge tone="dark" />}
@@ -162,7 +176,7 @@ function Slide({
       </div>
 
       {slide.imagePath && (
-        <div className="relative min-h-[180px] lg:min-h-0">
+        <div className="absolute inset-0 lg:relative lg:inset-auto lg:min-h-0">
           <Image
             src={slide.imagePath}
             alt=""
@@ -171,9 +185,19 @@ function Slide({
             priority={priority}
             className="object-cover"
           />
-          {/* Feathers the photo into the gradient instead of ending on a hard
-              seam. Physical direction: the photo is always on the far side. */}
-          <div className="from-primary-700 absolute inset-0 to-transparent ltr:bg-linear-to-r rtl:bg-linear-to-l" />
+          {/*
+            Two scrims, one per layout, because they are doing different jobs.
+            Below `lg` the copy sits ON the photo, so the veil is vertical and
+            heavy enough to carry white text over any frame the catalogue
+            supplies — a fixed tint would be too little on a pale product shot
+            and too much on a dark one, so it is opaque where the words are and
+            clear where they are not. From `lg` the photo is a neighbour rather
+            than a backdrop and the original horizontal feather returns, which
+            only has to hide the seam.
+          */}
+          <div className="from-primary-950/90 via-primary-900/45 absolute inset-0 bg-linear-to-t to-transparent lg:hidden" />
+          {/* Physical direction: the photo is always on the far side. */}
+          <div className="from-primary-700 absolute inset-0 to-transparent max-lg:hidden ltr:bg-linear-to-r rtl:bg-linear-to-l" />
         </div>
       )}
     </div>

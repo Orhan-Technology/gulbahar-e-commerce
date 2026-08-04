@@ -194,6 +194,45 @@ export async function activeOffers(limit = 8, now: Date = new Date()) {
        * cannot inflate the number.
        */
       /*
+       * WHAT IS ACTUALLY IN THE SALE, as pictures.
+       *
+       * The offer rows on /offers read as ledger entries — a discount, a shop
+       * name and a countdown, three numbers and no goods — on the one page in
+       * the store whose subject is buying something. An offer is not a coupon,
+       * it is a window: these are the three most-viewed in-stock products it
+       * covers, first image each, so the row shows what the discount is ON.
+       *
+       * IN-STOCK ONLY, for the same reason the offers grid hides sold-out
+       * cards: every pixel of this band is the shop telling the reader to buy.
+       *
+       * One subquery rather than a second round trip per offer — a promotional
+       * band that costs N+1 queries is a band that gets deleted the first time
+       * anyone profiles the page. `distinct on (p.id)` picks each product's
+       * first image, and the outer wrapper is what lets the LIMIT apply before
+       * the aggregate.
+       */
+      previewImages: sql<string[]>`(
+        select coalesce(jsonb_agg(y.path), '[]'::jsonb) from (
+          select x.path from (
+            select distinct on (p.id) p.id, p.view_count, pi.path
+            from products p
+            join product_images pi on pi.product_id = p.id
+            where p.shop_id = offers.shop_id
+              and p.status = 'published'
+              and p.stock > 0
+              and (
+                offers.scope = 'shop'
+                or p.id::text in (
+                  select jsonb_array_elements_text(coalesce(offers.product_ids, '[]'::jsonb))
+                )
+              )
+            order by p.id, pi.sort asc
+          ) x
+          order by x.view_count desc
+          limit 3
+        ) y
+      )`,
+      /*
        * Written as literal qualified SQL, not with interpolated columns: inside
        * a subquery aliased `p`, drizzle's unqualified rendering of
        * `${offers.scope}` would bind to the wrong relation (see

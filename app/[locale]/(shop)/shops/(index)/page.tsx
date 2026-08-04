@@ -13,6 +13,7 @@ import { recordImpressions } from '@/lib/db/queries/promoted';
 import { searchShops } from '@/lib/db/queries/search';
 import { categoryBySlug, categoryTree, shopDirectory } from '@/lib/db/queries/shops';
 import { formatNumber } from '@/lib/format';
+import { MALL_FLOORS } from '@/lib/mall-floors';
 
 /**
  * Shop directory (PRD §5.1) — a first-class listing, not a list.
@@ -20,6 +21,11 @@ import { formatNumber } from '@/lib/format';
  * Same shape as a category page, because that is what it is: a header that says
  * how much is here, a way to search it, a scope row across the top, then a
  * featured strip and the grid. It used to be a search box and eight cards.
+ *
+ * The grid is GROUPED BY FLOOR and uses ShopCard's compact row — see the note
+ * on `groups` below for why the building's own structure beats a rating sort
+ * here. A SEARCH is ungrouped: a term is not a place, and scattering four
+ * matches across three floor headings hides the thing that was asked for.
  *
  * The FEATURED STRIP is a revenue surface (PRD §8.2): shops holding a live
  * `directory_top` placement render first, larger and badged. It is bounded by
@@ -60,7 +66,7 @@ export default async function ShopsPage({
 
       <ShopCategoryChips categories={tree} active={category} />
 
-      <Suspense fallback={<ShopGridSkeleton />}>
+      <Suspense fallback={<ShopGridSkeleton layout="row" />}>
         <Directory locale={locale} q={q} category={category} now={now} />
       </Suspense>
     </div>
@@ -100,6 +106,8 @@ async function Directory({
   now: Date;
 }) {
   const t = await getTranslations('shops');
+  const tCommon = await getTranslations('common');
+  const tFloors = await getTranslations('floors');
   const term = q?.trim();
 
   // A search narrows to trigram matches; otherwise the full directory.
@@ -142,6 +150,37 @@ async function Directory({
 
   void recordImpressions(promoted.map((shop) => shop.campaignId));
 
+  /*
+   * GROUPED BY FLOOR, because that is the map the customer already has.
+   *
+   * Gulbahar Center is a building with three trading floors, and a visitor who
+   * has ever been inside it navigates by them — «طبقه دوم» is where the phone
+   * shops are, and knowing that is worth more than knowing which shop has 4.6
+   * stars. A flat grid sorted on derived rating threw that structure away and
+   * offered nothing in its place: fourteen equally-weighted cards in an order
+   * whose logic is invisible from the outside.
+   *
+   * The rating order SURVIVES INSIDE each floor, so the grouping costs nothing
+   * — the best-rated shop on a floor is still its first card.
+   *
+   * MALL_FLOORS rather than the floors the data happens to hold: an empty third
+   * floor is a fact about the mall, and deriving the headings from the shops
+   * would silently delete a floor from the building's map. Empty ones are
+   * dropped from the RENDER (a heading over nothing is not a fact worth
+   * stating) but the list is what defines the order.
+   */
+  const groups = MALL_FLOORS.map((floor) => ({
+    floor,
+    shops: rest.filter((shop) => shop.floor === floor),
+  })).filter((group) => group.shops.length > 0);
+
+  // Anything the mall has not placed on a known floor. Never dropped — a shop
+  // missing from the directory because its floor column is null is a shop that
+  // has effectively been unpublished by a data gap.
+  const unplaced = rest.filter(
+    (shop) => shop.floor === null || !MALL_FLOORS.includes(shop.floor as (typeof MALL_FLOORS)[number]),
+  );
+
   return (
     <div className="space-y-6">
       {promoted.length > 0 && (
@@ -164,7 +203,23 @@ async function Directory({
         </section>
       )}
 
-      <ShopGrid items={rest} now={now} />
+      {groups.map((group) => (
+        <section key={group.floor} className="space-y-3">
+          <h2 className="text-foreground flex items-baseline gap-2 text-base font-bold">
+            {tCommon('floorName', { floor: group.floor })}
+            {/* `floors.shopsOnFloor` — «۴ دکان» — and NOT this page's own
+                `shopCount`, which reads «۴ دکان در مرکز گلبهار»: under a floor
+                heading that sentence names the wrong place, and the mall is
+                already the subject of the page. */}
+            <span className="text-muted-foreground text-xs font-normal">
+              {tFloors('shopsOnFloor', { count: formatNumber(group.shops.length, locale) })}
+            </span>
+          </h2>
+          <ShopGrid items={group.shops} layout="row" hideFloor now={now} />
+        </section>
+      ))}
+
+      {unplaced.length > 0 && <ShopGrid items={unplaced} layout="row" now={now} />}
     </div>
   );
 }

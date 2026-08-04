@@ -46,6 +46,16 @@ export interface ShopCardProps {
    * competing with the product photography above them.
    */
   layout?: 'card' | 'row';
+  /**
+   * Drops the floor from the row's metadata line.
+   *
+   * For the directory, which now GROUPS by floor: «طبقه اول» under a heading
+   * that already reads «طبقه اول» is the card repeating its own container, five
+   * times down a column. The floor stays everywhere the grouping does not —
+   * search results, the styleguide — because there it is the only place the
+   * card says where the shop is.
+   */
+  hideFloor?: boolean;
   className?: string;
 }
 
@@ -70,6 +80,7 @@ export function ShopCard({
   pausedUntil,
   isSponsored = false,
   layout = 'card',
+  hideFloor = false,
   className,
 }: ShopCardProps) {
   const locale = useLocale();
@@ -156,7 +167,7 @@ export function ShopCard({
                 productCount !== undefined
                   ? t('productCount', { count: formatNumber(productCount, locale) })
                   : null,
-                hasLocation ? common('floorName', { floor }) : null,
+                hasLocation && !hideFloor ? common('floorName', { floor }) : null,
               ]
                 .filter(Boolean)
                 .join(' · ')}

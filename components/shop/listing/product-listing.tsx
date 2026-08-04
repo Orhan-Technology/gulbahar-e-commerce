@@ -2,11 +2,11 @@ import { getTranslations } from 'next-intl/server';
 import { PackageSearch } from 'lucide-react';
 
 import { EmptyState } from '@/components/custom/empty-state';
-import { SponsoredBadge } from '@/components/custom/sponsored-badge';
 import { AppliedFilters } from '@/components/shop/listing/applied-filters';
 import type { FacetOptions } from '@/components/shop/listing/facet-controls';
 import { LoadMore } from '@/components/shop/listing/load-more';
 import { ListingToolbar } from '@/components/shop/listing/listing-toolbar';
+import { SponsoredNote } from '@/components/shop/listing/sponsored-note';
 import { ProductGrid, ProductGridSkeleton } from '@/components/shop/product-grid';
 import { Skeleton } from '@/components/ui/skeleton';
 import { currentUser } from '@/lib/auth/guards';
@@ -80,6 +80,7 @@ export async function ProductListing({
   defaultSort = 'popularity',
   emptyHref,
   emptyExtra,
+  hideFilters = false,
 }: {
   query: ListingSearchParams;
   locale: string;
@@ -121,6 +122,22 @@ export async function ProductListing({
    * this node when there are results, so its awaits never run.
    */
   emptyExtra?: React.ReactNode;
+  /**
+   * Drops the toolbar's filter entry point while keeping the toolbar itself.
+   *
+   * For a catalogue small enough to read whole (lib/listing SMALL_CATALOGUE_MAX)
+   * — a shop with five products — where narrowing cannot remove anything the
+   * reader has not already seen. The COUNT and the SORT stay: they are the
+   * shared listing vocabulary, and a surface that renders a different toolbar
+   * from every other listing is the drift `check:design` exists to catch. What
+   * goes is the mobile filter sheet, and the page above drops the rail beside
+   * it.
+   *
+   * `facets` is still needed for the applied-chip labels — a filter carried in
+   * from a link must still be nameable and removable even where the controls
+   * that set it are hidden.
+   */
+  hideFilters?: boolean;
 }) {
   const t = await getTranslations('listing');
 
@@ -263,7 +280,7 @@ export async function ProductListing({
         // Clamped: a promoted product that the current page's organic slice
         // does not contain would otherwise make "showing 25 of 24".
         shown={Math.min(promoted.length + organic.length, result.total)}
-        facets={facets}
+        facets={hideFilters ? undefined : facets}
         defaultSort={defaultSort}
       />
 
@@ -282,12 +299,7 @@ export async function ProductListing({
         The note stays, above the grid, because the badge alone does not explain
         that the ordering underneath is untouched.
       */}
-      {promoted.length > 0 && (
-        <p className="flex flex-wrap items-center gap-2 text-xs text-neutral-600">
-          <SponsoredBadge />
-          {t('promotedNote')}
-        </p>
-      )}
+      {promoted.length > 0 && <SponsoredNote />}
 
       <ProductGrid
         items={[...promoted.map((item) => ({ ...item, sponsored: true as const })), ...organic]}

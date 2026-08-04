@@ -129,6 +129,13 @@ export function ProductCard({
    */
   const lowStock =
     stock !== undefined && stock > 0 && stock <= LOW_STOCK_BADGE_THRESHOLD;
+  /*
+   * Mirrors RatingStars' own test rather than assuming a count is present: the
+   * styleguide renders a card with a rating and no count, and treating that as
+   * unrated would stamp «جدید» over a product that has a score to show.
+   */
+  const unrated =
+    reviewCount !== undefined ? reviewCount < MIN_RATING_REVIEWS : (rating ?? 0) === 0;
 
   function toggleWishlist(event: React.MouseEvent) {
     event.preventDefault();
@@ -279,20 +286,76 @@ export function ProductCard({
        * Set HERE rather than in RatingStars' default so the review list and the
        * composer, where one rating IS the subject, keep drawing it.
        */}
-      <RatingStars
-        value={rating ?? 0}
-        count={reviewCount}
-        size="sm"
-        reserveSpace
-        minCount={MIN_RATING_REVIEWS}
-      />
+      {/*
+       * …and where the row would be blank, one word instead of none.
+       *
+       * Silence was the honest answer to "we have no score", but it is not the
+       * only true thing about the product: it is NEW. A blank line where every
+       * neighbouring card carries stars reads as a card that failed to load
+       * something, so the reader supplies the missing meaning themselves and it
+       * is never a flattering one. «جدید» is the same absence, said out loud —
+       * and it is the reading a shopper is inclined to reward rather than skip.
+       *
+       * Below MIN_RATING_REVIEWS rather than at zero reviews exactly, so the
+       * chip covers the whole span where the stars are withheld and the row is
+       * never empty. Neutral, not blue: the chip is not pressable, and not
+       * amber either, because amber is reserved for opinion and this is the
+       * absence of one.
+       */}
+      {unrated ? (
+        <span className="inline-flex h-5 items-center">
+          <span className="rounded-pill border-border text-2xs text-muted-foreground border px-2 py-0.5 font-medium">
+            {t('newBadge')}
+          </span>
+        </span>
+      ) : (
+        <RatingStars
+          value={rating ?? 0}
+          count={reviewCount}
+          size="sm"
+          reserveSpace
+          minCount={MIN_RATING_REVIEWS}
+        />
+      )}
 
       <PriceDisplay price={price} discountPrice={discountPrice} size="md" />
 
-      <span className="text-2xs truncate text-neutral-500">
-        {shopFloor === undefined || shopFloor === null
-          ? shopName
-          : `${shopName} · ${common('floorName', { floor: shopFloor })}`}
+      {/*
+       * THE LOCATION LINE IS A WAY IN, not a caption.
+       *
+       * «طبقه اول» under a price is the one fact on this card that no other
+       * marketplace can print, and it was inert text. It now opens the mall
+       * plan at that floor — the same panel the product page's sheet shows,
+       * reached through the page that already draws it.
+       *
+       * A LINK TO /floors RATHER THAN A SHEET, and that is a cost decision
+       * rather than a preference. A sheet needs the floor's units, and a grid
+       * renders twenty-four of these: either twenty-four queries or the whole
+       * mall map threaded through every listing page and every rail, for a
+       * panel almost nobody opens. One href costs nothing and lands on the
+       * surface built for it. The product PAGE — one card, one shop, one floor
+       * — gets the real sheet.
+       *
+       * `z-20` and a sibling of the stretched link, not a child: the card's
+       * `::after` covers the whole tile at z-10, so anything meant to be
+       * clickable inside it has to sit above that, and an anchor nested in an
+       * anchor is invalid HTML the parser silently unpicks.
+       */}
+      <span className="text-2xs relative z-20 truncate text-neutral-500">
+        {shopFloor === undefined || shopFloor === null ? (
+          shopName
+        ) : (
+          <>
+            {shopName}
+            <span aria-hidden> · </span>
+            <Link
+              href={`/floors?floor=${shopFloor}`}
+              className="hover:text-primary underline decoration-dotted underline-offset-2 transition-colors duration-150"
+            >
+              {common('floorName', { floor: shopFloor })}
+            </Link>
+          </>
+        )}
       </span>
     </div>
   );

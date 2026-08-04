@@ -125,6 +125,25 @@ export function brandLabel(
 }
 
 /**
+ * The size below which a catalogue does not need narrowing.
+ *
+ * A shop page carried the full listing apparatus — the shop's own category
+ * chips, an in-shop search box, a sort control and a filter rail — above five
+ * products. Four controls to narrow a set the reader can already see entire is
+ * not a feature, it is furniture: it pushes the goods below the fold and it
+ * asks somebody to do work whose best possible outcome is the page they are
+ * already looking at.
+ *
+ * Eight, because that is a bit more than a full grid row at every width the
+ * storefront lays out: at eight the reader can still take the whole catalogue
+ * in with one scroll, and above it a filter starts being able to remove
+ * something they have not already seen. In lib/ and not beside the shop page
+ * because the query layer and the page both read it, and a `'use client'`
+ * module cannot export a number to a server component (CLAUDE.md).
+ */
+export const SMALL_CATALOGUE_MAX = 8;
+
+/**
  * Threshold for the "only N left" badge on a card (PRD §5.2).
  *
  * Three, not the dashboard's five: a shopkeeper wants warning early enough to

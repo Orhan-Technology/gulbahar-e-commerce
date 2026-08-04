@@ -1,22 +1,17 @@
-import Image from 'next/image';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Tag } from 'lucide-react';
 
 import { HeroCarousel, type HeroSlide } from '@/components/shop/home/hero-carousel';
 import { pickLocale } from '@/lib/db/localized';
 import { activeOffers, homeHeroCampaign } from '@/lib/db/queries/home';
 import { recordImpressions } from '@/lib/db/queries/promoted';
 import { formatNumber, formatPercent } from '@/lib/format';
-import { Link } from '@/lib/i18n/navigation';
 
 /**
  * Home hero (PRD §5.1) — the first thing the client sees, and the mall's most
  * expensive placement (PRD §8.2).
  *
- * Split two-up: a rotating hero at 2.1fr beside a promo card at 1fr. The narrow
- * card carries the best live OFFER rather than a second paid slot — offers are
- * shop-funded discounts, so it gets no Sponsored badge (PRD §8.1 vs §8.2) and
- * the mall is not credited with inventory it never sold.
+ * FULL WIDTH, one rotating banner. It used to be a two-up with a promo card
+ * beside it; that card is now the head of the deals band — see below.
  *
  * The carousel's slides are REAL and of two kinds: the paid hero placement
  * first, then the running offers. There is no filler slide — with nothing sold
@@ -30,7 +25,6 @@ export async function HeroBanner() {
   const t = await getTranslations('home');
   const tCommon = await getTranslations('common');
   const [campaign, offers] = await Promise.all([homeHeroCampaign(), activeOffers(4)]);
-  const offer = offers[0] ?? null;
 
   /*
    * MONEY IN PROSE TAKES THE WORD, money in a chip takes the symbol — the one
@@ -82,8 +76,9 @@ export async function HeroBanner() {
   }
 
   /*
-   * The offer occupying the side card is skipped here: showing the same
-   * discount twice, side by side, is what an empty catalogue looks like.
+   * The soonest-ending offer is skipped here: it heads the deals band a screen
+   * below, and showing the same discount twice on one scroll is what an empty
+   * catalogue looks like.
    */
   for (const item of offers.slice(1, 4)) {
     const title =
@@ -127,67 +122,27 @@ export async function HeroBanner() {
     });
   }
 
+  /*
+   * THE SIDE PROMO CARD IS GONE, folded into the deals band (DealsRail).
+   *
+   * On a 390px screen the two-up collapses to a stack, so the card was not
+   * beside the hero at all — it was a second 220px panel between the hero and
+   * the first thing anyone can buy, and the first purchasable product sat
+   * nearly two screens down. It also duplicated the deals band's subject: both
+   * were built from `activeOffers`, both pointed at the same shop, and the
+   * band already carries that offer's countdown. One offer, said once, in the
+   * section whose whole subject is offers.
+   */
   return (
-    <section className="grid gap-4 lg:grid-cols-[2.1fr_1fr]">
+    <section>
       <HeroCarousel slides={slides} />
-
-      {offer && (
-        <Link
-          href={`/shops/${offer.shopSlug}`}
-          className="pressable rounded-card group flex min-h-[220px] flex-col overflow-hidden bg-neutral-100 transition-[background-color,scale] duration-150 ease-out hover:bg-neutral-200 lg:min-h-[380px]"
-        >
-          <span className="flex items-start justify-between gap-3 p-6 pb-4">
-            <span className="flex min-w-0 flex-col">
-              {/* `dir="auto"` because the offer's name is the shopkeeper's own
-                  text: a Dari catalogue holds "Black Friday" verbatim, and a
-                  Latin phrase inheriting RTL puts its punctuation on the wrong
-                  side. */}
-              <span
-                dir="auto"
-                className="text-foreground text-2xl leading-tight font-extrabold"
-              >
-                {offer.type === 'percent'
-                  ? t('offerUpTo', { percent: formatPercent(offer.value / 100, locale) })
-                  : pickLocale(offer.name, locale)}
-              </span>
-              <span className="text-primary mt-2 text-base font-bold">
-                {pickLocale(offer.shopName, locale)}
-              </span>
-              {/*
-                No clock here. The deals band below owns the page's ONE
-                countdown, and two tickers racing each other above the fold
-                turned urgency into noise — the eye reads competing timers as
-                decoration. This card's job is the discount and whose it is.
-              */}
-              <span className="mt-3 text-xs font-medium text-neutral-600">
-                {t('offerEndsSoon')}
-              </span>
-            </span>
-            <span className="rounded-pill bg-card text-accent flex h-10 w-10 shrink-0 items-center justify-center">
-              <Tag className="h-4 w-4" aria-hidden />
-            </span>
-          </span>
-
-          {offer.imagePath && (
-            <span className="rounded-media relative mx-4 mb-4 block flex-1 overflow-hidden">
-              <Image
-                src={offer.imagePath}
-                alt=""
-                fill
-                sizes="(max-width: 1024px) 100vw, 380px"
-                className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              />
-            </span>
-          )}
-        </Link>
-      )}
     </section>
   );
 }
 
 export function HeroBannerSkeleton() {
   return (
-    <section className="grid gap-4 lg:grid-cols-[2.1fr_1fr]">
+    <section>
       <div className="flex flex-col gap-3">
         <div className="rounded-card min-h-[320px] flex-1 animate-pulse bg-neutral-200 lg:min-h-[380px]" />
         {/* The dot row is part of the layout, so it is part of the skeleton. */}
@@ -197,7 +152,6 @@ export function HeroBannerSkeleton() {
           ))}
         </div>
       </div>
-      <div className="rounded-card min-h-[220px] animate-pulse bg-neutral-100 lg:min-h-[380px]" />
     </section>
   );
 }

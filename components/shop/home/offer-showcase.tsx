@@ -156,23 +156,24 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
         </Link>
 
         {rest.length > 0 && (
-          <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
+          /*
+           * ONE COLUMN, not two.
+           *
+           * Two columns had two problems and the same cause — a follower row
+           * had no width to spare. With four live campaigns the second column
+           * left the last row stranded beside an empty cell, and neither cell
+           * was wide enough to show anything but text. A single column gives
+           * each campaign the full width of the panel, which is what makes room
+           * for the goods; the rows are SHORTER than the two-up ones were, so
+           * the band ends higher up the page even with the pictures in it.
+           */
+          <ul className="flex flex-col gap-3">
             {rest.map((offer) => (
               <li key={offer.id}>
                 <Link
                   href={`/shops/${offer.shopSlug}`}
                   className="pressable rounded-card border-border bg-card shadow-card hover:border-accent-300 hover:shadow-overlay flex h-full items-center gap-3 overflow-hidden border p-2 transition-[box-shadow,border-color,scale] duration-150 ease-out"
                 >
-                  <span className="rounded-control relative h-16 w-16 shrink-0 overflow-hidden bg-neutral-100">
-                    {offer.imagePath ? (
-                      <Image src={offer.imagePath} alt="" fill sizes="64px" className="object-cover" />
-                    ) : (
-                      <span className="bg-accent-100 text-accent-800 flex h-full w-full items-center justify-center">
-                        <Tag className="h-5 w-5" aria-hidden />
-                      </span>
-                    )}
-                  </span>
-
                   <span className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="rounded-pill bg-danger-bg text-danger text-2xs px-2 py-0.5 font-bold">
@@ -196,6 +197,40 @@ export async function OfferShowcase({ limit = 7 }: { limit?: number }) {
                       )}
                     </span>
                   </span>
+
+                  {/*
+                    THE SHOP WINDOW. Up to three of the products this discount
+                    actually covers, at the inline end where the eye lands last
+                    — the row still reads name-then-goods, and the pictures are
+                    the reason to tap rather than the label.
+
+                    `aria-hidden`: the link is already named by its heading and
+                    its shop, and three unlabelled thumbnails announced one by
+                    one would be three empty stops for a screen reader. Falls
+                    back to the shop's representative shot when an offer covers
+                    nothing that is currently in stock, so the row is never a
+                    picture short of the ones beside it.
+                  */}
+                  <span className="flex shrink-0 gap-1.5" aria-hidden>
+                    {(offer.previewImages?.length
+                      ? offer.previewImages
+                      : offer.imagePath
+                        ? [offer.imagePath]
+                        : []
+                    ).map((path) => (
+                      <span
+                        key={path}
+                        className="rounded-control relative h-14 w-14 overflow-hidden bg-neutral-100"
+                      >
+                        <Image src={path} alt="" fill sizes="56px" className="object-cover" />
+                      </span>
+                    ))}
+                    {!offer.previewImages?.length && !offer.imagePath && (
+                      <span className="rounded-control bg-accent-100 text-accent-800 flex h-14 w-14 items-center justify-center">
+                        <Tag className="h-5 w-5" aria-hidden />
+                      </span>
+                    )}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -212,19 +247,23 @@ export function OfferShowcaseSkeleton() {
       <Skeleton className="h-6 w-40" />
       <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr]">
         <Skeleton className="rounded-panel min-h-64" />
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
-          {Array.from({ length: 4 }, (_, index) => (
+        <ul className="flex flex-col gap-3">
+          {Array.from({ length: 3 }, (_, index) => (
             <li
               key={index}
               className={cn(
                 'rounded-card border-border bg-card flex h-full items-center gap-3 border p-2',
               )}
             >
-              <Skeleton className="rounded-control h-16 w-16 shrink-0" />
               <div className="min-w-0 flex-1 space-y-2">
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-3 w-28" />
                 <Skeleton className="h-3 w-16" />
+              </div>
+              <div className="flex shrink-0 gap-1.5">
+                {Array.from({ length: 3 }, (_, thumb) => (
+                  <Skeleton key={thumb} className="rounded-control h-14 w-14" />
+                ))}
               </div>
             </li>
           ))}
